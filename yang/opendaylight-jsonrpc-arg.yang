@@ -1,0 +1,255 @@
+module opendaylight-jsonrpc-arg {
+    yang-version 1;
+    namespace "urn:opendaylight:jsonrpc:arg";
+    prefix "arg";
+
+    import ietf-yang-types {
+        prefix yang;
+        revision-date 2013-07-15;
+    }
+    import ietf-inet-types {
+        prefix inet;
+        revision-date 2013-07-15;
+    }
+
+    organization
+        "Brocade BSC Team";
+
+    contact
+        "Anton Ivanov <mailto:aivanov@brocade.com>
+         David Spence <mailto:dspence@brocade.com>
+         Richard Kosegi <mailto:rkosegi@brocade.com>
+         Shaleen Saxena <mailto:ssaxena@brocade.com>";
+
+    description
+        "This module defines common arguments for the OpenDaylight JSON RPC
+         feature. These arguments are used in rpc statements which define both
+         JSON RPC methods invoked by the feature (outgoing method calls, where
+         the feature is the client) and JSON RPC methods accepted by the feature
+         (incoming method calls, where the feature is the server).";
+
+    revision 2017-02-08 {
+        description "Initial revision.";
+    }
+
+    typedef data-store {
+        description
+            "A type for specifying a target data store.
+
+             A data store may be specified as either a string (an enum label) or
+             as an integer value. The integer is not range-restricted, meaning
+             that any integer value may be sent. (An integer value may map to an
+             enum label from this union but is not required to do so. The use of
+             such values, assignment of their meaning, and support in applications
+             is beyond the scope of this type model.)
+
+             An implementation MUST accept string values for data stores that it
+             supports and MAY accept integer values. An implementation SHOULD
+             send string values for data stores in this type's enumeration.";
+        reference
+            "RFC 6020: YANG - A Data Modeling Language
+             Section 4.2.3. State Data
+
+             RFC 7951: JSON Encoding of Data Modeled with YANG
+             Section 6.4. The \"enumeration\" Type
+            ";
+        type union {
+            type enumeration {
+                enum none {
+                    value -1;
+                    description "The value specifying no data store.";
+                }
+                enum config {
+                    value 0;
+                    description "The value specifying the config data store.";
+                }
+                enum operational {
+                    value 1;
+                    description "The value specifying the operational data store.";
+                }
+            }
+            type int32;
+        }
+    }
+    typedef revision-date {
+        description
+            "A string type for a YANG module revision date.";
+        reference
+            "RFC 6020: YANG - A Data Modeling Language
+             Section 5.1.1. Import and Include by Revision";
+        type string {
+            pattern '\d{4}-\d{2}-\d{2}';
+        }
+    }
+
+    grouping module {
+        leaf module {
+            description
+                "The YANG module that is the subject of this procedure.";
+            mandatory true;
+            type string;
+        }
+    }
+    grouping revision {
+        leaf revision {
+            description
+                "The YANG module revision that is the subject of this procedure.";
+            mandatory true;
+            type revision-date;
+        }
+    }
+
+    grouping store {
+        leaf store {
+            description "The data store that is the subject of this procedure.";
+            mandatory true;
+            type data-store;
+        }
+    }
+    grouping entity {
+        leaf entity {
+            description
+                "The identifier of the managed entity that is the subject of this
+                 procedure.";
+            mandatory true;
+            type string;
+        }
+    }
+    grouping path {
+        anyxml path {
+            description
+                "The path specifying the model subtree that is the subject of
+                 this procedure.
+
+                 A path is like a YANG instance-identifier, as it is used for
+                 addressing a model subtree, but it is encoded as a JSON value.
+                 When using a path to walk a tree, if the structure of the path
+                 value does not correspond to that expected by the model schema
+                 at each step, then the path does not address any subtree in the
+                 tree.
+
+                 An empty JSON object is a terminal value for a path. If an
+                 empty JSON object is reached when walking a tree, then the
+                 addressed subtree has been reached.
+
+                 A JSON object with one or more members whose values are all
+                 atomic JSON values is a conditional terminal value for a path.
+                 If such a JSON object is reached when walking a tree, then
+                 the addressed subtree has been reached if the subtree has a
+                 child node for each object member, with the child node data
+                 value exactly matching the object member value.
+
+                 A valid path instance MUST have exactly one terminal value.
+
+                 A JSON object which has exactly one member whose value is a
+                 structured value is a child node selector for a path. The
+                 object member's simple name specifies the schema name of the
+                 child node to select. The object member's value specifies the
+                 path steps to use in walking the subtree at that child node.
+                 If the JSON object has other members, then their values MUST
+                 be atomic JSON values. The presence of such members makes the
+                 object a conditional child node selector. The selected child
+                 node is only walked if that child has a sibling node for each
+                 atomic-valued object member, with the sibling node data value
+                 exactly matching the object member value.
+
+                 A JSON object with more than one member whose value is a
+                 structured value is not permitted in a valid path instance.
+
+                 The object member names in the outermost JSON object in a path
+                 MUST be namespace-qualified. The object member names in other
+                 JSON objects SHOULD be simple names, unless that path step
+                 is referring to a child node defined in a different module than
+                 its parent node (as a result of an augment statement, for
+                 example).
+
+                 A JSON list is a list element selector for a path. The JSON
+                 list value MUST include exactly one value and that value MUST
+                 be a JSON object conforming to the path rules above. The path
+                 steps specified by the JSON object are applied to the list
+                 elements in the tree at the current node, in list index order.
+                 Once the path steps have been successfully applied to a list
+                 element in the tree, then they are not applied to any further
+                 list elements.
+
+                 Any other JSON list value is not permitted in a valid path
+                 instance.
+
+                 An empty object {} addresses the whole data tree.
+
+                 An object {\"foo:bar\": {}} addresses the subtree at top-level
+                 node 'bar' in module 'foo'.
+
+                 An object {\"foo:bar\": {\"baz\": {}}} addresses the subtree at
+                 node '/bar/baz' in module 'foo'.
+
+                 An object {\"foo:bar\": [{\"baz\": \"val\"}]} addresses the
+                 first element in top-level list 'bar' which has a node 'baz'
+                 with string value 'val'.
+
+                 An object {\"foo:bar\": [{\"baz\": \"val\", \"kam\": {}}]}
+                 addresses the subtree 'kam' of the first element in top-level
+                 list 'bar' which has a node 'baz' with the string value 'val'.";
+            reference
+                "RFC 6020: YANG - A Data Modeling Language
+                 Section 9.13. The instance-identifier Built-In Type.
+
+                 RFC 7951: JSON Encoding of Data Modeled with YANG
+                 Section 4. Names and Namespaces
+                ";
+            mandatory true;
+        }
+    }
+    grouping data {
+        anyxml data {
+            description
+                "An argument for passing arbitrary JSON-encoded data.";
+            reference
+                "RFC 7951: JSON Encoding of Data Modeled with YANG";
+            mandatory true;
+        }
+    }
+    grouping txid {
+        leaf txid {
+            description
+                "A handle for a transaction. Procedures performed with the same
+                 handle value relate to the same transaction: the first procedure
+                 containing a previously unseen handle implicitly begins a new
+                 transaction. Data changes made within a transaction are not
+                 permanent until an explicit 'commit' procedure, with the same
+                 handle value, is invoked to end the transaction. Alternatively,
+                 data changes in a transaction may be discarded by an explicit
+                 'cancel' procedure.
+
+                 In order to allow multiple clients to interact with the same
+                 data store service, that service should provide a 'txid' method
+                 which returns a new transaction id whose value is not currently
+                 in use for another transaction. There is no hard requirement
+                 for a client to use this method: a single client or group of
+                 clients may take responsibility for generating non-conflicting
+                 transaction ids according to their (collective) needs.";
+            mandatory true;
+            type yang:uuid;
+        }
+    }
+
+    grouping uri {
+        leaf uri {
+            description
+                "The endpoint uri of the service which governs a data store
+                 subtree.
+
+                 The client using this uri value to access the service may be
+                 passed client configuration options in the query component of
+                 the uri (RFC 3986 Section 3.4). Client configuration options
+                 recognised by the client should be removed from the uri before
+                 onward use of the uri value in accessing the service. Other
+                 key/value pairs in the query component must be ignored by the
+                 client with regard to their use as configuration options.";
+            reference
+                "RFC 3986: Uniform Resource Identifier (URI): Generic Syntax";
+            mandatory true;
+            type inet:uri;
+        }
+    }
+}

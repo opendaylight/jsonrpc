@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (C) 2017 Brocade Communications Systems, Inc. All Rights Reserved.
+
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License v1.0 which accompanies this distribution,
+and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
+<features name="odl-jsonrpc-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.2.0 http://karaf.apache.org/xmlns/features/v1.2.0">
+    <repository>mvn:org.opendaylight.controller/features-mdsal/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.yangtools/features-yangtools/{{VERSION}}/xml/features</repository>
+    <repository>mvn:org.opendaylight.odlparent/features-odlparent/{{VERSION}}/xml/features</repository>
+    <feature name='odl-jsonrpc' version='${project.version}' description='OpenDaylight :: JSON-RPC'>
+        <bundle>mvn:org.opendaylight.jsonrpc/jsonrpc-impl/${project.version}</bundle>
+        <bundle>mvn:org.opendaylight.jsonrpc/jsonrpc-api/${project.version}</bundle>
+        <feature>odl-yangtools-yang-data</feature>
+        <feature>odl-jsonrpc-bus</feature>
+        <feature>odl-restconf-all</feature>
+    </feature>
+
+    <feature name='odl-jsonrpc-bus' version='${project.version}' description='OpenDaylight :: JSON-RPC :: Bus'>
+        <bundle dependency="true">mvn:com.google.code.gson/gson/{{VERSION}}</bundle>
+        <bundle>mvn:org.opendaylight.jsonrpc.bus/bus-messagelib/${project.version}</bundle>
+        <bundle>mvn:org.opendaylight.jsonrpc.bus/bus-jsonrpc/${project.version}</bundle>
+        <bundle>mvn:org.opendaylight.jsonrpc.bus/bus-api/${project.version}</bundle>
+        <bundle>mvn:org.opendaylight.jsonrpc.bus/transport-zmq/${project.version}</bundle>
+        <bundle>mvn:org.zeromq/jeromq/{{VERSION}}</bundle>
+    </feature>
+</features>

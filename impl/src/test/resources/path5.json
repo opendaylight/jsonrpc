@@ -1,0 +1,7 @@
+{
+  "jsonrpc:config": {
+    "configured-endpoints": {
+      "name": "value"
+    }
+  }
+}

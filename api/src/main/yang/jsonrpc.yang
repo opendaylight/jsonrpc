@@ -1,0 +1,309 @@
+module jsonrpc {
+
+    yang-version 1;
+
+    namespace "urn:opendaylight:jsonrpc";
+
+    prefix jsonrpc;
+
+    import ietf-inet-types {
+        prefix "inet";
+        revision-date 2013-07-15;
+    }
+    import ietf-yang-types {
+        prefix "yt";
+        revision-date 2013-07-15;
+    }
+
+    organization
+        "Brocade Communications Systems, Inc.";
+
+    contact
+        "Anton Ivanov <mailto:aivanov@brocade.com>
+         David Spence <mailto:dspence@brocade.com>
+         Richard Kosegi <mailto:rkosegi@brocade.com>
+         Shaleen Saxena <mailto:ssaxena@brocade.com>";
+
+    reference "JSON-RPC 2.0 Specification
+               http://www.jsonrpc.org/specification
+
+               RFC 6020: YANG - A Data Modeling Language";
+
+    description "YANG model of the JSON-RPC 2.0 Extension.
+
+                 JSON-RPC 2.0 provides a \"stateless light-weight remote procedure call
+                 (RPC) protocol\" which is \"transport agnostic\". The controller's
+                 implementation of JSON-RPC allows for outgoing calls (from the
+                 controller to remote peers) and for incoming calls (from a remote peer
+                 to the controller). Calls made by the controller to a remote peer may
+                 use call-by-name or call-by-position method params. The controller
+                 will only accept calls from a remote peer using call-by-position
+                 method params.
+
+                 This module has been specified independent of transport technology:
+                 network endpoints are configured as a URI, which must be valid for a
+                 technology supported by this feature in the running controller.
+
+                 At the time of writing there is no public standard for documenting
+                 the JSON-RPC calls which can be made to a server. As the controller
+                 employs YANG as its modeling language, YANG has been used to document
+                 both JSON-RPC requests (using rpc statements) and JSON-RPC notifications
+                 (using notification statements) for both the calls that the controller
+                 makes on remote peers and that a remote peer may make on the controller.
+                 The YANG modules containing the documented rpcs and notifications
+                 related to this module are stated in relevant descriptions below.
+
+                 The use of rpc and notification statements will be described in detail
+                 in a draft dedicated to YANG modeling of JSON-RPC.";
+
+    revision "2016-12-01" {
+        description "Initial revision.";
+    }
+
+    typedef response-error-code {
+        reference "http://www.jsonrpc.org/specification
+            http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php";
+        type enumeration {
+            enum parse-error {
+                description "Invalid JSON was received by the server.
+                             An error occurred on the server while parsing the JSON text.";
+                value -32700;
+            }
+            enum invalid-request {
+                description "The JSON sent is not a valid Request object.";
+                value -32600;
+            }
+            enum method-not-found {
+                description "The method does not exist / is not available.";
+                value -32601;
+            }
+            enum invalid-params {
+                description "Invalid method parameter(s).";
+                value -32602;
+            }
+            enum internal-error {
+                description "Internal JSON-RPC error.";
+                value -32603;
+            }
+        }
+    }
+
+    grouping entity {
+        leaf name {
+            type string;
+            mandatory true;
+            description "Entity unique name. An entity's data and RPC model (defined by 'modules') is
+                         implemented remotely at one or more JSON-RPC peer endpoints. This name is a
+                         binding value for identifying this set of endpoints.";
+        }
+        leaf-list modules {
+            type yt:yang-identifier;
+            min-elements 1;
+            description "A list of all YANG modules supported by this entity. The list must include all
+                         modules and submodules that are dependencies (imported or included) of other
+                         modules or submodules in the list. The order of modules and submodules in the
+                         list is not important.";
+       }
+    }
+
+    grouping endpoint {
+        leaf path {
+            type string;
+            mandatory true;
+            reference "RFC 6020: YANG - A Data Modeling Language
+                       Section 9.13. The instance-identifier Built-In Type.
+
+                       draft-ietf-netmod-yang-json
+                       JSON Encoding of Data Modeled with YANG.";
+            description "A YANG instance-identifier ('iid') encoded as a JSON object.
+
+                         *** Note that the convention for encoding a YANG instance-identifier as a JSON
+                         object described here may differ from that in draft-ietf-netmod-yang-json. ***
+
+                         To address a whole data value (the value corresponding to a schema container,
+                         leaf, leaf-list or list node) encode the iid as nested JSON objects with the
+                         path terminating at an empty object. Each object that nests another must have
+                         exactly one property and the property name must be set to the corresponding schema
+                         node identifier. The outermost object must also prefix the node identifier with
+                         the module name and a colon ':' (and no whitespace).
+
+                         For example, the following path addresses this module's 'who-am-i' leaf node,
+                         which is under the 'config' container:
+
+                         {\"jsonrpc:config\":{\"who-am-i\":{}}}
+
+                         To address a whole element in a list node the path is encoded as above except
+                         that the path terminator is specified as a single JSON object in a JSON array.
+                         The JSON object shall specify values at properties for each list key in the
+                         schema.
+
+                         For example, the following path addresses the element with (fictional) entity
+                         name 'DEVICE-1A2B' in this module's 'configured-endpoints' list:
+
+                         {\"jsonrpc:config\":{\"configured-endpoints\":[{\"name\":\"DEVICE-1A2B\"}]}}
+
+                         To address a single node within a list element the path is encoded using a
+                         combination of the schemes above. The path terminator for a whole list element
+                         is employed as a list element selector and its properties are complemented
+                         with a single extra property which has the name of the list element node to
+                         address.
+
+                         For example, the following path addresses the 'rpc-endpoints' of the element
+                         with (fictional) entity name 'DEVICE-3C4D' in this module's 'configured-endpoints'
+                         list:
+
+                         {\"jsonrpc:config\":{\"configured-endpoints\":[{\"name\":\"DEVICE-3C4D\",\"rpc-endpoints\":{}}]}}
+
+                         This notation will be described in detail in a draft dedicated to YANG modeling
+                         of JSON-RPC.";
+        }
+        leaf endpoint-uri {
+            type inet:uri;
+            mandatory true;
+            description "The URI of the JSON-RPC peer endpoint remotely implementing 'path'.";
+        }
+    }
+
+    grouping peer {
+        uses entity;
+        list data-config-endpoints {
+            key "path";
+            uses endpoint;
+            description "The JSON-RPC peer endpoint remotely implementing each 'path' (module subtree)
+                         for a named entity's config data store.
+
+                         This extension selects the remote peer to handle a request using a longest
+                         'path' first match (similar to route prefix matching in IP routing). As such
+                         the shortest path, an empty JSON object, {}, may be used to specify a default
+                         peer, which handles the request in the absence of a more specific 'path' match.
+                         The shortest path for a specific module identifies the tree for one root node:
+
+                         {\"module:root\":{}}
+
+                         Each listed remote peer must implement the JSON-RPC methods documented in the
+                         'opendaylight-jsonrpc-data' YANG module.";
+        }
+        list data-operational-endpoints {
+            key "path";
+            uses endpoint;
+            description "The JSON-RPC peer endpoint remotely implementing each 'path' (module subtree)
+                         for a named entity's operational data store.
+
+                         The endpoint selection algorithm and JSON-RPC methods specified for
+                         'data-config-endpoints' also apply here.";
+        }
+        list rpc-endpoints {
+            key "path";
+            uses endpoint;
+            description "The JSON-RPC peer endpoint remotely implementing each 'path' (module rpc) for
+                         a named entity. A YANG rpc statement with name 'method' in 'module' corresponds
+                         to 'path':
+
+                         {\"module:method\":{}}
+
+                         The endpoint selection algorithm specified for 'data-config-endpoints' also
+                         applies here.
+
+                         The remote peer which implements the module rpc for 'path' must implement
+                         that rpc as a named JSON-RPC method. The controller may make a JSON-RPC request
+                         using either a method of \"module:method\" or \"method\".";
+        }
+        list notification-endpoints {
+            key "path";
+            uses endpoint;
+            description "The JSON-RPC peer endpoint remotely generating notifications for the 'path'
+                        module notification. A YANG notification statement with name 'notification'
+                        in 'module' corresponds to 'path'.
+
+                        {\"module:notification\":{}}
+
+                        The remote peer which implements the notification for 'path' must implement
+                        that as a JSON-RPC 2.0 notification
+
+                        Transport specific options (f.e. pub/sub topic) are supplied in the query part
+                        of the uri.";
+        }
+    }
+
+    container config {
+        leaf who-am-i {
+            type inet:uri;
+            description "The URI of this controller's JSON-RPC endpoint at which remote peers can access
+                         the controller's data stores. The JSON-RPC methods supported at this endpoint
+                         are documented in the 'opendaylight-jsonrpc-data' YANG module.
+
+                         *** Note that this endpoint gives full read/write access to both the controller's
+                         config data store and operational data store, without restriction. ***";
+        }
+        leaf governance-root {
+            type inet:uri;
+            description "The URI of a remote peer which implements the JSON-RPC methods documented in
+                         the 'opendaylight-jsonrpc-service' and 'opendaylight-jsonrpc-module' YANG modules.
+
+                         When configured, the YANG modules required to mount a named entity are fetched
+                         from the remote peer by making a 'source' call to it. In this manner the remote
+                         peer acts as a single source of YANG modules for both the controller and the
+                         remote peer implementations. Otherwise, when this leaf is not configured, the
+                         YANG modules required to mount a named entity must be available in the controller.
+
+                         When configured and a data store access or RPC operation is made for a named
+                         entity, if there is no corresponding peer endpoint in this module's
+                         'actual-endpoints' for that operation, then a 'governance' call is made to
+                         'governance-root' to identify the peer endpoint. Any relationships
+                         identified are added to 'actual-endpoints'. Otherwise, when this leaf is not
+                         configured, then the absence of a required peer endpoint in 'actual-endpoints'
+                         for the operation is an error.";
+        }
+
+        list configured-endpoints {
+            key "name";
+            uses peer;
+            description "For each named entity, the JSON-RPC peer endpoints that comprise all, or part,
+                         of its remote implementation. For parts of a named entity's remote
+                         implementation that are not covered by an entry in this list, the peer endpoint
+                         for that path (module subtree) will be learned from 'governance-root'.
+
+                         Adding a new element to this list introduces a new named entity which this
+                         extension will mount in the controller. Deleting a whole element will cause
+                         this extension to unmount the named entity in the controller. Modifying an
+                         existing named entity does not result in the named entity being remounted:
+                         delete and add back to achieve this effect.";
+        }
+
+        list actual-endpoints {
+            key "name";
+            config false;
+            uses peer;
+            description "For each named entity, the JSON-RPC peer endpoints that comprise all, or part,
+                         of its remote implementation. This list contains entries for each named entity
+                         in 'configured-endpoints' that was successfully mounted, complemented by
+                         entries learned from 'governance-root'.";
+        }
+    }
+
+    rpc force-refresh {
+        description "Perform any actions required to refresh the extension state from the
+                     configuration. A new attempt will be made to mount any entity in
+                     'configured-endpoints' that is not currently mounted (perhaps due to a
+                     transient failure). All entries in 'actual-endpoints' that do not have
+                     a corresponding entry in 'configured-endpoints' will be removed.";
+        output {
+            leaf result {
+                type boolean;
+                description "Refresh operation result - true if successful, false otherwise.";
+            }
+        }
+    }
+    rpc force-reload {
+        description "Perform any actions required to rebuild the extension state from the
+                     configuration. The mount points for all entries in 'actual-endpoints'
+                     will first be removed, followed by a new attempt to mount each entity in
+                     'configured-endpoints'.";
+        output {
+            leaf result {
+                type boolean;
+                description "Reload operation result - true if successful, false otherwise.";
+            }
+        }
+    }
+}

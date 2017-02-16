@@ -1,0 +1,43 @@
+/*
+ * Copyright (c) 2017 Brocade Communications Systems, Inc. All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+package org.opendaylight.jsonrpc.bus.messagelib.osgi;
+
+import java.util.Iterator;
+import java.util.List;
+
+import org.opendaylight.jsonrpc.bus.BusSession;
+import org.opendaylight.jsonrpc.bus.BusSessionFactory;
+import org.opendaylight.jsonrpc.bus.spi.BusSessionFactoryProvider;
+
+/**
+ * Implementation of {@link BusSessionFactoryProvider} used in OSGi environment.
+ * This requires blueprint container as specified by OSGi Compendium R4.2, more
+ * specifically in 121.7.3 "reference-list" manager.
+ *
+ * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
+ *
+ */
+public class OsgiBusSessionFactoryProvider implements BusSessionFactoryProvider {
+    private List<BusSessionFactory<BusSession>> sessionFactories;
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Override
+    public <T extends BusSession> Iterator<BusSessionFactory<T>> getBusSessionFactories() {
+        return (Iterator) sessionFactories.iterator();
+    }
+
+    /**
+     * List of registered {@link BusSessionFactory} service is set by blueprint
+     * container
+     *
+     * @param sessionFactories list of {@link BusSessionFactory} services
+     */
+    public void setSessionFactories(List<BusSessionFactory<BusSession>> sessionFactories) {
+        this.sessionFactories = sessionFactories;
+    }
+}

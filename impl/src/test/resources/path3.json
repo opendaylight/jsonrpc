@@ -1,0 +1,11 @@
+{
+  "level1": {
+    "level2": {
+      "level2": {
+        "level3a": {
+          "name1" : [{ "item1" : 42}]
+        }
+      }
+    }
+  }
+}

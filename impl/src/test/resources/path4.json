@@ -1,0 +1,13 @@
+{
+  "network-topology:network-topology": {
+    "topology": [{
+      "topology-id": "topology1",
+      "node": [{
+        "node-id": "node1",
+        "termination-point": [{
+          "tp-id": "eth0"
+        }]
+      }]
+    }]
+  }
+}

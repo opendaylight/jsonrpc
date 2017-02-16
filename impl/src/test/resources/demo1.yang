@@ -1,0 +1,36 @@
+module demo1 {
+    namespace "urn:opendaylight:demo:tbd";
+    prefix demo;
+    organization "Brocade";
+
+    revision "2016-10-11" {
+        description "Initial revision";
+    }
+
+    container demo-container {
+        description "Demo containier with simple list";
+        list demo-list {
+            key "item-id";
+            leaf item-id {
+                type uint32;
+            }
+        }
+    }
+
+    rpc rpc-method1 {
+        description "Demo RPC emthod 1";
+        input {
+            leaf param1 {
+                description "Input string param";
+                type string;
+            }
+        }
+
+        output {
+            leaf out-var {
+                description "Output int variable";
+                type int32;
+            }
+        }
+    }
+}

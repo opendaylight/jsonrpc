@@ -1,0 +1,45 @@
+module opendaylight-jsonrpc-service {
+    yang-version 1;
+    namespace "urn:opendaylight:jsonrpc:service";
+    prefix "service";
+
+    import opendaylight-jsonrpc-arg {
+        prefix "arg";
+    }
+
+    organization
+        "Brocade BSC Team";
+
+    contact
+        "Anton Ivanov <mailto:aivanov@brocade.com>
+         David Spence <mailto:dspence@brocade.com>
+         Richard Kosegi <mailto:rkosegi@brocade.com>
+         Shaleen Saxena <mailto:ssaxena@brocade.com>";
+
+    description
+        "This module defines the external interface for retrieving the URI of
+         the service implementing all or part of a mounted entity's model.
+
+         OpenDaylight JSON RPC makes JSON RPC method calls to an external service
+         implementing this interface when it does not already know the URI of
+         the service implementing all or part of a mounted entity's model.";
+
+    revision 2017-02-08 {
+        description "Initial revision.";
+    }
+
+    rpc governance {
+        description
+            "Return the `uri` of the service implementing the model subtree
+             addressed by `path` and `store` for `entity`. If there is no such
+             service then null shall be returned.";
+        input {
+            uses arg:store;
+            uses arg:entity;
+            uses arg:path;
+        }
+        output {
+            uses arg:uri { refine uri { mandatory false; } }
+        }
+    }
+}

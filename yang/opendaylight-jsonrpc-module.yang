@@ -1,0 +1,49 @@
+module opendaylight-jsonrpc-module {
+    yang-version 1;
+    namespace "urn:opendaylight:jsonrpc:module";
+    prefix "module";
+
+    import opendaylight-jsonrpc-arg {
+        prefix "arg";
+    }
+
+    organization
+        "Brocade BSC Team";
+
+    contact
+        "Anton Ivanov <mailto:aivanov@brocade.com>
+         David Spence <mailto:dspence@brocade.com>
+         Richard Kosegi <mailto:rkosegi@brocade.com>
+         Shaleen Saxena <mailto:ssaxena@brocade.com>";
+
+    description
+        "This module defines the external interface for retrieving YANG modules.
+
+         OpenDaylight JSON RPC makes JSON RPC method calls to external services
+         implementing this interface in order to fetch YANG module source text
+         required to mount an entity in OpenDaylight.";
+
+    revision 2017-02-08 {
+        description "Initial revision.";
+    }
+
+    rpc source {
+        description
+            "Return the YANG `source` text of YANG `module`. If `revision` is
+             supplied then return the `source` text of that exact `revision`.
+             If the `source` text of `module` or `revision` is not available,
+             then null shall be returned.";
+        reference
+            "RFC 6020: YANG - A Data Modeling Language
+             Section 5.1.1. Import and Include by Revision";
+        input {
+            uses arg:module;
+            uses arg:revision { refine revision { mandatory false; } }
+        }
+        output {
+            leaf source {
+                type string;
+            }
+        }
+    }
+}

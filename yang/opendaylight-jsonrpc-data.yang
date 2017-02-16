@@ -1,0 +1,162 @@
+module opendaylight-jsonrpc-data {
+    yang-version 1;
+    namespace "urn:opendaylight:jsonrpc:data";
+    prefix "data";
+
+    import opendaylight-jsonrpc-arg {
+        prefix "arg";
+    }
+
+    organization
+        "Brocade BSC Team";
+
+    contact
+        "Anton Ivanov <mailto:aivanov@brocade.com>
+         David Spence <mailto:dspence@brocade.com>
+         Richard Kosegi <mailto:rkosegi@brocade.com>
+         Shaleen Saxena <mailto:ssaxena@brocade.com>";
+
+    description
+        "This module defines the external interface for a data store shard
+         implementation.
+
+         OpenDaylight JSON RPC makes JSON RPC method calls to external services
+         implementing this interface in order to read or write the data of an
+         entity mounted by the feature. For example, outgoing calls to a service
+         would result from a RESTCONF call to read data maintained or represented
+         by that service for a mounted entity.
+
+         OpenDaylight JSON RPC also implements this interface and accepts JSON
+         RPC method calls from external clients.";
+
+    revision 2017-02-08 {
+        description "Initial revision.";
+    }
+
+    rpc exists {
+        description
+            "A request to check whether any data is available at `path` in
+             `store` for `entity`. An output `result` of 'true' indicates that
+             there is data: 'false' that there is no data.";
+        input {
+            uses arg:store;
+            uses arg:entity;
+            uses arg:path;
+        }
+        output {
+            leaf result {
+                mandatory true;
+                type boolean;
+            }
+        }
+    }
+    rpc read {
+        description
+            "A request to read all `data` at `path` in `store` for `entity`. The
+             output `data` represents the value of the addressed subtree.";
+        input {
+            uses arg:store;
+            uses arg:entity;
+            uses arg:path;
+        }
+        output {
+            uses arg:data;
+        }
+    }
+    rpc txid {
+        description
+            "Generate and return a locally unique transaction id. The returned
+             value must not be in use by an active transaction. A server should
+             also not return a value which has been recently used (according to
+             the server's definition of recent).";
+        output {
+            uses arg:txid;
+        }
+    }
+    rpc put {
+        description
+            "Store `data` at path in `store` for `entity`. This procedure will
+             overwrite any and all existing data at `path`, when the transaction
+             identified by `txid` is committed.";
+        input {
+            uses arg:txid;
+            uses arg:store;
+            uses arg:entity;
+            uses arg:path;
+            uses arg:data;
+        }
+    }
+    rpc merge {
+        description
+            "Store `data` at `path` in `store` for `entity`. This procedure
+             merges `data` with any existing data at `path`, with `data`
+             overriding existing data, when the transaction identified by `txid`
+             is committed.";
+        input {
+            uses arg:txid;
+            uses arg:store;
+            uses arg:entity;
+            uses arg:path;
+            uses arg:data;
+        }
+    }
+    rpc delete {
+        description
+            "Delete all data at `path` in `store` for `entity`. This procedure
+             deletes all data at `path`, when the transaction identified by
+             `txid` is committed.";
+        input {
+            uses arg:txid;
+            uses arg:store;
+            uses arg:entity;
+            uses arg:path;
+        }
+    }
+    rpc commit {
+        description
+            "Make permanent all data changes specified in the transaction
+             identified by `txid`, then end the transaction. An output `result`
+             of 'true' indicates that all changes were successfully committed
+             and that the transaction has now ended: an output `result` of
+             'false' indicates that the transaction failed for some reason. A
+             failed transaction is not implicitly ended in order to allow for it
+             to be analyzed/debugged. A client must explicitly 'cancel' a failed
+             transaction to end it. A client may use the 'error' method to read
+             any message relating to a failed transaction.";
+        input {
+            uses arg:txid;
+        }
+        output {
+            leaf result {
+                mandatory true;
+                type boolean;
+            }
+        }
+    }
+    rpc cancel {
+        description
+            "Discard all data changes specified in the transaction identified
+             by `txid`, then end that transaction. For the avoidance of doubt,
+             the next data change specified using the same transaction handle
+             value `txid` as supplied to this method implicitly begins a new
+             transaction.";
+        input {
+            uses arg:txid;
+        }
+    }
+    rpc error {
+        description
+            "Return a human-readable description of the last failure for the
+             transaction identified by `txid`. If there is no such transaction
+             or there is no failure message recorded for the transaction, then
+             an empty string or null may be returned.";
+        input {
+            uses arg:txid;
+        }
+        output {
+            leaf reason {
+                type string;
+            }
+        }
+    }
+}
