@@ -72,6 +72,7 @@ public class Util {
      * Transform string representation of a datastore into
      * {@link LogicalDatastoreType}
      *
+     * @param store Logical Data Store
      * @return 0 for "config", 1 for "operational"
      */
     public static int store2int(final String store) {
@@ -83,6 +84,7 @@ public class Util {
     /**
      * Transform {@link LogicalDatastoreType} into string representation
      *
+     * @param store Logical Data Store
      * @return "config" for 0, "operational" for 1
      */
     public static String store2str(final int store) {
@@ -94,6 +96,8 @@ public class Util {
     /**
      * Transform instance of {@link LogicalDatastoreType} to JSON RPC 2.0
      * representation of a datastore
+     * @param store Logical Data Store
+     * @return 0 for config, 1 for operational
      */
     public static int store2int(@Nonnull final LogicalDatastoreType store) {
         Preconditions.checkNotNull(store);
@@ -104,6 +108,8 @@ public class Util {
 
     /**
      * Utility method to reduce repeated null checks
+     * @param closeable - an autocloseable to close
+     * @throws java.lang.Exception
      */
     public static void closeNullable(@Nullable AutoCloseable closeable) throws Exception {
         if (closeable != null) {
@@ -113,6 +119,8 @@ public class Util {
 
     /**
      * Allows to intercept anyXmlNode in stream and handle it
+     * @param delegate an instance of NormalizedStreamWriter
+     * @return an instance of NormalizedStreamWriter
      */
     public static NormalizedNodeStreamWriter wrapWithAnyXmlNullValueCallBack(NormalizedNodeStreamWriter delegate) {
         return new ForwardingNormalizedNodeStreamWriter() {
@@ -139,7 +147,7 @@ public class Util {
      *            parameter
      * @param role {@link EndpointRole} to use
      * @return URI which will contain 'role' query parameter as requested
-     * @throws URISyntaxException
+     * @throws URISyntaxException - thrown if URI syntax is incorrect 
      */
     public static String ensureRole(String inUri, EndpointRole role) throws URISyntaxException {
         int idx = inUri.indexOf('?');
@@ -185,6 +193,8 @@ public class Util {
 
     /**
      * Create a Binding Independent path identifier for a name
+     * @param name - name to create the Bi identifier for
+     * @return Bi identifier
      */
     public static YangInstanceIdentifier createBiPath(final String name) {
         final YangInstanceIdentifier.InstanceIdentifierBuilder builder = YangInstanceIdentifier.builder();

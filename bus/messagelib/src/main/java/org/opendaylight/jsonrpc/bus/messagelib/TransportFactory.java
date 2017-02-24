@@ -32,6 +32,7 @@ public interface TransportFactory {
      *
      * @param rawUri URI where new service will be published
      * @param handler used to handle JSON-RPC requests
+     * @param <T> an AutoCloseable implementation of ThreadedSession
      * @return ThreadedSession
      * @throws URISyntaxException when URI denoted by rawUri has invalid syntax
      */
@@ -43,6 +44,8 @@ public interface TransportFactory {
      * 
      * @param rawUri URI pointing to remote service implementing responder
      * @param handler Handler used to handle requests
+     * @param <T> an AutoCloseable implementation of ThreadedSession
+     * @return ThreadedSession
      * @throws URISyntaxException when URI denoted by rawUri has invalid syntax
      */
     <T extends AutoCloseable> ThreadedSession createSubscriber(String rawUri, T handler) throws URISyntaxException;

@@ -119,7 +119,7 @@ public class Session implements AutoCloseable {
      * 
      * @param id The id of the request which generated this reply.
      * @param result The result object.
-     * @throws MessageLibraryMismatchException 
+     * @throws MessageLibraryMismatchException see exception for more details
      */
     public void sendReplyWithResult(JsonElement id, Object result) throws MessageLibraryMismatchException {
         // Build Result Reply
@@ -135,7 +135,7 @@ public class Session implements AutoCloseable {
      * 
      * @param id The id of the request which generated this reply.
      * @param error The error containing code, message, and optional data.
-     * @throws MessageLibraryMismatchException 
+     * @throws MessageLibraryMismatchException see exception for more details
      */
     public void sendReplyWithError(JsonElement id, JsonRpcErrorObject error) throws MessageLibraryMismatchException {
         // Build Error Reply
@@ -150,7 +150,7 @@ public class Session implements AutoCloseable {
      * A low level message sending method, to send user-created strings.
      * 
      * @param msg A single message (i.e. request or reply)
-     * @throws MessageLibraryMismatchException 
+     * @throws MessageLibraryMismatchException see exception for more details
      */
     public void sendMessage(String msg) throws MessageLibraryMismatchException {
         if (sessionType == SessionType.SUBSCRIBER) {
@@ -166,7 +166,7 @@ public class Session implements AutoCloseable {
      * A low level message sending method, to send user-created messages.
      * 
      * @param msg A single message (i.e. request or reply)
-     * @throws MessageLibraryMismatchException 
+     * @throws MessageLibraryMismatchException see exception for more details
      */
     public void sendMessage(JsonRpcBaseMessage msg) throws MessageLibraryMismatchException {
         sendMessage(JsonRpcSerializer.toJson(msg));
@@ -178,7 +178,7 @@ public class Session implements AutoCloseable {
      * 
      * @param msg
      *            A list of messages (i.e. request or reply).
-     * @throws MessageLibraryMismatchException 
+     * @throws MessageLibraryMismatchException see exception for more details
      */
     public void sendMessage(List<JsonRpcBaseMessage> msg) throws MessageLibraryMismatchException {
         if (msg.isEmpty()) {

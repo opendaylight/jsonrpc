@@ -26,7 +26,7 @@
  * <pre>
  *
  * JsonPathCodec codec = JsonPathCodec.create();
- * HierarchicalEnumMap<JsonElement, Types, String, String> map = HierarchicalEnumHashMap.create(Types.class, codec);
+ * HierarchicalEnumMap&lt;JsonElement, Types, String, String&gt; map = HierarchicalEnumHashMap.create(Types.class, codec);
  *
  * map.lookup(path, Types.TYPE_A); // perform lookup
  *

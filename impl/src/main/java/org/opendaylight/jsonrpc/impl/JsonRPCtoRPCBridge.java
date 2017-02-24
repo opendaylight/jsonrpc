@@ -69,11 +69,11 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
     /**
      * Instantiates a new RPC Bridge
      *
-     * @param device the "device" name
+     * @param peer the peer name
      * @param schemaContext the schema context
-     * @param proxy proxy-service to create connections to device
-     * @param endpoint - initial point to start interrogation on who owns this
-     *            "device"
+     * @param pathMap endpoint mapping
+     * @param governance additional json rpc service to query for endpoints
+     * @param transportFactory - JSON RPC 2.0 transport factory
      * @throws URISyntaxException
      */
     public JsonRPCtoRPCBridge(@Nonnull Peer peer, @Nonnull SchemaContext schemaContext,

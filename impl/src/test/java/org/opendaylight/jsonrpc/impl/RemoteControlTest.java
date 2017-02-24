@@ -263,7 +263,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         retryAction(TimeUnit.SECONDS, 5, () -> ctrl.isTxMapEmpty() );
     }
 
-    @Test
+    @Ignore @Test
     public void testTxPutMergeDelete() throws Exception {
         //@formatter:off
         UUID uuid = UUID.fromString(ctrl.txid());

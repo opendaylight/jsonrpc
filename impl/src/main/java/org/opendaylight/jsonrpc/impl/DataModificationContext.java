@@ -46,8 +46,8 @@ public class DataModificationContext implements AutoCloseable {
     }
 
     /**
-     * Cancel all chained transactions. If no transaction has been allocated,
-     * return true.
+     * Cancel all chained transactions.
+     * @return true if no transaction has been allocated.
      */
     public boolean cancel() {
         try {
@@ -92,7 +92,7 @@ public class DataModificationContext implements AutoCloseable {
     }
 
     /**
-     * Return completion timestamp in UTC.
+     * @return completion timestamp in UTC.
      *
      * @see System#currentTimeMillis()
      */
@@ -110,7 +110,7 @@ public class DataModificationContext implements AutoCloseable {
     }
 
     /**
-     * Get immutable copy of errors, if no errors occurred, list is empty (never
+     * @return immutable copy of errors, if no errors occurred, list is empty (never
      * NULL)
      */
     @Nonnull

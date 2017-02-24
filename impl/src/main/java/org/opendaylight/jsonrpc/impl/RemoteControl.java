@@ -320,7 +320,7 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     }
 
     /**
-     * Overloaded version of {@link #read(int, int, JsonElement)}
+     * Overloaded version of {@link #read(int, String, JsonElement)}
      */
     @Override
     public JsonElement read(String store, String entity, JsonElement path) throws Exception {

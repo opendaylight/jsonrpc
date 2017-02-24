@@ -63,7 +63,7 @@ public class Util {
     }
 
     /**
-     * Same as {@link #createProxy(EndpointRole, Class, String)}, but using
+     * Same as {@link #createProxy(Class, String, int)}, but using
      * default timeout which is {@value #DEFAULT_TIMEOUT}.EndpointRole is
      * determined by 'role' query parameter, which is mandatory
      *
@@ -71,7 +71,7 @@ public class Util {
      * @param clazz interface to create proxy against
      * @param rawUri URI pointing to service
      * @return proxy instance of T
-     * @throws URISyntaxException
+     * @throws URISyntaxException when URI syntax is incorrect
      * @throws IllegalArgumentException when provided endpoint role is not
      *             allowed
      */
@@ -88,7 +88,7 @@ public class Util {
      * @param rawUri URI pointing to service
      * @param timeout connection timeout
      * @return proxy instance of T
-     * @throws URISyntaxException
+     * @throws URISyntaxException when URI syntax is incorrect
      * @throws IllegalArgumentException when provided endpoint role is not
      *             allowed
      */
@@ -99,7 +99,7 @@ public class Util {
 
     /**
      * <strong>This method is meant to be used by custom
-     * {@link TransportFactory}.</strong> <br/>
+     * TransportFactory.</strong> 
      * Create proxy of given interface. Allowed endpoint roles are PUB and
      * REQ.EndpointRole is determined by 'role' query parameter, which is
      * mandatory. It also allows to use custom {@link LoadingCache}
@@ -111,7 +111,7 @@ public class Util {
      * @param rawUri URI pointing to service
      * @param timeout connection timeout
      * @return proxy instance of T
-     * @throws URISyntaxException
+     * @throws URISyntaxException if URI syntax is incorrect
      * @throws IllegalArgumentException when provided endpoint role is not
      *             allowed
      */
@@ -139,7 +139,7 @@ public class Util {
      * @param rawUri URI
      * @param handler used to handle requests
      * @return {@link ThreadedSession}
-     * @throws URISyntaxException
+     * @throws URISyntaxException if URI syntax is incorrect
      */
     public static <T extends AutoCloseable> ThreadedSession createThreadedResponderSession(String rawUri, T handler)
             throws URISyntaxException {
@@ -148,7 +148,7 @@ public class Util {
 
     /**
      * <strong>This method is meant to be used by custom
-     * {@link TransportFactory}.</strong> <br/>
+     * TransportFactory.</strong> 
      * Create {@link ThreadedSession} of type {@link SessionType#RESPONDER} to
      * given URI. It also allows to use custom {@link LoadingCache}
      *
@@ -158,7 +158,7 @@ public class Util {
      * @param rawUri URI
      * @param handler used to handle requests
      * @return {@link ThreadedSession}
-     * @throws URISyntaxException
+     * @throws URISyntaxException if URI syntax is incorrect
      */
     public static <T extends AutoCloseable> ThreadedSession createThreadedResponderSession(
             LoadingCache<String, MessageLibrary> cache, String rawUri, T handler) throws URISyntaxException {
@@ -174,7 +174,7 @@ public class Util {
      * @param rawUri URI
      * @param handler used to handle requests
      * @return {@link ThreadedSession}
-     * @throws URISyntaxException
+     * @throws URISyntaxException if URI syntax is incorrect
      */
     public static <T extends AutoCloseable> ThreadedSession createThreadedSubscriberSession(String rawUri, T handler)
             throws URISyntaxException {
@@ -183,7 +183,7 @@ public class Util {
 
     /**
      * <strong>This method is meant to be used by custom
-     * {@link TransportFactory}.</strong> <br/>
+     * TransportFactory.</strong> 
      * Create {@link ThreadedSession} of type {@link SessionType#SUBSCRIBER} to
      * given URI
      *
@@ -193,7 +193,7 @@ public class Util {
      * @param rawUri URI
      * @param handler used to handle requests
      * @return {@link ThreadedSession}
-     * @throws URISyntaxException
+     * @throws URISyntaxException if URI syntax is incorrect
      */
     public static <T extends AutoCloseable> ThreadedSession createThreadedSubscriberSession(
             LoadingCache<String, MessageLibrary> cache, String rawUri, T handler) throws URISyntaxException {
@@ -270,7 +270,7 @@ public class Util {
      * that query already contains 'role' parameter, otherwise error will be
      * raised.
      *
-     * @param uri Service URI
+     * @param rawUri Service URI
      * @return {@link Session}
      */
     public static Session openSession(String rawUri) {
@@ -279,13 +279,13 @@ public class Util {
 
     /**
      * <strong>This method is meant to be used by custom
-     * {@link TransportFactory}.</strong> <br/>
+     * TransportFactory.</strong> 
      * Open {@link Session} to service at given URI. If query parameters within
      * URI didn't contain 'role' parameter, then roleStr argument will be used.
      *
      * @param cache {@link LoadingCache} used to get/create instances of
      *            {@link MessageLibrary}
-     * @param uri Service URI
+     * @param rawUri Service URI
      * @param roleStr Role, @see {@link EndpointRole}
      * @return {@link Session}
      * @throws IllegalArgumentException if given role is not recognized
@@ -323,7 +323,7 @@ public class Util {
      * Open {@link Session} to service at given URI. If query parameters within
      * URI didn't contain 'role' parameter, then roleStr argument will be used.
      *
-     * @param uri Service URI
+     * @param rawUri Service URI
      * @param roleStr Role, @see {@link EndpointRole}
      * @return {@link Session}
      * @throws IllegalArgumentException if given role is not recognized

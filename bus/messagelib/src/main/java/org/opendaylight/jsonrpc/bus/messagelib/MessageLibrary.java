@@ -45,6 +45,7 @@ public class MessageLibrary implements AutoCloseable {
      * Constructor which allows usage of custom
      * {@link TcclBusSessionFactoryProvider} to discover installed transports
      *
+     * @param bsfp Bus Session Factory Provider
      * @param busType bus type to get
      */
     public MessageLibrary(BusSessionFactoryProvider bsfp, String busType) {

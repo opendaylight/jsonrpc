@@ -18,7 +18,6 @@ import java.util.Optional;
  *            external path specification)
  * @param <K> enum type used as key
  * @param <D> type of data to associate with path in data tree
- * @param <I> internal tree-node identifier type
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */

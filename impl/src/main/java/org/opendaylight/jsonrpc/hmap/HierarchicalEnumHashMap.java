@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.google.common.base.Strings;
 
 /**
- * Implementation of {@link HierarchicalMap} which uses {@link HashMap}
+ * Implementation of a HierarchicalMap which uses {@link HashMap}
  * internally to perform child lookups and {@link EnumMap} for key-value
  * mapping.
  *

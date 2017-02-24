@@ -95,6 +95,7 @@ public class JsonConverter {
      *
      * @param qnames - a list of qnames pointing to the schema root
      * @param data - Normalized Node
+     * @return converted data argument as a JsonObject
      */
 
     public JsonObject doConvert(List<QName> qnames, NormalizedNode<?, ?> data) {
@@ -110,6 +111,7 @@ public class JsonConverter {
      *
      * @param path - Schema path for the rpc data.
      * @param data - Normalized Node argument as passed to the rpc
+     * @return data argument converted to JsonObject as expected by RPC calls
      */
     public JsonObject rpcConvert(SchemaPath path, ContainerNode data) {
         LOG.info("Converting node {} at path {}", data, path);
@@ -150,8 +152,9 @@ public class JsonConverter {
     /**
      * Performs the actual data conversion
      *
-     * @param qnames - a list of qnames pointing to the schema root
+     * @param schemaPath - schema path for data
      * @param data - Normalized Node
+     * @return data converted as a JsonObject
      */
     public JsonObject doConvert(SchemaPath schemaPath, NormalizedNode<?, ?> data) {
         final StringWriter writer = new StringWriter();
@@ -196,7 +199,7 @@ public class JsonConverter {
      *
      * @param path the YangInstanceIdentifier path
      * @param data the Data
-     * @param falg to control outer most element stripping
+     * @param strip to control outer most element stripping
      * @return an object containing a converted path and data
      *
      */
@@ -321,7 +324,7 @@ public class JsonConverter {
      * Convert bus received data to the ODL expected form.
      *
      * @param path the YangInstanceIdentifier path
-     * @param jsonString to prepend
+     * @param jsonElement to prepend
      * @return the prepended json string
      */
     public JsonObject busToODL(final YangInstanceIdentifier path, JsonElement jsonElement) {
