@@ -76,9 +76,15 @@ public class Util {
      * @return 0 for "config", 1 for "operational"
      */
     public static int store2int(final String store) {
-        final Integer s = STORE_STR_MAP.get(store);
-        Preconditions.checkNotNull(s, ERR_UNRECOGNIZED_STORE, store);
-        return s;
+        try {
+            /* Integer quoted as string - common JSON bugbear */
+            return Integer.parseInt(store);
+        } catch (NumberFormatException e) {
+            /* String representation of the datastore */
+            final Integer s = STORE_STR_MAP.get(store);
+            Preconditions.checkNotNull(s, ERR_UNRECOGNIZED_STORE, store);
+            return s;
+        }
     }
 
     /**

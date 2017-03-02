@@ -206,7 +206,6 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
      * @throws OperationFailedException
      */
     @Test
-    @Ignore
     public void testMerge() throws OperationFailedException {
         final BindingToNormalizedNodeCodec codec = NormalizedNodesHelper.getBindingToNormalizedNodeCodec();
         DOMDataWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
