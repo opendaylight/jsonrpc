@@ -49,6 +49,7 @@ import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.opendaylight.yangtools.yang.model.api.SchemaPath;
+import org.opendaylight.yangtools.yang.model.api.ContainerSchemaNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -136,6 +137,21 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
         }
     }
 
+    /* Perform a full check if a container node is null or empty
+     * ODL schema prior to 05 March 2017 returns nulls for empty
+     * input or output rpc statements. After that it returns
+     * empty containers.
+     * */
+    private boolean isNotEmpty(ContainerSchemaNode arg) {
+        if (arg == null) {
+            return false;
+        }
+        if (arg.getChildNodes().isEmpty()) {
+            return false;
+        }
+        return true;
+    }
+
     /* RPC Bridge functionality */
     @Nonnull
     @Override
@@ -146,7 +162,7 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
         final RpcState rpcState = Preconditions.checkNotNull(mappedRpcs.get(rpcQName.getLocalName()),
                 "Unknown rpc %s, available rpcs: %s", rpcQName, mappedRpcs.keySet());
         JsonObject jsonForm = null;
-        if (rpcState.rpc().getInput() != null) {
+        if (isNotEmpty(rpcState.rpc().getInput())) {
             Preconditions.checkArgument(input instanceof ContainerNode,
                     "Transforming an rpc with input: %s, payload has to be a container, but was: %s", rpcQName, input);
             jsonForm = jsonConverter.rpcConvert(rpcState.rpc().getInput().getPath(), (ContainerNode) input);
@@ -156,7 +172,7 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
 
         if (rpcState.lastError() == null) {
             final DOMRpcResult toODL;
-            if (rpcState.rpc().getOutput() != null) {
+            if (isNotEmpty(rpcState.rpc().getOutput())) {
                 final DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> resultBuilder = ImmutableContainerNodeBuilder
                         .create().withNodeIdentifier(NodeIdentifier.create(rpcState.rpc().getOutput().getQName()));
                 toODL = extractResult(rpcState, jsonResult, resultBuilder);

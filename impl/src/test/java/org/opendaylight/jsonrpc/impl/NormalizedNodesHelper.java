@@ -11,9 +11,9 @@ import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCo
 import org.opendaylight.yangtools.binding.data.codec.gen.impl.DataObjectSerializerGenerator;
 import org.opendaylight.yangtools.binding.data.codec.gen.impl.StreamWriterGenerator;
 import org.opendaylight.yangtools.binding.data.codec.impl.BindingNormalizedNodeCodecRegistry;
-import org.opendaylight.yangtools.sal.binding.generator.impl.GeneratedClassLoadingStrategy;
-import org.opendaylight.yangtools.sal.binding.generator.util.BindingRuntimeContext;
-import org.opendaylight.yangtools.sal.binding.generator.util.JavassistUtils;
+import org.opendaylight.mdsal.binding.generator.impl.GeneratedClassLoadingStrategy;
+import org.opendaylight.mdsal.binding.generator.util.BindingRuntimeContext;
+import org.opendaylight.mdsal.binding.generator.util.JavassistUtils;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
 import javassist.ClassPool;

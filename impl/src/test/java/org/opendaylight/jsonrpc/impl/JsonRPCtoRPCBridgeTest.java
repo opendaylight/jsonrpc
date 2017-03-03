@@ -141,7 +141,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "simple-method"));
         SchemaPath path = rpcPath(mod, "simple-method");
         DOMRpcResult result = bridge.invokeRpc(path, rpcDef).checkedGet();
-        LOG.info("RPC result : {}", result);
+        LOG.info("Simple RPC result : {}", result);
         assertTrue(result.getErrors().isEmpty());
         assertNull(result.getResult());
     }

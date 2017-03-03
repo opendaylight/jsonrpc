@@ -137,7 +137,6 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
         try {
             rootJson = jsonConverter.busToODL(path, omshard.read(store2str(store2int(store)), deviceName, arg.path));
         } catch (Exception e) {
-            LOG.error("Failed to read from om shard", e);
             return readFailure(e);
         }
 
@@ -181,6 +180,7 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
             try {
                 jsonParser.parse(new JsonReader(new StringReader(rootJson.toString())));
             } catch (IllegalArgumentException e) {
+                LOG.error("Failed to parse read data {}", rootJson.toString());
                 return readFailure(e);
             }
             final ListenableFuture<Optional<NormalizedNode<?, ?>>> future = Futures

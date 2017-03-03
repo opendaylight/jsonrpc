@@ -41,7 +41,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                     <instructions>
                         <Import-Package>
                             *,
-                            org.opendaylight.yangtools.sal.binding.generator.api
+                            org.opendaylight.mdsal.binding.generator.api
                         </Import-Package>
                     </instructions>
                 </configuration>

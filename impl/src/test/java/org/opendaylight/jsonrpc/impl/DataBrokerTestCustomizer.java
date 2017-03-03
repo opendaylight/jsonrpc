@@ -30,8 +30,8 @@ import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yangtools.binding.data.codec.gen.impl.DataObjectSerializerGenerator;
 import org.opendaylight.yangtools.binding.data.codec.gen.impl.StreamWriterGenerator;
 import org.opendaylight.yangtools.binding.data.codec.impl.BindingNormalizedNodeCodecRegistry;
-import org.opendaylight.yangtools.sal.binding.generator.impl.GeneratedClassLoadingStrategy;
-import org.opendaylight.yangtools.sal.binding.generator.util.JavassistUtils;
+import org.opendaylight.mdsal.binding.generator.impl.GeneratedClassLoadingStrategy;
+import org.opendaylight.mdsal.binding.generator.util.JavassistUtils;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
 import com.google.common.collect.ImmutableMap;

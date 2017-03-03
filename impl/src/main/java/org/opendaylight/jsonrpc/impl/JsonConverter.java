@@ -370,12 +370,18 @@ public class JsonConverter {
         result = new JsonObject();
         if (pathArg instanceof YangInstanceIdentifier.NodeIdentifierWithPredicates) {
             JsonArray asArray = new JsonArray();
-            asArray.add(jsonElement);
+            if (jsonElement != null && (!jsonElement.isJsonNull())) {
+                asArray.add(jsonElement);
+            } 
             result.add(rootKey, asArray);
         } else {
-            result.add(rootKey, jsonElement);
+            if (jsonElement != null && (!jsonElement.isJsonNull())) {
+                result.add(rootKey, jsonElement);
+            } else {
+                /* special case - read of empty container contents */
+                result.add(rootKey, new JsonObject());
+            }
         }
-
         return result;
     }
 

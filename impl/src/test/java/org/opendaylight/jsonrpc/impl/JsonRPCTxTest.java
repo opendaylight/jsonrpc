@@ -96,6 +96,19 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
     }
 
     @Test
+    public void test_read_null() throws Exception {
+        /* Special case - null read (allowed by RPC spec) should result in an empty container
+         * and no barfs on the ODL side */
+        final JsonElement elem = null;
+        doReturn(elem).when(om).read(eq(Util.store2str(Util.store2int(LogicalDatastoreType.OPERATIONAL))), eq(DEVICE_NAME),
+                any(JsonElement.class));
+        final CheckedFuture<Optional<NormalizedNode<?, ?>>, ReadFailedException> fopt = trx
+                .read(LogicalDatastoreType.OPERATIONAL, YangInstanceIdentifier.of(NetworkTopology.QNAME));
+
+        final NormalizedNode<?, ?> nn = fopt.checkedGet().get();
+        LOG.info("Read output : {}", nn);
+    }
+    @Test
     public void test_exists() throws Exception {
         doReturn(true).when(om).exists(anyString(), anyString(), any(JsonElement.class));
         assertTrue(trx.exists(LogicalDatastoreType.CONFIGURATION, YangInstanceIdentifier.of(NetworkTopology.QNAME))
