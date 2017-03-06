@@ -8,6 +8,7 @@
 package org.opendaylight.jsonrpc.impl;
 
 import static org.opendaylight.jsonrpc.impl.Util.store2int;
+import static org.opendaylight.jsonrpc.impl.Util.store2str;
 
 import java.util.Collections;
 import java.util.Map;
@@ -74,14 +75,14 @@ public class JsonRPCDataBroker implements DOMDataBroker, AutoCloseable {
             Util.populateFromEndpointList(pathMap, peer.getDataConfigEndpoints(), DataType.CONFIGURATION_DATA);
         } else {
             pathMap.put(TOP, DataType.CONFIGURATION_DATA,
-                    governance.governance(store2int(LogicalDatastoreType.CONFIGURATION), peer.getName(), TOP));
+                    governance.governance(store2str(store2int(LogicalDatastoreType.CONFIGURATION)), peer.getName(), TOP));
         }
 
         if (peer.getDataOperationalEndpoints() != null) {
             Util.populateFromEndpointList(pathMap, peer.getDataOperationalEndpoints(), DataType.OPERATIONAL_DATA);
         } else {
             pathMap.put(TOP, DataType.OPERATIONAL_DATA,
-                    governance.governance(store2int(LogicalDatastoreType.OPERATIONAL), peer.getName(), TOP));
+                    governance.governance(store2str(store2int(LogicalDatastoreType.OPERATIONAL)), peer.getName(), TOP));
         }
         LOG.info("Broker Instantiated for {}", peer.getName());
     }

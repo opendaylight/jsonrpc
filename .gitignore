@@ -1,0 +1,11 @@
+*.checkstyle
+*.class
+*.classpath
+*.diff
+*.log
+*.project
+*.settings
+*.swp
+*~
+.gitignore
+target
