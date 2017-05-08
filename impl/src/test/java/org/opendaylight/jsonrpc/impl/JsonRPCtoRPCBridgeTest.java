@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -40,6 +41,7 @@ import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
+import org.opendaylight.jsonrpc.model.RpcExceptionImpl;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpointsBuilder;
@@ -127,7 +129,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     public void testRpcUnknownMethod() throws Exception {
         NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "unknown-method"));
         SchemaPath path = rpcPath(mod, "unknown-method");
-        bridge.invokeRpc(path, rpcDef);
+        bridge.invokeRpc(path, rpcDef).checkedGet();
     }
 
     /**
@@ -268,7 +270,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      *
      * @throws Exception
      */
-    @Test(expected = DOMRpcException.class)
+    @Test(expected = RuntimeException.class)
     public void testRpcError() throws Exception {
         NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "error-method"));
         bridge.invokeRpc(rpcPath(mod, "error-method"), rpcDef).checkedGet();

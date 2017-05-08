@@ -55,17 +55,23 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.CheckedFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
+import java.util.concurrent.ArrayBlockingQueue;
 
 public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
+    private static final int maxQueueDepth = 64;
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCtoRPCBridge.class);
     private final SchemaContext schemaContext;
     private final JsonConverter jsonConverter;
     private final Collection<DOMRpcIdentifier> availableRpcs = new ArrayList<>();
     private final Map<String, RpcState> mappedRpcs = new HashMap<>();
+    private ArrayBlockingQueue<QueueElement> requestQueue;
+    private Thread requestProcessorThread;
+    private boolean shuttingDown = false;
 
     /**
      * Instantiates a new RPC Bridge
@@ -93,6 +99,9 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
         if (mappedRpcs.isEmpty()) {
             LOG.warn("No RPCs to map for " + peer.getName());
         }
+        requestQueue = new ArrayBlockingQueue(maxQueueDepth);
+        requestProcessorThread = new Thread(new RPCRequestProcessor(this));
+        requestProcessorThread.start();
         LOG.info("RPC bridge instantiated for {}", peer.getName());
     }
 
@@ -157,31 +166,78 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
     @Override
     public CheckedFuture<DOMRpcResult, DOMRpcException> invokeRpc(@Nonnull final SchemaPath type,
             @Nullable final NormalizedNode<?, ?> input) {
-        final QName rpcQName = type.getLastComponent();
-        LOG.debug("will invoke RPC {}", rpcQName.getLocalName());
-        final RpcState rpcState = Preconditions.checkNotNull(mappedRpcs.get(rpcQName.getLocalName()),
-                "Unknown rpc %s, available rpcs: %s", rpcQName, mappedRpcs.keySet());
-        JsonObject jsonForm = null;
-        if (isNotEmpty(rpcState.rpc().getInput())) {
-            Preconditions.checkArgument(input instanceof ContainerNode,
-                    "Transforming an rpc with input: %s, payload has to be a container, but was: %s", rpcQName, input);
-            jsonForm = jsonConverter.rpcConvert(rpcState.rpc().getInput().getPath(), (ContainerNode) input);
+
+        if (this.shuttingDown) {
+            return Futures.immediateFailedCheckedFuture(new RpcExceptionImpl("RPC Bridge shutting down"));
         }
 
-        final JsonElement jsonResult = rpcState.sendRequest(jsonForm);
+        SettableFuture<DOMRpcResult> futureResult = SettableFuture.create();
+        CheckedFuture<DOMRpcResult, DOMRpcException> postponedResult = JsonRPCDOMRpcResultFuture.create(futureResult);
+        try {
+            requestQueue.put(
+                new QueueElement(
+                    type,
+                    input,
+                    (JsonRPCDOMRpcResultFuture) postponedResult
+                )
+            );
+        } catch (java.lang.InterruptedException e) {
+            return Futures.immediateFailedCheckedFuture(new RpcExceptionImpl(e.getMessage()));
+        }
+        return postponedResult;
+    }
 
-        if (rpcState.lastError() == null) {
-            final DOMRpcResult toODL;
-            if (isNotEmpty(rpcState.rpc().getOutput())) {
-                final DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> resultBuilder = ImmutableContainerNodeBuilder
-                        .create().withNodeIdentifier(NodeIdentifier.create(rpcState.rpc().getOutput().getQName()));
-                toODL = extractResult(rpcState, jsonResult, resultBuilder);
-            } else {
-                toODL = new DefaultDOMRpcResult((NormalizedNode<?, ?>) null);
+    /* Dequeue element (used by the RPC worker thread)#
+     *
+     * @return next QueueElement to process or block until one becomes available
+     *
+     * */
+
+    public QueueElement deQueue() throws java.lang.InterruptedException {
+        return requestQueue.take();
+    }
+
+    /* Mark all remaining queue elements in the queue as cancelled
+     * provide an exception to be thrown if the upper layers asks for any
+     * of them
+     * */
+    public void flushQueue() {
+        QueueElement request = requestQueue.poll();
+        while (request != null) {
+            request.getJsonRPCFuture().setException(new RpcExceptionImpl("Execution interrupted due to broker shutdown"));
+        }
+    }
+
+    public void doInvokeRpc(QueueElement request) {
+        final QName rpcQName = request.getType().getLastComponent();
+        LOG.debug("will invoke RPC {}", rpcQName.getLocalName());
+        JsonObject jsonForm = null;
+        try {
+            RpcState rpcState = Preconditions.checkNotNull(mappedRpcs.get(rpcQName.getLocalName()),
+                    "Unknown rpc %s, available rpcs: %s", rpcQName, mappedRpcs.keySet());
+            if (isNotEmpty(rpcState.rpc().getInput())) {
+                Preconditions.checkArgument(request.getInput() instanceof ContainerNode,
+                        "Transforming an rpc with input: %s, payload has to be a container, but was: %s", rpcQName, request.getInput());
+                jsonForm = jsonConverter.rpcConvert(rpcState.rpc().getInput().getPath(), (ContainerNode) request.getInput());
             }
-            return Futures.immediateCheckedFuture(toODL);
-        } else {
-            return Futures.immediateFailedCheckedFuture(new RpcExceptionImpl(rpcState.lastError().getMessage()));
+            final JsonElement jsonResult = rpcState.sendRequest(jsonForm);
+
+            if (rpcState.lastError() == null) {
+                final DOMRpcResult toODL;
+                if (isNotEmpty(rpcState.rpc().getOutput())) {
+                    final DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> resultBuilder = ImmutableContainerNodeBuilder
+                        .create().withNodeIdentifier(NodeIdentifier.create(rpcState.rpc().getOutput().getQName()));
+                    toODL = extractResult(rpcState, jsonResult, resultBuilder);
+                } else {
+                    toODL = new DefaultDOMRpcResult((NormalizedNode<?, ?>) null);
+                }
+                request.getJsonRPCFuture().set(toODL);
+            } else {
+                request.getJsonRPCFuture().setException(new RpcExceptionImpl(rpcState.lastError().getMessage()));
+            }
+        } catch (Exception e) {
+            request.getJsonRPCFuture().setException(e);
+            return;
         }
     }
 
@@ -238,6 +294,50 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
 
     @Override
     public void close() {
+        this.shuttingDown = true;
+        requestProcessorThread.interrupt();
+        try {
+            requestProcessorThread.join();
+        } catch (java.lang.InterruptedException e) {
+            // Do nothing - this gets us out of the loop
+        }
         mappedRpcs.clear();
+    }
+
+    private class RPCRequestProcessor implements Runnable {
+        private JsonRPCtoRPCBridge bridge;
+
+        RPCRequestProcessor(JsonRPCtoRPCBridge bridge) {
+            this.bridge = bridge;
+        }
+        public void run() {
+            try {
+                while (true) { 
+                    bridge.doInvokeRpc(bridge.deQueue());
+                }
+            } catch (java.lang.InterruptedException e) {
+                bridge.flushQueue();
+            }
+        }
+    }
+
+    private class QueueElement {
+        final SchemaPath type;
+        final NormalizedNode<?, ?> input;
+        JsonRPCDOMRpcResultFuture jsonRPCFuture;
+        QueueElement(final SchemaPath type, final NormalizedNode<?, ?> input, JsonRPCDOMRpcResultFuture jsonRPCFuture) {
+            this.type = type;
+            this.input = input;
+            this.jsonRPCFuture = jsonRPCFuture;
+        }
+        SchemaPath getType() {
+            return this.type;
+        }
+        NormalizedNode<?, ?> getInput() {
+            return this.input;
+        } 
+        JsonRPCDOMRpcResultFuture getJsonRPCFuture() {
+            return this.jsonRPCFuture;
+        }
     }
 }
