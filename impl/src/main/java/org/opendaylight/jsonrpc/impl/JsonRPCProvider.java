@@ -21,8 +21,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import java.util.stream.Collectors;
 
-import javax.annotation.concurrent.GuardedBy;
-
 import org.opendaylight.controller.md.sal.binding.api.ClusteredDataTreeChangeListener;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
@@ -238,8 +236,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
      * Performs reconciliation between our internal mount state and the
      * datastore upon startup and after receiving a DCN.
      */
-    @GuardedBy("changeLock")
-    private boolean processNotification() {
+    private synchronized boolean processNotification() {
         final WriteLock wLock = changeLock.writeLock();
         try {
             wLock.lock();

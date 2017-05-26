@@ -12,9 +12,6 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.jsonrpc.bus.messagelib.EndpointRole;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
@@ -105,7 +102,7 @@ public class Util {
      * @param store Logical Data Store
      * @return 0 for config, 1 for operational
      */
-    public static int store2int(@Nonnull final LogicalDatastoreType store) {
+    public static int store2int(final LogicalDatastoreType store) {
         Preconditions.checkNotNull(store);
         final Integer ldt = STORE_MAP.inverse().get(store);
         Preconditions.checkNotNull(ldt, ERR_UNRECOGNIZED_STORE, store);
@@ -117,7 +114,7 @@ public class Util {
      * @param closeable - an autocloseable to close
      * @throws java.lang.Exception
      */
-    public static void closeNullable(@Nullable AutoCloseable closeable) throws Exception {
+    public static void closeNullable(AutoCloseable closeable) throws Exception {
         if (closeable != null) {
             closeable.close();
         }
@@ -186,8 +183,8 @@ public class Util {
      * @param callback Callback to be invoked when exception occur, must not be
      *            null
      */
-    public static void closeNullableWithExceptionCallback(@Nullable AutoCloseable closeable,
-            @Nonnull Consumer<Exception> callback) {
+    public static void closeNullableWithExceptionCallback(AutoCloseable closeable,
+            Consumer<Exception> callback) {
         if (closeable != null) {
             try {
                 closeable.close();

@@ -9,8 +9,6 @@ package org.opendaylight.jsonrpc.impl;
 
 import java.io.ByteArrayInputStream;
 
-import javax.annotation.Nonnull;
-
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.SchemaContextProvider;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
@@ -38,7 +36,7 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
     private static final Logger LOG = LoggerFactory.getLogger(GovernanceSchemaContextProvider.class);
     private final RemoteGovernance governance;
 
-    public GovernanceSchemaContextProvider(@Nonnull final RemoteGovernance governance) {
+    public GovernanceSchemaContextProvider(final RemoteGovernance governance) {
         this.governance = Preconditions.checkNotNull(governance);
     }
 

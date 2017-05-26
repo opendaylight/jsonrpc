@@ -13,6 +13,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <repository>mvn:org.opendaylight.yangtools/features-yangtools/{{VERSION}}/xml/features</repository>
     <repository>mvn:org.opendaylight.odlparent/features-odlparent/{{VERSION}}/xml/features</repository>
     <feature name='odl-jsonrpc' version='${project.version}' description='OpenDaylight :: JSON-RPC'>
+        <bundle>mvn:com.google.guava/guava/${guava.version}</bundle>
         <bundle>mvn:org.opendaylight.jsonrpc/jsonrpc-impl/${project.version}</bundle>
         <bundle>mvn:org.opendaylight.jsonrpc/jsonrpc-api/${project.version}</bundle>
         <feature>odl-yangtools-yang-data</feature>
@@ -21,6 +22,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     </feature>
 
     <feature name='odl-jsonrpc-bus' version='${project.version}' description='OpenDaylight :: JSON-RPC :: Bus'>
+        <bundle>mvn:com.google.guava/guava/${guava.version}</bundle>
         <bundle dependency="true">mvn:com.google.code.gson/gson/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.jsonrpc.bus/bus-messagelib/${project.version}</bundle>
         <bundle>mvn:org.opendaylight.jsonrpc.bus/bus-jsonrpc/${project.version}</bundle>

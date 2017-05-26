@@ -16,7 +16,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.annotation.Nonnull;
 
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
@@ -31,7 +30,7 @@ public class DataModificationContext implements AutoCloseable {
     private List<DOMDataWriteTransaction> txs = new ArrayList<>();
     private final AtomicLong completed = new AtomicLong(-1);
 
-    public DataModificationContext(@Nonnull final TransactionFactory transactionFactory) {
+    public DataModificationContext(final TransactionFactory transactionFactory) {
         Objects.requireNonNull(transactionFactory);
         txs.add(transactionFactory.get());
     }
@@ -113,7 +112,6 @@ public class DataModificationContext implements AutoCloseable {
      * @return immutable copy of errors, if no errors occurred, list is empty (never
      * NULL)
      */
-    @Nonnull
     public List<Throwable> getErrors() {
         return ImmutableList.copyOf(errors);
     }

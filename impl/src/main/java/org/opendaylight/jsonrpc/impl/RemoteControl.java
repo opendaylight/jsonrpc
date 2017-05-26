@@ -26,9 +26,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nonnull;
-import javax.annotation.concurrent.GuardedBy;
-
 import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodec;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadOnlyTransaction;
@@ -61,13 +58,13 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     // Time-to-live for failed transactions
     private static final long TRX_TTL_MILLIS = 900000; // 15 minutes
 
-    public RemoteControl(@Nonnull final DOMDataBroker domDataBroker, @Nonnull final SchemaContext schemaContext,
-            @Nonnull final BindingToNormalizedNodeCodec codec) {
+    public RemoteControl(final DOMDataBroker domDataBroker, final SchemaContext schemaContext,
+            final BindingToNormalizedNodeCodec codec) {
         this(domDataBroker, schemaContext, codec, 90000);
     }
 
-    public RemoteControl(@Nonnull final DOMDataBroker domDataBroker, @Nonnull final SchemaContext schemaContext,
-            @Nonnull final BindingToNormalizedNodeCodec codec, long cleanupIntervalMilliseconds) {
+    public RemoteControl(final DOMDataBroker domDataBroker, final SchemaContext schemaContext,
+            final BindingToNormalizedNodeCodec codec, long cleanupIntervalMilliseconds) {
         this.domDataBroker = Objects.requireNonNull(domDataBroker);
         this.schemaContext = Objects.requireNonNull(schemaContext);
         this.jsonConverter = new JsonConverter(schemaContext);
@@ -149,7 +146,6 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
         trx.delete(int2store(store), pathAsIId);
     }
 
-    @GuardedBy("trxGuard")
     @Override
     public boolean commit(String txId) {
         LOG.debug("COMMIT : {}", txId);
@@ -275,7 +271,6 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
      * exception is thrown. By fact that UUID#randomUUID() uses
      * cryptographically strong PRNG, such situation is almost hypothetical only
      */
-    @GuardedBy("trxGuard")
     private Entry<String, DataModificationContext> allocateTrx(String txId) {
         final Entry<String, DataModificationContext> ret;
         UUID uuid;

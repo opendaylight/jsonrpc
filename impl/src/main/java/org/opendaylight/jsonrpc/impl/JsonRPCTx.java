@@ -17,8 +17,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.annotation.Nonnull;
-
 import org.opendaylight.controller.md.sal.common.api.TransactionStatus;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
@@ -83,9 +81,9 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
      * @param jsonConverter the conversion janitor instance
      * @param schemaContext the schema context
      */
-    public JsonRPCTx(@Nonnull TransportFactory transportFactory, @Nonnull String deviceName,
-            @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull JsonConverter jsonConverter,
-            @Nonnull SchemaContext schemaContext) {
+    public JsonRPCTx(TransportFactory transportFactory, String deviceName,
+            HierarchicalEnumMap<JsonElement, DataType, String> pathMap, JsonConverter jsonConverter,
+            SchemaContext schemaContext) {
         this.transportFactory = Preconditions.checkNotNull(transportFactory);
         Preconditions.checkArgument(!Strings.isNullOrEmpty(deviceName), "Peer name is missing");
         this.deviceName = deviceName;

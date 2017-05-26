@@ -15,8 +15,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-
 import org.opendaylight.controller.md.sal.dom.api.DOMNotification;
 import org.opendaylight.controller.md.sal.dom.api.DOMNotificationListener;
 import org.opendaylight.controller.md.sal.dom.api.DOMNotificationService;
@@ -63,9 +61,9 @@ public class JsonRPCNotificationService implements DOMNotificationService, Notif
     private final SchemaContext schemaContext;
     private final Map<String, NotificationState> mappedNotifications = new HashMap<>();
 
-    public JsonRPCNotificationService(@Nonnull Peer peer, @Nonnull SchemaContext schemaContext,
-            @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
-            @Nonnull TransportFactory transportFactory, @Nonnull RemoteGovernance governance)
+    public JsonRPCNotificationService(Peer peer, SchemaContext schemaContext,
+            HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
+            TransportFactory transportFactory, RemoteGovernance governance)
             throws URISyntaxException {
         this.schemaContext = Preconditions.checkNotNull(schemaContext);
         Preconditions.checkNotNull(peer);
@@ -143,7 +141,7 @@ public class JsonRPCNotificationService implements DOMNotificationService, Notif
 
     @Override
     public synchronized <T extends DOMNotificationListener> ListenerRegistration<T> registerNotificationListener(
-            @Nonnull final T listener, @Nonnull final Collection<SchemaPath> types) {
+            final T listener, final Collection<SchemaPath> types) {
         for (final SchemaPath type : types) {
             listeners.put(type, listener);
         }
@@ -165,7 +163,7 @@ public class JsonRPCNotificationService implements DOMNotificationService, Notif
 
     @Override
     public synchronized <T extends DOMNotificationListener> ListenerRegistration<T> registerNotificationListener(
-            @Nonnull final T listener, final SchemaPath... types) {
+            final T listener, final SchemaPath... types) {
         return registerNotificationListener(listener, Lists.newArrayList(types));
     }
 

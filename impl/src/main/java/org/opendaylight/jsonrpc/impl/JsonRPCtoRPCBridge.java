@@ -16,9 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcAvailabilityListener;
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcException;
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcIdentifier;
@@ -83,9 +80,9 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
      * @param transportFactory - JSON RPC 2.0 transport factory
      * @throws URISyntaxException
      */
-    public JsonRPCtoRPCBridge(@Nonnull Peer peer, @Nonnull SchemaContext schemaContext,
-            @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull RemoteGovernance governance,
-            @Nullable TransportFactory transportFactory) throws URISyntaxException {
+    public JsonRPCtoRPCBridge(Peer peer, SchemaContext schemaContext,
+            HierarchicalEnumMap<JsonElement, DataType, String> pathMap, RemoteGovernance governance,
+            TransportFactory transportFactory) throws URISyntaxException {
         /* Endpoints via configuration */
         if (peer.getRpcEndpoints() != null) {
             Util.populateFromEndpointList(pathMap, peer.getRpcEndpoints(), DataType.RPC);
@@ -162,10 +159,9 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
     }
 
     /* RPC Bridge functionality */
-    @Nonnull
     @Override
-    public CheckedFuture<DOMRpcResult, DOMRpcException> invokeRpc(@Nonnull final SchemaPath type,
-            @Nullable final NormalizedNode<?, ?> input) {
+    public CheckedFuture<DOMRpcResult, DOMRpcException> invokeRpc(final SchemaPath type,
+            final NormalizedNode<?, ?> input) {
 
         if (this.shuttingDown) {
             return Futures.immediateFailedCheckedFuture(new RpcExceptionImpl("RPC Bridge shutting down"));
@@ -272,10 +268,9 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
         return new DefaultDOMRpcResult(RpcResultBuilder.newError(ErrorType.RPC, "internal-error", e.getMessage()));
     }
 
-    @Nonnull
     @Override
     public <T extends DOMRpcAvailabilityListener> ListenerRegistration<T> registerRpcListener(
-            @Nonnull final T listener) {
+            final T listener) {
         LOG.info("registered RPC implementation for json rpc broker");
         listener.onRpcAvailable(availableRpcs);
 

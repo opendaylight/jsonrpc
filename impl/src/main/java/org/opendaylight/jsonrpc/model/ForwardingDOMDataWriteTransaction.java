@@ -9,8 +9,6 @@ package org.opendaylight.jsonrpc.model;
 
 import java.util.Objects;
 
-import javax.annotation.Nonnull;
-
 import org.opendaylight.controller.md.sal.common.api.TransactionStatus;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
@@ -33,7 +31,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 public class ForwardingDOMDataWriteTransaction implements DOMDataWriteTransaction {
     protected DOMDataWriteTransaction delegate;
 
-    public ForwardingDOMDataWriteTransaction(@Nonnull DOMDataWriteTransaction delegate) {
+    public ForwardingDOMDataWriteTransaction(DOMDataWriteTransaction delegate) {
         this.delegate = Objects.requireNonNull(delegate);
     }
 

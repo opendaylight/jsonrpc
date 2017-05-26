@@ -10,8 +10,6 @@ package org.opendaylight.jsonrpc.impl;
 import java.net.URISyntaxException;
 import java.util.Objects;
 
-import javax.annotation.Nonnull;
-
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
@@ -70,9 +68,9 @@ public class MappedPeerContext implements AutoCloseable {
     private final DataBroker dataBroker;
     private final YangInstanceIdentifier biPath;
 
-    public MappedPeerContext(@Nonnull Peer peer, @Nonnull TransportFactory transportFactory,
-            @Nonnull SchemaContextProvider schemaContextProvider, @Nonnull DataBroker dataBroker,
-            @Nonnull DOMMountPointService mountService, @Nonnull RemoteGovernance governance)
+    public MappedPeerContext(Peer peer, TransportFactory transportFactory,
+            SchemaContextProvider schemaContextProvider, DataBroker dataBroker,
+            DOMMountPointService mountService, RemoteGovernance governance)
             throws URISyntaxException {
         this.peer = Objects.requireNonNull(peer);
         this.dataBroker = Objects.requireNonNull(dataBroker);

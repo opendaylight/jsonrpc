@@ -13,8 +13,6 @@ import static org.opendaylight.jsonrpc.impl.Util.store2str;
 import java.util.Collections;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
@@ -62,9 +60,9 @@ public class JsonRPCDataBroker implements DOMDataBroker, AutoCloseable {
      *            governance info
      * @see DOMDataBroker
      */
-    public JsonRPCDataBroker(@Nonnull Peer peer, @Nonnull SchemaContext schemaContext,
-            @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
-            @Nonnull TransportFactory transportFactory, @Nonnull RemoteGovernance governance) {
+    public JsonRPCDataBroker(Peer peer, SchemaContext schemaContext,
+            HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
+            TransportFactory transportFactory, RemoteGovernance governance) {
         this.peer = Preconditions.checkNotNull(peer);
         this.schemaContext = Preconditions.checkNotNull(schemaContext);
         this.jsonConverter = new JsonConverter(schemaContext);

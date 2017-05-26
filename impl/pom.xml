@@ -12,12 +12,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <parent>
         <groupId>org.opendaylight.odlparent</groupId>
         <artifactId>bundle-parent</artifactId>
-        <version>1.8.0-SNAPSHOT</version>
+        <version>1.7.4-SNAPSHOT</version>
         <relativePath />
     </parent>
     <groupId>org.opendaylight.jsonrpc</groupId>
     <artifactId>jsonrpc-impl</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.9.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>JSON-RPC :: Implementation</name>
     <dependencyManagement>
@@ -41,9 +41,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                     <instructions>
                         <Import-Package>
                             *,
-                            org.opendaylight.mdsal.binding.generator.api
+                            org.opendaylight.yangtools.sal.binding.generator.api
                         </Import-Package>
-                    </instructions>
+                     </instructions>
                 </configuration>
             </plugin>
         </plugins>
@@ -96,6 +96,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <dependency>
             <groupId>org.opendaylight.mdsal</groupId>
             <artifactId>mdsal-common-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.mdsal</groupId>
+            <artifactId>mdsal-binding-generator-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -177,13 +182,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <dependency>
             <groupId>org.opendaylight.jsonrpc.bus</groupId>
             <artifactId>transport-zmq</artifactId>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.jsonrpc.bus</groupId>
             <artifactId>bus-messagelib</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

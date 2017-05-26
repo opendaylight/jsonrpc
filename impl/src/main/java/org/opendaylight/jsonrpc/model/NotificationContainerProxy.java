@@ -65,6 +65,11 @@ public final class NotificationContainerProxy implements ContainerSchemaNode {
     public DataSchemaNode getDataChildByName(final QName qName) {
         return childNodes.get(qName);
     }
+    @Override
+    @Deprecated
+    public DataSchemaNode getDataChildByName(String name) {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public Set<UsesNode> getUses() {
