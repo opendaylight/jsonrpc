@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 /**
@@ -93,6 +95,12 @@ public abstract class JsonRpcBaseMessage {
         if (cls.isInstance(elem)) {
             return (T) elem; 
         } 
+        if (JsonArray.class == cls) {
+            return (T) elem.getAsJsonArray();
+        }
+        if (JsonObject.class == cls) {
+            return (T) elem.getAsJsonObject();
+        }
         try {
             return gson.fromJson(gson.toJson(elem), cls);
         } catch (Exception e) {
