@@ -17,7 +17,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
-import org.opendaylight.yangtools.yang.parser.stmt.reactor.EffectiveSchemaContext;
+import org.opendaylight.yangtools.yang.model.util.SimpleSchemaContext;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
@@ -55,6 +55,6 @@ public class BuiltinSchemaContextProvider implements SchemaContextProvider {
                 .forEach(m -> resolved.addAll(m.getImports().stream()
                         .map(mi -> schemaContext.findModuleByName(mi.getModuleName(), mi.getRevision()))
                         .collect(Collectors.toSet())));
-        return EffectiveSchemaContext.resolveSchemaContext(resolved);
+        return SimpleSchemaContext.forModules(resolved);
     }
 }
