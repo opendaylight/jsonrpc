@@ -9,6 +9,7 @@ package org.opendaylight.jsonrpc.bus.jsonrpc;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /**
  * This represents the JSON RPC Request Message. This can be a received message,
@@ -25,14 +26,24 @@ public class JsonRpcRequestMessage extends JsonRpcBaseMessage {
         // Fill fields later.
     }
 
-    public JsonRpcRequestMessage(String jsonrpc, JsonElement id) {
-        super(jsonrpc, id);
+    public JsonRpcRequestMessage(String jsonrpc, JsonElement id, JsonObject metadata) {
+        super(jsonrpc, id, metadata);
     }
 
     public JsonRpcRequestMessage(String jsonrpc, JsonElement id, String method, JsonElement params) {
-        super(jsonrpc, id);
+        super(jsonrpc, id, null);
         this.method = method;
         this.params = params;
+    }
+
+    public JsonRpcRequestMessage(String jsonrpc, JsonElement id, String method, JsonElement params, JsonObject metadata) {
+        super(jsonrpc, id, metadata);
+        this.method = method;
+        this.params = params;
+    }
+
+    public JsonRpcRequestMessage(JsonElement id, String method, JsonElement params, JsonObject metadata) {
+        this(VERSION, id, method, params, metadata);
     }
 
     public JsonRpcRequestMessage(JsonElement id, String method, JsonElement params) {

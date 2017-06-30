@@ -19,6 +19,7 @@ import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 public class RpcState {
     private String name;
@@ -44,14 +45,26 @@ public class RpcState {
         return this.handler.getResult();
     }
 
+    public JsonObject lastMetadata() {
+        if ( this.handler.getMetadata() != null) {
+            return this.handler.getMetadata().getAsJsonObject();
+        } else {
+            return null;
+        }
+    }
+
     public JsonRpcErrorObject lastError() {
         return this.handler.getError();
     }
 
-    public JsonElement sendRequest(JsonElement argument) {
+    public JsonElement sendRequest(JsonElement argument, JsonObject metadata) {
         /* we will refine the handling here later */
         try {
-            this.client.sendRequest(this.name, argument);
+            if (metadata == null) {
+                this.client.sendRequest(this.name, argument);
+            } else {
+                this.client.sendRequest(this.name, argument, metadata);
+            }
             int replyCount = this.client.handleIncomingMessage();
             if (replyCount > 0) {
                 return this.lastMessage();

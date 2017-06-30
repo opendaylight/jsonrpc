@@ -40,6 +40,9 @@ public class JsonRpcReplyMessageSerializer extends Object implements JsonSeriali
         if (src.getResult() != null) {
             obj.add(JsonRpcConstants.RESULT, src.getResult());
         }
+        if (src.getMetadata() != null) {
+            obj.add(JsonRpcConstants.METADATA, src.getMetadata());
+        }
         return obj;
     }
 }
