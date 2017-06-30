@@ -13,19 +13,15 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <repository>mvn:org.opendaylight.yangtools/features-yangtools/{{VERSION}}/xml/features</repository>
     <repository>mvn:org.opendaylight.odlparent/features-odlparent/{{VERSION}}/xml/features</repository>
     <feature name='odl-jsonrpc' version='${project.version}' description='OpenDaylight :: JSON-RPC'>
+        <bundle dependency="true">mvn:com.google.code.gson/gson/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.jsonrpc/jsonrpc-impl/${project.version}</bundle>
         <bundle>mvn:org.opendaylight.jsonrpc/jsonrpc-api/${project.version}</bundle>
-        <feature>odl-yangtools-yang-data</feature>
-        <feature>odl-jsonrpc-bus</feature>
-        <feature>odl-restconf-all</feature>
-    </feature>
-
-    <feature name='odl-jsonrpc-bus' version='${project.version}' description='OpenDaylight :: JSON-RPC :: Bus'>
-        <bundle dependency="true">mvn:com.google.code.gson/gson/{{VERSION}}</bundle>
         <bundle>mvn:org.opendaylight.jsonrpc.bus/bus-messagelib/${project.version}</bundle>
         <bundle>mvn:org.opendaylight.jsonrpc.bus/bus-jsonrpc/${project.version}</bundle>
         <bundle>mvn:org.opendaylight.jsonrpc.bus/bus-api/${project.version}</bundle>
         <bundle>mvn:org.opendaylight.jsonrpc.bus/transport-zmq/${project.version}</bundle>
         <bundle>mvn:org.zeromq/jeromq/{{VERSION}}</bundle>
+        <feature>odl-yangtools-yang-data</feature>
+        <feature>odl-restconf-all</feature>
     </feature>
 </features>
