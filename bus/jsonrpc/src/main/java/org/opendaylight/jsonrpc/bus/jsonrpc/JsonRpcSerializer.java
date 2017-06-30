@@ -69,7 +69,11 @@ public class JsonRpcSerializer {
                 return new JsonRpcMessageError(id, -32700, "Reply has both error and result", null);
             } else {
                 // Valid result message
-                return new JsonRpcReplyMessage(id, obj.get(JsonRpcConstants.RESULT));
+                if (obj.has(JsonRpcConstants.METADATA)) {
+                    return new JsonRpcReplyMessage(id, obj.get(JsonRpcConstants.RESULT), obj.get(JsonRpcConstants.METADATA).getAsJsonObject());
+                } else {
+                    return new JsonRpcReplyMessage(id, obj.get(JsonRpcConstants.RESULT));
+                }
             }
         } else if (obj.has(JsonRpcConstants.ERROR)) {
             // Valid error message
@@ -85,8 +89,13 @@ public class JsonRpcSerializer {
         if (obj.has(JsonRpcConstants.ERROR) || obj.has(JsonRpcConstants.RESULT)) {
             return new JsonRpcMessageError(id, -32700, "Request message has error or result", null);
         } else {
-            return new JsonRpcRequestMessage(id, obj.get(JsonRpcConstants.METHOD).getAsString(),
-                    obj.get(JsonRpcConstants.PARAMS));
+            if (obj.has(JsonRpcConstants.METADATA)) {
+                return new JsonRpcRequestMessage(id, obj.get(JsonRpcConstants.METHOD).getAsString(),
+                        obj.get(JsonRpcConstants.PARAMS),  obj.get(JsonRpcConstants.METADATA).getAsJsonObject());
+            } else {
+                return new JsonRpcRequestMessage(id, obj.get(JsonRpcConstants.METHOD).getAsString(),
+                        obj.get(JsonRpcConstants.PARAMS));
+            }
         }
     }
 

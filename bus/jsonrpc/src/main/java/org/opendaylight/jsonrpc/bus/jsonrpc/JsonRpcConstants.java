@@ -17,6 +17,7 @@ public class JsonRpcConstants {
     public static final String CODE = "code";
     public static final String MESSAGE = "message";
     public static final String DATA = "data";
+    public static final String METADATA = "metadata";
 
     private JsonRpcConstants() {
         // do not call constructor

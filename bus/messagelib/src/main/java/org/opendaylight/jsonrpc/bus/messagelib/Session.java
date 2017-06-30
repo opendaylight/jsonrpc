@@ -83,7 +83,6 @@ public class Session implements AutoCloseable {
      * This method is used to send requests or notification messages. If the
      * channel is PUBLISHER, the message is assumed to be notification. If the
      * channel is REQUESTER, the message is assumed to be request.
-     * 
      * @param method The method to which this request or notification is
      *            directed at.
      * @param params Optional parameters. Can be a single object or an array.
@@ -113,6 +112,44 @@ public class Session implements AutoCloseable {
 
         return;
     }
+    /**
+     * This method is used to send requests or notification messages. If the
+     * channel is PUBLISHER, the message is assumed to be notification. If the
+     * channel is REQUESTER, the message is assumed to be request.
+     * 
+     * @param method The method to which this request or notification is
+     *            directed at.
+     * @param params Optional parameters. Can be a single object or an array.
+     * @param metadata Optional metadata. Should be a single object
+     * @throws MessageLibraryMismatchException If this is called for a session
+     *             that does not support sending messges.
+     */
+    public void sendRequest(String method, Object params, JsonObject metadata) throws MessageLibraryMismatchException {
+        // Check if we have valid session
+        if ((sessionType == SessionType.SUBSCRIBER) || (sessionType == SessionType.RESPONDER)) {
+            throw new MessageLibraryMismatchException("Send not supported for this session.");
+        }
+
+        // Build Request
+        JsonRpcRequestMessage request = new JsonRpcRequestMessage();
+        request.setDefaultJsonrpc();
+        request.setMethod(method);
+
+        if (sessionType != SessionType.PUBLISHER) {
+            request.setIdAsIntValue(newId());
+        }
+
+        if (params != null) {
+            request.setParamsAsObject(params);
+        }
+
+        if (metadata != null) {
+            request.setMetadata(metadata);
+        }
+        sendMessage(request);
+
+        return;
+    }
 
     /**
      * Sends a reply message with a result.
@@ -130,6 +167,23 @@ public class Session implements AutoCloseable {
         sendMessage(reply);
     }
 
+    /**
+     * Sends a reply message with a result, provide metadata support
+     * 
+     * @param id The id of the request which generated this reply.
+     * @param result The result object.
+     * @param metadata The metadata object.
+     * @throws MessageLibraryMismatchException see exception for more details
+     */
+    public void sendReplyWithResult(JsonElement id, Object result, JsonObject metadata) throws MessageLibraryMismatchException {
+        // Build Result Reply
+        JsonRpcReplyMessage reply = new JsonRpcReplyMessage();
+        reply.setDefaultJsonrpc();
+        reply.setId(id);
+        reply.setResultAsObject(result);
+        reply.setMetadata(metadata);
+        sendMessage(reply);
+    }
     /**
      * Sends a reply message with an error response.
      * 

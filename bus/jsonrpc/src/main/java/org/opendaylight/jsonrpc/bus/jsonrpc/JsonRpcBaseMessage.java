@@ -32,6 +32,7 @@ public abstract class JsonRpcBaseMessage {
     protected static final String VERSION_SHORT = "2";
     protected String jsonrpc;
     protected JsonElement id;
+    protected JsonObject metadata;
 
     public enum JsonRpcMessageType {
         REQUEST,      // A request which expects a reply
@@ -50,12 +51,26 @@ public abstract class JsonRpcBaseMessage {
         this.id = id;
     }
 
+    public JsonRpcBaseMessage(String jsonrpc, JsonElement id, JsonObject metadata) {
+        this.jsonrpc = jsonrpc;
+        this.id = id;
+        this.metadata = metadata;
+    }
+
     public String getJsonrpc() {
         return jsonrpc;
     }
 
+    public JsonObject getMetadata() {
+        return metadata;
+    }
+
     public void setJsonrpc(String jsonrpc) {
         this.jsonrpc = jsonrpc;
+    }
+
+    public void setMetadata(JsonObject metadata) {
+        this.metadata = metadata;
     }
 
     public void setDefaultJsonrpc() {

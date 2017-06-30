@@ -8,6 +8,7 @@
 package org.opendaylight.jsonrpc.bus.jsonrpc;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 /**
  * This represents the JSON RPC Reply message. This can be the received message,
@@ -26,8 +27,8 @@ public class JsonRpcReplyMessage extends JsonRpcBaseMessage {
         // Fill fields later.
     }
 
-    public JsonRpcReplyMessage(String jsonrpc, JsonElement id, JsonElement result, JsonRpcErrorObject error) {
-        super(jsonrpc, id);
+    public JsonRpcReplyMessage(String jsonrpc, JsonElement id, JsonElement result, JsonRpcErrorObject error, JsonObject metadata) {
+        super(jsonrpc, id, metadata);
         this.result = result;
         this.error = error;
 
@@ -36,12 +37,16 @@ public class JsonRpcReplyMessage extends JsonRpcBaseMessage {
         }
     }
 
+    public JsonRpcReplyMessage(JsonElement id, JsonElement result, JsonObject metadata) {
+        this(VERSION, id, result, null, metadata);
+    }
+
     public JsonRpcReplyMessage(JsonElement id, JsonElement result) {
-        this(VERSION, id, result, null);
+        this(VERSION, id, result, null, null);
     }
 
     public JsonRpcReplyMessage(JsonElement id, JsonRpcErrorObject error) {
-        this(VERSION, id, null, error);
+        this(VERSION, id, null, error, null);
     }
 
     public boolean isResult() {

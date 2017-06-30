@@ -13,22 +13,35 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.*;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 public class JsonRPCHandler implements ReplyMessageHandler { 
     private JsonElement result;
     private JsonRpcErrorObject error;
+    private JsonObject metadata;
 
     public JsonElement getResult() {
         return this.result;
     }
+
     public JsonElement setResult(JsonElement result) {
         this.result = result;
         return result;
     }
 
+    public JsonElement getMetadata() {
+        return this.metadata;
+    }
+
+    public JsonElement setMetadata(JsonObject metadata) {
+        this.metadata = metadata;
+        return metadata;
+    }
+
     public JsonRpcErrorObject getError() {
         return this.error;
     }
+
     public JsonRpcErrorObject setError(JsonRpcErrorObject error) {
         this.error = error;
         return error;
@@ -39,6 +52,7 @@ public class JsonRPCHandler implements ReplyMessageHandler {
         try {
             if (! reply.isError()) {
                 this.setResult(reply.getResultAsObject(JsonElement.class));
+                this.setMetadata(reply.getMetadata());
                 this.setError(null);
             } else {
                 throw new JsonRpcException("AAAAArghhh...");
