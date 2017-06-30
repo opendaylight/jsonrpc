@@ -250,9 +250,9 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
             JsonRpcErrorObject error;
             Throwable inner = e.getCause();
             if (inner != null) {
-                error = new JsonRpcErrorObject(-3200, inner.getMessage(), null);
+                error = new JsonRpcErrorObject(-32000, inner.getMessage(), null);
             } else {
-                error = new JsonRpcErrorObject(-3200, e.getMessage(), null);
+                error = new JsonRpcErrorObject(-32000, e.getMessage(), null);
             }
             reply.setError(error);
         }

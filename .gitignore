@@ -6,6 +6,8 @@
 *.project
 *.settings
 *.swp
+*.iml
 *~
 .gitignore
 target
+.idea
