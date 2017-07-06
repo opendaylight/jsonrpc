@@ -117,6 +117,10 @@ public class JsonRpcSerializer {
             parsedJson = gson.fromJson(strJson, JsonElement.class);
         } catch (Exception e) {
             logger.debug("Unable to parse JSON message", e);
+            parsedJson = null;
+        }
+
+        if (parsedJson == null) {
             JsonRpcMessageError err = new JsonRpcMessageError(null, -32700, "Unable to parse incoming message", null);
             list.add(err);
             return list;
