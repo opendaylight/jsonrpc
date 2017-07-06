@@ -57,19 +57,25 @@ public class ZMQSession implements BusSession {
         this.zmqContext = zmqContext;
         this.sessionType = sessionType;
         this.topic = topic.getBytes();
-
-        // Convert URI string to URI object
-        try {
-			this.uri = new URI(uri);
-		} catch (URISyntaxException e) {
-			logger.error("Invalid URI", e);
-			throw new IllegalArgumentException(e);
-		}
+        this.uri = convertToUri(uri);
 
         // Set other fields.
         this.socketType = convertToSocketType(sessionType);
         setTimeoutToDefault();
         open();
+    }
+
+    private URI convertToUri(String uri) {
+
+        if (uri.endsWith("/")) // allow sloppier URLs
+            uri = uri.substring(0, uri.lastIndexOf('/'));
+
+        try {
+            return new URI(uri);
+        } catch (URISyntaxException e) {
+            logger.error("Invalid URI: "+uri, e);
+            throw new IllegalArgumentException(e);
+        }
     }
 
     private int convertToSocketType(SessionType type) {
@@ -83,7 +89,7 @@ public class ZMQSession implements BusSession {
         case PUBLISHER:
             return ZMQ.PUB;
         default:
-            throw new IllegalArgumentException("Unsupported session type.");
+            throw new IllegalArgumentException("Unsupported session type: "+type);
         }
     }
 

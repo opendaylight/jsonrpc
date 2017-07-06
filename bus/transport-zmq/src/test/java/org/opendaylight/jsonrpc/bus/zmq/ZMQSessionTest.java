@@ -199,6 +199,12 @@ public class ZMQSessionTest {
         assertEquals(msg4, rxMsg);
     }
 
+    @Test // should not throw
+    public void testUriForgiveness() {
+        factory.responder("tcp://*:12345");  // happy uri
+        factory.responder("tcp://*:12346/"); // sloppy, but acceptable uri
+    }
+
     @AfterClass
     public static void teardown() {
         showFunctionName();
