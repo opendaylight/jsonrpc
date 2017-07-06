@@ -74,7 +74,7 @@ public class MessageLibraryTest {
     {
         showFunctionName();
         // Create params to send on request channel
-        String[] params = { "first", "second" };
+        Object[] params = { "first", "second" };
         client.sendRequest("concat", params);
         int serverCount = server.handleIncomingMessage();
         int clientCount = client.handleIncomingMessage();
@@ -112,6 +112,17 @@ public class MessageLibraryTest {
         assertEquals(null, handler.result);
         assertEquals(1, serverCount);
         assertEquals(1, clientCount);
+    }
+
+    @Test
+    public void testServerClientInvalidMethodParameters() throws MessageLibraryException
+    {
+        showFunctionName();
+        String[] params = { "any-non-integer-argument" };
+        client.sendRequest("increment", params);
+        server.handleIncomingMessage();
+        client.handleIncomingMessage();
+        assertEquals(-32602, handler.error.getCode());
     }
 
     @Test(timeout=600)

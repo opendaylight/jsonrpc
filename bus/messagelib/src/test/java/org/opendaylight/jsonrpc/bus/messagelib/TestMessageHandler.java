@@ -71,6 +71,11 @@ public class TestMessageHandler implements RequestMessageHandler, ReplyMessageHa
     }
 
     @Override
+    public int increment(int in) {
+        return ++in;
+    }
+
+    @Override
     public void close() {
         Thread.currentThread().interrupt();
         return;
@@ -103,6 +108,11 @@ public class TestMessageHandler implements RequestMessageHandler, ReplyMessageHa
                 int delay = request.getParamsAtIndexAsObject(1, int.class);
                 String res = delayedEcho(msg, delay);
                 reply.setResultAsObject(res);
+            } else if (method.equals("increment")) {
+                int incount = request.getParamsAtIndexAsObject(0, int.class);
+                int outcount = increment(incount);
+                reply.setResultAsObject(outcount);
+
             } else if (method.equals("close")) {
                 close();
             } else {

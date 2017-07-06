@@ -19,6 +19,7 @@ import java.util.concurrent.Future;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.google.gson.JsonSyntaxException;
 import org.opendaylight.jsonrpc.bus.BusSession;
 import org.opendaylight.jsonrpc.bus.BusSessionMsgHandler;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
@@ -62,14 +63,13 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
      * <li>is named 'methodAbc'</li>
      * <li>is named 'method_abc'</li>
      * <ol>
-     * in both cases, number of method arguments must match number of parameters
-     * in JSON-RPC message
-     * 
+     * the number of method arguments is not a factor in the match
+     *
      * @param name method name from JSON-RPC message
      * @return
      */
     private static class NameMatchingPredicate implements Predicate<Method> {
-        private final JsonRpcRequestMessage msg;
+        protected final JsonRpcRequestMessage msg;
 
         public NameMatchingPredicate(JsonRpcRequestMessage msg) {
             this.msg = msg;
@@ -80,12 +80,7 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
             boolean nameMatched = false;
             nameMatched |= t.getName().equalsIgnoreCase(toUnderscoreName(msg.getMethod()));
             nameMatched |= t.getName().equalsIgnoreCase(toCamelCaseName(msg.getMethod()));
-            // to continue, we need to have name match first
-            if (!nameMatched) {
-                return false;
-            }
-            // number of parameters must match method arguments
-            return getParametersCount(msg) == t.getParameterTypes().length;
+            return nameMatched;
         }
 
         /**
@@ -118,6 +113,33 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
         }
     }
 
+
+    /**
+     * A matcher that not only uses the method name but also the number of arguments.
+     *
+     * @param name method name from JSON-RPC message
+     * @return
+     */
+    private static class StrictMatchingPredicate extends NameMatchingPredicate {
+
+        public StrictMatchingPredicate(JsonRpcRequestMessage msg) {
+            super(msg);
+        }
+
+        private boolean nameMatches(Method t) {
+            return super.test(t);
+        }
+
+        private boolean parameterCountMatches(Method t) {
+            return getParametersCount(msg) == t.getParameterTypes().length;
+        }
+
+        @Override
+        public boolean test(Method t) {
+            return nameMatches(t) && parameterCountMatches(t);
+        }
+    }
+
     /**
      * Sorts list of matched methods based on preference. Currently it only
      * prefers method without underscore in it's name
@@ -145,9 +167,18 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
         return size;
     }
 
-    private List<Method> findMethod(JsonRpcRequestMessage msg) {
-        return Arrays.asList(handler.getClass().getDeclaredMethods()).stream().filter(new NameMatchingPredicate(msg))
-                .sorted(nameSorter()).collect(Collectors.toList());
+    private List<Method> findMethodStrict(JsonRpcRequestMessage msg) {
+        return Arrays.stream(handler.getClass().getDeclaredMethods())
+                .filter(new StrictMatchingPredicate(msg))
+                .sorted(nameSorter())
+                .collect(Collectors.toList());
+    }
+
+    private List<Method> findMethodLenient(JsonRpcRequestMessage msg) {
+        return Arrays.stream(handler.getClass().getDeclaredMethods())
+                .filter(new NameMatchingPredicate(msg))
+                .sorted(nameSorter())
+                .collect(Collectors.toList());
     }
 
     /*
@@ -167,9 +198,8 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
     @SuppressWarnings("squid:S1166")
     private Object invokeHandler(JsonRpcRequestMessage message)
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        boolean success = false;
-        Object ret = null;
-        final List<Method> opt = findMethod(message);
+
+        List<Method> opt = findMethodStrict(message);
         if (!opt.isEmpty()) {
             // We have a method with the incoming method name and have
             // managed to parse params as per that method's signature.
@@ -181,18 +211,30 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
                 Object[] args = null;
                 try {
                     args = getArgumentsForMethod(m, message);
-                    ret = m.invoke(handler, args);
-                    success = true;
-                    break;
+                    return m.invoke(handler, args);
                 } catch (JsonRpcException e) {
-                    // failed to set arguments or invoke method
-                    logger.debug("Failed to invoke method {} with arguments {}", m, args);
+                    if (args == null) {
+                        String msg = String.format("Failed to manage arguments when invoking method %s", m);
+                        logger.debug(msg);
+                        throw new IllegalArgumentException(msg);
+                    }
+                    else {
+                        // failed to set arguments or invoke method
+                        logger.debug("Failed to invoke method {} with arguments {}", m, args);
+                    }
                 }
             }
         }
-        if (success) {
-            return ret;
+
+        // At this point, could be either wrong number of arguments or wrong argument types
+
+        opt = findMethodLenient(message);
+        if (!opt.isEmpty()) {
+            String msg = String.format("Found method but wrong number of arguments: %s", message.getMethod());
+            logger.debug(msg);
+            throw new IllegalArgumentException(msg);
         }
+
         throw new NoSuchMethodException(String.format("Method not found : %s", message.getMethod()));
     }
 

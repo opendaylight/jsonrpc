@@ -19,6 +19,8 @@ public interface ServerPartialInterface extends AutoCloseable {
 
     public String delayedEcho(String msg, int time);
 
+    public int increment(int count);
+
     @Override
     public void close();
 }

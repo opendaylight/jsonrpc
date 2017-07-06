@@ -49,6 +49,11 @@ public class TestMessageServer implements ServerPartialInterface {
     }
 
     @Override
+    public int increment(int count) {
+        return ++count;
+    }
+
+    @Override
     public void close() {
         Thread.currentThread().interrupt();
         return;

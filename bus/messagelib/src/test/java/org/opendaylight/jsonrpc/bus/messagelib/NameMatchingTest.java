@@ -79,7 +79,7 @@ public class NameMatchingTest {
         request.setMethod("method1");
         request.setParams(new JsonPrimitive("abc"));
         ts.handleRequest(request, reply);
-        assertEquals(-32601, (int) reply.getError().getCode());
+        assertEquals(-32602, (int) reply.getError().getCode());
     }
 
     @Test
