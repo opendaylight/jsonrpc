@@ -18,13 +18,16 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.opendaylight.yangtools.yang.parser.stmt.reactor.CrossSourceStatementReactor;
 import org.opendaylight.yangtools.yang.parser.stmt.rfc6020.YangInferencePipeline;
-import org.opendaylight.yangtools.yang.parser.stmt.rfc6020.YangStatementSourceImpl;
+import org.opendaylight.yangtools.yang.model.repo.api.YangTextSchemaSource;
+import org.opendaylight.yangtools.yang.parser.rfc6020.repo.YangStatementStreamSource;
+import org.opendaylight.yangtools.yang.model.parser.api.YangSyntaxErrorException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.io.ByteSource;
 
 /**
  * Implementation of {@link SchemaContextProvider} which uses
@@ -51,8 +54,21 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
                 final String model = governance.source(m);
                 Preconditions.checkState(!Strings.isNullOrEmpty(model), "Module not found in remote governance : %s",
                         m);
-                reactor.addSource(
-                        new YangStatementSourceImpl(new ByteArrayInputStream(model.getBytes(Charsets.UTF_8))));
+                try {
+                    reactor.addSource(
+                            YangStatementStreamSource.create(
+                                YangTextSchemaSource.delegateForByteSource(
+                                    m + ".yang", ByteSource.wrap(model.getBytes(Charsets.UTF_8)))
+                                )
+                            );
+                } catch (java.io.IOException e) {
+                    /* This should never occur - our byte stream is off a pre-loaded
+                     * byte array
+                     **/
+                    throw new IllegalStateException("Cannot obtain models", e);
+                } catch (YangSyntaxErrorException e) {
+                    throw new IllegalStateException("Cannot parse models", e);
+                }
             });
             return reactor.buildEffective();
         } catch (Exception e) {
