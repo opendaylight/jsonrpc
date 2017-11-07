@@ -114,7 +114,7 @@ public class JsonConverter {
      * @return data argument converted to JsonObject as expected by RPC calls
      */
     public JsonObject rpcConvert(SchemaPath path, ContainerNode data) {
-        LOG.info("Converting node {} at path {}", data, path);
+        LOG.debug("Converting node {} at path {}", data, path);
         final StringWriter writer = new StringWriter();
         final JsonWriter jsonWriter = JsonWriterFactory.createJsonWriter(writer);
         final NormalizedNodeStreamWriter streamWriter = Util.wrapWithAnyXmlNullValueCallBack(JSONNormalizedNodeStreamWriter.createNestedWriter(
