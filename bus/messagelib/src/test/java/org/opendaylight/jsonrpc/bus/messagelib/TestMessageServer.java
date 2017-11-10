@@ -54,6 +54,12 @@ public class TestMessageServer implements ServerPartialInterface {
     }
 
     @Override
+    public void returnError(int option) {
+        // for now ignore incoming option
+        throw new RuntimeException();
+    }
+
+    @Override
     public void close() {
         Thread.currentThread().interrupt();
         return;

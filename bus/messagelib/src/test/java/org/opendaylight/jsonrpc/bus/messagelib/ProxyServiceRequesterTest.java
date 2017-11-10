@@ -14,6 +14,7 @@ import static org.junit.Assert.fail;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,6 +73,19 @@ public class ProxyServiceRequesterTest {
         showFunctionName();
         String[] params = { "a", "b", "c", "d" };
         serverProxy.notImplemented(params);
+        fail("Exception was not thrown");
+    }
+
+    @Test
+    public void testProxyServerErrorReturn() throws Throwable {
+        showFunctionName();
+        try {
+            serverProxy.returnError(0);
+        } catch (ProxyServiceGenericException e) {
+            // Verify that we get standard error string in the message back
+            assertTrue(e.getMessage().contains(JsonRpcErrorObject.JSONRPC_ERROR_MESSAGE_INTERNAL));
+            return;
+        }
         fail("Exception was not thrown");
     }
 

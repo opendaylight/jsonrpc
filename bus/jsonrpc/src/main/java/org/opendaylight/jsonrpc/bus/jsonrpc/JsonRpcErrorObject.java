@@ -9,6 +9,7 @@ package org.opendaylight.jsonrpc.bus.jsonrpc;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 /**
  * This class represents the internal error object that could be sent as part of
@@ -18,13 +19,14 @@ import com.google.gson.JsonObject;
  * @author Shaleen Saxena
  */
 public class JsonRpcErrorObject {
-    private Integer code;
+    public static final String JSONRPC_ERROR_MESSAGE_INTERNAL = "Internal error";
+    private int code;
     private String message;
     private JsonElement data;
 
     public JsonRpcErrorObject() {
         message = null;
-        code = null;
+        code = 0;
         data = null;
     }
 
@@ -34,13 +36,17 @@ public class JsonRpcErrorObject {
         this.data = data;
     }
 
+    /**
+     * Convert an error message into an error object
+     * @param elem A JSON representation of the error message
+     */
     public JsonRpcErrorObject(JsonElement elem) {
         this();
         if (elem != null) {
             JsonObject obj = elem.getAsJsonObject();
             if (obj != null) {
-                setCode(obj.get(JsonRpcConstants.CODE).getAsInt());
-                setMessage(obj.get(JsonRpcConstants.MESSAGE).getAsString());
+                setCode(obj.get(JsonRpcConstants.CODE));
+                setMessage(obj.get(JsonRpcConstants.MESSAGE));
                 setData(obj.get(JsonRpcConstants.DATA));
             }
         }
@@ -50,12 +56,26 @@ public class JsonRpcErrorObject {
         return message;
     }
 
+    // Safely extract the string value from incoming element
+    private void setMessage(JsonElement element) {
+        if (element instanceof JsonPrimitive) {
+            setMessage(element.getAsString());
+        }
+    }
+
     public void setMessage(String message) {
         this.message = message;
     }
 
     public int getCode() {
-        return code.intValue();
+        return code;
+    }
+
+    // Safely extract the int value from incoming element
+    private void setCode(JsonElement element) {
+        if (element instanceof JsonPrimitive) {
+            setCode(element.getAsInt());
+        }
     }
 
     public void setCode(int code) {

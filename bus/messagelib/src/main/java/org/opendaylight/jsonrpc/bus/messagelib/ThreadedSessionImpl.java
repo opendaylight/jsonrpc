@@ -64,9 +64,6 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
      * <li>is named 'method_abc'</li>
      * <ol>
      * the number of method arguments is not a factor in the match
-     *
-     * @param name method name from JSON-RPC message
-     * @return
      */
     private static class NameMatchingPredicate implements Predicate<Method> {
         protected final JsonRpcRequestMessage msg;
@@ -116,9 +113,6 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
 
     /**
      * A matcher that not only uses the method name but also the number of arguments.
-     *
-     * @param name method name from JSON-RPC message
-     * @return
      */
     private static class StrictMatchingPredicate extends NameMatchingPredicate {
 
@@ -289,15 +283,29 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
             reply.setError(error);
         } catch (InvocationTargetException e) {
             logger.error("Error while executing method: {}", request.getMethod());
-            JsonRpcErrorObject error;
-            Throwable inner = e.getCause();
-            if (inner != null) {
-                error = new JsonRpcErrorObject(-32000, inner.getMessage(), null);
-            } else {
-                error = new JsonRpcErrorObject(-32000, e.getMessage(), null);
-            }
+            JsonRpcErrorObject error = new JsonRpcErrorObject(-32000, getErrorMessage(e), null);
             reply.setError(error);
         }
+    }
+
+    /*
+     * Extract the error message from an exception.
+     * First check if there is a nested exception.
+     * If no error message is available, then use a fixed string.
+     */
+    private String getErrorMessage(Exception error) {
+        String errorMessage;
+        Throwable inner = error.getCause();
+        if (inner != null) {
+            errorMessage = inner.getMessage();
+        } else {
+            errorMessage = error.getMessage();
+        }
+        // Ensure some error string is sent
+        if (errorMessage == null) {
+            errorMessage = JsonRpcErrorObject.JSONRPC_ERROR_MESSAGE_INTERNAL;
+        }
+        return errorMessage;
     }
 
     @Override

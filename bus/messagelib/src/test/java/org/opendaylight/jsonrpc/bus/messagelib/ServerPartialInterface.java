@@ -21,6 +21,9 @@ public interface ServerPartialInterface extends AutoCloseable {
 
     public int increment(int count);
 
+    /* Option can be used to throw different exceptions.*/
+    public void returnError(int option) throws Exception;
+
     @Override
     public void close();
 }

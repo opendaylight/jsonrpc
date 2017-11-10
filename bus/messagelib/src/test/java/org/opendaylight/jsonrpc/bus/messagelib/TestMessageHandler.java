@@ -18,16 +18,17 @@ import org.opendaylight.jsonrpc.bus.messagelib.RequestMessageHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TestMessageHandler implements RequestMessageHandler, ReplyMessageHandler, NotificationMessageHandler, ServerPartialInterface {
+public class TestMessageHandler implements RequestMessageHandler, ReplyMessageHandler, NotificationMessageHandler {
     private static final Logger logger = LoggerFactory.getLogger(TestMessageHandler.class);
     public String result;
     public JsonRpcErrorObject error;
     public String noticeMethod;
     public String noticeParam;
+    private TestMessageServer server;
     private Lock lock = null;
 
     public TestMessageHandler() {
-        // do nothing
+        server = new TestMessageServer();
     }
 
     public TestMessageHandler(Lock lock) {
@@ -36,52 +37,6 @@ public class TestMessageHandler implements RequestMessageHandler, ReplyMessageHa
     }
 
     @Override
-    public String echo(String msg) {
-        return msg;
-    }
-
-    @Override
-    public String concat(String msg1, String msg2) {
-        return msg1 + msg2;
-    }
-
-    @Override
-    public String join(String delim, String[] msgs) {
-        return StringUtils.join(msgs, delim);
-    }
-
-    @Override
-    public void noReturn(String msg) {
-        // Do nothing function
-        return;
-    }
-
-    @Override
-    public String delayedEcho(String msg, int time) {
-        // This method will go off to sleep for specified time.
-        // Lets client test timeout
-        logger.debug("Sleeping for {}", time);
-        try {
-        	Thread.sleep(time);
-        } catch (InterruptedException e) {
-        	logger.error("Got interrupted", e);
-        	Thread.currentThread().interrupt();
-        }
-        return msg;
-    }
-
-    @Override
-    public int increment(int in) {
-        return ++in;
-    }
-
-    @Override
-    public void close() {
-        Thread.currentThread().interrupt();
-        return;
-    }
-    
-    @Override
     public void handleRequest(JsonRpcRequestMessage request,
             JsonRpcReplyMessage reply) {
         String method = request.getMethod();
@@ -89,32 +44,32 @@ public class TestMessageHandler implements RequestMessageHandler, ReplyMessageHa
         try {
             if (method.equals("echo")) {
                 String params = request.getParamsAsObject(String.class);
-                String res = echo(params);
+                String res = server.echo(params);
                 reply.setResultAsObject(res);
             } else if (method.equals("concat")) {
                 String[] params = request.getParamsAsObject(String[].class);
-                reply.setResultAsObject(concat(params[0], params[1]));
+                reply.setResultAsObject(server.concat(params[0], params[1]));
             } else if (method.equals("join")) {
                 String delim = request
                         .getParamsAtIndexAsObject(0, String.class);
                 String[] args = request.getParamsAtIndexAsObject(1,
                         String[].class);
-                reply.setResultAsObject(join(delim, args));
+                reply.setResultAsObject(server.join(delim, args));
             } else if (method.equals("noReturn")) {
                 String params = request.getParamsAsObject(String.class);
-                noReturn(params);
+                server.noReturn(params);
             } else if (method.equals("delayedEcho")) {
                 String msg = request.getParamsAtIndexAsObject(0, String.class);
                 int delay = request.getParamsAtIndexAsObject(1, int.class);
-                String res = delayedEcho(msg, delay);
+                String res = server.delayedEcho(msg, delay);
                 reply.setResultAsObject(res);
             } else if (method.equals("increment")) {
                 int incount = request.getParamsAtIndexAsObject(0, int.class);
-                int outcount = increment(incount);
+                int outcount = server.increment(incount);
                 reply.setResultAsObject(outcount);
 
             } else if (method.equals("close")) {
-                close();
+                server.close();
             } else {
                 JsonRpcErrorObject error = new JsonRpcErrorObject(-32601,
                         "Method not found", null);
