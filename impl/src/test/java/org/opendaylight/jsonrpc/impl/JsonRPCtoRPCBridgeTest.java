@@ -16,23 +16,21 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.Lists;
+import com.google.gson.JsonElement;
+import com.google.gson.stream.JsonReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodec;
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcException;
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcResult;
 import org.opendaylight.jsonrpc.bus.messagelib.MessageLibrary;
-import org.opendaylight.jsonrpc.bus.messagelib.Session;
 import org.opendaylight.jsonrpc.bus.messagelib.ThreadedSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.Util;
@@ -41,7 +39,6 @@ import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
-import org.opendaylight.jsonrpc.model.RpcExceptionImpl;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpointsBuilder;
@@ -59,7 +56,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.Test
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.numbers.list.NumbersBuilder;
 import org.opendaylight.yangtools.yang.binding.DataContainer;
 import org.opendaylight.yangtools.yang.common.QName;
-import org.opendaylight.yangtools.yang.common.SimpleDateFormatUtil;
+import org.opendaylight.yangtools.yang.common.Revision;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStreamWriter;
@@ -73,13 +70,9 @@ import org.opendaylight.yangtools.yang.model.api.SchemaPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.gson.JsonElement;
-import com.google.gson.stream.JsonReader;
-
 /**
  * Tests for {@link JsonRPCtoRPCBridge}.
- * 
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
@@ -101,16 +94,10 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         NormalizedNodesHelper.init(schemaContext);
         bi2baCodec = NormalizedNodesHelper.getBindingToNormalizedNodeCodec();
         transportFactory = mock(TransportFactory.class);
-        when(transportFactory.createSession(anyString())).thenAnswer(new Answer<Session>() {
-            @Override
-            public Session answer(InvocationOnMock invocation) throws Throwable {
-                return Util.openSession((String) invocation.getArguments()[0], "REQ");
-            }
-        });
+        when(transportFactory.createSession(anyString())).thenAnswer(invocation -> Util.openSession((String) invocation.getArguments()[0], "REQ"));
         bridge = new JsonRPCtoRPCBridge(getPeer(), schemaContext, pathMap, mock(RemoteGovernance.class),
                 transportFactory);
-        mod = schemaContext.findModuleByName("test-model",
-                SimpleDateFormatUtil.getRevisionFormat().parse("2016-11-17"));
+        mod = schemaContext.findModule("test-model", Revision.of("2016-11-17")).get();
     }
 
     @After

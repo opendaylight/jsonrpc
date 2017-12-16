@@ -7,6 +7,13 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URISyntaxException;
@@ -14,9 +21,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
+import java.util.Optional;
 import javax.annotation.Nonnull;
-
 import org.opendaylight.controller.md.sal.dom.api.DOMNotification;
 import org.opendaylight.controller.md.sal.dom.api.DOMNotificationListener;
 import org.opendaylight.controller.md.sal.dom.api.DOMNotificationService;
@@ -48,14 +54,6 @@ import org.opendaylight.yangtools.yang.model.api.SchemaPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.stream.JsonReader;
-
 public class JsonRPCNotificationService implements DOMNotificationService, NotificationMessageHandler, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCNotificationService.class);
@@ -78,13 +76,13 @@ public class JsonRPCNotificationService implements DOMNotificationService, Notif
 
         for (final NotificationDefinition def : schemaContext.getNotifications()) {
             final QNameModule qm = def.getQName().getModule();
-            final Module module = schemaContext.findModuleByNamespaceAndRevision(qm.getNamespace(), qm.getRevision());
-            if (module == null) {
+            final Optional<Module> possibleModule = schemaContext.findModule(qm.getNamespace(), qm.getRevision());
+            if (!possibleModule.isPresent()) {
                 LOG.error("Notification {} cannot be mapped, module not found", def.getQName().getLocalName());
                 continue;
             }
             final StringBuilder sb = new StringBuilder();
-            sb.append(module.getName());
+            sb.append(possibleModule.get().getName());
             sb.append(':');
             sb.append(def.getQName().getLocalName());
             final String topLevel = sb.toString();

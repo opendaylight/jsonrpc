@@ -7,6 +7,13 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.CheckedFuture;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.SettableFuture;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URISyntaxException;
@@ -15,11 +22,10 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
-
+import java.util.Optional;
+import java.util.concurrent.ArrayBlockingQueue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcAvailabilityListener;
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcException;
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcIdentifier;
@@ -46,23 +52,13 @@ import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.data.impl.schema.builder.api.DataContainerNodeAttrBuilder;
 import org.opendaylight.yangtools.yang.data.impl.schema.builder.impl.ImmutableContainerNodeBuilder;
+import org.opendaylight.yangtools.yang.model.api.ContainerSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.opendaylight.yangtools.yang.model.api.SchemaPath;
-import org.opendaylight.yangtools.yang.model.api.ContainerSchemaNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.CheckedFuture;
-import com.google.common.util.concurrent.SettableFuture;
-import com.google.common.util.concurrent.Futures;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.stream.JsonReader;
-import java.util.concurrent.ArrayBlockingQueue;
 
 public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
     private static final int maxQueueDepth = 64;
@@ -71,8 +67,8 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
     private final JsonConverter jsonConverter;
     private final Collection<DOMRpcIdentifier> availableRpcs = new ArrayList<>();
     private final Map<String, RpcState> mappedRpcs = new HashMap<>();
-    private ArrayBlockingQueue<JsonRPCDOMRpcResultFuture> requestQueue;
-    private Thread requestProcessorThread;
+    private final ArrayBlockingQueue<JsonRPCDOMRpcResultFuture> requestQueue;
+    private final Thread requestProcessorThread;
     private boolean shuttingDown = false;
 
     /**
@@ -111,13 +107,13 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
             HierarchicalEnumMap<JsonElement, DataType, String> pathMap, RemoteGovernance governance, RpcDefinition def,
             TransportFactory transportFactory) throws URISyntaxException {
         final QNameModule qmodule = def.getQName().getModule();
-        final Module module = schemaContext.findModuleByNamespaceAndRevision(qmodule.getNamespace(),
-                qmodule.getRevision());
+        final Optional<Module> possibleModule = schemaContext.findModule(qmodule.getNamespace(), qmodule.getRevision());
 
-        Preconditions.checkNotNull(module, "RPC %s cannot be mapped, module not found", def.getQName().getLocalName());
+        Preconditions.checkState(possibleModule.isPresent(), "RPC %s cannot be mapped, module not found",
+                def.getQName().getLocalName());
 
         final StringBuilder sb = new StringBuilder();
-        sb.append(module.getName());
+        sb.append(possibleModule.get().getName());
         sb.append(":");
         sb.append(def.getQName().getLocalName());
         final String topLevel = sb.toString();
@@ -220,7 +216,7 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
                             "Transforming an rpc with input: %s, payload has to be a container, but was: %s", rpcQName, request.getInput());
                     jsonForm = jsonConverter.rpcConvert(rpcState.rpc().getInput().getPath(), (ContainerNode) request.getInput());
                 }
-            } 
+            }
             JsonElement jsonResult;
             jsonResult = rpcState.sendRequest(jsonForm, request.formMetadata());
             if (rpcState.lastError() == null) {
@@ -236,7 +232,7 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
                         }
                     }
                 } else {
-                    if (((jsonResult == null) || jsonResult.isJsonNull()) && (rpcState.lastMetadata() != null)) {
+                    if ((jsonResult == null || jsonResult.isJsonNull()) && rpcState.lastMetadata() != null) {
                     /* we performed an async handle request - someone wants an answer, requeue to continue polling */
                         if (! requestQueue.offer(request)) {
                             request.setException(new RpcExceptionImpl("Queue Full"));
@@ -269,7 +265,7 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
             LOG.error("Failed to requeue UUID {}", request.getUuid().toString());
             request.set(null);
             request.setException(new RpcExceptionImpl("Queue Full"));
-        } 
+        }
     }
 
     private DOMRpcResult extractResult(RpcState rpcState, JsonElement jsonResult,
@@ -337,14 +333,15 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
     }
 
     private class RPCRequestProcessor implements Runnable {
-        private JsonRPCtoRPCBridge bridge;
+        private final JsonRPCtoRPCBridge bridge;
 
         RPCRequestProcessor(JsonRPCtoRPCBridge bridge) {
             this.bridge = bridge;
         }
+        @Override
         public void run() {
             try {
-                while (bridge.opStatus()) { 
+                while (bridge.opStatus()) {
                     bridge.doInvokeRpc(bridge.deQueue());
                 }
             } catch (java.lang.InterruptedException e) {
@@ -353,6 +350,6 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
         }
     }
     public boolean opStatus() {
-        return (! this.shuttingDown);
+        return ! this.shuttingDown;
     }
 }

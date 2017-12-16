@@ -7,26 +7,28 @@
  */
 package org.opendaylight.jsonrpc.model;
 
+import com.google.common.collect.Sets;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-
 import org.opendaylight.yangtools.yang.common.QName;
-import org.opendaylight.yangtools.yang.model.api.AugmentationSchema;
-import org.opendaylight.yangtools.yang.model.api.ConstraintDefinition;
+import org.opendaylight.yangtools.yang.model.api.ActionDefinition;
+import org.opendaylight.yangtools.yang.model.api.AugmentationSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.ContainerSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.GroupingDefinition;
+import org.opendaylight.yangtools.yang.model.api.MustDefinition;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
+import org.opendaylight.yangtools.yang.model.api.RevisionAwareXPath;
 import org.opendaylight.yangtools.yang.model.api.SchemaPath;
 import org.opendaylight.yangtools.yang.model.api.Status;
 import org.opendaylight.yangtools.yang.model.api.TypeDefinition;
 import org.opendaylight.yangtools.yang.model.api.UnknownSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.UsesNode;
-
-import com.google.common.collect.Sets;
 
 /**
  * Simple proxy for container like schema nodes, where user provides a
@@ -34,7 +36,7 @@ import com.google.common.collect.Sets;
  */
 public final class NotificationContainerProxy implements ContainerSchemaNode {
 
-    private final Set<AugmentationSchema> availableAugmentations;
+    private final Set<AugmentationSchemaNode> availableAugmentations;
     private final Map<QName, DataSchemaNode> childNodes = new HashMap<>();
     private final QName qName;
 
@@ -77,7 +79,7 @@ public final class NotificationContainerProxy implements ContainerSchemaNode {
     }
 
     @Override
-    public Set<AugmentationSchema> getAvailableAugmentations() {
+    public Set<AugmentationSchemaNode> getAvailableAugmentations() {
         return availableAugmentations;
     }
 
@@ -97,11 +99,6 @@ public final class NotificationContainerProxy implements ContainerSchemaNode {
     }
 
     @Override
-    public ConstraintDefinition getConstraints() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public QName getQName() {
         return qName;
     }
@@ -112,22 +109,47 @@ public final class NotificationContainerProxy implements ContainerSchemaNode {
     }
 
     @Override
-    public String getDescription() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public String getReference() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public Status getStatus() {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public List<UnknownSchemaNode> getUnknownSchemaNodes() {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public Optional<DataSchemaNode> findDataChildByName(QName name) {
+        return null;
+    }
+
+    @Override
+    public Optional<String> getDescription() {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<String> getReference() {
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<RevisionAwareXPath> getWhenCondition() {
+        return Optional.empty();
+    }
+
+    @Override
+    public Set<NotificationDefinition> getNotifications() {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public Set<ActionDefinition> getActions() {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public Collection<MustDefinition> getMustConstraints() {
         return Collections.emptyList();
     }
 }

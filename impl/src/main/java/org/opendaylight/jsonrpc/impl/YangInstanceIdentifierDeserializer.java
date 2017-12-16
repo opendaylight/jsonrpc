@@ -7,9 +7,14 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.common.base.Preconditions;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.util.Iterator;
 import java.util.Map.Entry;
-
+import java.util.Optional;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.InstanceIdentifierBuilder;
@@ -18,16 +23,10 @@ import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-
 /**
  * Parses {@link YangInstanceIdentifier} from JSON-RPC 2.0 path specification,
  * using provided {@link SchemaContext}.
- * 
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
@@ -63,8 +62,8 @@ public class YangInstanceIdentifierDeserializer {
         }
 
         private QName lookupByLocalName(String localName) {
-            final Module mod = schemaContext.findModuleByName(localName, null);
-            return mod != null ? QName.create(mod.getQNameModule(), localName) : null;
+            final Optional<Module> possibleModule = Util.findModuleWithLatestRevision(schemaContext, localName);
+            return possibleModule.isPresent() ? QName.create(possibleModule.get().getQNameModule(), localName) : null;
         }
 
         private YangInstanceIdentifier parse(JsonElement path) {

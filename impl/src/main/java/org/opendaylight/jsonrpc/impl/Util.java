@@ -7,14 +7,19 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Consumer;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.jsonrpc.bus.messagelib.EndpointRole;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
@@ -28,17 +33,12 @@ import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.NodeIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.stream.ForwardingNormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStreamWriter;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.ImmutableBiMap;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import org.opendaylight.yangtools.yang.model.api.Module;
+import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
 /**
  * Utility class.
- * 
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
@@ -148,12 +148,12 @@ public class Util {
     /**
      * Ensures that given URI will contain proper 'role' query parameter as
      * required by {@link TransportFactory}'s method
-     * 
+     *
      * @param inUri URI to check(and eventually fix) for presence of 'role'
      *            parameter
      * @param role {@link EndpointRole} to use
      * @return URI which will contain 'role' query parameter as requested
-     * @throws URISyntaxException - thrown if URI syntax is incorrect 
+     * @throws URISyntaxException - thrown if URI syntax is incorrect
      */
     public static String ensureRole(String inUri, EndpointRole role) throws URISyntaxException {
         int idx = inUri.indexOf('?');
@@ -167,7 +167,7 @@ public class Util {
 
     /**
      * Populates {@link HierarchicalEnumMap} entries from list of endpoints
-     * 
+     *
      * @param pathMap {@link HierarchicalEnumMap} to populate
      * @param endpoints list of endpoints
      * @param key {@link DataType} of entries to populate
@@ -208,5 +208,15 @@ public class Util {
                 QName.create(ConfiguredEndpoints.QNAME.getNamespace(), ConfiguredEndpoints.QNAME.getRevision(), "name"),
                 name);
         return builder.build();
+    }
+
+    public static Optional<Module> findModuleWithLatestRevision(SchemaContext schemaContext, String name) {
+        // We can't use findModule(localName) b/c it will try to find a Module with no revision but we want
+        // the Module with latest revision. So we use findModules. The javadoc indicates the iteration order
+        // of the returned Set guarantees that the latest revision is encountered first however this is not the
+        // case. So we find the one with the latest (max) revision.
+        return schemaContext.findModules(name).stream()
+            .max((m1, m2) -> m1.getRevision().isPresent() && m2.getRevision().isPresent() ? m1.getRevision().get()
+                .compareTo(m2.getRevision().get()) : m1.getRevision().isPresent() ? 1 : -1);
     }
 }

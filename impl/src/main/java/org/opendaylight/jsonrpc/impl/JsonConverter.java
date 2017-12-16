@@ -7,6 +7,15 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -14,7 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
+import java.util.Optional;
 import org.opendaylight.jsonrpc.model.JSONRPCArg;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.QNameModule;
@@ -45,16 +54,6 @@ import org.opendaylight.yangtools.yang.model.util.SchemaContextUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-
 /**
  * The Class JsonConverter converts YangInstanceIdentifier paths and
  * NormalizedNode data into json objects accordiong to draft-ietf-netmod-yang-json
@@ -78,7 +77,7 @@ public class JsonConverter {
     private static final char COLON = ':';
     private static final Logger LOG = LoggerFactory.getLogger(JsonConverter.class);
     private static final JSONRPCArg EMPTY_RPC_ARG = new JSONRPCArg(null, null);
-    private SchemaContext schemaContext;
+    private final SchemaContext schemaContext;
 
     /**
      * Instantiates a new json converter.
@@ -118,7 +117,7 @@ public class JsonConverter {
         final StringWriter writer = new StringWriter();
         final JsonWriter jsonWriter = JsonWriterFactory.createJsonWriter(writer);
         final NormalizedNodeStreamWriter streamWriter = Util.wrapWithAnyXmlNullValueCallBack(JSONNormalizedNodeStreamWriter.createNestedWriter(
-                JSONCodecFactory.create(schemaContext),path,null,jsonWriter));
+                JSONCodecFactory.createSimple(schemaContext),path,null,jsonWriter));
         final NormalizedNodeWriter nodeWriter = NormalizedNodeWriter.forStreamWriter(streamWriter);
         try {
             jsonWriter.beginObject();
@@ -135,8 +134,7 @@ public class JsonConverter {
              * The data is generated with a module prefix - this does not match our implementation
              * semantics, we have to strip it, otherwis the bus side does not like it.
              **/
-            for (Iterator<Map.Entry<String,JsonElement>> jIt = dataWithModule.entrySet().iterator(); jIt.hasNext();) {
-                Map.Entry<String,JsonElement> element = jIt.next();
+            for (Entry<String, JsonElement> element : dataWithModule.entrySet()) {
                 String property = element.getKey();
                 if (property.indexOf(COLON) != -1) {
                     newData.add(property.substring(property.indexOf(COLON) + 1),element.getValue());
@@ -159,7 +157,7 @@ public class JsonConverter {
     public JsonObject doConvert(SchemaPath schemaPath, NormalizedNode<?, ?> data) {
         final StringWriter writer = new StringWriter();
         final JsonWriter jsonWriter = JsonWriterFactory.createJsonWriter(writer);
-        final JSONCodecFactory codecFactory = JSONCodecFactory.create(schemaContext);
+        final JSONCodecFactory codecFactory = JSONCodecFactory.createSimple(schemaContext);
         NormalizedNodeStreamWriter jsonStream;
         if(data instanceof MapEntryNode) {
             jsonStream = JSONNormalizedNodeStreamWriter.createNestedWriter(
@@ -205,7 +203,7 @@ public class JsonConverter {
      */
     public JSONRPCArg convertWithStripControl(YangInstanceIdentifier path, NormalizedNode<?, ?> data, boolean strip) {
         Iterator<PathArgument> pathIterator = path.getPathArguments().iterator();
-        List<QName> qnames = new ArrayList<QName>();
+        List<QName> qnames = new ArrayList<>();
 
             JsonObject pathJson;
             JsonElement dataJson = null;
@@ -227,17 +225,16 @@ public class JsonConverter {
 
                 QNameModule qmodule = nodeType.getModule();
 
-                Module module = schemaContext.findModuleByNamespaceAndRevision(
+                Optional<Module> possibleModule = schemaContext.findModule(
                     qmodule.getNamespace(),
-                    qmodule.getRevision()
-                );
-                Preconditions.checkNotNull(module,
+                    qmodule.getRevision());
+                Preconditions.checkState(possibleModule.isPresent(),
                     "Could not find module for namespace %s and revision %s",
                     qmodule.getNamespace(),
                     qmodule.getRevision()
                     );
 
-                activeModule = module.getName();
+                activeModule = possibleModule.get().getName();
                 sb.append(activeModule);
                 sb.append(COLON);
                 sb.append(root.getNodeType().getLocalName());
@@ -346,17 +343,16 @@ public class JsonConverter {
 
         QNameModule qmodule = nodeType.getModule();
 
-        Module module = schemaContext.findModuleByNamespaceAndRevision(
+        Optional<Module> possibleModule = schemaContext.findModule(
             qmodule.getNamespace(),
-            qmodule.getRevision()
-        );
-        Preconditions.checkNotNull(module,
+            qmodule.getRevision());
+        Preconditions.checkState(possibleModule.isPresent(),
             "Could not find module for namespace %s and revision %s",
             qmodule.getNamespace(),
             qmodule.getRevision()
         );
 
-        sb.append(module.getName());
+        sb.append(possibleModule.get().getName());
         sb.append(COLON);
 
         /* use last here */
@@ -370,12 +366,12 @@ public class JsonConverter {
         result = new JsonObject();
         if (pathArg instanceof YangInstanceIdentifier.NodeIdentifierWithPredicates) {
             JsonArray asArray = new JsonArray();
-            if (jsonElement != null && (!jsonElement.isJsonNull())) {
+            if (jsonElement != null && !jsonElement.isJsonNull()) {
                 asArray.add(jsonElement);
-            } 
+            }
             result.add(rootKey, asArray);
         } else {
-            if (jsonElement != null && (!jsonElement.isJsonNull())) {
+            if (jsonElement != null && !jsonElement.isJsonNull()) {
                 result.add(rootKey, jsonElement);
             } else {
                 /* special case - read of empty container contents */
