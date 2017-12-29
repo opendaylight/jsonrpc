@@ -7,9 +7,12 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
+import javassist.ClassPool;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
 import org.opendaylight.controller.md.sal.binding.api.NotificationService;
@@ -26,24 +29,18 @@ import org.opendaylight.controller.md.sal.dom.broker.impl.mount.DOMMountPointSer
 import org.opendaylight.controller.md.sal.dom.store.impl.InMemoryDOMDataStore;
 import org.opendaylight.controller.sal.core.spi.data.DOMStore;
 import org.opendaylight.mdsal.binding.dom.adapter.test.util.MockSchemaService;
-import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.mdsal.binding.dom.codec.gen.impl.DataObjectSerializerGenerator;
 import org.opendaylight.mdsal.binding.dom.codec.gen.impl.StreamWriterGenerator;
 import org.opendaylight.mdsal.binding.dom.codec.impl.BindingNormalizedNodeCodecRegistry;
 import org.opendaylight.mdsal.binding.generator.impl.GeneratedClassLoadingStrategy;
 import org.opendaylight.mdsal.binding.generator.util.JavassistUtils;
+import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-
-import javassist.ClassPool;
 
 /**
  * Enhanced version of
- * {@link org.opendaylight.mdsal.binding.dom.adapter.test.DataBrokerTestCustomizer}
- * 
+ * {@link org.opendaylight.mdsal.binding.dom.adapter.test.DataBrokerTestCustomizer}.
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public class DataBrokerTestCustomizer {

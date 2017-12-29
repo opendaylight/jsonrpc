@@ -7,6 +7,10 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.Futures;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,9 +24,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import java.util.stream.Collectors;
-
 import javax.annotation.concurrent.GuardedBy;
-
 import org.opendaylight.controller.md.sal.binding.api.ClusteredDataTreeChangeListener;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
@@ -51,11 +53,6 @@ import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.Futures;
 
 public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private static final String ME = "JSON RPC Provider";
@@ -118,7 +115,6 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
 
     private boolean processNotificationInternal() throws URISyntaxException {
         LOG.debug("Processing notification");
-        boolean result = true;
         if (!sessionInitialized) {
             LOG.debug("Can't process configuration change at this time, need provider session first");
             return false;
@@ -159,7 +155,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
          * perform a doMount().
          *
          */
-        result &= mountPeers(peersConfState);
+        boolean result = mountPeers(peersConfState);
 
         /* 4, Unmount peers */
         result &= unmountPeers(peersConfState);
@@ -212,7 +208,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
             LOG.debug("(Re)setting governance root for JSON RPC to {}", peersConfState.getGovernanceRoot());
             if (governance != null) {
                 Util.closeNullableWithExceptionCallback(governance,
-                        t -> LOG.warn("Failed to close RemoteGovernance", t));
+                    t -> LOG.warn("Failed to close RemoteGovernance", t));
                 governance = null;
             }
             final Uri rootOm = rootOm();
@@ -280,7 +276,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         Util.closeNullable(governance);
         governance = null;
         toClose.forEach(
-                c -> Util.closeNullableWithExceptionCallback(c, e -> LOG.warn("Failed to close object {}", c, e)));
+            c -> Util.closeNullableWithExceptionCallback(c, e -> LOG.warn("Failed to close object {}", c, e)));
         org.opendaylight.jsonrpc.bus.messagelib.Util.close();
         LOG.debug("JsonRPCProvider Closed");
         providerClosed = true;
@@ -329,6 +325,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
      * unMount heavy lifter - does the appropriate cleanup when unmounting a
      * device
      */
+    @SuppressWarnings("checkstyle:IllegalCatch")
     public boolean doUnmount(String deviceName) {
         if (Strings.isNullOrEmpty(deviceName)) {
             return false;

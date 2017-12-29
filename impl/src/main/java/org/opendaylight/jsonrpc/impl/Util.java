@@ -42,7 +42,7 @@ import org.opendaylight.yangtools.yang.model.api.SchemaContext;
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
-public class Util {
+public final class Util {
     private static final String ERR_UNRECOGNIZED_STORE = "Unrecognized store value %s";
     private static final Gson GSON = new Gson();
     private static final BiMap<Integer, LogicalDatastoreType> STORE_MAP = ImmutableBiMap
@@ -57,8 +57,7 @@ public class Util {
     }
 
     /**
-     * Transform JSON RPC 2.0 representation of a datastore into
-     * {@link LogicalDatastoreType}
+     * Transform JSON RPC 2.0 representation of a data store into {@link LogicalDatastoreType}.
      *
      * @return 0 for CONFIGURATION, 1 for OPERATIONAL
      */
@@ -69,8 +68,7 @@ public class Util {
     }
 
     /**
-     * Transform string representation of a datastore into
-     * {@link LogicalDatastoreType}
+     * Transform string representation of a data store into {@link LogicalDatastoreType}.
      *
      * @param store Logical Data Store
      * @return 0 for "config", 1 for "operational"
@@ -88,20 +86,8 @@ public class Util {
     }
 
     /**
-     * Transform {@link LogicalDatastoreType} into string representation
+     * Transform instance of {@link LogicalDatastoreType} to JSON RPC 2.0 representation of a data store.
      *
-     * @param store Logical Data Store
-     * @return "config" for 0, "operational" for 1
-     */
-    public static String store2str(final int store) {
-        final String s = STORE_STR_MAP.inverse().get(store);
-        Preconditions.checkNotNull(s, ERR_UNRECOGNIZED_STORE, store);
-        return s;
-    }
-
-    /**
-     * Transform instance of {@link LogicalDatastoreType} to JSON RPC 2.0
-     * representation of a datastore
      * @param store Logical Data Store
      * @return 0 for config, 1 for operational
      */
@@ -113,9 +99,21 @@ public class Util {
     }
 
     /**
-     * Utility method to reduce repeated null checks
+     * Transform {@link LogicalDatastoreType} into string representation.
+     *
+     * @param store Logical Data Store
+     * @return "config" for 0, "operational" for 1
+     */
+    public static String store2str(final int store) {
+        final String s = STORE_STR_MAP.inverse().get(store);
+        Preconditions.checkNotNull(s, ERR_UNRECOGNIZED_STORE, store);
+        return s;
+    }
+
+    /**
+     * Utility method to reduce repeated null checks.
+     *
      * @param closeable - an autocloseable to close
-     * @throws java.lang.Exception
      */
     public static void closeNullable(@Nullable AutoCloseable closeable) throws Exception {
         if (closeable != null) {
@@ -124,7 +122,8 @@ public class Util {
     }
 
     /**
-     * Allows to intercept anyXmlNode in stream and handle it
+     * Allows to intercept anyXmlNode in stream and handle it.
+     *
      * @param delegate an instance of NormalizedStreamWriter
      * @return an instance of NormalizedStreamWriter
      */
@@ -147,7 +146,7 @@ public class Util {
 
     /**
      * Ensures that given URI will contain proper 'role' query parameter as
-     * required by {@link TransportFactory}'s method
+     * required by {@link TransportFactory}'s method.
      *
      * @param inUri URI to check(and eventually fix) for presence of 'role'
      *            parameter
@@ -166,7 +165,7 @@ public class Util {
     }
 
     /**
-     * Populates {@link HierarchicalEnumMap} entries from list of endpoints
+     * Populates {@link HierarchicalEnumMap} entries from list of endpoints.
      *
      * @param pathMap {@link HierarchicalEnumMap} to populate
      * @param endpoints list of endpoints
@@ -175,17 +174,17 @@ public class Util {
     public static void populateFromEndpointList(HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
             Collection<? extends Endpoint> endpoints, DataType key) {
         endpoints.stream().filter(p -> p != null && p.getEndpointUri() != null).forEach(
-                ep -> pathMap.put(GSON.fromJson(ep.getPath(), JsonObject.class), key, ep.getEndpointUri().getValue()));
+            ep -> pathMap.put(GSON.fromJson(ep.getPath(), JsonObject.class), key, ep.getEndpointUri().getValue()));
     }
 
     /**
-     * Utility method to close {@link AutoCloseable} with eventual exception
-     * callback
+     * Utility method to close {@link AutoCloseable} with eventual exception callback.
      *
      * @param closeable {@link AutoCloseable} instance to close, can be null
      * @param callback Callback to be invoked when exception occur, must not be
      *            null
      */
+    @SuppressWarnings("checkstyle:IllegalCatch")
     public static void closeNullableWithExceptionCallback(@Nullable AutoCloseable closeable,
             @Nonnull Consumer<Exception> callback) {
         if (closeable != null) {
@@ -198,7 +197,8 @@ public class Util {
     }
 
     /**
-     * Create a Binding Independent path identifier for a name
+     * Create a Binding Independent path identifier for a name.
+     *
      * @param name - name to create the Bi identifier for
      * @return Bi identifier
      */

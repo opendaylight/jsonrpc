@@ -8,12 +8,14 @@
 package org.opendaylight.jsonrpc.model;
 
 /* Governance operations */
-public interface RemoteGovernance extends AutoCloseable{
+public interface RemoteGovernance extends AutoCloseable {
 
     /* store is enum - we should support both forms */
     String governance(int store, String entity, Object path);
+
     String governance(String store, String entity, Object path);
 
     String source(String name);
+
     String source(String name, String revision);
 }

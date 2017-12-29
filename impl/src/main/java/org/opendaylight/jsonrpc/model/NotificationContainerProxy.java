@@ -31,21 +31,20 @@ import org.opendaylight.yangtools.yang.model.api.UnknownSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.UsesNode;
 
 /**
- * Simple proxy for container like schema nodes, where user provides a
- * collection of children schema nodes
+ * Simple proxy for container like schema nodes, where user provides a collection of children schema nodes.
  */
 public final class NotificationContainerProxy implements ContainerSchemaNode {
 
     private final Set<AugmentationSchemaNode> availableAugmentations;
     private final Map<QName, DataSchemaNode> childNodes = new HashMap<>();
-    private final QName qName;
+    private final QName qname;
 
     public NotificationContainerProxy(final NotificationDefinition def) {
         this.availableAugmentations = def.getAvailableAugmentations();
         for (DataSchemaNode element : def.getChildNodes()) {
             this.childNodes.put(element.getQName(), element);
         }
-        this.qName = def.getQName();
+        this.qname = def.getQName();
     }
 
     @Override
@@ -64,8 +63,8 @@ public final class NotificationContainerProxy implements ContainerSchemaNode {
     }
 
     @Override
-    public DataSchemaNode getDataChildByName(final QName qName) {
-        return childNodes.get(qName);
+    public DataSchemaNode getDataChildByName(final QName child) {
+        return childNodes.get(child);
     }
 
     @Override
@@ -100,7 +99,7 @@ public final class NotificationContainerProxy implements ContainerSchemaNode {
 
     @Override
     public QName getQName() {
-        return qName;
+        return qname;
     }
 
     @Override

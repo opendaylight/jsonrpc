@@ -49,7 +49,7 @@ public interface EnumTreeNode<I, K extends Enum<K>, D> {
     Optional<EnumTreeNode<I, K, D>> lookupChild(I childId);
 
     /**
-     * Set value associated with this node
+     * Set value associated with this node.
      *
      * @param key enumeration key used to specify type of data
      * @param data data to associate with this node
@@ -74,7 +74,7 @@ public interface EnumTreeNode<I, K extends Enum<K>, D> {
     Map<K, D> allValues();
 
     /**
-     * Appends child node to this node with given node identifier
+     * Appends child node to this node with given node identifier.
      *
      * @param id child node identifier
      * @return appended child {@link EnumTreeNode}

@@ -7,9 +7,8 @@
  */
 package org.opendaylight.jsonrpc.model;
 
-import java.util.List;
-
 import com.google.gson.JsonElement;
+import java.util.List;
 
 /* DOM Broker operations */
 public interface RemoteOmShard extends AutoCloseable {

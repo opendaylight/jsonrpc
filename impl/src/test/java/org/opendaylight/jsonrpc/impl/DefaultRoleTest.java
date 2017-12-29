@@ -13,8 +13,9 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import java.net.URISyntaxException;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
@@ -29,13 +30,10 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
 /**
  * Test to ensure that default role is appended to URI's query string, when none
  * was provided from user input.
- * 
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */

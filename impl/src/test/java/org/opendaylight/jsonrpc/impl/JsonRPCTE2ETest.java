@@ -13,9 +13,11 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
+import com.google.common.base.Optional;
+import com.google.common.base.Strings;
+import com.google.gson.JsonElement;
 import java.net.URISyntaxException;
 import java.util.Map.Entry;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,18 +39,13 @@ import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Strings;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
 /**
- * End-to-end test connecting {@link JsonRPCDataBroker}, {@link JsonRPCTx} and
- * {@link RemoteOmShard}
- * 
+ * End-to-end test connecting {@link JsonRPCDataBroker}, {@link JsonRPCTx} and {@link RemoteOmShard}.
+ *
+ * <p>
  * Goal is to make sure that behavior of {@link JsonRPCDataBroker} is consistent
  * with {@link DOMDataBroker}
- * 
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
@@ -71,7 +68,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         peer.name("test");
         governance = mock(RemoteGovernance.class);
         doReturn(shard).when(transportFactory).createProxy(any(), anyString());
-        pathMap.put((JsonObject) jsonParser.parse("{\"network-topology:network-topology\":{}}"),
+        pathMap.put(jsonParser.parse("{\"network-topology:network-topology\":{}}"),
                 DataType.OPERATIONAL_DATA, "zmq://localhost");
 
         jrbroker = new JsonRPCDataBroker(peer, schemaContext, pathMap, transportFactory, governance);

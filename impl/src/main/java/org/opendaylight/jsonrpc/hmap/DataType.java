@@ -7,37 +7,38 @@
  */
 package org.opendaylight.jsonrpc.hmap;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.Objects;
-
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 
-import com.google.common.collect.ImmutableMap;
-
 /**
- * Used to differentiate between data keys in {@link HierarchicalEnumMap}
- * 
+ * Used to differentiate between data keys in {@link HierarchicalEnumMap}.
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public enum DataType {
     /**
-     * Operational data
+     * Operational data.
      */
     OPERATIONAL_DATA,
+
     /**
-     * Configuration data
+     * Configuration data.
      */
     CONFIGURATION_DATA,
+
     /**
-     * RPCs
+     * RPCs.
      */
     RPC,
+
     /**
-     * Notifications
+     * Notifications.
      */
     NOTIFICATION;
 
-    private static final ImmutableMap<LogicalDatastoreType, DataType> DS_MAP = ImmutableMap
-            .<LogicalDatastoreType, DataType>builder()
+    private static final ImmutableMap<LogicalDatastoreType, DataType> DS_MAP =
+        ImmutableMap.<LogicalDatastoreType, DataType>builder()
             .put(LogicalDatastoreType.CONFIGURATION, DataType.CONFIGURATION_DATA)
             .put(LogicalDatastoreType.OPERATIONAL, DataType.OPERATIONAL_DATA).build();
 

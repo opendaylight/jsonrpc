@@ -10,8 +10,8 @@ package org.opendaylight.jsonrpc.model;
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcException;
 
 /**
- * Simplistic implementation of {@link DOMRpcException}
- * 
+ * Simplistic implementation of {@link DOMRpcException}.
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public class RpcExceptionImpl extends DOMRpcException {
@@ -19,5 +19,9 @@ public class RpcExceptionImpl extends DOMRpcException {
 
     public RpcExceptionImpl(final String message) {
         super(message, null);
+    }
+
+    public RpcExceptionImpl(final String message, final Throwable cause) {
+        super(message, cause);
     }
 }

@@ -7,6 +7,7 @@
  */
 package org.opendaylight.jsonrpc.hmap;
 
+import com.google.common.base.Strings;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -18,8 +19,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.common.base.Strings;
-
 /**
  * Implementation of a HierarchicalMap which uses {@link HashMap}
  * internally to perform child lookups and {@link EnumMap} for key-value
@@ -28,7 +27,7 @@ import com.google.common.base.Strings;
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
-public class HierarchicalEnumHashMap<P, K extends Enum<K>, D, I> implements HierarchicalEnumMap<P, K, D> {
+public final class HierarchicalEnumHashMap<P, K extends Enum<K>, D, I> implements HierarchicalEnumMap<P, K, D> {
     private final EnumTreeNode<I, K, D> root;
     private final PathCodec<P, I> pathCodec;
 
@@ -47,7 +46,7 @@ public class HierarchicalEnumHashMap<P, K extends Enum<K>, D, I> implements Hier
         EnumTreeNode<I, K, D> current = root;
         D value = null;
         final Iterator<I> iterator = pathCodec.serialize(path).iterator();
-        if(!iterator.hasNext()) {
+        if (!iterator.hasNext()) {
             return Optional.ofNullable(root.value(key));
         }
         while (iterator.hasNext()) {
@@ -124,14 +123,14 @@ public class HierarchicalEnumHashMap<P, K extends Enum<K>, D, I> implements Hier
         return new RootTreeNode<>(keyType);
     }
 
-    static class ChildTreeNode<I, K extends Enum<K>, D> extends AbstractTreeNode<I, K, D> {
-        public ChildTreeNode(I id, Class<K> keyType, EnumTreeNode<I, K, D> parent) {
+    private static class ChildTreeNode<I, K extends Enum<K>, D> extends AbstractTreeNode<I, K, D> {
+        ChildTreeNode(I id, Class<K> keyType, EnumTreeNode<I, K, D> parent) {
             super(id, keyType);
         }
     }
 
     private static class RootTreeNode<I, K extends Enum<K>, D> extends AbstractTreeNode<I, K, D> {
-        public RootTreeNode(Class<K> keyType) {
+        RootTreeNode(Class<K> keyType) {
             super(null, keyType);
         }
     }
@@ -180,9 +179,9 @@ public class HierarchicalEnumHashMap<P, K extends Enum<K>, D, I> implements Hier
         }
 
         @Override
-        public EnumTreeNode<I, K, D> appendChild(I id) {
-            final EnumTreeNode<I, K, D> child = newNode(id, keyType, this);
-            children.put(id, child);
+        public EnumTreeNode<I, K, D> appendChild(I childId) {
+            final EnumTreeNode<I, K, D> child = newNode(childId, keyType, this);
+            children.put(childId, child);
             return child;
         }
 

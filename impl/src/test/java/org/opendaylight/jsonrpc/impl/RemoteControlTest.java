@@ -13,11 +13,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -45,18 +48,15 @@ import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-
 public class RemoteControlTest extends AbstractJsonRpcTest {
     private static final String TOPO_TP_DATA = "{\"network-topology:network-topology\":"
             + "{\"topology\":[{\"topology-id\":\"topology1\",\"node\":[{\"node-id\":\"node1\","
             + "\"termination-point\":[{\"tp-id\": \"eth0\"}]}]}]}}";
     private static final String TEST_MODEL_PATH = "{\"test-model:top-element\":{}}";
-    private static final String MLX_JSON_PATH = "{\"jsonrpc:config\":{ \"configured-endpoints\" : [ { \"name\" : \"lab-mlx\"} ]}}";
-    private static final String MLX_CONFIG_DATA = "{\"name\":\"lab-mlx\", \"modules\": [\"ietf-inet-types\", \"brocade-mlx-interfaces\", \"brocade-mlx-router\", \"brocade-mlx-security\", \"brocade-mlx-types\"]}";
+    private static final String MLX_JSON_PATH =
+            "{\"jsonrpc:config\":{ \"configured-endpoints\" : [ { \"name\" : \"lab-mlx\"} ]}}";
+    private static final String MLX_CONFIG_DATA = "{\"name\":\"lab-mlx\", \"modules\": [\"ietf-inet-types\", "
+            + "\"brocade-mlx-interfaces\", \"brocade-mlx-router\", \"brocade-mlx-security\", \"brocade-mlx-types\"]}";
     private static final String ENTITY = "test-model";
     private static final Logger LOG = LoggerFactory.getLogger(RemoteControlTest.class);
     private RemoteControl ctrl;
@@ -80,24 +80,24 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     @Test
     public void testCRUD() throws Exception {
         JsonElement path = parser.parse(TEST_MODEL_PATH);
-        String tx_id = ctrl.txid();
-        ctrl.put(tx_id, 1, ENTITY, path, parser.parse("{ \"test-model:top-element\" : { \"level2a\" : {}}}"));
-        assertTrue(ctrl.commit(tx_id));
+        String txId = ctrl.txid();
+        ctrl.put(txId, 1, ENTITY, path, parser.parse("{ \"test-model:top-element\" : { \"level2a\" : {}}}"));
+        assertTrue(ctrl.commit(txId));
         assertTrue(ctrl.exists(1, ENTITY, path));
-        tx_id = ctrl.txid();
-        ctrl.delete(tx_id, 1, ENTITY, path);
-        assertTrue(ctrl.commit(tx_id));
+        txId = ctrl.txid();
+        ctrl.delete(txId, 1, ENTITY, path);
+        assertTrue(ctrl.commit(txId));
         assertFalse(ctrl.exists(1, ENTITY, path));
     }
 
     @Test
     public void testCRUD2() throws Exception {
         JsonElement path = parser.parse(TEST_MODEL_PATH);
-        String tx_id = ctrl.txid();
-        ctrl.put(tx_id, 1, ENTITY, path,
+        String txId = ctrl.txid();
+        ctrl.put(txId, 1, ENTITY, path,
                 parser.parse("{ \"test-model:top-element\" : { \"level2a\" : { \"abc\" : \"123\"}}}"));
         assertFalse(ctrl.exists(1, ENTITY, path));
-        assertTrue(ctrl.commit(tx_id));
+        assertTrue(ctrl.commit(txId));
         assertTrue(ctrl.exists(1, ENTITY, path));
     }
 
@@ -141,7 +141,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     }
 
     /**
-     * Test path to leaf in container
+     * Test path to leaf in container.
      */
     @Test
     public void testPathToLeaf() {
@@ -156,7 +156,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     }
 
     /**
-     * Test path to item in list
+     * Test path to item in list.
      */
     @Test
     public void testPathToListItem() {
@@ -171,22 +171,25 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     }
 
     @Test
+    @SuppressWarnings("checkstyle:IllegalCatch")
     public void testInvalidPaths() {
         //@formatter:off
         final String[] paths = new String[] {
-                "{\"network-topology:network-topology\":{\"topology\":[1]}}",
-                "{\"network-topology:network-topology\":{\"topology\":[[]]}}",
-                "{\"network-topology:network-topology\":null}",
-                "null",
-                "ABCD",
-                "[]",
-                "{\"non-existent-module:data1\":{}}" };
+            "{\"network-topology:network-topology\":{\"topology\":[1]}}",
+            "{\"network-topology:network-topology\":{\"topology\":[[]]}}",
+            "{\"network-topology:network-topology\":null}",
+            "null",
+            "ABCD",
+            "[]",
+            "{\"non-existent-module:data1\":{}}"
+        };
+
         //@formatter:off
         for (final String p : paths) {
             try {
                 YangInstanceIdentifierDeserializer.toYangInstanceIdentifier(parser.parse(p), schemaContext);
                 fail("This path should not be parseable !  : " + p);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 LOG.info("This was expected : " + e.getMessage());
             }
         }
@@ -200,10 +203,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     }
 
     /**
-     * This test doesn't test anything, it is used as reference for other tests
-     * (merging related)
-     *
-     * @throws OperationFailedException
+     * This test doesn't test anything, it is used as reference for other tests (merging related).
      */
     @Test
     public void testMerge() throws OperationFailedException {
@@ -239,30 +239,30 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     }
 
     /**
-     * Here list item data are merged into non-existent list
-     * @throws InterruptedException
+     * Here list item data are merged into non-existent list.
      */
     @Test
     public void testMergeListItemNonExistentList() throws InterruptedException {
-        String tx_id = ctrl.txid();
-        ctrl.merge(tx_id, Util.store2int(LogicalDatastoreType.CONFIGURATION), "",
+        String txId = ctrl.txid();
+        ctrl.merge(txId, Util.store2int(LogicalDatastoreType.CONFIGURATION), "",
                 parser.parse(MLX_JSON_PATH),
                 parser.parse(MLX_CONFIG_DATA));
-        assertTrue(ctrl.commit(tx_id));
+        assertTrue(ctrl.commit(txId));
     }
 
     @Test
     public void testFailedTransactionsVanished() throws InterruptedException {
-        String tx_id = ctrl.txid();
-        ctrl.delete(tx_id, Util.store2int(LogicalDatastoreType.CONFIGURATION), "test-model", parser.parse("{}"));
-        assertFalse(ctrl.commit(tx_id));
-        List<String> err = ctrl.error(tx_id);
+        String txId = ctrl.txid();
+        ctrl.delete(txId, Util.store2int(LogicalDatastoreType.CONFIGURATION), "test-model", parser.parse("{}"));
+        assertFalse(ctrl.commit(txId));
+        List<String> err = ctrl.error(txId);
         assertFalse(err.isEmpty());
         LOG.info("Collected errors : {}", err);
-        retryAction(TimeUnit.SECONDS, 5, () -> ctrl.isTxMapEmpty() );
+        retryAction(TimeUnit.SECONDS, 5, () -> ctrl.isTxMapEmpty());
     }
 
-    @Ignore @Test
+    @Ignore
+    @Test
     public void testTxPutMergeDelete() throws Exception {
         //@formatter:off
         UUID uuid = UUID.fromString(ctrl.txid());
@@ -280,8 +280,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
                 Util.store2int(LogicalDatastoreType.CONFIGURATION),
                 "something",
                 parser.parse("{\"jsonrpc:config\":{}}"),
-                parser.parse("{\"jsonrpc:config\":{\"configured-endpoints\":[]}}")
-                );
+                parser.parse("{\"jsonrpc:config\":{\"configured-endpoints\":[]}}"));
         ctrl.commit(uuid.toString());
 
         uuid = UUID.randomUUID();
@@ -334,10 +333,10 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
 
     private static void dumpYii(YangInstanceIdentifier yii) {
         final List<PathArgument> path = yii.getPathArguments();
-        int i = 0;
+        int index = 0;
         LOG.info("Path len : {}", path.size());
         for (final PathArgument p : path) {
-            LOG.info("{}{} : {}", Strings.repeat("-", i++), p.getNodeType(), p);
+            LOG.info("{}{} : {}", Strings.repeat("-", index++), p.getNodeType(), p);
         }
     }
 }

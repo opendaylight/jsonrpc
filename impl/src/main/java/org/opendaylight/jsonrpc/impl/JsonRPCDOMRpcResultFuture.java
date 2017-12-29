@@ -9,55 +9,43 @@
 
 package org.opendaylight.jsonrpc.impl;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcException;
-import org.opendaylight.controller.md.sal.dom.spi.DefaultDOMRpcResult;
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcResult;
 import org.opendaylight.jsonrpc.model.RpcExceptionImpl;
-
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.model.api.SchemaPath;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-
-
-
 /**
- * Simplistic implementation of CheckedFuture to be returned by the 
- * RPC implementation
- * 
+ * Simplistic implementation of CheckedFuture to be returned by the RPC implementation.
+ *
  */
-
-final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOMRpcException> { 
+@SuppressWarnings("checkstyle:AbbreviationAsWordInName")
+final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOMRpcException> {
 
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCDOMRpcResultFuture.class);
     private volatile Exception exception = null;
-    private JsonRPCtoRPCBridge bridge; /* who spawned this future */
+    private final JsonRPCtoRPCBridge bridge; /* who spawned this future */
 
-    private SettableFuture<DOMRpcResult> jsonRPCFuture;
-    private SettableFuture<String> uuidFuture;
+    private final SettableFuture<DOMRpcResult> jsonRPCFuture;
+    private final SettableFuture<String> uuidFuture;
     private String uuid;
     private final NormalizedNode<?, ?> input;
     private final SchemaPath type;
     private boolean pollingForResult;
 
-    public JsonRPCDOMRpcResultFuture(
-            SettableFuture<DOMRpcResult> jsonRPCFuture, SettableFuture<String> uuidFuture, JsonRPCtoRPCBridge bridge,
-            final SchemaPath type, final NormalizedNode<?, ?> input
-        ) {
+    JsonRPCDOMRpcResultFuture(SettableFuture<DOMRpcResult> jsonRPCFuture, SettableFuture<String> uuidFuture,
+            JsonRPCtoRPCBridge bridge, final SchemaPath type, final NormalizedNode<?, ?> input) {
         this.jsonRPCFuture = jsonRPCFuture;
         this.uuidFuture = uuidFuture;
         this.bridge = bridge;
@@ -66,10 +54,9 @@ final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOM
         this.pollingForResult = false;
     }
 
-    static CheckedFuture<DOMRpcResult, DOMRpcException> create(
-        SettableFuture<DOMRpcResult> jsonRPCFuture, SettableFuture<String> uuidFuture, JsonRPCtoRPCBridge bridge,
-        final SchemaPath type, final NormalizedNode<?, ?> input
-        ) {
+    static CheckedFuture<DOMRpcResult, DOMRpcException> create(SettableFuture<DOMRpcResult> jsonRPCFuture,
+            SettableFuture<String> uuidFuture, JsonRPCtoRPCBridge bridge, final SchemaPath type,
+            final NormalizedNode<?, ?> input) {
         return new JsonRPCDOMRpcResultFuture(jsonRPCFuture, uuidFuture, bridge, type, input);
     }
 
@@ -83,14 +70,16 @@ final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOM
 
     public NormalizedNode<?, ?> getInput() {
         return this.input;
-    } 
+    }
 
     boolean isPollingForResult() {
         return this.pollingForResult;
     }
+
     void startPollingForResult() {
         this.pollingForResult = true;
     }
+
     JsonObject formMetadata() {
         JsonObject result = new JsonObject();
         if (this.getUuid() != null) {
@@ -124,14 +113,14 @@ final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOM
         return jsonRPCFuture.set(value);
     }
 
-    public boolean setException(Exception e) {
+    public boolean setException(Exception ex) {
         this.uuid = null; /* cancel async ops */
-        this.exception = e;
+        this.exception = ex;
         if (!uuidFuture.isDone()) {
             uuidFuture.set(null);
         }
         jsonRPCFuture.set(null);
-        return true; 
+        return true;
     }
 
     @Override
@@ -147,6 +136,7 @@ final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOM
             throw new ExecutionException(this.exception);
         }
     }
+
     @Override
     public DOMRpcResult get(final long timeout, final TimeUnit unit) throws InterruptedException,
             TimeoutException, ExecutionException {
@@ -165,36 +155,18 @@ final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOM
     @Override
     public DOMRpcResult checkedGet() throws DOMRpcException {
         try {
-            this.uuid = this.uuidFuture.get();
-            if (uuid != null) {
-                this.bridge.kick(this);
-            }
             return get();
         } catch (InterruptedException | ExecutionException e) {
-            if (this.exception != null) {
-                Throwables.propagate(exception);
-                return null;
-            } else {
-                throw new RpcExceptionImpl(e.getMessage());
-            }
+            throw new RpcExceptionImpl("Future failed", e);
         }
     }
 
     @Override
     public DOMRpcResult checkedGet(final long timeout, final TimeUnit unit) throws TimeoutException, DOMRpcException {
         try {
-            this.uuid = this.uuidFuture.get(timeout, unit);
-            if (uuid != null) {
-                this.bridge.kick(this);
-            }
             return get(timeout, unit);
         } catch (InterruptedException | ExecutionException e) {
-            if (this.exception != null) {
-                Throwables.propagate(exception);
-                return null;
-            } else {
-                throw new RpcExceptionImpl(e.getMessage());
-            }
+            throw new RpcExceptionImpl("Future failed", e);
         }
     }
 

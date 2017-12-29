@@ -7,11 +7,15 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.CheckedFuture;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.gson.JsonElement;
 import java.net.URISyntaxException;
 import java.util.Objects;
-
 import javax.annotation.Nonnull;
-
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
@@ -46,15 +50,10 @@ import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.CheckedFuture;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
-import com.google.gson.JsonElement;
-
 /**
  * Context of mapped {@link Peer}.
- * 
+ *
+ * <p>
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
@@ -138,7 +137,7 @@ public class MappedPeerContext implements AutoCloseable {
     public void close() throws Exception {
         Lists.<AutoCloseable>newArrayList(rpcDataBroker, rpcBridge, notificationService, mountpointRegistration)
                 .stream().forEach(c -> Util.closeNullableWithExceptionCallback(c,
-                        e -> LOG.error("Failed to close provider {}", c, e)));
+                    e -> LOG.error("Failed to close provider {}", c, e)));
         removeOperationalState();
     }
 
@@ -159,17 +158,17 @@ public class MappedPeerContext implements AutoCloseable {
 
         Futures.addCallback(result, new FutureCallback<Void>() {
             @Override
-            public void onSuccess(final Void result) {
+            public void onSuccess(final Void noop) {
                 LOG.trace("{}: Transaction({}) SUCCESSFUL", txType, transaction.getIdentifier());
             }
 
             @Override
-            public void onFailure(final Throwable t) {
-                LOG.error("{}: Transaction({}) FAILED!", txType, transaction.getIdentifier(), t);
+            public void onFailure(final Throwable failure) {
+                LOG.error("{}: Transaction({}) FAILED!", txType, transaction.getIdentifier(), failure);
                 throw new IllegalStateException(
-                        String.format("%s : Transaction(%s) not commited currectly", device, txType), t);
+                        String.format("%s : Transaction(%s) not commited currectly", device, txType), failure);
             }
-        });
+        }, MoreExecutors.directExecutor());
     }
 
     public String getName() {

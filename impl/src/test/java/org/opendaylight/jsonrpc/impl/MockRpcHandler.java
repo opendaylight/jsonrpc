@@ -7,19 +7,6 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
-import org.opendaylight.jsonrpc.bus.messagelib.RequestMessageHandler;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.TestModelService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
 import com.google.gson.JsonArray;
@@ -28,6 +15,17 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
+import org.opendaylight.jsonrpc.bus.messagelib.RequestMessageHandler;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.TestModelService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Mock RPC service implementation.
@@ -44,10 +42,10 @@ public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
     static {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-            try (final InputStream is = Resources.getResource(MockRpcHandler.class, "/get-all-numbers-response.json")
+            try (InputStream is = Resources.getResource(MockRpcHandler.class, "/get-all-numbers-response.json")
                     .openStream()) {
                 ByteStreams.copy(is, baos);
-                MOCK_RESP_JSON = (JsonObject) PARSER.parse(baos.toString(Charsets.UTF_8.name()));
+                MOCK_RESP_JSON = (JsonObject) PARSER.parse(baos.toString(StandardCharsets.UTF_8.name()));
             }
         } catch (IOException e) {
             throw new ExceptionInInitializerError(e);
@@ -59,45 +57,45 @@ public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
         LOG.info("Received request : {}", request);
 
         switch (request.getMethod()) {
-        case "simple-method":
-            // no-op
-            break;
+            case "simple-method":
+                // no-op
+                break;
 
-        case "multiply-ll":
-            processMultiplyLeafList(request.getParams(), response);
-            break;
+            case "multiply-ll":
+                processMultiplyLeafList(request.getParams(), response);
+                break;
 
-        case "multiply-list":
-            processMultiplyList(request.getParams(), response);
-            break;
+            case "multiply-list":
+                processMultiplyList(request.getParams(), response);
+                break;
 
-        case "get-all-numbers":
-            processGetAllNumbers(request.getParams(), response);
-            break;
+            case "get-all-numbers":
+                processGetAllNumbers(request.getParams(), response);
+                break;
 
-        case "error-method":
-            response.setError(new JsonRpcErrorObject(12345, "It just failed", new JsonObject()));
-            break;
+            case "error-method":
+                response.setError(new JsonRpcErrorObject(12345, "It just failed", new JsonObject()));
+                break;
 
-        case "factorial":
-            processFactorial(request.getParams(), response);
-            break;
+            case "factorial":
+                processFactorial(request.getParams(), response);
+                break;
 
-        case "method-with-anyxml":
-            processAnyXml(request.getParams(), response);
-            break;
+            case "method-with-anyxml":
+                processAnyXml(request.getParams(), response);
+                break;
 
-        case "get-any-xml":
-            processGetAnyXml(request.getParams(), response);
-            break;
+            case "get-any-xml":
+                processGetAnyXml(request.getParams(), response);
+                break;
 
-        case "removeCoffeePot":
-            processRemoveCoffeePot(request.getParams(), response);
-            break;
+            case "removeCoffeePot":
+                processRemoveCoffeePot(request.getParams(), response);
+                break;
 
-        default:
-            // we should not land here
-            break;
+            default:
+                // we should not land here
+                break;
         }
         LOG.info("Sending response : {}", response);
     }
@@ -120,9 +118,9 @@ public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
         for (int i = 2; i <= in; i++) {
             out *= i;
         }
-        JsonObject o = new JsonObject();
-        o.addProperty("out-number", out);
-        response.setResult(o);
+        JsonObject obj = new JsonObject();
+        obj.addProperty("out-number", out);
+        response.setResult(obj);
     }
 
     private void processGetAllNumbers(JsonElement params, JsonRpcReplyMessage response) {
@@ -133,38 +131,38 @@ public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
         JsonObject in = params.getAsJsonObject();
         int multiplier = in.get("multiplier").getAsInt();
         int[] numbers = intArrayfromJsonArray(in.get("numbers").getAsJsonArray());
-        JsonObject o = new JsonObject();
+        JsonObject obj = new JsonObject();
         JsonArray arr = new JsonArray();
         for (int n : numbers) {
             JsonObject jo = new JsonObject();
             jo.addProperty("num", n * multiplier);
             arr.add(jo);
         }
-        o.add("numbers", arr);
-        response.setResult(o);
+        obj.add("numbers", arr);
+        response.setResult(obj);
     }
 
     private void processMultiplyLeafList(JsonElement params, JsonRpcReplyMessage response) {
         JsonObject in = params.getAsJsonObject();
         int multiplier = in.get("multiplier").getAsInt();
         int[] numbers = intArrayfromJsonArray(in.get("numbers").getAsJsonArray());
-        JsonObject o = new JsonObject();
+        JsonObject obj = new JsonObject();
         JsonArray arr = new JsonArray();
         for (int n : numbers) {
             arr.add(new JsonPrimitive(n * multiplier));
         }
-        o.add("numbers", arr);
-        response.setResult(o);
+        obj.add("numbers", arr);
+        response.setResult(obj);
     }
 
     private static int[] intArrayfromJsonArray(JsonArray arr) {
         int[] ret = new int[arr.size()];
-        int i = 0;
+        int index = 0;
         for (JsonElement je : arr) {
             if (je instanceof JsonPrimitive) {
-                ret[i++] = je.getAsInt();
+                ret[index++] = je.getAsInt();
             } else {
-                ret[i++] = ((JsonObject) je).get("num").getAsInt();
+                ret[index++] = ((JsonObject) je).get("num").getAsInt();
             }
         }
         return ret;

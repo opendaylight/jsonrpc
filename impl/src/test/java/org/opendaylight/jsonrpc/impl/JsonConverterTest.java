@@ -16,13 +16,15 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,13 +54,9 @@ import org.opendaylight.yangtools.yang.model.api.SchemaPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
-import com.google.gson.JsonObject;
-
 /**
  * Tests for {@link JsonConverter}.
- * 
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
@@ -152,7 +150,7 @@ public class JsonConverterTest extends AbstractDataBrokerTest {
         sw.write(nn.getIdentifier().toString());
         sw.write("\n");
         if (nn.getValue() instanceof Collection) {
-            for (Object e : ((Collection<?>) nn.getValue())) {
+            for (Object e : (Collection<?>) nn.getValue()) {
                 if (e instanceof NormalizedNode) {
                     dump((NormalizedNode<PathArgument, ?>) e, sw, level + 1);
                 }
@@ -171,7 +169,7 @@ public class JsonConverterTest extends AbstractDataBrokerTest {
                 .toNormalizedNode(InstanceIdentifier.create(NetworkTopology.class).child(Topology.class),
                         new TopologyBuilder().setTopologyId(new TopologyId("topo-id")).setNode(data).build());
         NormalizedNode<?, ?> sub1 = data2.getValue();
-        return new SimpleEntry<YangInstanceIdentifier, NormalizedNode<?, ?>>(data2.getKey(), sub1);
+        return new SimpleEntry<>(data2.getKey(), sub1);
     }
 
     private Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> createLeafNodeData() {
@@ -180,7 +178,7 @@ public class JsonConverterTest extends AbstractDataBrokerTest {
                 new TopologyKey(new TopologyId("topo-id")));
         LOG.info("II : {}, YII : {}", ii,
                 NormalizedNodesHelper.getBindingToNormalizedNodeCodec().toYangInstanceIdentifier(ii));
-        return new SimpleEntry<YangInstanceIdentifier, NormalizedNode<?, ?>>(
+        return new SimpleEntry<>(
                 NormalizedNodesHelper.getBindingToNormalizedNodeCodec().toYangInstanceIdentifier(ii),
                 ImmutableNodes.leafNode(topoIdQname, "topo-id"));
     }

@@ -24,7 +24,7 @@ package org.opendaylight.jsonrpc.hmap;
  */
 public interface PathCodec<P, I> {
     /**
-     * Serialize external path specification (P) into {@link Iterable} of I
+     * Serialize external path specification (P) into {@link Iterable} of I.
      *
      * @param path external path specification
      * @return {@link Iterable} of I

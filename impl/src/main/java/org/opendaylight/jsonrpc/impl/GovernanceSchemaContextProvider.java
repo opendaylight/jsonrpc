@@ -7,10 +7,10 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.io.ByteSource;
+import java.nio.charset.StandardCharsets;
 import javax.annotation.Nonnull;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.SchemaContextProvider;
@@ -21,6 +21,7 @@ import org.opendaylight.yangtools.yang.model.parser.api.YangSyntaxErrorException
 import org.opendaylight.yangtools.yang.model.repo.api.YangTextSchemaSource;
 import org.opendaylight.yangtools.yang.parser.rfc7950.reactor.RFC7950Reactors;
 import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangStatementStreamSource;
+import org.opendaylight.yangtools.yang.parser.spi.meta.ReactorException;
 import org.opendaylight.yangtools.yang.parser.stmt.reactor.CrossSourceStatementReactor;
 //import org.opendaylight.yangtools.yang.parser.stmt.rfc6020.YangInferencePipeline;
 import org.slf4j.Logger;
@@ -55,9 +56,7 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
                     reactor.addSource(
                             YangStatementStreamSource.create(
                                 YangTextSchemaSource.delegateForByteSource(
-                                    m + ".yang", ByteSource.wrap(model.getBytes(Charsets.UTF_8)))
-                                )
-                            );
+                                    m + ".yang", ByteSource.wrap(model.getBytes(StandardCharsets.UTF_8)))));
                 } catch (java.io.IOException e) {
                     /* This should never occur - our byte stream is off a pre-loaded
                      * byte array
@@ -68,7 +67,7 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
                 }
             });
             return reactor.buildEffective();
-        } catch (Exception e) {
+        } catch (ReactorException e) {
             throw new IllegalStateException("Cannot obtain models", e);
         }
     }

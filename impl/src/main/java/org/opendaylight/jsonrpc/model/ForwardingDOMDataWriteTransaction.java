@@ -7,10 +7,10 @@
  */
 package org.opendaylight.jsonrpc.model;
 
+import com.google.common.util.concurrent.CheckedFuture;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Objects;
-
 import javax.annotation.Nonnull;
-
 import org.opendaylight.controller.md.sal.common.api.TransactionStatus;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
@@ -19,13 +19,9 @@ import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 
-import com.google.common.util.concurrent.CheckedFuture;
-import com.google.common.util.concurrent.ListenableFuture;
-
 /**
- * {@link DOMDataWriteTransaction} which just delegates method calls to other
- * {@link DOMDataWriteTransaction}.
- * 
+ * {@link DOMDataWriteTransaction} which just delegates method calls to other {@link DOMDataWriteTransaction}.
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */

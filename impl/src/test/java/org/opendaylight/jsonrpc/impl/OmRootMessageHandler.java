@@ -7,8 +7,10 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.common.io.Resources;
+import com.google.gson.JsonPrimitive;
 import java.io.IOException;
-
+import java.nio.charset.StandardCharsets;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.RequestMessageHandler;
@@ -16,20 +18,16 @@ import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
-import com.google.gson.JsonPrimitive;
-
 /**
  * {@link RequestMessageHandler} which acts as mock implementation of
  * {@link RemoteOmShard}.
- * 
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
 public class OmRootMessageHandler implements RequestMessageHandler, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(OmRootMessageHandler.class);
-    private int governancePort;
+    private final int governancePort;
 
     public OmRootMessageHandler(int governancePort) {
         this.governancePort = governancePort;
@@ -40,20 +38,20 @@ public class OmRootMessageHandler implements RequestMessageHandler, AutoCloseabl
         LOG.info("Req : {}", request);
         try {
             switch (request.getMethod()) {
-            case "source":
-                reply.setResult(new JsonPrimitive(getYangSource(request.getParams().getAsString())));
-                return;
-            case "governance":
-                reply.setResult(new JsonPrimitive(String.format("zmq://localhost:%d", governancePort)));
-                return;
-            case "close":
-                reply.setResult(new JsonPrimitive("ok"));
-                return;
-            default:
-                reply.setResultAsObject("ERROR : unknown method : " + request.getMethod());
-                return;
+                case "source":
+                    reply.setResult(new JsonPrimitive(getYangSource(request.getParams().getAsString())));
+                    return;
+                case "governance":
+                    reply.setResult(new JsonPrimitive(String.format("zmq://localhost:%d", governancePort)));
+                    return;
+                case "close":
+                    reply.setResult(new JsonPrimitive("ok"));
+                    return;
+                default:
+                    reply.setResultAsObject("ERROR : unknown method : " + request.getMethod());
+                    return;
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             LOG.error("I/O error", e);
             reply.setResultAsObject("ERROR");
         }
@@ -61,7 +59,7 @@ public class OmRootMessageHandler implements RequestMessageHandler, AutoCloseabl
 
     private String getYangSource(String moduleName) throws IOException {
         String str = Resources.toString(Resources.getResource(getClass(), "/" + moduleName + ".yang"),
-                Charsets.US_ASCII);
+                StandardCharsets.US_ASCII);
         return str;
     }
 

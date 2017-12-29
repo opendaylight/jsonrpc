@@ -7,14 +7,12 @@
  */
 package org.opendaylight.jsonrpc.model;
 
+import com.google.common.base.Preconditions;
 import java.net.URISyntaxException;
-
 import org.opendaylight.jsonrpc.bus.messagelib.NotificationMessageHandler;
 import org.opendaylight.jsonrpc.bus.messagelib.ThreadedSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
-
-import com.google.common.base.Preconditions;
 
 public class NotificationState {
     private final NotificationDefinition notification;

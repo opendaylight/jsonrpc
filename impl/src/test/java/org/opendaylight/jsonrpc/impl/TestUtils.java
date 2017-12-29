@@ -7,10 +7,11 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map.Entry;
-
 import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodec;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopologyBuilder;
@@ -29,18 +30,18 @@ import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-
 /**
  * Utility class to reduce code duplication.
- * 
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
-public class TestUtils {
+public final class TestUtils {
     public static final String MOCK_TOPO_TP_ID_YII_PATH = "{\"network-topology:network-topology\":"
             + "{\"topology\":[{\"topology-id\":\"topology1\",\"node\":[{\"node-id\":\"node1\","
             + "\"termination-point\":[{\"tp-id\": \"eth0\"}]}]}]}}";
+
+    private TestUtils() {
+    }
 
     public static NetworkTopology getMockTopology() {
         //@formatter:off
@@ -74,7 +75,7 @@ public class TestUtils {
     }
 
     /**
-     * Ensure that given class has only one private constructor
+     * Ensure that given class has only one private constructor.
      */
     public static boolean assertPrivateConstructor(Class<?> clazz) {
         final Constructor<?>[] ctors = clazz.getDeclaredConstructors();

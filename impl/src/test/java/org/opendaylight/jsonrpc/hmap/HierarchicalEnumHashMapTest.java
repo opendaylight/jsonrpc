@@ -10,25 +10,19 @@ package org.opendaylight.jsonrpc.hmap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
-
 import org.junit.Test;
-import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
-import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
-import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 
 public class HierarchicalEnumHashMapTest {
     private static final Logger LOG = LoggerFactory.getLogger(HierarchicalEnumHashMapTest.class);
@@ -37,7 +31,7 @@ public class HierarchicalEnumHashMapTest {
     private static final JsonParser PARSER = new JsonParser();
     private static final JsonPathCodec CODEC = JsonPathCodec.create();
 
-    private static enum Types {
+    private enum Types {
         A, B, C;
     }
 
@@ -46,7 +40,7 @@ public class HierarchicalEnumHashMapTest {
         final HierarchicalEnumMap<JsonElement, Types, String> map = HierarchicalEnumHashMap.create(Types.class, CODEC);
         map.put(parse("{}"), Types.A, "uri://localhost");
         map.put(parse(PATH1), Types.A, "xyz");
-        assertEquals("uri://localhost", map.lookup((JsonObject) new JsonParser().parse(PATH2), Types.A).get());
+        assertEquals("uri://localhost", map.lookup(new JsonParser().parse(PATH2), Types.A).get());
         assertNull(map.put(parse(getData("path3")), Types.A, "HERE"));
         assertNull(map.put(parse(getData("path4")), Types.A, "another"));
         assertNull(map.put(parse(getData("path5")), Types.A, "123456"));

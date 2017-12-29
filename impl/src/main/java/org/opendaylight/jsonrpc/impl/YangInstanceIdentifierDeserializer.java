@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
-public class YangInstanceIdentifierDeserializer {
+public final class YangInstanceIdentifierDeserializer {
     private static final Logger LOG = LoggerFactory.getLogger(YangInstanceIdentifierDeserializer.class);
 
     private YangInstanceIdentifierDeserializer() {
@@ -42,7 +42,7 @@ public class YangInstanceIdentifierDeserializer {
         return pc.parse(path);
     }
 
-    private static class ParsingContext {
+    private static final class ParsingContext {
         private final SchemaContext schemaContext;
         private final InstanceIdentifierBuilder builder = YangInstanceIdentifier.builder();
         private QName nodeNs;
@@ -56,9 +56,9 @@ public class YangInstanceIdentifierDeserializer {
             Preconditions.checkNotNull(ns, "Missing/unresolvable namespace");
         }
 
-        private void throwJsonPathError(JsonElement e) {
+        private void throwJsonPathError(JsonElement ex) {
             throw new IllegalStateException(
-                    String.format("Unexpected JsonElement : %s => %s", e.getClass().getSimpleName(), e));
+                    String.format("Unexpected JsonElement : %s => %s", ex.getClass().getSimpleName(), ex));
         }
 
         private QName lookupByLocalName(String localName) {

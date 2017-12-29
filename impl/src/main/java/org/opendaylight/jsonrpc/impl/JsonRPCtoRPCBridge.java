@@ -61,7 +61,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
-    private static final int maxQueueDepth = 64;
+    private static final int MAX_QUEUE_DEPTH = 64;
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCtoRPCBridge.class);
     private final SchemaContext schemaContext;
     private final JsonConverter jsonConverter;
@@ -72,14 +72,14 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
     private boolean shuttingDown = false;
 
     /**
-     * Instantiates a new RPC Bridge
+     * Instantiates a new RPC Bridge.
      *
      * @param peer the peer name
      * @param schemaContext the schema context
      * @param pathMap endpoint mapping
      * @param governance additional json rpc service to query for endpoints
      * @param transportFactory - JSON RPC 2.0 transport factory
-     * @throws URISyntaxException
+     * @throws URISyntaxException internal error
      */
     public JsonRPCtoRPCBridge(@Nonnull Peer peer, @Nonnull SchemaContext schemaContext,
             @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull RemoteGovernance governance,
@@ -92,20 +92,20 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
         this.schemaContext = Objects.requireNonNull(schemaContext);
         this.jsonConverter = new JsonConverter(schemaContext);
         for (final RpcDefinition def : schemaContext.getOperations()) {
-            addRpcDefinition(peer, schemaContext, pathMap, governance, def, transportFactory);
+            addRpcDefinition(peer, pathMap, governance, def, transportFactory);
         }
         if (mappedRpcs.isEmpty()) {
             LOG.warn("No RPCs to map for " + peer.getName());
         }
-        requestQueue = new ArrayBlockingQueue(maxQueueDepth);
+        requestQueue = new ArrayBlockingQueue<>(MAX_QUEUE_DEPTH);
         requestProcessorThread = new Thread(new RPCRequestProcessor(this));
         requestProcessorThread.start();
         LOG.info("RPC bridge instantiated for {}", peer.getName());
     }
 
-    private void addRpcDefinition(Peer peer, SchemaContext schemaContext,
-            HierarchicalEnumMap<JsonElement, DataType, String> pathMap, RemoteGovernance governance, RpcDefinition def,
-            TransportFactory transportFactory) throws URISyntaxException {
+    private void addRpcDefinition(Peer peer, HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
+            RemoteGovernance governance, RpcDefinition def, TransportFactory transportFactory)
+                    throws URISyntaxException {
         final QNameModule qmodule = def.getQName().getModule();
         final Optional<Module> possibleModule = schemaContext.findModule(qmodule.getNamespace(), qmodule.getRevision());
 
@@ -171,7 +171,8 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
 
         SettableFuture<DOMRpcResult> futureResult = SettableFuture.create();
         SettableFuture<String> asyncUUID = SettableFuture.create();
-        JsonRPCDOMRpcResultFuture postponedResult = new JsonRPCDOMRpcResultFuture(futureResult, asyncUUID, this, type, input);
+        JsonRPCDOMRpcResultFuture postponedResult = new JsonRPCDOMRpcResultFuture(futureResult, asyncUUID,
+                this, type, input);
         try {
             requestQueue.put(
                     postponedResult
@@ -204,6 +205,7 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
         }
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     public void doInvokeRpc(JsonRPCDOMRpcResultFuture request) {
         final QName rpcQName = request.getType().getLastComponent();
         JsonObject jsonForm = null;
@@ -213,8 +215,10 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
             if (!request.isPollingForResult()) {
                 if (isNotEmpty(rpcState.rpc().getInput())) {
                     Preconditions.checkArgument(request.getInput() instanceof ContainerNode,
-                            "Transforming an rpc with input: %s, payload has to be a container, but was: %s", rpcQName, request.getInput());
-                    jsonForm = jsonConverter.rpcConvert(rpcState.rpc().getInput().getPath(), (ContainerNode) request.getInput());
+                            "Transforming an rpc with input: %s, payload has to be a container, but was: %s",
+                            rpcQName, request.getInput());
+                    jsonForm = jsonConverter.rpcConvert(rpcState.rpc().getInput().getPath(),
+                            (ContainerNode) request.getInput());
                 }
             }
             JsonElement jsonResult;
@@ -243,8 +247,9 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
 
                 final DOMRpcResult toODL;
                 if (isNotEmpty(rpcState.rpc().getOutput())) {
-                    final DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> resultBuilder = ImmutableContainerNodeBuilder
-                        .create().withNodeIdentifier(NodeIdentifier.create(rpcState.rpc().getOutput().getQName()));
+                    final DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> resultBuilder =
+                            ImmutableContainerNodeBuilder.create().withNodeIdentifier(NodeIdentifier.create(
+                                    rpcState.rpc().getOutput().getQName()));
                     toODL = extractResult(rpcState, jsonResult, resultBuilder);
                 } else {
                     toODL = new DefaultDOMRpcResult((NormalizedNode<?, ?>) null);
@@ -253,7 +258,7 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
             } else {
                 request.setException(new RpcExceptionImpl(rpcState.lastError().getMessage()));
             }
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             request.setException(e);
             return;
         }
@@ -268,6 +273,7 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
         }
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     private DOMRpcResult extractResult(RpcState rpcState, JsonElement jsonResult,
             DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> resultBuilder) {
         try (NormalizedNodeStreamWriter streamWriter = Util
@@ -276,7 +282,7 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
         } catch (IOException e1) {
             LOG.error("Failed to close JSON parser", e1);
             return resultFromException(e1);
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             LOG.error("Failed invoke RPC method", e);
             return resultFromException(e);
         }
@@ -285,7 +291,7 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
     private DOMRpcResult extractResultInternal(RpcState rpcState, JsonElement jsonResult,
             DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> resultBuilder,
             NormalizedNodeStreamWriter streamWriter) {
-        try (final JsonParserStream jsonParser = JsonParserStream.create(streamWriter, schemaContext,
+        try (JsonParserStream jsonParser = JsonParserStream.create(streamWriter, schemaContext,
                 rpcState.rpc().getOutput())) {
             jsonParser.parse(new JsonReader(new StringReader(jsonResult.toString())));
             return new DefaultDOMRpcResult(resultBuilder.build());
@@ -295,8 +301,8 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
         }
     }
 
-    private DOMRpcResult resultFromException(Exception e) {
-        return new DefaultDOMRpcResult(RpcResultBuilder.newError(ErrorType.RPC, "internal-error", e.getMessage()));
+    private DOMRpcResult resultFromException(Exception ex) {
+        return new DefaultDOMRpcResult(RpcResultBuilder.newError(ErrorType.RPC, "internal-error", ex.getMessage()));
     }
 
     @Nonnull
@@ -338,6 +344,7 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
         RPCRequestProcessor(JsonRPCtoRPCBridge bridge) {
             this.bridge = bridge;
         }
+
         @Override
         public void run() {
             try {
@@ -349,6 +356,7 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
             }
         }
     }
+
     public boolean opStatus() {
         return ! this.shuttingDown;
     }

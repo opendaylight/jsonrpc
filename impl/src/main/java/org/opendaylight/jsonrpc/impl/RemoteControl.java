@@ -9,6 +9,10 @@ package org.opendaylight.jsonrpc.impl;
 
 import static org.opendaylight.jsonrpc.impl.Util.int2store;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Maps;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.List;
@@ -25,10 +29,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
-
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.GuardedBy;
-
 import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodec;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadOnlyTransaction;
@@ -43,11 +45,6 @@ import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
 public class RemoteControl implements RemoteOmShard, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(RemoteControl.class);
     private final DOMDataBroker domDataBroker;
@@ -56,8 +53,8 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     private final ConcurrentMap<String, DataModificationContext> txmap = Maps.newConcurrentMap();
     private final ReadWriteLock trxGuard = new ReentrantReadWriteLock();
     private final ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
-    private Future<?> cleanerFuture;
-    private TransactionFactory transactionFactory;
+    private final Future<?> cleanerFuture;
+    private final TransactionFactory transactionFactory;
     // Time-to-live for failed transactions
     private static final long TRX_TTL_MILLIS = 900000; // 15 minutes
 
@@ -77,7 +74,7 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     }
 
     /**
-     * Remove stale transactions.To be eligible for removal, transaction must
+     * Remove stale transactions.To be eligible for removal, transaction must.
      * <ol>
      * <li>encountered error(s)</li>
      * <li>exists for at least TXR_TTL_MILLIS in map of transactions</li>
@@ -86,7 +83,7 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     private void cleanupStaleTransactions() {
         final long now = System.currentTimeMillis();
         txmap.entrySet().removeIf(e -> !e.getValue().isSuccess() && e.getValue().getCompletionTimestamp() != -1L
-                && ((e.getValue().getCompletionTimestamp() + TRX_TTL_MILLIS) > now));
+                && e.getValue().getCompletionTimestamp() + TRX_TTL_MILLIS > now);
     }
 
     @VisibleForTesting
@@ -109,6 +106,14 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
         return jsonConverter.convert(pathAsIId, result).data;
     }
 
+    /**
+     * Overloaded version of {@link #read(int, String, JsonElement)}.
+     */
+    @Override
+    public JsonElement read(String store, String entity, JsonElement path) throws Exception {
+        return read(Util.store2int(store), entity, path);
+    }
+
     @Override
     public void put(String txId, int store, String entity, JsonElement path, JsonElement data) {
         final YangInstanceIdentifier pathAsIId = path2II(path);
@@ -119,16 +124,29 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
                 jsonConverter.jsonElementToNormalizedNode(injectQName(pathAsIId, data), pathAsIId));
     }
 
+    /**
+     * Overloaded version of {@link #put(String, int, String, JsonElement, JsonElement)}.
+     */
+    @Override
+    public void put(String txId, String store, String entity, JsonElement path, JsonElement data) {
+        put(txId, Util.store2int(store), entity, path, data);
+    }
+
     @Override
     public boolean exists(int store, String entity, JsonElement path) throws Exception {
         final YangInstanceIdentifier pathAsIId = path2II(path);
         LOG.debug("EXISTS store={}, entity={}, path={}, YII={}", int2store(store), entity, path, pathAsIId);
-        final DOMDataReadOnlyTransaction trx = domDataBroker.newReadOnlyTransaction();
-        try {
+        try (DOMDataReadOnlyTransaction trx = domDataBroker.newReadOnlyTransaction()) {
             return trx.exists(int2store(store), pathAsIId).checkedGet();
-        } finally {
-            trx.close();
         }
+    }
+
+    /**
+     * Overloaded version of {@link #exists(int, String, JsonElement)}.
+     */
+    @Override
+    public boolean exists(String store, String entity, JsonElement path) throws Exception {
+        return exists(Util.store2int(store), entity, path);
     }
 
     @Override
@@ -140,6 +158,14 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
         trx.merge(int2store(store), pathAsIId, jsonConverter.jsonElementToNormalizedNode(data, pathAsIId, true));
     }
 
+    /**
+     * Overloaded version of {@link #merge(String, int, String, JsonElement, JsonElement)}.
+     */
+    @Override
+    public void merge(String txId, String store, String entity, JsonElement path, JsonElement data) {
+        merge(txId, Util.store2int(store), entity, path, data);
+    }
+
     @Override
     public void delete(String txId, int store, String entity, JsonElement path) {
         final YangInstanceIdentifier pathAsIId = path2II(path);
@@ -147,6 +173,14 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
                 pathAsIId);
         final DOMDataWriteTransaction trx = allocateTrx(txId).getValue().newWriteTransaction();
         trx.delete(int2store(store), pathAsIId);
+    }
+
+    /**
+     * Overloaded version of {@link #delete(String, int, String, JsonElement)}.
+     */
+    @Override
+    public void delete(String txId, String store, String entity, JsonElement path) {
+        delete(txId, Util.store2int(store), entity, path);
     }
 
     @GuardedBy("trxGuard")
@@ -206,18 +240,21 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
      * }
      * </pre>
      *
+     * <p>
      * To set leaf 'gasKnob' to value eg. 5, path is
      *
      * <pre>
      * {"test-model:grillconf":{}}
      * </pre>
      *
+     * <p>
      * and data is
      *
      * <pre>
      * {"gasKnob":10}
      * </pre>
      *
+     * <p>
      * This breaks requirement of GSON codec, which needs data to be qualified
      * by module name. Injecting/wrapping qualifier around it can workaround
      * this issue, so outcome of this method will be such as:
@@ -251,14 +288,14 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     }
 
     /**
-     * Extract error messages from {@link Throwable}
+     * Extract error messages from {@link Throwable}.
      *
-     * @param t instance of {@link Throwable}
+     * @param error instance of {@link Throwable}
      * @return formated error message
      */
-    private static String serializeError(final Throwable t) {
+    private static String serializeError(final Throwable error) {
         final StringBuilder sb = new StringBuilder();
-        Throwable cause = t;
+        Throwable cause = error;
         while (cause != null) {
             sb.append(cause.getMessage());
             cause = cause.getCause();
@@ -317,47 +354,5 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
         cleanerFuture.cancel(true);
         exec.shutdown();
         txmap.clear();
-    }
-
-    /**
-     * Overloaded version of {@link #read(int, String, JsonElement)}
-     */
-    @Override
-    public JsonElement read(String store, String entity, JsonElement path) throws Exception {
-        return read(Util.store2int(store), entity, path);
-    }
-
-    /**
-     * Overloaded version of
-     * {@link #put(String, int, String, JsonElement, JsonElement)}
-     */
-    @Override
-    public void put(String txId, String store, String entity, JsonElement path, JsonElement data) {
-        put(txId, Util.store2int(store), entity, path, data);
-    }
-
-    /**
-     * Overloaded version of {@link #exists(int, String, JsonElement)}
-     */
-    @Override
-    public boolean exists(String store, String entity, JsonElement path) throws Exception {
-        return exists(Util.store2int(store), entity, path);
-    }
-
-    /**
-     * Overloaded version of
-     * {@link #merge(String, int, String, JsonElement, JsonElement)}
-     */
-    @Override
-    public void merge(String txId, String store, String entity, JsonElement path, JsonElement data) {
-        merge(txId, Util.store2int(store), entity, path, data);
-    }
-
-    /**
-     * Overloaded version of {@link #delete(String, int, String, JsonElement)}
-     */
-    @Override
-    public void delete(String txId, String store, String entity, JsonElement path) {
-        delete(txId, Util.store2int(store), entity, path);
     }
 }

@@ -8,12 +8,11 @@
 package org.opendaylight.jsonrpc.model;
 
 import java.util.function.Supplier;
-
 import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
 
 /**
- * Factory abstraction to provide {@link DOMDataWriteTransaction} instances
- * 
+ * Factory abstraction to provide {@link DOMDataWriteTransaction} instances.
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */

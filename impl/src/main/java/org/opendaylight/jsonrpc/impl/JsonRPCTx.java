@@ -7,8 +7,19 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
-import static org.opendaylight.jsonrpc.impl.Util.*;
+import static org.opendaylight.jsonrpc.impl.Util.store2int;
+import static org.opendaylight.jsonrpc.impl.Util.store2str;
 
+import com.google.common.base.Function;
+import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.common.util.concurrent.CheckedFuture;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.stream.JsonReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URISyntaxException;
@@ -16,9 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import javax.annotation.Nonnull;
-
 import org.opendaylight.controller.md.sal.common.api.TransactionStatus;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
@@ -50,17 +59,6 @@ import org.opendaylight.yangtools.yang.model.api.SchemaNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.util.concurrent.CheckedFuture;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.stream.JsonReader;
-
 @SuppressWarnings("deprecation")
 public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTransaction {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCTx.class);
@@ -71,8 +69,8 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
     private final TransportFactory transportFactory;
 
     /* Transaction ID */
-    private Map<String, RemoteOmShard> endPointMap;
-    private Map<String, String> txIdMap;
+    private final Map<String, RemoteOmShard> endPointMap;
+    private final Map<String, String> txIdMap;
 
     /**
      * Instantiates a new ZMQ Bus Transaction.
@@ -125,6 +123,7 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
     }
 
     @Override
+    @SuppressWarnings("checkstyle:IllegalCatch")
     public CheckedFuture<Optional<NormalizedNode<?, ?>>, ReadFailedException> read(final LogicalDatastoreType store,
             final YangInstanceIdentifier path) {
         final JSONRPCArg arg = jsonConverter.convert(path, null);
@@ -146,7 +145,7 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
         final NormalizedNodeResult result = new NormalizedNodeResult();
         JsonParserStream jsonParser = null;
         DataNodeContainer tracker = schemaContext;
-        try (final NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(result)) {
+        try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(result)) {
             final Iterator<PathArgument> pathIterator = path.getPathArguments().iterator();
             while (pathIterator.hasNext()) {
                 final PathArgument step = pathIterator.next();
@@ -186,11 +185,11 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
             final ListenableFuture<Optional<NormalizedNode<?, ?>>> future = Futures
                     .immediateFuture(Optional.<NormalizedNode<?, ?>>of(result.getResult()));
             switch (store) {
-            case CONFIGURATION:
-            case OPERATIONAL:
-                return MappingCheckedFuture.create(future, ReadFailedException.MAPPER);
-            default:
-                throw new IllegalArgumentException(String.format(
+                case CONFIGURATION:
+                case OPERATIONAL:
+                    return MappingCheckedFuture.create(future, ReadFailedException.MAPPER);
+                default:
+                    throw new IllegalArgumentException(String.format(
                         "%s, Cannot read data %s for %s datastore, unknown datastore type", deviceName, path, store));
             }
         } catch (IOException e) {
@@ -200,8 +199,8 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
         }
     }
 
-    private CheckedFuture<Optional<NormalizedNode<?, ?>>, ReadFailedException> readFailure(Exception e) {
-        return MappingCheckedFuture.create(Futures.immediateFailedFuture(e), ReadFailedException.MAPPER);
+    private CheckedFuture<Optional<NormalizedNode<?, ?>>, ReadFailedException> readFailure(Exception ex) {
+        return MappingCheckedFuture.create(Futures.immediateFailedFuture(ex), ReadFailedException.MAPPER);
     }
 
     private CheckedFuture<Optional<NormalizedNode<?, ?>>, ReadFailedException> readFailure() {
@@ -210,6 +209,7 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
     }
 
     @Override
+    @SuppressWarnings("checkstyle:IllegalCatch")
     public CheckedFuture<Boolean, ReadFailedException> exists(LogicalDatastoreType store, YangInstanceIdentifier path) {
         final JSONRPCArg arg = jsonConverter.convert(path, null);
         final RemoteOmShard omshard = getOmShard(store, arg.path);
@@ -223,7 +223,7 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
     @Override
     public void close() {
         endPointMap.entrySet().forEach(e -> Util.closeNullableWithExceptionCallback(e.getValue(),
-                t -> LOG.warn("Failed to close RemoteOmShard proxy", t)));
+            t -> LOG.warn("Failed to close RemoteOmShard proxy", t)));
     }
 
     @Override
@@ -234,7 +234,8 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
             /* ODL supplies a null arg to create an entry before setting it */
             RemoteOmShard omshard = getOmShard(store, arg.path);
             /* this is ugly - extra lookup, needs fixing on another pass */
-            omshard.put(getTxId(lookupEndPoint(store, arg.path)), store2str(store2int(store)), deviceName, arg.path, arg.data);
+            omshard.put(getTxId(lookupEndPoint(store, arg.path)), store2str(store2int(store)), deviceName,
+                    arg.path, arg.data);
         }
     }
 
@@ -243,7 +244,8 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
             final NormalizedNode<?, ?> data) {
         final JSONRPCArg arg = jsonConverter.convert(path, data);
         final RemoteOmShard omshard = getOmShard(store, arg.path);
-        omshard.merge(getTxId(lookupEndPoint(store, arg.path)), store2str(store2int(store)), deviceName, arg.path, arg.data);
+        omshard.merge(getTxId(lookupEndPoint(store, arg.path)), store2str(store2int(store)), deviceName,
+                arg.path, arg.data);
 
     }
 
@@ -280,8 +282,8 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
                 (Function<RpcResult<TransactionStatus>, Void>) input -> null);
 
         return Futures.makeChecked(commmitFutureAsVoid,
-                input -> new TransactionCommitFailedException("Submit of transaction " + getIdentifier() + " failed",
-                        input));
+            input -> new TransactionCommitFailedException("Submit of transaction " + getIdentifier() + " failed",
+                    input));
     }
 
     @Override

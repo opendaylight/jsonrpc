@@ -11,16 +11,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.net.URISyntaxException;
-
 import org.junit.Test;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.jsonrpc.bus.messagelib.EndpointRole;
-import org.opendaylight.jsonrpc.impl.Util;
-import org.opendaylight.jsonrpc.impl.YangInstanceIdentifierDeserializer;
 
 /**
  * Tests for {@link Util} class.
- * 
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */

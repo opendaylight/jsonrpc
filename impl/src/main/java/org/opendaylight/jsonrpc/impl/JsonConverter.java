@@ -56,8 +56,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The Class JsonConverter converts YangInstanceIdentifier paths and
- * NormalizedNode data into json objects accordiong to draft-ietf-netmod-yang-json
+ * NormalizedNode data into json objects accordiong to draft-ietf-netmod-yang-json.
  *
+ * <p>
  * 1. Namespace is stripped from data, paths retain namespace (no point to ship in both)
  * 2. Objects are adjusted for BUS to ODL semantics and vice versa
  * ODL has the expectation that the data overlays with the path by one
@@ -68,6 +69,7 @@ import org.slf4j.LoggerFactory;
  * ODL      {"a":{"b":{}}}      {"b":{"b1":"b1-value", "b2":"b2-value"}}
  * BUS      {"a":{"b":{}}}      {"b1":"b1-value", "b2":"b2-value"}
  *
+ * <p>
  * This is not particularly efficient as it relies on ODL json reader/writers
  * It will benefit significantly from converting these to a custom gson
  * serializer/deserializer and registering it with gson
@@ -90,23 +92,7 @@ public class JsonConverter {
 
 
     /**
-     * Performs the actual data conversion
-     *
-     * @param qnames - a list of qnames pointing to the schema root
-     * @param data - Normalized Node
-     * @return converted data argument as a JsonObject
-     */
-
-    public JsonObject doConvert(List<QName> qnames, NormalizedNode<?, ?> data) {
-        if (!qnames.isEmpty()) {
-            return doConvert(SchemaPath.create(qnames, true), data);
-        } else {
-            return doConvert(SchemaPath.ROOT, data);
-        }
-    }
-
-    /**
-     * Performs the data conversion for an RPC argument
+     * Performs the data conversion for an RPC argument.
      *
      * @param path - Schema path for the rpc data.
      * @param data - Normalized Node argument as passed to the rpc
@@ -116,12 +102,13 @@ public class JsonConverter {
         LOG.debug("Converting node {} at path {}", data, path);
         final StringWriter writer = new StringWriter();
         final JsonWriter jsonWriter = JsonWriterFactory.createJsonWriter(writer);
-        final NormalizedNodeStreamWriter streamWriter = Util.wrapWithAnyXmlNullValueCallBack(JSONNormalizedNodeStreamWriter.createNestedWriter(
-                JSONCodecFactory.createSimple(schemaContext),path,null,jsonWriter));
+        final NormalizedNodeStreamWriter streamWriter = Util.wrapWithAnyXmlNullValueCallBack(
+                JSONNormalizedNodeStreamWriter.createNestedWriter(
+                        JSONCodecFactory.createSimple(schemaContext),path,null,jsonWriter));
         final NormalizedNodeWriter nodeWriter = NormalizedNodeWriter.forStreamWriter(streamWriter);
         try {
             jsonWriter.beginObject();
-            for(final DataContainerChild<? extends PathArgument, ?> child : data.getValue()) {
+            for (final DataContainerChild<? extends PathArgument, ?> child : data.getValue()) {
                 nodeWriter.write(child);
             }
             jsonWriter.endObject();
@@ -146,9 +133,26 @@ public class JsonConverter {
         } catch (java.io.IOException e) {
             return null;
         }
-     }
+    }
+
     /**
-     * Performs the actual data conversion
+     * Performs the actual data conversion.
+     *
+     * @param qnames - a list of qnames pointing to the schema root
+     * @param data - Normalized Node
+     * @return converted data argument as a JsonObject
+     */
+
+    public JsonObject doConvert(List<QName> qnames, NormalizedNode<?, ?> data) {
+        if (!qnames.isEmpty()) {
+            return doConvert(SchemaPath.create(qnames, true), data);
+        } else {
+            return doConvert(SchemaPath.ROOT, data);
+        }
+    }
+
+    /**
+     * Performs the actual data conversion.
      *
      * @param schemaPath - schema path for data
      * @param data - Normalized Node
@@ -159,7 +163,7 @@ public class JsonConverter {
         final JsonWriter jsonWriter = JsonWriterFactory.createJsonWriter(writer);
         final JSONCodecFactory codecFactory = JSONCodecFactory.createSimple(schemaContext);
         NormalizedNodeStreamWriter jsonStream;
-        if(data instanceof MapEntryNode) {
+        if (data instanceof MapEntryNode) {
             jsonStream = JSONNormalizedNodeStreamWriter.createNestedWriter(
                     codecFactory,
                     schemaPath,
@@ -183,17 +187,17 @@ public class JsonConverter {
             if (!jsonValue.startsWith("{")) {
                 jsonValue = "{" + jsonValue + "}";
             }
-            if(data instanceof LeafNode) {
+            if (data instanceof LeafNode) {
                 jsonValue += '}';
             }
             return new JsonParser().parse(jsonValue).getAsJsonObject();
         } catch (java.io.IOException e) {
             return null;
         }
-     }
+    }
 
     /**
-     * Convert a yang instance identifier path and (optionally) data to netmod draft-json format
+     * Convert a yang instance identifier path and (optionally) data to netmod draft-json format.
      *
      * @param path the YangInstanceIdentifier path
      * @param data the Data
@@ -205,109 +209,103 @@ public class JsonConverter {
         Iterator<PathArgument> pathIterator = path.getPathArguments().iterator();
         List<QName> qnames = new ArrayList<>();
 
-            JsonObject pathJson;
-            JsonElement dataJson = null;
-            JsonObject previous;
-            JsonObject tracker;
-            String lastKey;
-            String activeModule;
+        JsonObject pathJson;
+        JsonElement dataJson = null;
+        JsonObject previous;
+        JsonObject tracker;
+        String lastKey;
+        String activeModule;
 
+        if (pathIterator.hasNext()) {
+            pathJson = new JsonObject();
+            tracker = new JsonObject();
+            PathArgument root = pathIterator.next();
+            QName nodeType = root.getNodeType();
             if (pathIterator.hasNext()) {
-                pathJson = new JsonObject();
-                tracker = new JsonObject();
-                PathArgument root = pathIterator.next();
-                QName nodeType = root.getNodeType();
-                if (pathIterator.hasNext()) {
-                    qnames.add(nodeType);
-                }
+                qnames.add(nodeType);
+            }
 
-                StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
 
-                QNameModule qmodule = nodeType.getModule();
+            QNameModule qmodule = nodeType.getModule();
 
-                Optional<Module> possibleModule = schemaContext.findModule(
-                    qmodule.getNamespace(),
+            Optional<Module> possibleModule = schemaContext.findModule(qmodule.getNamespace(), qmodule.getRevision());
+            Preconditions.checkState(possibleModule.isPresent(),
+                    "Could not find module for namespace %s and revision %s", qmodule.getNamespace(),
                     qmodule.getRevision());
-                Preconditions.checkState(possibleModule.isPresent(),
-                    "Could not find module for namespace %s and revision %s",
-                    qmodule.getNamespace(),
-                    qmodule.getRevision()
-                    );
 
-                activeModule = possibleModule.get().getName();
-                sb.append(activeModule);
-                sb.append(COLON);
-                sb.append(root.getNodeType().getLocalName());
-                lastKey = sb.toString();
-                pathJson.add(lastKey, tracker);
+            activeModule = possibleModule.get().getName();
+            sb.append(activeModule);
+            sb.append(COLON);
+            sb.append(root.getNodeType().getLocalName());
+            lastKey = sb.toString();
+            pathJson.add(lastKey, tracker);
+        } else {
+            return EMPTY_RPC_ARG;
+        }
+
+        previous = tracker;
+
+        while (pathIterator.hasNext()) {
+            PathArgument pathArg = pathIterator.next();
+            JsonObject nextLevel = new JsonObject();
+            if (pathArg instanceof YangInstanceIdentifier.NodeIdentifierWithPredicates) {
+
+                Map<QName, Object> keyValues = ((YangInstanceIdentifier.NodeIdentifierWithPredicates) pathArg)
+                        .getKeyValues();
+
+                if (keyValues != null) {
+                    for (Entry<QName, Object> entry : keyValues.entrySet()) {
+                        nextLevel.add(entry.getKey().getLocalName(), new JsonPrimitive(entry.getValue().toString()));
+                    }
+                }
+
+                JsonArray jsonArray = new JsonArray();
+                jsonArray.add(nextLevel);
+
+                lastKey = pathArg.getNodeType().getLocalName();
+
+                previous.remove(lastKey);
+                previous.add(lastKey, jsonArray);
             } else {
-                return EMPTY_RPC_ARG;
+                if (pathIterator.hasNext()) {
+                    qnames.add(pathArg.getNodeType());
+                }
+                lastKey = pathArg.getNodeType().getLocalName();
+                tracker.add(lastKey, nextLevel);
             }
-
             previous = tracker;
+            tracker = nextLevel;
+        }
 
-            while (pathIterator.hasNext()) {
-                PathArgument pathArg = pathIterator.next();
-                JsonObject nextLevel = new JsonObject();
-                if (pathArg instanceof YangInstanceIdentifier.NodeIdentifierWithPredicates) {
+        if (data != null) {
 
-                    Map<QName, Object> keyValues =
-                            ((YangInstanceIdentifier.NodeIdentifierWithPredicates) pathArg).getKeyValues();
-
-                    if (keyValues != null) {
-                        for (Entry<QName, Object> entry : keyValues.entrySet()) {
-                            nextLevel.add(
-                                entry.getKey().getLocalName(), new JsonPrimitive(entry.getValue().toString())
-                            );
-                        }
-                    }
-
-                    JsonArray jsonArray = new JsonArray();
-                    jsonArray.add(nextLevel);
-
-                    lastKey = pathArg.getNodeType().getLocalName();
-
-                    previous.remove(lastKey);
-                    previous.add(lastKey, jsonArray);
+            /*
+             * KLUDGE - TODO we reuse the ODL ser/des which emits string to
+             * stream we should have this replaced by something that generates
+             * JSON natively
+             */
+            try {
+                JsonObject newData = this.doConvert(qnames, data);
+                if (newData == null) {
+                    dataJson = null;
                 } else {
-                    if (pathIterator.hasNext()) {
-                        qnames.add(pathArg.getNodeType());
-                    }
-                    lastKey = pathArg.getNodeType().getLocalName();
-                    tracker.add(lastKey, nextLevel);
-                }
-                previous = tracker;
-                tracker = nextLevel;
-            }
-
-            if (data != null) {
-
-                /* KLUDGE - TODO
-                 * we reuse the ODL ser/des which emits string to stream
-                 * we should have this replaced by something that generates
-                 * JSON natively
-                 */
-                try {
-                    JsonObject newData = this.doConvert(qnames, data);
-                    if (newData == null) {
-                        dataJson = null;
-                    } else {
-                        if (!newData.has(lastKey)) {
-                            if(!newData.has(activeModule + COLON + lastKey)) {
-                                dataJson = newData;
-                            } else {
-                                dataJson = decideStrip(newData, activeModule + COLON + lastKey, strip);
-                            }
+                    if (!newData.has(lastKey)) {
+                        if (!newData.has(activeModule + COLON + lastKey)) {
+                            dataJson = newData;
                         } else {
-                            dataJson = decideStrip(newData, lastKey, strip);
+                            dataJson = decideStrip(newData, activeModule + COLON + lastKey, strip);
                         }
+                    } else {
+                        dataJson = decideStrip(newData, lastKey, strip);
                     }
-                } catch (java.lang.IllegalStateException e) {
-                    //We should never land here
-                    throw e;
                 }
+            } catch (java.lang.IllegalStateException e) {
+                // We should never land here
+                throw e;
             }
-            return new JSONRPCArg(pathJson, dataJson);
+        }
+        return new JSONRPCArg(pathJson, dataJson);
     }
 
     private JsonElement decideStrip(JsonObject data, String outerElement, boolean strip) {
@@ -317,6 +315,7 @@ public class JsonConverter {
     public JSONRPCArg convert(YangInstanceIdentifier path, NormalizedNode<?, ?> data) {
         return convertWithStripControl(path, data, true);
     }
+
     /**
      * Convert bus received data to the ODL expected form.
      *
@@ -326,17 +325,13 @@ public class JsonConverter {
      */
     public JsonObject busToODL(final YangInstanceIdentifier path, JsonElement jsonElement) {
         Iterator<PathArgument> it = path.getPathArguments().iterator();
-        PathArgument pathArg = null; /* to get compiler to shut up*/
-        JsonObject result;
-
         if (!it.hasNext()) {
             return null;
         }
 
         /* Pull the last "key" off the path */
 
-
-        pathArg = it.next();
+        PathArgument pathArg = it.next();
 
         QName nodeType = pathArg.getNodeType();
         StringBuilder sb = new StringBuilder();
@@ -363,7 +358,7 @@ public class JsonConverter {
         sb.append(pathArg.getNodeType().getLocalName());
         String rootKey = sb.toString();
 
-        result = new JsonObject();
+        JsonObject result = new JsonObject();
         if (pathArg instanceof YangInstanceIdentifier.NodeIdentifierWithPredicates) {
             JsonArray asArray = new JsonArray();
             if (jsonElement != null && !jsonElement.isJsonNull()) {
@@ -395,7 +390,7 @@ public class JsonConverter {
 
     /**
      * Convert JSON representation of data into {@link NormalizedNode} based on
-     * given {@link YangInstanceIdentifier} path
+     * given {@link YangInstanceIdentifier} path.
      *
      * @param data JSON data
      * @param path path in schema tree
@@ -406,20 +401,23 @@ public class JsonConverter {
     }
 
     /**
-     * Convert JSON representation of data into {@link NormalizedNode} based on given {@link YangInstanceIdentifier} path.
-     * Optionally, JSON can be reduced to minimalistic form, where wrap flag is set to true
+     * Convert JSON representation of data into {@link NormalizedNode} based on given {@link YangInstanceIdentifier}
+     * path. Optionally, JSON can be reduced to minimalistic form, where wrap flag is set to true
      *
      * @param data JSON data
      * @param path path in schema tree
      * @param wrap flag to indicate that JSON data are in reduced form
      * @return {@link NormalizedNode}
      */
-    public NormalizedNode<?, ?> jsonElementToNormalizedNode(JsonElement data, YangInstanceIdentifier path, boolean wrap) {
+    public NormalizedNode<?, ?> jsonElementToNormalizedNode(JsonElement data, YangInstanceIdentifier path,
+            boolean wrap) {
         final NormalizedNodeResult resultHolder = new NormalizedNodeResult();
-        final NormalizedNodeStreamWriter writer = Util.wrapWithAnyXmlNullValueCallBack(ImmutableNormalizedNodeStreamWriter.from(resultHolder));
+        final NormalizedNodeStreamWriter writer = Util
+                .wrapWithAnyXmlNullValueCallBack(ImmutableNormalizedNodeStreamWriter.from(resultHolder));
         final SchemaNode parentSchema = findParentSchema(path);
         final JsonParserStream jsonParser = JsonParserStream.create(writer, schemaContext, parentSchema);
-        final JsonReader reader = new JsonReader(new StringReader((wrap ? wrapReducedJson(path, data) : data).toString()));
+        final JsonReader reader = new JsonReader(
+                new StringReader((wrap ? wrapReducedJson(path, data) : data).toString()));
         jsonParser.parse(reader);
         NormalizedNode<?, ?> result = resultHolder.getResult();
         if (result instanceof MapNode) {
@@ -431,7 +429,6 @@ public class JsonConverter {
 
     /**
      * To support simplified JSON data, we need to wrap it.
-     * @return
      */
     private JsonElement wrapReducedJson(YangInstanceIdentifier id, JsonElement data) {
         final QName qname = id.getLastPathArgument().getNodeType();

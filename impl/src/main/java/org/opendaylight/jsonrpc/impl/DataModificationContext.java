@@ -7,6 +7,7 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,20 +16,16 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import javax.annotation.Nonnull;
-
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
 import org.opendaylight.controller.md.sal.dom.api.DOMTransactionChain;
 import org.opendaylight.jsonrpc.model.TransactionFactory;
 
-import com.google.common.collect.ImmutableList;
-
 public class DataModificationContext implements AutoCloseable {
     private DOMTransactionChain chain;
     private List<Throwable> errors = Collections.emptyList();
-    private List<DOMDataWriteTransaction> txs = new ArrayList<>();
+    private final List<DOMDataWriteTransaction> txs = new ArrayList<>();
     private final AtomicLong completed = new AtomicLong(-1);
 
     public DataModificationContext(@Nonnull final TransactionFactory transactionFactory) {
@@ -37,7 +34,7 @@ public class DataModificationContext implements AutoCloseable {
     }
 
     /**
-     * Allocates new transaction
+     * Allocates new transaction.
      *
      * @return {@link DOMDataWriteTransaction}
      */
@@ -82,7 +79,7 @@ public class DataModificationContext implements AutoCloseable {
     }
 
     /**
-     * Check if transaction chain processing succeeded
+     * Check if transaction chain processing succeeded.
      *
      * @return true if and only if all transactions in chain succeeded (no
      *         errors has been recorded)
@@ -92,6 +89,8 @@ public class DataModificationContext implements AutoCloseable {
     }
 
     /**
+     * Returns the completion timestamp.
+     *
      * @return completion timestamp in UTC.
      *
      * @see System#currentTimeMillis()
@@ -101,17 +100,18 @@ public class DataModificationContext implements AutoCloseable {
     }
 
     /**
-     * Adds {@link Throwable} into exception list
+     * Adds {@link Throwable} into exception list.
      *
-     * @param e {@link Throwable} instance to add
+     * @param ex {@link Throwable} instance to add
      */
-    public void addError(Throwable e) {
-        errors.add(e);
+    public void addError(Throwable ex) {
+        errors.add(ex);
     }
 
     /**
-     * @return immutable copy of errors, if no errors occurred, list is empty (never
-     * NULL)
+     * Returns any errors that occurred.
+     *
+     * @return immutable copy of errors, if no errors occurred, list is empty (never NULL).
      */
     @Nonnull
     public List<Throwable> getErrors() {

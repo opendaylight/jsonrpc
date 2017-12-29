@@ -10,11 +10,12 @@ package org.opendaylight.jsonrpc.impl;
 import static org.opendaylight.jsonrpc.impl.Util.store2int;
 import static org.opendaylight.jsonrpc.impl.Util.store2str;
 
+import com.google.common.base.Preconditions;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import java.util.Collections;
 import java.util.Map;
-
 import javax.annotation.Nonnull;
-
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
@@ -34,11 +35,6 @@ import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
 
 @SuppressWarnings("deprecation")
 public class JsonRPCDataBroker implements DOMDataBroker, AutoCloseable {
@@ -75,14 +71,14 @@ public class JsonRPCDataBroker implements DOMDataBroker, AutoCloseable {
             Util.populateFromEndpointList(pathMap, peer.getDataConfigEndpoints(), DataType.CONFIGURATION_DATA);
         } else {
             pathMap.put(TOP, DataType.CONFIGURATION_DATA,
-                    governance.governance(store2str(store2int(LogicalDatastoreType.CONFIGURATION)), peer.getName(), TOP));
+                governance.governance(store2str(store2int(LogicalDatastoreType.CONFIGURATION)), peer.getName(), TOP));
         }
 
         if (peer.getDataOperationalEndpoints() != null) {
             Util.populateFromEndpointList(pathMap, peer.getDataOperationalEndpoints(), DataType.OPERATIONAL_DATA);
         } else {
             pathMap.put(TOP, DataType.OPERATIONAL_DATA,
-                    governance.governance(store2str(store2int(LogicalDatastoreType.OPERATIONAL)), peer.getName(), TOP));
+                governance.governance(store2str(store2int(LogicalDatastoreType.OPERATIONAL)), peer.getName(), TOP));
         }
         LOG.info("Broker Instantiated for {}", peer.getName());
     }
@@ -113,7 +109,8 @@ public class JsonRPCDataBroker implements DOMDataBroker, AutoCloseable {
     }
 
     @Override
-    public ListenerRegistration<DOMDataChangeListener> registerDataChangeListener(LogicalDatastoreType store, YangInstanceIdentifier path, DOMDataChangeListener listener, DataChangeScope triggeringScope) {
+    public ListenerRegistration<DOMDataChangeListener> registerDataChangeListener(LogicalDatastoreType store,
+            YangInstanceIdentifier path, DOMDataChangeListener listener, DataChangeScope triggeringScope) {
         throw new UnsupportedOperationException("Listener registrations are not supported by this DataBroker");
     }
 

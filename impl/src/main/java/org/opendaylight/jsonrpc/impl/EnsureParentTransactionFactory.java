@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.impl;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import org.opendaylight.controller.md.sal.binding.impl.AbstractWriteTransaction;
 import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodec;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
@@ -25,18 +24,16 @@ import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgum
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 
 /**
- * Implementation of {@link TransactionFactory} which follows semantics of
- * {@link AbstractWriteTransaction}
- * 
+ * Implementation of {@link TransactionFactory} which follows semantics of {@link AbstractWriteTransaction}.
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
-@SuppressWarnings("deprecation")
 class EnsureParentTransactionFactory implements TransactionFactory {
     private final BindingToNormalizedNodeCodec codec;
     protected final DOMDataBroker domDataBroker;
 
-    public EnsureParentTransactionFactory(final DOMDataBroker domDataBroker, final BindingToNormalizedNodeCodec codec) {
+    EnsureParentTransactionFactory(final DOMDataBroker domDataBroker, final BindingToNormalizedNodeCodec codec) {
         this.domDataBroker = domDataBroker;
         this.codec = codec;
     }

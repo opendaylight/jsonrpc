@@ -8,13 +8,12 @@
 package org.opendaylight.jsonrpc.model;
 import com.google.gson.JsonElement;
 
-
+@SuppressWarnings("checkstyle:AbbreviationAsWordInName")
 public class JSONRPCArg {
     public final JsonElement path;
     public final JsonElement data;
 
-    public JSONRPCArg(JsonElement path, JsonElement data)
-    {
+    public JSONRPCArg(JsonElement path, JsonElement data) {
         this.path = path;
         this.data = data;
     }

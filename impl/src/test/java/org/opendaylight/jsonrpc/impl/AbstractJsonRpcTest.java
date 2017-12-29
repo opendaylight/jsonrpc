@@ -7,12 +7,15 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.gson.JsonParser;
 import java.io.IOException;
+import java.net.Socket;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
+import junit.framework.AssertionFailedError;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMMountPointService;
@@ -22,14 +25,9 @@ import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.gson.JsonParser;
-
-import junit.framework.AssertionFailedError;
-
 /**
  * Common test infrastructure for {@link SchemaContext} aware tests.
- * 
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 abstract class AbstractJsonRpcTest extends AbstractSchemaAwareTest {
@@ -40,6 +38,7 @@ abstract class AbstractJsonRpcTest extends AbstractSchemaAwareTest {
     protected SchemaContext schemaContext;
     protected final JsonParser jsonParser = new JsonParser();
 
+    @Override
     protected void setupWithSchema(SchemaContext context) {
         this.testCustomizer = createDataBrokerTestCustomizer();
         this.dataBroker = this.testCustomizer.createDataBroker();
@@ -53,7 +52,7 @@ abstract class AbstractJsonRpcTest extends AbstractSchemaAwareTest {
         return this.testCustomizer.getSchemaService();
     }
 
-    protected void setupWithDataBroker(DataBroker dataBroker) {
+    protected void setupWithDataBroker(DataBroker broker) {
     }
 
     protected DataBrokerTestCustomizer createDataBrokerTestCustomizer() {
@@ -81,6 +80,7 @@ abstract class AbstractJsonRpcTest extends AbstractSchemaAwareTest {
         }
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     public static void retryAction(final TimeUnit timeUnit, final long wait, final Callable<Boolean> action)
             throws InterruptedException {
         int counter = 1;
@@ -104,10 +104,10 @@ abstract class AbstractJsonRpcTest extends AbstractSchemaAwareTest {
     protected static int getFreeTcpPort() {
         int port = -1;
         try {
-            java.net.Socket s = new java.net.Socket();
-            s.bind(null);
-            port = s.getLocalPort();
-            s.close();
+            Socket socket = new Socket();
+            socket.bind(null);
+            port = socket.getLocalPort();
+            socket.close();
             return port;
         } catch (IOException e) {
             throw new IllegalStateException(e);

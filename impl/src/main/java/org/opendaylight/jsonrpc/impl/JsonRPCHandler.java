@@ -7,15 +7,14 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
-import org.opendaylight.jsonrpc.bus.messagelib.*;
+import org.opendaylight.jsonrpc.bus.messagelib.ReplyMessageHandler;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
-public class JsonRPCHandler implements ReplyMessageHandler { 
+public class JsonRPCHandler implements ReplyMessageHandler {
     private JsonElement result;
     private JsonRpcErrorObject error;
     private JsonObject metadata;
@@ -24,31 +23,31 @@ public class JsonRPCHandler implements ReplyMessageHandler {
         return this.result;
     }
 
-    public JsonElement setResult(JsonElement result) {
-        this.result = result;
-        return result;
+    public JsonElement setResult(JsonElement newResult) {
+        this.result = newResult;
+        return newResult;
     }
 
     public JsonElement getMetadata() {
         return this.metadata;
     }
 
-    public JsonElement setMetadata(JsonObject metadata) {
-        this.metadata = metadata;
-        return metadata;
+    public JsonElement setMetadata(JsonObject newMetadata) {
+        this.metadata = newMetadata;
+        return newMetadata;
     }
 
     public JsonRpcErrorObject getError() {
         return this.error;
     }
 
-    public JsonRpcErrorObject setError(JsonRpcErrorObject error) {
-        this.error = error;
-        return error;
+    public JsonRpcErrorObject setError(JsonRpcErrorObject newError) {
+        this.error = newError;
+        return newError;
     }
 
     @Override
-    public void handleReply (JsonRpcReplyMessage reply) {
+    public void handleReply(JsonRpcReplyMessage reply) {
         try {
             if (! reply.isError()) {
                 this.setResult(reply.getResultAsObject(JsonElement.class));
@@ -58,8 +57,8 @@ public class JsonRPCHandler implements ReplyMessageHandler {
                 throw new JsonRpcException("AAAAArghhh...");
             }
         } catch (JsonRpcException e) {
-                this.setResult(null);
-                this.setError(reply.getError()); 
+            this.setResult(null);
+            this.setError(reply.getError());
         }
     }
 }

@@ -27,8 +27,8 @@ public class MutablePeer implements Peer {
     private final List<YangIdentifier> models = new ArrayList<>();
 
     // Builder-friendly methods
-    public MutablePeer name(String name) {
-        this.name = name;
+    public MutablePeer name(String newName) {
+        this.name = newName;
         return this;
     }
 
@@ -37,8 +37,8 @@ public class MutablePeer implements Peer {
         return this;
     }
 
-    public MutablePeer addModels(List<YangIdentifier> models) {
-        this.models.addAll(models);
+    public MutablePeer addModels(List<YangIdentifier> yangIds) {
+        this.models.addAll(yangIds);
         return this;
     }
 

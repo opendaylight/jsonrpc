@@ -10,11 +10,12 @@ package org.opendaylight.jsonrpc.impl;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,12 +49,9 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcE
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 
-import com.google.common.base.Optional;
-import com.google.common.collect.Lists;
-
 /**
  * Tests for {@link JsonRPCProvider}.
- * 
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
@@ -92,18 +90,18 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         provider.close();
     }
 
-    @Test(timeout=15000)
+    @Test(timeout = 15000)
     public void testMountUnmount() throws InterruptedException, ExecutionException, ReadFailedException {
         DataConfigEndpointsBuilder dataConfigEndpointsBuilder = new DataConfigEndpointsBuilder();
         dataConfigEndpointsBuilder.setEndpointUri(new Uri(String.format("zmq://localhost:%d", governancePort)));
         dataConfigEndpointsBuilder.setPath("{}");
-        List<DataConfigEndpoints> configList = new ArrayList<DataConfigEndpoints>();
+        List<DataConfigEndpoints> configList = new ArrayList<>();
         configList.add(dataConfigEndpointsBuilder.build());
 
         DataOperationalEndpointsBuilder dataOperEndpointsBuilder = new DataOperationalEndpointsBuilder();
         dataOperEndpointsBuilder.setEndpointUri(new Uri(String.format("zmq://localhost:%d", governancePort)));
         dataOperEndpointsBuilder.setPath("{}");
-        List<DataOperationalEndpoints> operList = new ArrayList<DataOperationalEndpoints>();
+        List<DataOperationalEndpoints> operList = new ArrayList<>();
         operList.add(dataOperEndpointsBuilder.build());
         final ConfiguredEndpoints ep = new ConfiguredEndpointsBuilder().setDataConfigEndpoints(configList)
                 .setDataOperationalEndpoints(operList).setModules(Lists.newArrayList(new YangIdentifier(DEMO1_MODEL)))
@@ -112,13 +110,13 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
 
         final YangInstanceIdentifier yii = Util.createBiPath(TOASTER);
         retryAction(TimeUnit.SECONDS, 5, getDOMMountPointService().getMountPoint(yii)::isPresent);
-        Optional<DOMMountPoint> mp = getDOMMountPointService().getMountPoint(yii);
+
         // Verify that peer appeared
         retryAction(TimeUnit.SECONDS, 2, () -> TOASTER.equals(getPeerOpState(TOASTER).get().getName()));
         provider.forceRefresh().get();
         // Verify that peer vanished
         retryAction(TimeUnit.SECONDS, 2, () -> !getPeerOpState(TOASTER).isPresent());
-        mp = this.getDOMMountPointService().getMountPoint(yii);
+        Optional<DOMMountPoint> mp = this.getDOMMountPointService().getMountPoint(yii);
         assertTrue(!mp.isPresent());
     }
 
@@ -130,7 +128,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     }
 
     // Here we mount 'device' by updating configuration
-    @Test(timeout=15000)
+    @Test(timeout = 15000)
     public void test_ConfigDriven() throws Exception {
         // unconfigure all
         updateConfig(new ConfigBuilder().build());
@@ -154,7 +152,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     }
 
     // Test build-in (global SchemaContext)
-    @Test(timeout=15000)
+    @Test(timeout = 15000)
     public void test_BuiltinSchemaContextProvider() throws Exception {
         // unconfigure all
         updateConfig(new ConfigBuilder().build());

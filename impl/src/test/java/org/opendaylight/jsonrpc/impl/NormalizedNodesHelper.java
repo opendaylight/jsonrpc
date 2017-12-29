@@ -7,6 +7,7 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import javassist.ClassPool;
 import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodec;
 import org.opendaylight.mdsal.binding.dom.codec.gen.impl.DataObjectSerializerGenerator;
 import org.opendaylight.mdsal.binding.dom.codec.gen.impl.StreamWriterGenerator;
@@ -16,17 +17,15 @@ import org.opendaylight.mdsal.binding.generator.util.BindingRuntimeContext;
 import org.opendaylight.mdsal.binding.generator.util.JavassistUtils;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
-import javassist.ClassPool;
-
 /**
  * Helper class to provide easy way to encode/decode of DOM objects.
- * 
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
-public class NormalizedNodesHelper {
+public final class NormalizedNodesHelper {
     private static NormalizedNodesHelper instance = null;
-    private BindingToNormalizedNodeCodec bnnc;
+    private final BindingToNormalizedNodeCodec bnnc;
 
     private NormalizedNodesHelper(SchemaContext schemaContext) {
         DataObjectSerializerGenerator generator = StreamWriterGenerator

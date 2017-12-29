@@ -7,8 +7,10 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.common.io.Resources;
+import com.google.gson.JsonPrimitive;
 import java.io.IOException;
-
+import java.nio.charset.StandardCharsets;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.RequestMessageHandler;
@@ -16,14 +18,9 @@ import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
-import com.google.gson.JsonPrimitive;
-
 /**
- * {@link RequestMessageHandler} which acts as mock implementation of
- * {@link RemoteGovernance}.
- * 
+ * {@link RequestMessageHandler} which acts as mock implementation of {@link RemoteGovernance}.
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
@@ -35,20 +32,20 @@ public class GovernanceMessageHandler implements RequestMessageHandler, AutoClos
         LOG.info("Req : {}", request);
         try {
             switch (request.getMethod()) {
-            case "source":
-                reply.setResult(new JsonPrimitive(getYangSource(request.getParams().getAsString())));
-                return;
-            case "governance":
-                reply.setResult(new JsonPrimitive("ok"));
-                return;
-            case "close":
-                reply.setResult(new JsonPrimitive("ok"));
-                return;
-            default:
-                reply.setResultAsObject("ERROR : unknown method : " + request.getMethod());
-                return;
+                case "source":
+                    reply.setResult(new JsonPrimitive(getYangSource(request.getParams().getAsString())));
+                    return;
+                case "governance":
+                    reply.setResult(new JsonPrimitive("ok"));
+                    return;
+                case "close":
+                    reply.setResult(new JsonPrimitive("ok"));
+                    return;
+                default:
+                    reply.setResultAsObject("ERROR : unknown method : " + request.getMethod());
+                    return;
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             LOG.error("I/O error", e);
             reply.setResultAsObject("ERROR");
         }
@@ -56,7 +53,7 @@ public class GovernanceMessageHandler implements RequestMessageHandler, AutoClos
 
     private String getYangSource(String moduleName) throws IOException {
         String str = Resources.toString(Resources.getResource(getClass(), "/" + moduleName + ".yang"),
-                Charsets.US_ASCII);
+                StandardCharsets.US_ASCII);
         return str;
     }
 

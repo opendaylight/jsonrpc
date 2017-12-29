@@ -7,25 +7,24 @@
  */
 package org.opendaylight.jsonrpc.model;
 
+import com.google.common.base.Preconditions;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import java.net.URISyntaxException;
-
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.messagelib.EndpointRole;
+import org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryException;
 import org.opendaylight.jsonrpc.bus.messagelib.Session;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.impl.JsonRPCHandler;
 import org.opendaylight.jsonrpc.impl.Util;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 
-import com.google.common.base.Preconditions;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
 public class RpcState {
-    private String name;
-    private RpcDefinition rpc;
-    private Session client;
-    private JsonRPCHandler handler;
+    private final String name;
+    private final RpcDefinition rpc;
+    private final Session client;
+    private final JsonRPCHandler handler;
 
     public RpcState(String qname, RpcDefinition rpc, String endpoint, TransportFactory transportFactory)
             throws URISyntaxException {
@@ -46,7 +45,7 @@ public class RpcState {
     }
 
     public JsonObject lastMetadata() {
-        if ( this.handler.getMetadata() != null) {
+        if (this.handler.getMetadata() != null) {
             return this.handler.getMetadata().getAsJsonObject();
         } else {
             return null;
@@ -71,7 +70,7 @@ public class RpcState {
             } else {
                 return null;
             }
-        } catch (Exception e) {
+        } catch (MessageLibraryException e) {
             return null;
         }
     }

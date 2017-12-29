@@ -172,7 +172,7 @@ public class JsonRPCNotificationService implements DOMNotificationService, Notif
 
         try (NormalizedNodeStreamWriter streamWriter = Util
                 .wrapWithAnyXmlNullValueCallBack(ImmutableNormalizedNodeStreamWriter.from(notificationBuilder))) {
-            try (final JsonParserStream jsonParser = JsonParserStream.create(streamWriter, schemaContext,
+            try (JsonParserStream jsonParser = JsonParserStream.create(streamWriter, schemaContext,
                     new NotificationContainerProxy(notificationState.notification()))) {
                 jsonParser.parse(new JsonReader(new StringReader(jsonResult.toString())));
                 return new JsonRpcNotification(notificationBuilder.build(), eventTime,
@@ -184,26 +184,21 @@ public class JsonRPCNotificationService implements DOMNotificationService, Notif
         } catch (IOException e1) {
             LOG.error("Failed to close JSON parser", e1);
             return null;
-        } catch (Exception e) {
-            LOG.error("General error processing notification", e);
-            return null;
         }
     }
 
     @Override
     public void handleNotification(JsonRpcRequestMessage notification) {
-        String method = null;
-        JsonElement parsed = null;
+        String method = notification.getMethod();
+        JsonElement parsed;
         NotificationState ns;
-        Date eventTime = new Date();
 
         LOG.debug("Got notification {}", notification);
         try {
             parsed = notification.getParamsAsObject(JsonElement.class);
-            method = notification.getMethod();
             ns = Preconditions.checkNotNull(mappedNotifications.get(method));
         } catch (JsonRpcException e) {
-            LOG.error("Error processing notification {}", e);
+            LOG.error("Error processing notification", e);
             return;
         } catch (IllegalStateException e) {
             LOG.error("Notification not mapped {}", method, e);
@@ -227,9 +222,11 @@ public class JsonRPCNotificationService implements DOMNotificationService, Notif
             }
         }
 
-        final DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> notificationBuilder = ImmutableContainerNodeBuilder
-                .create().withNodeIdentifier(NodeIdentifier.create(ns.notification().getQName()));
+        final DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> notificationBuilder =
+                ImmutableContainerNodeBuilder.create().withNodeIdentifier(NodeIdentifier.create(
+                        ns.notification().getQName()));
 
+        Date eventTime = new Date();
         final DOMNotification deserialized = extractNotification(ns, digested, notificationBuilder, eventTime);
 
         LOG.debug("Deserialized {}", deserialized);

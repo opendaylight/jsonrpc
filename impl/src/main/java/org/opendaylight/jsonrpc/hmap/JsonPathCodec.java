@@ -7,27 +7,25 @@
  */
 package org.opendaylight.jsonrpc.hmap;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Map.Entry;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map.Entry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of {@link PathCodec} which consumes {@link JsonElement} and
- * produce sequence of {@link String} node identifiers
+ * produce sequence of {@link String} node identifiers.
  *
  * @see PathCodec
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
-public class JsonPathCodec implements PathCodec<JsonElement, String> {
+public final class JsonPathCodec implements PathCodec<JsonElement, String> {
     private static final Logger LOG = LoggerFactory.getLogger(JsonPathCodec.class);
     private static final JsonPathCodec INSTANCE = new JsonPathCodec();
 

@@ -70,7 +70,8 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
         mod = schemaContext.findModule("test-model", Revision.of("2016-11-17")).get();
 
         transportFactory = mock(TransportFactory.class);
-        when(transportFactory.createSubscriber(anyString(), any())).thenAnswer(invocation -> Util.createThreadedSubscriberSession((String) invocation.getArguments()[0],
+        when(transportFactory.createSubscriber(anyString(), any())).thenAnswer(invocation ->
+            Util.createThreadedSubscriberSession((String) invocation.getArguments()[0],
                 (AutoCloseable) invocation.getArguments()[1]));
         svc = new JsonRPCNotificationService(getPeer(),
                 new BuiltinSchemaContextProvider(schemaContext).createSchemaContext(getPeer()), pathMap,

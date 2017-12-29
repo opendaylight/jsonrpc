@@ -26,7 +26,8 @@
  * <pre>
  *
  * JsonPathCodec codec = JsonPathCodec.create();
- * HierarchicalEnumMap&lt;JsonElement, Types, String, String&gt; map = HierarchicalEnumHashMap.create(Types.class, codec);
+ * HierarchicalEnumMap&lt;JsonElement, Types, String, String&gt; map =
+ *         HierarchicalEnumHashMap.create(Types.class, codec);
  *
  * map.lookup(path, Types.TYPE_A); // perform lookup
  *
@@ -34,7 +35,7 @@
  * </pre>
  *
  * </blockquote>
- * 
+ *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 package org.opendaylight.jsonrpc.hmap;
