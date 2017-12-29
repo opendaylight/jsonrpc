@@ -7,18 +7,17 @@
  */
 package org.opendaylight.jsonrpc.bus.jsonrpc;
 
-import java.lang.reflect.Type;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import java.lang.reflect.Type;
 
 /**
  * This is the serializer for the JSON RPC Reply Message. This does not verify
  * that only one of Result or Error parameter is set. Hence an invalid JSON RPC
  * Reply can be created. This behavior is useful for negative tests.
- * 
+ *
  * @author Shaleen Saxena
  */
 public class JsonRpcReplyMessageSerializer extends Object implements JsonSerializer<JsonRpcReplyMessage> {

@@ -7,12 +7,13 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import static org.junit.Assert.assertEquals;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static org.junit.Assert.assertEquals;
 
 public class ParallelRequesterTest {
     private static Logger logger;
@@ -30,11 +31,11 @@ public class ParallelRequesterTest {
     }
 
     private class ParallelClient implements Runnable {
-        private ServerInterface serverProxy;
-        private String num;
-        private int delay;
+        private final ServerInterface serverProxy;
+        private final String num;
+        private final int delay;
 
-        public ParallelClient(ServerInterface serverProxy, int num, int delay) {
+        ParallelClient(ServerInterface serverProxy, int num, int delay) {
             this.serverProxy = serverProxy;
             this.num = Integer.toString(num);
             this.delay = delay;
@@ -74,13 +75,13 @@ public class ParallelRequesterTest {
     private void doTest(Thread[] clients) {
         goodCount = 0;
 
-        for(int i = 0; i < clients.length; i++) {
-            clients[i].start();
+        for (Thread client : clients) {
+            client.start();
         }
 
-        for(int i = 0; i < clients.length; i++) {
+        for (Thread client : clients) {
             try {
-                clients[i].join();
+                client.join();
             } catch (InterruptedException e) {
                 logger.error("Interrupted waiting for client join", e);
                 Thread.currentThread().interrupt();
@@ -92,12 +93,11 @@ public class ParallelRequesterTest {
     }
 
     @Test
-    public void testMultiClientSharedProxy()
-    {
+    public void testMultiClientSharedProxy() {
         // Create multiple clients with each sharing the server proxy.
         // Since these block on the client side, having a low timeout is fine.
         Thread[] clients = new Thread[threadCount];
-        ServerInterface serverProxy = (ServerInterface) proxy.createRequesterProxy(
+        ServerInterface serverProxy = proxy.createRequesterProxy(
                 "tcp://127.0.0.1:" + port, ServerInterface.class, timeout);
 
         for (int i = 0; i < threadCount; i++) {
@@ -107,10 +107,9 @@ public class ParallelRequesterTest {
         doTest(clients);
         serverProxy.close();
     }
- 
+
     @Test
-    public void testMultiClientSeparateProxy()
-    {
+    public void testMultiClientSeparateProxy() {
         // Create multiple threads with each having a separate server proxy.
         // Since these do not block on client side, the timeout should be proportional
         // to the number of threads.
@@ -118,18 +117,18 @@ public class ParallelRequesterTest {
         ServerInterface[] servers = new ServerInterface[threadCount];
 
         for (int i = 0; i < threadCount; i++) {
-            servers[i] = (ServerInterface) proxy.createRequesterProxy(
+            servers[i] = proxy.createRequesterProxy(
                         "tcp://127.0.0.1:" + port, ServerInterface.class, timeout * threadCount);
             clients[i] = new Thread(new ParallelClient(servers[i], i, echoDelay));
         }
 
         doTest(clients);
 
-        for (int i = 0; i < servers.length; i++) {
-            servers[i].close();
+        for (ServerInterface server2 : servers) {
+            server2.close();
         }
     }
- 
+
     @AfterClass
     public static void teardown() {
         showFunctionName();

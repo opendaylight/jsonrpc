@@ -11,6 +11,7 @@ package org.opendaylight.jsonrpc.bus;
  * This factory is used to create different kinds of sessions for a given bus.
  * This interface needs to be implemented by various bus implementations.
  *
+ * <p>
  * Use {@link #close()} to close the underlying bus.
  * <dl>
  * <dt>publisher</dt>
@@ -22,14 +23,13 @@ package org.opendaylight.jsonrpc.bus;
  * <dt>requester</dt>
  * <dd>Client to send requests and receive replies.</dd>
  * </dl>
- * 
+ *
  * @author Shaleen Saxena
  */
 public interface BusSessionFactory<T extends BusSession> extends AutoCloseable {
     /**
-     * Create {@link SessionType#PUBLISHER} session to given URI with default
-     * topic (empty string)
-     * 
+     * Create {@link SessionType#PUBLISHER} session to given URI with default topic (empty string).
+     *
      * @param uri URI pointing to remote service
      * @return {@link BusSession}
      */
@@ -38,18 +38,16 @@ public interface BusSessionFactory<T extends BusSession> extends AutoCloseable {
     }
 
     /**
-     * Create {@link SessionType#PUBLISHER} session to given URI with specified
-     * topic
-     * 
+     * Create {@link SessionType#PUBLISHER} session to given URI with specified topic.
+     *
      * @param uri URI pointing to remote service
      * @return {@link BusSession}
      */
     T publisher(String uri, String topic);
 
     /**
-     * Create {@link SessionType#SUBSCRIBER} session to given URI with default
-     * topic (empty string)
-     * 
+     * Create {@link SessionType#SUBSCRIBER} session to given URI with default topic (empty string).
+     *
      * @param uri URI pointing to remote service
      * @return {@link BusSession}
      */
@@ -58,38 +56,37 @@ public interface BusSessionFactory<T extends BusSession> extends AutoCloseable {
     }
 
     /**
-     * Create {@link SessionType#PUBLISHER} session to given URI with specified
-     * topic
-     * 
+     * Create {@link SessionType#PUBLISHER} session to given URI with specified topic.
+     *
      * @param uri URI pointing to remote service
      * @return {@link BusSession}
      */
     T subscriber(String uri, String topic);
 
     /**
-     * Create {@link SessionType#RESPONDER} session to given URI
-     * 
+     * Create {@link SessionType#RESPONDER} session to given URI.
+     *
      * @param uri URI pointing to remote service
      * @return {@link BusSession}
      */
     T responder(String uri);
 
     /**
-     * Create new {@link SessionType#REQUESTER} session to given URI
-     * 
+     * Create new {@link SessionType#REQUESTER} session to given URI.
+     *
      * @param uri URI pointing to remote service
      * @return {@link BusSession}
      */
     T requester(String uri);
 
     /**
-     * Close {@link BusSessionFactory}, eventually releasing all resources
+     * Close {@link BusSessionFactory}, eventually releasing all resources.
      */
     @Override
     void close();
 
     /**
-     * Returns name of underlying transport, eg "zmq"
+     * Returns name of underlying transport, eg "zmq".
      */
     String name();
 }

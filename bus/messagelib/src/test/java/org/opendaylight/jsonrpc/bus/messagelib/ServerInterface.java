@@ -8,5 +8,5 @@
 package org.opendaylight.jsonrpc.bus.messagelib;
 
 public interface ServerInterface extends ServerPartialInterface {
-    public String notImplemented(String[] msgs);
+    String notImplemented(String[] msgs);
 }

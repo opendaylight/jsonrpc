@@ -7,26 +7,25 @@
  */
 package org.opendaylight.jsonrpc.bus.jsonrpc;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is the top-level serializer and deserializer for JSON RPC messages
  * ({@link JsonRpcBaseMessage} and its derived classes). Ideally, there should
  * be one serializer for each derived class.
- * 
+ *
  * @author Shaleen Saxena
  */
-public class JsonRpcSerializer {
-    private static final Logger logger = LoggerFactory.getLogger(JsonRpcSerializer.class);
+public final class JsonRpcSerializer {
+    private static final Logger LOG = LoggerFactory.getLogger(JsonRpcSerializer.class);
 
     private JsonRpcSerializer() {
         // empty constructor
@@ -41,7 +40,7 @@ public class JsonRpcSerializer {
         JsonElement id = obj.get(JsonRpcConstants.ID);
 
         JsonElement jsonrpcElem = obj.get(JsonRpcConstants.JSONRPC);
-        if ((jsonrpcElem == null) || (jsonrpcElem.isJsonNull())) {
+        if (jsonrpcElem == null || jsonrpcElem.isJsonNull()) {
             return new JsonRpcMessageError(id, -32700, "JSON RPC version is not defined", null);
         }
 
@@ -70,7 +69,8 @@ public class JsonRpcSerializer {
             } else {
                 // Valid result message
                 if (obj.has(JsonRpcConstants.METADATA)) {
-                    return new JsonRpcReplyMessage(id, obj.get(JsonRpcConstants.RESULT), obj.get(JsonRpcConstants.METADATA).getAsJsonObject());
+                    return new JsonRpcReplyMessage(id, obj.get(JsonRpcConstants.RESULT),
+                            obj.get(JsonRpcConstants.METADATA).getAsJsonObject());
                 } else {
                     return new JsonRpcReplyMessage(id, obj.get(JsonRpcConstants.RESULT));
                 }
@@ -104,7 +104,7 @@ public class JsonRpcSerializer {
      * message or an array of messages. Hence, the return value is a list of
      * {@link JsonRpcBaseMessage}, even for single messages. If a message cannot
      * be parsed, then a {@link JsonRpcMessageError} object is returned.
-     * 
+     *
      * @param strJson Incoming String containing JSON RPC message.
      * @return Returns a list of messages.
      */
@@ -115,8 +115,8 @@ public class JsonRpcSerializer {
 
         try {
             parsedJson = gson.fromJson(strJson, JsonElement.class);
-        } catch (Exception e) {
-            logger.debug("Unable to parse JSON message", e);
+        } catch (JsonSyntaxException e) {
+            LOG.debug("Unable to parse JSON message", e);
             parsedJson = null;
         }
 

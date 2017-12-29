@@ -23,7 +23,8 @@ import org.slf4j.LoggerFactory;
 
 
 public class MessageLibraryNegativeTest {
-    private static final String BAD_JSON_STRING = "{\"jsonrpc\":\"2.0\",\"id\":100,\"method\":\"publish\",\"params\":\"zyxwuv\"";
+    private static final String BAD_JSON_STRING =
+            "{\"jsonrpc\":\"2.0\",\"id\":100,\"method\":\"publish\",\"params\":\"zyxwuv\"";
     private static MessageLibrary messaging;
     private static TestMessageHandler handler;
     private static Logger logger;

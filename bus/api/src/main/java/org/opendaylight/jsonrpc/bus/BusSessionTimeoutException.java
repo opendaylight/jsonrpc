@@ -9,7 +9,7 @@ package org.opendaylight.jsonrpc.bus;
 
 /**
  * Checked {@link Exception} which is thrown by messaging library when message
- * was not received within timeout interval
+ * was not received within timeout interval.
  *
  */
 public class BusSessionTimeoutException extends Exception {

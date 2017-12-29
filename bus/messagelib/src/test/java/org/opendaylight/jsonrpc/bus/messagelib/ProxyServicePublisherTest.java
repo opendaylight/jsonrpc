@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 import static org.junit.Assert.assertEquals;
 
 import java.util.concurrent.TimeUnit;
-
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -18,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ProxyServicePublisherTest {
-    private static final Logger logger = LoggerFactory.getLogger(ProxyServicePublisherTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProxyServicePublisherTest.class);
     private static MessageLibrary messaging;
     private static ProxyServiceImpl proxy;
     private static PublishExtraInterface publisherProxy;
@@ -27,7 +26,7 @@ public class ProxyServicePublisherTest {
     private static Lock lock;
 
     private static void showFunctionName() {
-        logger.info(Thread.currentThread().getStackTrace()[2].getMethodName());
+        LOG.info(Thread.currentThread().getStackTrace()[2].getMethodName());
     }
 
     @BeforeClass
@@ -44,23 +43,21 @@ public class ProxyServicePublisherTest {
                 handler);
 
         proxy = new ProxyServiceImpl(messaging);
-        publisherProxy = (PublishExtraInterface) proxy.createPublisherProxy(
+        publisherProxy = proxy.createPublisherProxy(
                 "tcp://*:" + port, PublishExtraInterface.class);
 
         try {
             // Let subscriber join. Sleep is the best method we have for now.
             TimeUnit.MILLISECONDS.sleep(200L);
         } catch (InterruptedException e) {
-            logger.debug("Interrupted", e);
+            LOG.debug("Interrupted", e);
             Thread.currentThread().interrupt();
         }
     }
 
     @Test
-    public void testProxyPublish() throws InterruptedException, MessageLibraryTimeoutException 
-    {
+    public void testProxyPublish() throws InterruptedException, MessageLibraryTimeoutException {
         String msg1 = "abcdef";
-        String msg2 = "ghijkl";
 
         showFunctionName();
 
@@ -71,20 +68,21 @@ public class ProxyServicePublisherTest {
         assertEquals(msg1, handler.noticeParam);
 
         lock.reset();
+        String msg2 = "ghijkl";
         publisherProxy.publish(msg2);
         // Let the message get handled.
         lock.doWait();
         assertEquals(msg2, handler.noticeParam);
     }
 
-    @Test(expected=ProxyServiceGenericException.class)
-    public void testProxyInvalidPublish() throws Throwable {
+    @Test(expected = ProxyServiceGenericException.class)
+    public void testProxyInvalidPublish() {
         showFunctionName();
         publisherProxy.invalidPublish("abcdef");
     }
 
     @AfterClass
-    public static void teardown() {
+    public static void teardown() throws Exception {
         showFunctionName();
         subscriber.stop();
         subscriber.joinAndClose();

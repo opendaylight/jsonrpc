@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.bus.messagelib.osgi;
 
 import java.util.Iterator;
 import java.util.List;
-
 import org.opendaylight.jsonrpc.bus.BusSession;
 import org.opendaylight.jsonrpc.bus.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.spi.BusSessionFactoryProvider;
@@ -32,8 +31,7 @@ public class OsgiBusSessionFactoryProvider implements BusSessionFactoryProvider 
     }
 
     /**
-     * List of registered {@link BusSessionFactory} service is set by blueprint
-     * container
+     * List of registered {@link BusSessionFactory} service is set by blueprint container.
      *
      * @param sessionFactories list of {@link BusSessionFactory} services
      */

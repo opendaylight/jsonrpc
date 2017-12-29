@@ -8,11 +8,13 @@
 package org.opendaylight.jsonrpc.bus;
 
 /**
- * Message handler invoked by messaging library
+ * Message handler invoked by messaging library.
  */
 @FunctionalInterface
 public interface BusSessionMsgHandler {
     /**
+     * Invoked to handle a message.
+     *
      * @return 0 to continue loop, -1 to stop loop.
      */
     int handleIncomingMsg(String message);

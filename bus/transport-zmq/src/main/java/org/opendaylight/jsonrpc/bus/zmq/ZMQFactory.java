@@ -15,7 +15,7 @@ import org.zeromq.ZContext;
  * This class implements the
  * {@link org.opendaylight.jsonrpc.bus.BusSessionFactory
  * BusSessionFactory} for the ZeroMQ bus service.
- * 
+ *
  * @author Shaleen Saxena
  *
  */

@@ -13,14 +13,12 @@ import static org.junit.Assert.assertNull;
 
 import java.net.URI;
 import java.util.Map;
-
 import org.junit.Test;
 
 /**
  * Tests for {@link Util} class.
- * 
- * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
+ * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public class UtilTest {
     @Test

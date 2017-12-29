@@ -8,15 +8,15 @@
 
 package org.opendaylight.jsonrpc.bus.jsonrpc;
 
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNull;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.junit.Test;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNull;
-
-/*
- * Verify constructors and getters in JsonRpcErrorObject class
+/**
+ * Verify constructors and getters in JsonRpcErrorObject class.
  */
 public class JsonRpcErrorObjectTest {
     private final int testCode = -32000;

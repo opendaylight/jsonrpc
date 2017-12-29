@@ -12,7 +12,7 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 /**
  * This interface needs to be implemented by classes that wish to handle
  * notifications. There is no response needed after handling any notification.
- * 
+ *
  * @author Shaleen Saxena
  */
 public interface NotificationMessageHandler extends AutoCloseable {

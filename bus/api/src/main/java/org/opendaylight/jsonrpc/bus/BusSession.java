@@ -12,12 +12,14 @@ package org.opendaylight.jsonrpc.bus;
  * over a bus. The messages are treated as Strings. More complex objects may
  * need to be serialized before sending or deserialized after receiving. This
  * interface needs to be implemented by various bus implementations.
- * 
+ *
+ * <p>
  * A timeout value may be specified. This is the time to wait before the bus is
  * available for sending or receiving messages.
- * 
+ *
+ * <p>
  * Use {@link #close()} to close this session.
- * 
+ *
  * @author Shaleen Saxena
  *
  */
@@ -26,7 +28,7 @@ public interface BusSession extends AutoCloseable {
     /**
      * Read message from bus. This method will block caller until message is
      * received or timeout expired, whichever comes first
-     * 
+     *
      * @return message received from bus
      * @throws BusSessionTimeoutException when message was not received within
      *             timeout interval
@@ -34,30 +36,30 @@ public interface BusSession extends AutoCloseable {
     String readMessage() throws BusSessionTimeoutException;
 
     /**
-     * Send text message to bus
-     * 
+     * Send text message to bus.
+     *
      * @param message message to send
      * @return true if and only if transmission of message was successful
      */
     boolean sendMessage(String message);
 
     /**
-     * Get session type
-     * 
+     * Get session type.
+     *
      * @return {@link SessionType}
      */
     SessionType getSessionType();
 
     /**
-     * Get current timeout value, in milliseconds
-     * 
+     * Get current timeout value, in milliseconds.
+     *
      * @return timeout value
      */
     int getTimeout();
 
     /**
-     * Set timeout in milliseconds
-     * 
+     * Set timeout in milliseconds.
+     *
      * @param timeout timeout value
      */
     void setTimeout(int timeout);
@@ -69,19 +71,19 @@ public interface BusSession extends AutoCloseable {
     void setTimeoutToDefault();
 
     /**
-     * Start RX/TX loop
-     * 
+     * Start RX/TX loop.
+     *
      * @param handler message handler used to process messages
      */
     void startLoop(BusSessionMsgHandler handler);
 
     /**
-     * Stop RX/TX loop
+     * Stop RX/TX loop.
      */
     void stopLoop();
 
     /**
-     * Performs cleanup of session
+     * Performs cleanup of session.
      */
     @Override
     void close();

@@ -12,7 +12,7 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 /**
  * This interface needs to be implemented by classes that wish to handle Reply
  * messages. There is no response needed after handling any reply.
- * 
+ *
  * @author Shaleen Saxena
  */
 public interface ReplyMessageHandler {

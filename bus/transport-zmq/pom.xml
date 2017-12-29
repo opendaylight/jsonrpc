@@ -20,6 +20,18 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <version>1.3.2-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>JSON-RPC :: BUS :: ZeroMQ transport</name>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <configuration>
+                    <propertyExpansion>checkstyle.violationSeverity=error</propertyExpansion>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
     <dependencyManagement>
         <dependencies>
             <dependency>

@@ -7,13 +7,13 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import com.google.gson.JsonElement;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
 import org.opendaylight.jsonrpc.bus.SessionType;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
@@ -24,15 +24,13 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.JsonElement;
-
 /**
  * This service provides clients with an ability to define a proxy interface to
  * a server. The proxy interface must be same as the one defined by the server.
  * To define an interface for a notification server (i.e. a publisher), all
  * methods must return void, otherwise a {@link ProxyServiceGenericException} is
  * thrown.
- * 
+ *
  * @author Shaleen Saxena
  *
  */
@@ -80,7 +78,7 @@ public class ProxyServiceImpl implements ProxyService {
 
     private void deleteProxy(Object obj) {
         if (proxyMap.containsKey(obj)) {
-            try (final Session session = proxyMap.get(obj)) {
+            try (Session session = proxyMap.get(obj)) {
                 proxyMap.remove(obj);
             }
         }
@@ -125,9 +123,8 @@ public class ProxyServiceImpl implements ProxyService {
             return null;
         }
 
-        if ((session.getSessionType() == SessionType.PUBLISHER) &&
-            (!method.getReturnType().equals(void.class))) {
-                throw new ProxyServiceGenericException("Method expects return value for publisher.");
+        if (session.getSessionType() == SessionType.PUBLISHER && !method.getReturnType().equals(void.class)) {
+            throw new ProxyServiceGenericException("Method expects return value for publisher.");
         }
 
         try {
@@ -143,9 +140,10 @@ public class ProxyServiceImpl implements ProxyService {
 
 
     private Object getResultFromRequest(Method method, String msg) {
-        if (msg == null)
+        if (msg == null) {
             // nothing to do
             return null;
+        }
 
         // Parse reply and process.
         List<JsonRpcBaseMessage> replyList = JsonRpcSerializer.fromJson(msg);

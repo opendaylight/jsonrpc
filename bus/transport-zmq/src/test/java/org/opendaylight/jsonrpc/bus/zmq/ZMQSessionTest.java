@@ -19,8 +19,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.BusSessionTimeoutException;
-import org.opendaylight.jsonrpc.bus.zmq.ZMQFactory;
-import org.opendaylight.jsonrpc.bus.zmq.ZMQSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
@@ -56,7 +54,7 @@ public class ZMQSessionTest {
         rep = factory.responder("tcp://*:" + port1);
         assertNotNull(rep);
         rep.setTimeout(timeout);
-        
+
         req = factory.requester("tcp://127.0.0.1:" + port1);
         assertNotNull(req);
         req.setTimeout(timeout);
@@ -102,8 +100,7 @@ public class ZMQSessionTest {
     }
 
     @Test
-    public void pubSubSendReceive() throws InterruptedException, BusSessionTimeoutException 
-    {
+    public void pubSubSendReceive() throws InterruptedException, BusSessionTimeoutException {
         showFunctionName();
         Thread.sleep(200); // waiting for sub to actually join
         pub.sendMessage(msg1);
@@ -125,7 +122,7 @@ public class ZMQSessionTest {
         assertNull(rxMsg);
     }
 
-    @Test(expected=BusSessionTimeoutException.class)
+    @Test(expected = BusSessionTimeoutException.class)
     public void reqReceiveTimeout() throws BusSessionTimeoutException {
         showFunctionName();
         rxMsg = req.readMessage(); // no client message has been sent.
@@ -142,13 +139,13 @@ public class ZMQSessionTest {
         assertFalse(result);
 
         // cleanup the messages on req-rep channel so that
-        // they can be used by other tests 
+        // they can be used by other tests
         rxMsg = rep.readMessage();
         rep.sendMessage(rxMsg);
         rxMsg = req.readMessage();
     }
 
-    @Test(timeout=600)
+    @Test(timeout = 600)
     public void reqManualReopen() throws BusSessionTimeoutException {
         showFunctionName();
         boolean result;
@@ -171,7 +168,7 @@ public class ZMQSessionTest {
         assertEquals(msg4, rxMsg);
     }
 
-    @Test(timeout=600)
+    @Test(timeout = 600)
     public void reqTimeoutReopen() throws BusSessionTimeoutException {
         showFunctionName();
         boolean result;

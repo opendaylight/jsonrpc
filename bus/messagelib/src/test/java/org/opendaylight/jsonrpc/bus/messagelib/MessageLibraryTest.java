@@ -42,7 +42,7 @@ public class MessageLibraryTest {
         String port2 = TestHelper.getFreeTcpPort();
         publisher = messaging.publisher("tcp://*:" + port2);
         subscriber = messaging.subscriber("tcp://localhost:" + port2);
-        
+
         handler = new TestMessageHandler();
         server.setRequestMessageHandler(handler);
         client.setReplyMessageHandler(handler);
@@ -58,8 +58,7 @@ public class MessageLibraryTest {
     }
 
     @Test
-    public void testServerClientEcho() throws MessageLibraryException
-    {
+    public void testServerClientEcho() throws MessageLibraryException {
         showFunctionName();
         client.sendRequest("echo", "abc");
         int serverCount = server.handleIncomingMessage();
@@ -70,8 +69,7 @@ public class MessageLibraryTest {
     }
 
     @Test
-    public void testServerClientConcat() throws MessageLibraryException 
-    {
+    public void testServerClientConcat() throws MessageLibraryException {
         showFunctionName();
         // Create params to send on request channel
         Object[] params = { "first", "second" };
@@ -84,13 +82,12 @@ public class MessageLibraryTest {
     }
 
     @Test
-    public void testServerClientInvalidMethod() throws MessageLibraryException
-    {
+    public void testServerClientInvalidMethod() throws MessageLibraryException {
         showFunctionName();
         // Create method and params and send on request channel
         client.sendRequest("dummy", null);
-        int serverCount = server.handleIncomingMessage();
-        int clientCount = client.handleIncomingMessage();
+        final int serverCount = server.handleIncomingMessage();
+        final int clientCount = client.handleIncomingMessage();
         assertEquals(-32601, handler.error.getCode());
         assertEquals(null, handler.result);
         assertEquals(1, serverCount);
@@ -98,16 +95,15 @@ public class MessageLibraryTest {
     }
 
     @Test
-    public void testServerClientInvalidMessage() throws MessageLibraryException
-    {
+    public void testServerClientInvalidMessage() throws MessageLibraryException {
         showFunctionName();
         // Create method and params and send on request channel
         JsonRpcRequestMessage msg = new JsonRpcRequestMessage();
         msg.setMethod("dummy");
         msg.setIdAsIntValue(4);
         client.sendMessage(msg);
-        int serverCount = server.handleIncomingMessage();
-        int clientCount = client.handleIncomingMessage();
+        final int serverCount = server.handleIncomingMessage();
+        final int clientCount = client.handleIncomingMessage();
         assertEquals(-32700, handler.error.getCode());
         assertEquals(null, handler.result);
         assertEquals(1, serverCount);
@@ -115,8 +111,7 @@ public class MessageLibraryTest {
     }
 
     @Test
-    public void testServerClientInvalidMethodParameters() throws MessageLibraryException
-    {
+    public void testServerClientInvalidMethodParameters() throws MessageLibraryException {
         showFunctionName();
         String[] params = { "any-non-integer-argument" };
         client.sendRequest("increment", params);
@@ -125,11 +120,10 @@ public class MessageLibraryTest {
         assertEquals(-32602, handler.error.getCode());
     }
 
-    @Test(timeout=600)
-    public void testSessionTimeout() throws MessageLibraryException
-    {
+    @Test(timeout = 600)
+    public void testSessionTimeout() throws MessageLibraryException {
         showFunctionName();
-        int defaultTime = client.getTimeout();
+        final int defaultTime = client.getTimeout();
         client.setTimeout(200);
         assertEquals(200, client.getTimeout());
 
@@ -147,8 +141,7 @@ public class MessageLibraryTest {
     }
 
     @Test
-    public void testPubSub() throws MessageLibraryException
-    {
+    public void testPubSub() throws MessageLibraryException {
         showFunctionName();
         publisher.sendRequest("noticeMethod", "noticeParam");
         int subscriberCount = subscriber.handleIncomingMessage();
@@ -160,10 +153,6 @@ public class MessageLibraryTest {
     @AfterClass
     public static void teardown() {
         showFunctionName();
-        try {
-            messaging.close();
-        } catch (Exception e) {
-            logger.error("Message library error", e);
-        }
+        messaging.close();
     }
 }

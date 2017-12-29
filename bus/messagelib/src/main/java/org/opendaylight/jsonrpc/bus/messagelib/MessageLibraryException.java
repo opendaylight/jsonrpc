@@ -19,7 +19,7 @@ public class MessageLibraryException extends Exception {
         super(message);
     }
 
-    public MessageLibraryException(Throwable e) {
-        super(e);
+    public MessageLibraryException(Throwable cause) {
+        super(cause);
     }
 }

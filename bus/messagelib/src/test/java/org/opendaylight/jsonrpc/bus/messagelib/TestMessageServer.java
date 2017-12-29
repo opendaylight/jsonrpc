@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TestMessageServer implements ServerPartialInterface {
-    public static final Logger logger = LoggerFactory.getLogger(TestMessageServer.class);
+    public static final Logger LOG = LoggerFactory.getLogger(TestMessageServer.class);
 
     @Override
     public String echo(String msg) {
@@ -42,7 +42,7 @@ public class TestMessageServer implements ServerPartialInterface {
         try {
             Thread.sleep(time);
         } catch (InterruptedException e) {
-            logger.error("Got interrupted", e);
+            LOG.error("Got interrupted", e);
             Thread.currentThread().interrupt();
         }
         return msg;

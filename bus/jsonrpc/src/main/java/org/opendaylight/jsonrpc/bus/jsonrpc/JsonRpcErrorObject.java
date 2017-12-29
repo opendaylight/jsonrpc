@@ -15,7 +15,7 @@ import com.google.gson.JsonPrimitive;
  * This class represents the internal error object that could be sent as part of
  * JSON RPC reply. This class should be wrapped inside a
  * {@link org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage JsonRpcMessageClass} class.
- * 
+ *
  * @author Shaleen Saxena
  */
 public class JsonRpcErrorObject {
@@ -37,7 +37,8 @@ public class JsonRpcErrorObject {
     }
 
     /**
-     * Convert an error message into an error object
+     * Convert an error message into an error object.
+     *
      * @param elem A JSON representation of the error message
      */
     public JsonRpcErrorObject(JsonElement elem) {

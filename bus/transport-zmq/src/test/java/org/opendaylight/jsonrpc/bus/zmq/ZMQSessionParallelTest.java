@@ -14,8 +14,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.BusSessionTimeoutException;
-import org.opendaylight.jsonrpc.bus.zmq.ZMQFactory;
-import org.opendaylight.jsonrpc.bus.zmq.ZMQSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,7 +87,6 @@ public class ZMQSessionParallelTest {
             assertEquals(msg2, rxMsg);
         }
     }
-
 
     @AfterClass
     public static void teardown() {

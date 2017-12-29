@@ -16,15 +16,13 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.BusSessionTimeoutException;
-import org.opendaylight.jsonrpc.bus.zmq.ZMQFactory;
-import org.opendaylight.jsonrpc.bus.zmq.ZMQSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ZMQSessionPubSubTopicTest {
-    private static final Logger logger = LoggerFactory.getLogger(ZMQSessionPubSubTopicTest.class);
-    private static final String topic1 = "MyTopic";
-    private static final String topic2 = "OtherTopic";
+    private static final Logger LOG = LoggerFactory.getLogger(ZMQSessionPubSubTopicTest.class);
+    private static final String TOPIC1 = "MyTopic";
+    private static final String TOPIC2 = "OtherTopic";
 
     private static ZMQFactory factory;
     private static ZMQSession pub;
@@ -34,11 +32,11 @@ public class ZMQSessionPubSubTopicTest {
     String msg1 = "Hello";
     static int timeout = 500; // 0.5 second wait
 
-	static void showFunctionName() {
-	    logger.info(Thread.currentThread().getStackTrace()[2].getMethodName());
-	}
+    static void showFunctionName() {
+        LOG.info(Thread.currentThread().getStackTrace()[2].getMethodName());
+    }
 
-	@BeforeClass
+    @BeforeClass
     public static void setup() {
         showFunctionName();
 
@@ -47,32 +45,31 @@ public class ZMQSessionPubSubTopicTest {
 
         // Publisher for a topic
         String port = TestHelper.getFreeTcpPort();
-        pub = factory.publisher("tcp://*:" + port, topic1);
+        pub = factory.publisher("tcp://*:" + port, TOPIC1);
         assertNotNull(pub);
         pub.setTimeout(timeout);
 
         // Subscriber 1 listens on publisher topic
-        sub1 = factory.subscriber("tcp://127.0.0.1:" + port, topic1);
+        sub1 = factory.subscriber("tcp://127.0.0.1:" + port, TOPIC1);
         assertNotNull(sub1);
         sub1.setTimeout(timeout);
 
         // Subscriber 2 listens on different topic
-        sub2 = factory.subscriber("tcp://127.0.0.1:" + port, topic2);
+        sub2 = factory.subscriber("tcp://127.0.0.1:" + port, TOPIC2);
         assertNotNull(sub2);
         sub2.setTimeout(timeout);
 
         // Wait for sub to actually join
         try {
-			Thread.sleep(200);
-		} catch (InterruptedException e) {
-			logger.debug("Sleep interrupted", e);
-			Thread.currentThread().interrupt();
-		}
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            LOG.debug("Sleep interrupted", e);
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Test
-    public void pubSubTopicSendReceive() throws BusSessionTimeoutException 
-    {
+    public void pubSubTopicSendReceive() throws BusSessionTimeoutException {
         showFunctionName();
 
         // Publish message
@@ -84,11 +81,11 @@ public class ZMQSessionPubSubTopicTest {
 
         // Verify subscriber 2 got nothing
         try {
-        	rxMsg = sub2.readMessage();
-        	logger.info("recieved", rxMsg);
-        	fail("Received a message");
+            rxMsg = sub2.readMessage();
+            LOG.info("recieved", rxMsg);
+            fail("Received a message");
         } catch (BusSessionTimeoutException e) {
-        	assertTrue(true);
+            assertTrue(true);
         }
     }
 

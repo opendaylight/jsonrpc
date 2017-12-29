@@ -9,8 +9,5 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 
 public interface PublishInterface extends AutoCloseable {
 
-    public void publish(String msg);
-
-    @Override
-    public void close();
+    void publish(String msg);
 }

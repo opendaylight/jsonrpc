@@ -8,14 +8,11 @@
 package org.opendaylight.jsonrpc.bus.jsonrpc;
 
 import java.util.Arrays;
-
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RpcMessageIntArrayParams {
-    public static final Logger logger = LoggerFactory.getLogger(RpcMessageIntArrayParams.class);
+    public static final Logger LOG = LoggerFactory.getLogger(RpcMessageIntArrayParams.class);
     JsonRpcRequestMessage req;
     int[] params;
 
@@ -24,7 +21,7 @@ public class RpcMessageIntArrayParams {
         try {
             this.params = req.getParamsAsObject(int[].class);
         } catch (JsonRpcException e) {
-            logger.error("JSON message error", e);
+            LOG.error("JSON message error", e);
         }
     }
 

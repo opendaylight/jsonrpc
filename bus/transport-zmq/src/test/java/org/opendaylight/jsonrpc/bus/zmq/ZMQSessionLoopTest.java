@@ -15,8 +15,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.BusSessionMsgHandler;
 import org.opendaylight.jsonrpc.bus.BusSessionTimeoutException;
-import org.opendaylight.jsonrpc.bus.zmq.ZMQFactory;
-import org.opendaylight.jsonrpc.bus.zmq.ZMQSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,19 +27,18 @@ public class ZMQSessionLoopTest {
     String msg1 = "Hello";
     String rxMsg;
 
-    private class ServerHandler implements BusSessionMsgHandler, Runnable
-    {
-        private ZMQSession session;
-        
-        public ServerHandler(ZMQSession session) {
+    private class ServerHandler implements BusSessionMsgHandler, Runnable {
+        private final ZMQSession session;
+
+        ServerHandler(ZMQSession session) {
             this.session = session;
         }
-        
+
         // Echo the message. Close for "close" message.
         @Override
         public int handleIncomingMsg(String message) {
             session.sendMessage(message);
-            return (message.equals("close")) ? -1 : 0;
+            return message.equals("close") ? -1 : 0;
         }
 
         @Override
@@ -65,7 +62,7 @@ public class ZMQSessionLoopTest {
         String port = TestHelper.getFreeTcpPort();
         rep = factory.responder("tcp://*:" + port);
         assertNotNull(rep);
-        
+
         req = factory.requester("tcp://127.0.0.1:" + port);
         assertNotNull(req);
     }

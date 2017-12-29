@@ -7,6 +7,10 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonPrimitive;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -18,8 +22,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import com.google.gson.JsonSyntaxException;
 import org.opendaylight.jsonrpc.bus.BusSession;
 import org.opendaylight.jsonrpc.bus.BusSessionMsgHandler;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
@@ -29,14 +31,9 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonPrimitive;
-
 public class ThreadedSessionImpl<T extends AutoCloseable>
         implements Runnable, BusSessionMsgHandler, NotificationMessageHandler, RequestMessageHandler, ThreadedSession {
-    private static final Logger logger = LoggerFactory.getLogger(ThreadedSessionImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ThreadedSessionImpl.class);
     private static final ExecutorService THREAD_POOL = Executors
             .newCachedThreadPool(new ThreadFactoryBuilder().setNameFormat("Bus-session-%d").setDaemon(true).build());
     private final Object handler;
@@ -62,21 +59,21 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
      * <ol>
      * <li>is named 'methodAbc'</li>
      * <li>is named 'method_abc'</li>
-     * <ol>
+     * </ol>
      * the number of method arguments is not a factor in the match
      */
     private static class NameMatchingPredicate implements Predicate<Method> {
         protected final JsonRpcRequestMessage msg;
 
-        public NameMatchingPredicate(JsonRpcRequestMessage msg) {
+        NameMatchingPredicate(JsonRpcRequestMessage msg) {
             this.msg = msg;
         }
 
         @Override
-        public boolean test(Method t) {
+        public boolean test(Method method) {
             boolean nameMatched = false;
-            nameMatched |= t.getName().equalsIgnoreCase(toUnderscoreName(msg.getMethod()));
-            nameMatched |= t.getName().equalsIgnoreCase(toCamelCaseName(msg.getMethod()));
+            nameMatched |= method.getName().equalsIgnoreCase(toUnderscoreName(msg.getMethod()));
+            nameMatched |= method.getName().equalsIgnoreCase(toCamelCaseName(msg.getMethod()));
             return nameMatched;
         }
 
@@ -89,14 +86,14 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
          * <li>method-abc =&gt; method_abc</li>
          * <li>method_def =&gt; method_def</li>
          * <li>method123 => method123</li>
-         * <ul>
+         * </ul>
          */
         private String toUnderscoreName(String name) {
             return name.replaceAll("-", "_");
         }
 
         /**
-         * Convert raw method name to one with camel case
+         * Convert raw method name to one with camel case.
          */
         private String toCamelCaseName(String name) {
             final String ret = Arrays.asList(name.split("_|-")).stream().map(n -> {
@@ -116,21 +113,21 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
      */
     private static class StrictMatchingPredicate extends NameMatchingPredicate {
 
-        public StrictMatchingPredicate(JsonRpcRequestMessage msg) {
+        StrictMatchingPredicate(JsonRpcRequestMessage msg) {
             super(msg);
         }
 
-        private boolean nameMatches(Method t) {
-            return super.test(t);
+        private boolean nameMatches(Method method) {
+            return super.test(method);
         }
 
-        private boolean parameterCountMatches(Method t) {
-            return getParametersCount(msg) == t.getParameterTypes().length;
+        private boolean parameterCountMatches(Method method) {
+            return getParametersCount(msg) == method.getParameterTypes().length;
         }
 
         @Override
-        public boolean test(Method t) {
-            return nameMatches(t) && parameterCountMatches(t);
+        public boolean test(Method method) {
+            return nameMatches(method) && parameterCountMatches(method);
         }
     }
 
@@ -202,20 +199,13 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
             // objects with members similar to another might be parsed
             // as one or other
             for (final Method m : opt) {
-                Object[] args = null;
                 try {
-                    args = getArgumentsForMethod(m, message);
+                    Object[] args = getArgumentsForMethod(m, message);
                     return m.invoke(handler, args);
                 } catch (JsonRpcException e) {
-                    if (args == null) {
-                        String msg = String.format("Failed to manage arguments when invoking method %s", m);
-                        logger.debug(msg);
-                        throw new IllegalArgumentException(msg);
-                    }
-                    else {
-                        // failed to set arguments or invoke method
-                        logger.debug("Failed to invoke method {} with arguments {}", m, args);
-                    }
+                    String msg = String.format("Failed to manage arguments when invoking method %s", m);
+                    LOG.debug(msg);
+                    throw new IllegalArgumentException(msg, e);
                 }
             }
         }
@@ -225,7 +215,7 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
         opt = findMethodLenient(message);
         if (!opt.isEmpty()) {
             String msg = String.format("Found method but wrong number of arguments: %s", message.getMethod());
-            logger.debug(msg);
+            LOG.debug(msg);
             throw new IllegalArgumentException(msg);
         }
 
@@ -248,10 +238,10 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
             } else {
                 invokeHandler(notification);
             }
-        } catch (Exception e) {
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             // We don't care if there are any exceptions.
             // No way to tell the publisher.
-            logger.error("Can't map notification to method : {}", notification.getMethod(), e);
+            LOG.error("Can't map notification to method : {}", notification.getMethod(), e);
         }
     }
 
@@ -274,15 +264,15 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
             Object response = invokeHandler(request);
             reply.setResultAsObject(response);
         } catch (IllegalAccessException | NoSuchMethodException e) {
-            logger.error("Request method not found: {}", request.getMethod());
+            LOG.error("Request method not found: {}", request.getMethod());
             JsonRpcErrorObject error = new JsonRpcErrorObject(-32601, "Method not found", null);
             reply.setError(error);
         } catch (IllegalArgumentException e) {
-            logger.error("Invalid arguments");
+            LOG.error("Invalid arguments");
             JsonRpcErrorObject error = new JsonRpcErrorObject(-32602, "Invalid params", null);
             reply.setError(error);
         } catch (InvocationTargetException e) {
-            logger.error("Error while executing method: {}", request.getMethod());
+            LOG.error("Error while executing method: {}", request.getMethod());
             JsonRpcErrorObject error = new JsonRpcErrorObject(-32000, getErrorMessage(e), null);
             reply.setError(error);
         }
@@ -315,7 +305,7 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
         try {
             session.processIncomingMessage(message);
         } catch (MessageLibraryMismatchException e) {
-            logger.error("Invalid message received", e);
+            LOG.error("Invalid message received", e);
         }
         // One of the message handling method might have raised interrupt on
         // this thread.
@@ -328,7 +318,7 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
         final String threadName = Thread.currentThread().getName();
         try {
             Thread.currentThread().setName(threadName + " [" + session.getSessionType().name() + "]");
-            logger.trace("Thread starting {}", future);
+            LOG.trace("Thread starting {}", future);
             session.startLoop(this);
         } finally {
             Thread.currentThread().setName(threadName);
@@ -340,9 +330,9 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
         try {
             future.get();
             session.close();
-            logger.trace("Thread stopped");
+            LOG.trace("Thread stopped");
         } catch (InterruptedException | ExecutionException e) {
-            logger.debug("Thread interrupted", e);
+            LOG.debug("Thread interrupted", e);
         }
     }
 }

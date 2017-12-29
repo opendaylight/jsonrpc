@@ -11,7 +11,7 @@ package org.opendaylight.jsonrpc.bus.messagelib;
  * This is an exception that is thrown if the server returns an error in the
  * response. Currently the data field is ignored. The code can be obtained via
  * the message string.
- * 
+ *
  * @author Shaleen Saxena
  */
 public class ProxyServiceGenericException extends RuntimeException {

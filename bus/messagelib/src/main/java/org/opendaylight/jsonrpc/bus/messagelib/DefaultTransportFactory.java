@@ -17,6 +17,8 @@ import java.net.URISyntaxException;
  */
 public class DefaultTransportFactory implements TransportFactory {
     /**
+     * {@inheritDoc}.
+     *
      * @see Util#createProxy(Class, String)
      */
     @Override
@@ -25,6 +27,8 @@ public class DefaultTransportFactory implements TransportFactory {
     }
 
     /**
+     * {@inheritDoc}.
+     *
      * @see Util#createThreadedResponderSession(String, AutoCloseable)
      */
     @Override
@@ -34,6 +38,8 @@ public class DefaultTransportFactory implements TransportFactory {
     }
 
     /**
+     * {@inheritDoc}.
+     *
      * @see Util#createThreadedSubscriberSession(String, AutoCloseable)
      */
     @Override
@@ -43,6 +49,8 @@ public class DefaultTransportFactory implements TransportFactory {
     }
 
     /**
+     * {@inheritDoc}.
+     *
      * @see Util#openSession(String)
      * @see Util#openSession(String, String)
      */

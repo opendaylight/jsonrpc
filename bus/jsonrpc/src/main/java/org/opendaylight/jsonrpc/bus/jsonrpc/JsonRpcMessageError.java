@@ -14,7 +14,7 @@ import com.google.gson.JsonElement;
  * message. This class contains sufficient information to build a
  * {@link org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage
  * JsonRpcReplyMessage} containing the error details.
- * 
+ *
  * @author Shaleen Saxena
  */
 public class JsonRpcMessageError extends JsonRpcBaseMessage {

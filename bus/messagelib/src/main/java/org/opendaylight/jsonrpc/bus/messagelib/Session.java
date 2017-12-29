@@ -7,10 +7,11 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
 import org.opendaylight.jsonrpc.bus.BusSession;
 import org.opendaylight.jsonrpc.bus.BusSessionMsgHandler;
 import org.opendaylight.jsonrpc.bus.BusSessionTimeoutException;
@@ -24,18 +25,15 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
 /**
  * The session object that is used to communicate over a bus. This object can be
  * of different types {@link SessionType}, which have different capabilities.
  * Use the {@link MessageLibrary} to create the correct session.
- * 
+ *
  * @author Shaleen Saxena
  */
 public class Session implements AutoCloseable {
-    private static final Logger logger = LoggerFactory.getLogger(Session.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Session.class);
     private final MessageLibrary messaging;
     private final SessionType sessionType;
     private final BusSession busSession;
@@ -91,7 +89,7 @@ public class Session implements AutoCloseable {
      */
     public void sendRequest(String method, Object params) throws MessageLibraryMismatchException {
         // Check if we have valid session
-        if ((sessionType == SessionType.SUBSCRIBER) || (sessionType == SessionType.RESPONDER)) {
+        if (sessionType == SessionType.SUBSCRIBER || sessionType == SessionType.RESPONDER) {
             throw new MessageLibraryMismatchException("Send not supported for this session.");
         }
 
@@ -112,11 +110,12 @@ public class Session implements AutoCloseable {
 
         return;
     }
+
     /**
      * This method is used to send requests or notification messages. If the
      * channel is PUBLISHER, the message is assumed to be notification. If the
      * channel is REQUESTER, the message is assumed to be request.
-     * 
+     *
      * @param method The method to which this request or notification is
      *            directed at.
      * @param params Optional parameters. Can be a single object or an array.
@@ -126,7 +125,7 @@ public class Session implements AutoCloseable {
      */
     public void sendRequest(String method, Object params, JsonObject metadata) throws MessageLibraryMismatchException {
         // Check if we have valid session
-        if ((sessionType == SessionType.SUBSCRIBER) || (sessionType == SessionType.RESPONDER)) {
+        if (sessionType == SessionType.SUBSCRIBER || sessionType == SessionType.RESPONDER) {
             throw new MessageLibraryMismatchException("Send not supported for this session.");
         }
 
@@ -153,56 +152,59 @@ public class Session implements AutoCloseable {
 
     /**
      * Sends a reply message with a result.
-     * 
-     * @param id The id of the request which generated this reply.
+     *
+     * @param idElem The id of the request which generated this reply.
      * @param result The result object.
      * @throws MessageLibraryMismatchException see exception for more details
      */
-    public void sendReplyWithResult(JsonElement id, Object result) throws MessageLibraryMismatchException {
+    public void sendReplyWithResult(JsonElement idElem, Object result) throws MessageLibraryMismatchException {
         // Build Result Reply
         JsonRpcReplyMessage reply = new JsonRpcReplyMessage();
         reply.setDefaultJsonrpc();
-        reply.setId(id);
+        reply.setId(idElem);
         reply.setResultAsObject(result);
         sendMessage(reply);
     }
 
     /**
-     * Sends a reply message with a result, provide metadata support
-     * 
-     * @param id The id of the request which generated this reply.
+     * Sends a reply message with a result, provide metadata support.
+     *
+     * @param idElem The id of the request which generated this reply.
      * @param result The result object.
      * @param metadata The metadata object.
      * @throws MessageLibraryMismatchException see exception for more details
      */
-    public void sendReplyWithResult(JsonElement id, Object result, JsonObject metadata) throws MessageLibraryMismatchException {
+    public void sendReplyWithResult(JsonElement idElem, Object result, JsonObject metadata)
+            throws MessageLibraryMismatchException {
         // Build Result Reply
         JsonRpcReplyMessage reply = new JsonRpcReplyMessage();
         reply.setDefaultJsonrpc();
-        reply.setId(id);
+        reply.setId(idElem);
         reply.setResultAsObject(result);
         reply.setMetadata(metadata);
         sendMessage(reply);
     }
+
     /**
      * Sends a reply message with an error response.
-     * 
-     * @param id The id of the request which generated this reply.
+     *
+     * @param idElem The id of the request which generated this reply.
      * @param error The error containing code, message, and optional data.
      * @throws MessageLibraryMismatchException see exception for more details
      */
-    public void sendReplyWithError(JsonElement id, JsonRpcErrorObject error) throws MessageLibraryMismatchException {
+    public void sendReplyWithError(JsonElement idElem, JsonRpcErrorObject error)
+            throws MessageLibraryMismatchException {
         // Build Error Reply
         JsonRpcReplyMessage reply = new JsonRpcReplyMessage();
         reply.setDefaultJsonrpc();
-        reply.setId(id);
+        reply.setId(idElem);
         reply.setError(error);
         sendMessage(reply);
     }
 
     /**
      * A low level message sending method, to send user-created strings.
-     * 
+     *
      * @param msg A single message (i.e. request or reply)
      * @throws MessageLibraryMismatchException see exception for more details
      */
@@ -218,7 +220,7 @@ public class Session implements AutoCloseable {
 
     /**
      * A low level message sending method, to send user-created messages.
-     * 
+     *
      * @param msg A single message (i.e. request or reply)
      * @throws MessageLibraryMismatchException see exception for more details
      */
@@ -226,10 +228,9 @@ public class Session implements AutoCloseable {
         sendMessage(JsonRpcSerializer.toJson(msg));
     }
 
-    /***
-     * A low level message sending method, to send a list of user-created
-     * messages.
-     * 
+    /**
+     * A low level message sending method, to send a list of user-created messages.
+     *
      * @param msg
      *            A list of messages (i.e. request or reply).
      * @throws MessageLibraryMismatchException see exception for more details
@@ -324,20 +325,22 @@ public class Session implements AutoCloseable {
 
         for (JsonRpcBaseMessage msg : incoming) {
             switch (sessionType) {
-            case PUBLISHER:
-                // Publisher should not receive any message
-                throw new MessageLibraryMismatchException(
+                case PUBLISHER:
+                    // Publisher should not receive any message
+                    throw new MessageLibraryMismatchException(
                         String.format("Publisher received %s message", msg.getType().name()));
-            case REQUESTER:
-                requesterHandleMessage(msg);
-                break;
-            case RESPONDER:
-                outgoing.add(responderHandleMessage(msg));
-                break;
-            case SUBSCRIBER:
-                // Subscriber should get only Notification
-                subscriberHandleMessage(msg);
-                break;
+                case REQUESTER:
+                    requesterHandleMessage(msg);
+                    break;
+                case RESPONDER:
+                    outgoing.add(responderHandleMessage(msg));
+                    break;
+                case SUBSCRIBER:
+                    // Subscriber should get only Notification
+                    subscriberHandleMessage(msg);
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -351,6 +354,7 @@ public class Session implements AutoCloseable {
         return incoming.size();
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     private JsonRpcBaseMessage responderHandleMessage(JsonRpcBaseMessage msg) {
         if (msg.getType() == JsonRpcMessageType.PARSE_ERROR) {
             return msg;
@@ -372,8 +376,8 @@ public class Session implements AutoCloseable {
                     // handler didn't set a result, so set a dummy value.
                     reply.setResult(new JsonObject());
                 }
-            } catch (Exception e) {
-                logger.error("Unable to handle request", e);
+            } catch (RuntimeException e) {
+                LOG.error("Unable to handle request", e);
                 JsonRpcErrorObject error = new JsonRpcErrorObject(-32603, "Internal error", null);
                 reply.setError(error);
             }
@@ -381,6 +385,7 @@ public class Session implements AutoCloseable {
         return reply;
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     private void subscriberHandleMessage(JsonRpcBaseMessage msg) throws MessageLibraryMismatchException {
         // Subscriber should only receive Notification
         if (msg.getType() != JsonRpcMessageType.NOTIFICATION) {
@@ -393,11 +398,12 @@ public class Session implements AutoCloseable {
         }
         try {
             notificationMessageHandler.handleNotification((JsonRpcRequestMessage) msg);
-        } catch (Exception e) {
-            logger.error("Unable to handle notification", e);
+        } catch (RuntimeException e) {
+            LOG.error("Unable to handle notification", e);
         }
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     private void requesterHandleMessage(JsonRpcBaseMessage msg) throws MessageLibraryMismatchException {
         // Requester should only receive Reply
         if (msg.getType() != JsonRpcMessageType.REPLY) {
@@ -410,8 +416,8 @@ public class Session implements AutoCloseable {
         }
         try {
             replyMessageHandler.handleReply((JsonRpcReplyMessage) msg);
-        } catch (Exception e) {
-            logger.error("Unable to handle reply", e);
+        } catch (RuntimeException e) {
+            LOG.error("Unable to handle reply", e);
         }
     }
 
@@ -429,7 +435,7 @@ public class Session implements AutoCloseable {
         try {
             message = readMessage();
         } catch (MessageLibraryTimeoutException e) {
-            logger.error("Message read timed out", e);
+            LOG.error("Message read timed out", e);
             return 0;
         }
 

@@ -7,24 +7,20 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
-import org.apache.commons.lang.StringUtils;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
-import org.opendaylight.jsonrpc.bus.messagelib.NotificationMessageHandler;
-import org.opendaylight.jsonrpc.bus.messagelib.ReplyMessageHandler;
-import org.opendaylight.jsonrpc.bus.messagelib.RequestMessageHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TestMessageHandler implements RequestMessageHandler, ReplyMessageHandler, NotificationMessageHandler {
-    private static final Logger logger = LoggerFactory.getLogger(TestMessageHandler.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TestMessageHandler.class);
     public String result;
     public JsonRpcErrorObject error;
     public String noticeMethod;
     public String noticeParam;
-    private TestMessageServer server;
+    private final TestMessageServer server;
     private Lock lock = null;
 
     public TestMessageHandler() {
@@ -71,14 +67,10 @@ public class TestMessageHandler implements RequestMessageHandler, ReplyMessageHa
             } else if (method.equals("close")) {
                 server.close();
             } else {
-                JsonRpcErrorObject error = new JsonRpcErrorObject(-32601,
-                        "Method not found", null);
-                reply.setError(error);
+                reply.setError(new JsonRpcErrorObject(-32601, "Method not found", null));
             }
         } catch (JsonRpcException e) {
-            JsonRpcErrorObject error = new JsonRpcErrorObject(-32602,
-                    "Invalid Params", null);
-            reply.setError(error);
+            reply.setError(new JsonRpcErrorObject(-32602, "Invalid Params", null));
         }
     }
 
@@ -88,7 +80,7 @@ public class TestMessageHandler implements RequestMessageHandler, ReplyMessageHa
             this.result = reply.getResultAsObject(String.class);
             this.error = reply.getError();
         } catch (JsonRpcException e) {
-            logger.error("Unable to parse reply", e);
+            LOG.error("Unable to parse reply", e);
             this.result = null;
         }
     }
@@ -99,7 +91,7 @@ public class TestMessageHandler implements RequestMessageHandler, ReplyMessageHa
             this.noticeMethod = notification.getMethod();
             this.noticeParam = notification.getParamsAsObject(String.class);
         } catch (JsonRpcException e) {
-            logger.error("Unable to parse notification", e);
+            LOG.error("Unable to parse notification", e);
             this.result = null;
         }
         if (lock != null) {

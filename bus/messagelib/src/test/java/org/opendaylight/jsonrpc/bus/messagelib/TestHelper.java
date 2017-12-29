@@ -8,15 +8,19 @@
 package org.opendaylight.jsonrpc.bus.messagelib;
 
 import java.io.IOException;
+import java.net.Socket;
 
-public class TestHelper {
+public final class TestHelper {
+    private TestHelper() {
+    }
+
     public static String getFreeTcpPort() {
         int port = -1;
         try {
-            java.net.Socket s = new java.net.Socket();
-            s.bind(null);
-            port = s.getLocalPort();
-            s.close();
+            Socket socket = new Socket();
+            socket.bind(null);
+            port = socket.getLocalPort();
+            socket.close();
             return Integer.toString(port);
         } catch (IOException e) {
             throw new IllegalStateException(e);

@@ -10,7 +10,7 @@ package org.opendaylight.jsonrpc.bus.jsonrpc;
 /**
  * This exceptions class represents the errors might occur while using this
  * package.
- * 
+ *
  * @author Shaleen Saxena
  */
 public class JsonRpcException extends Exception {

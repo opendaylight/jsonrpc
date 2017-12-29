@@ -9,6 +9,5 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 
 public interface PublishExtraInterface extends PublishInterface {
     // A valid publisher should not have a return value.
-    public String invalidPublish(String msg);
-
+    String invalidPublish(String msg);
 }

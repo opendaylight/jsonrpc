@@ -7,19 +7,15 @@
  */
 package org.opendaylight.jsonrpc.bus.jsonrpc;
 
-public class JsonRpcConstants {
-    public static final String JSONRPC = "jsonrpc";
-    public static final String METHOD = "method";
-    public static final String PARAMS = "params";
-    public static final String ID = "id";
-    public static final String RESULT = "result";
-    public static final String ERROR = "error";
-    public static final String CODE = "code";
-    public static final String MESSAGE = "message";
-    public static final String DATA = "data";
-    public static final String METADATA = "metadata";
-
-    private JsonRpcConstants() {
-        // do not call constructor
-    }
+public interface JsonRpcConstants {
+    String JSONRPC = "jsonrpc";
+    String METHOD = "method";
+    String PARAMS = "params";
+    String ID = "id";
+    String RESULT = "result";
+    String ERROR = "error";
+    String CODE = "code";
+    String MESSAGE = "message";
+    String DATA = "data";
+    String METADATA = "metadata";
 }

@@ -14,13 +14,8 @@ import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.List;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseMessage;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

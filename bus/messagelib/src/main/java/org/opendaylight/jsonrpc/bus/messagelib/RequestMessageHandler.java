@@ -17,7 +17,7 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
  * with either a result or error object
  * ({@link org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject
  * JsonRpcErrorObject}).
- * 
+ *
  * @author Shaleen Saxena
  */
 @FunctionalInterface

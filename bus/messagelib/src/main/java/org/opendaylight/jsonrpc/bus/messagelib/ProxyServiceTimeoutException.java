@@ -10,7 +10,7 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 public class ProxyServiceTimeoutException extends RuntimeException {
     private static final long serialVersionUID = -5733631295262594048L;
 
-    public ProxyServiceTimeoutException(MessageLibraryTimeoutException e) {
-        super(e);
+    public ProxyServiceTimeoutException(MessageLibraryTimeoutException cause) {
+        super(cause);
     }
 }

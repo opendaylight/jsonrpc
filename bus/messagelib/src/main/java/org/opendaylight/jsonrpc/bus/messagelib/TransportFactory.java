@@ -11,7 +11,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
- * Abstraction layer to decouple transport factory implementations
+ * Abstraction layer to decouple transport factory implementations.
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
@@ -28,7 +28,7 @@ public interface TransportFactory {
     <T extends AutoCloseable> T createProxy(Class<T> clazz, String rawUri) throws URISyntaxException;
 
     /**
-     * Create Responder ThreadedSession for given {@link URI}
+     * Create Responder ThreadedSession for given {@link URI}.
      *
      * @param rawUri URI where new service will be published
      * @param handler used to handle JSON-RPC requests
@@ -41,7 +41,7 @@ public interface TransportFactory {
     /**
      * Create {@link ThreadedSessionImpl} to Responder. Specified handler is
      * used to handle requests.
-     * 
+     *
      * @param rawUri URI pointing to remote service implementing responder
      * @param handler Handler used to handle requests
      * @param <T> an AutoCloseable implementation of ThreadedSession
@@ -53,7 +53,7 @@ public interface TransportFactory {
     /**
      * Create general session, actual transport and socket type is determined
      * based on URI scheme and query parameter 'role', which is mandatory.
-     * 
+     *
      * @param rawUri raw uri specification, can be transport specific
      * @return {@link Session}
      * @throws URISyntaxException when URI denoted by rawUri has invalid syntax

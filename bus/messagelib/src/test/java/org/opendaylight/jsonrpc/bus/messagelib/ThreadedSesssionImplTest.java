@@ -7,6 +7,10 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -15,43 +19,33 @@ import org.opendaylight.jsonrpc.bus.SessionType;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-/*
- * @author Allan Clarke
- */
-
-class TestHandler implements AutoCloseable {
-
-    public String concat (int a, String s) {
-        return ""+a+s;
-    }
-
-    @Override
-    public void close() throws Exception {
-    }
-}
-
-
 public class ThreadedSesssionImplTest {
+    private static class TestHandler implements AutoCloseable {
 
-    private MessageLibrary mockMessaging = mock(MessageLibrary.class);
-    private BusSession mockBusSession = mock(BusSession.class);
-    private TestHandler handler = new TestHandler();
+        @SuppressWarnings("unused")
+        public String concat(int val, String str) {
+            return "" + val + str;
+        }
+
+        @Override
+        public void close() throws Exception {
+        }
+    }
+
+    private final MessageLibrary mockMessaging = mock(MessageLibrary.class);
+    private final BusSession mockBusSession = mock(BusSession.class);
+    private final TestHandler handler = new TestHandler();
 
     private ThreadedSessionImpl<TestHandler> instance;
 
     private JsonRpcRequestMessage request;
     private JsonRpcReplyMessage reply = mock(JsonRpcReplyMessage.class);
 
-    private final String TARGETMETHOD = "concat"; // from TestHandler class above
-    private final int ANYID = 1;
+    private static final String TARGET_METHOD = "concat"; // from TestHandler class above
+    private static final int ANYID = 1;
 
-    private final int METHOD_NOT_FOUND = -32601;
-    private final int INVALID_PARAMS   = -32602;
+    private static final int METHOD_NOT_FOUND = -32601;
+    private static final int INVALID_PARAMS   = -32602;
 
     @Before
     public void setup() {
@@ -68,7 +62,7 @@ public class ThreadedSesssionImplTest {
     @Test
     public void canSuccessfullyInvokeTargetMethod() {
         // given
-        request.setMethod(TARGETMETHOD);
+        request.setMethod(TARGET_METHOD);
         request.setParamsAsObject(new Object[] { 1, "abc" });
         // when
         instance.handleRequest(request, reply);
@@ -79,7 +73,7 @@ public class ThreadedSesssionImplTest {
     @Test
     public void canSuccessfullyCoerceParameters() {
         // given
-        request.setMethod(TARGETMETHOD);
+        request.setMethod(TARGET_METHOD);
         request.setParamsAsObject(new Object[] { "1", "abc" });
         // when
         instance.handleRequest(request, reply);
@@ -101,7 +95,7 @@ public class ThreadedSesssionImplTest {
     @Test
     public void invalidParameterCountIsNoticed() {
         // given
-        request.setMethod(TARGETMETHOD);
+        request.setMethod(TARGET_METHOD);
         request.setParamsAsObject(new Object[] { 1 });
         // when
         instance.handleRequest(request, reply);
@@ -113,10 +107,10 @@ public class ThreadedSesssionImplTest {
     @Test
     public void invalidParameterTypeIsNoticed() {
         // given
-        request.setMethod(TARGETMETHOD);
+        request.setMethod(TARGET_METHOD);
         // and
-        String NOT_CONVERTABLE_TO_INT = "x";
-        request.setParamsAsObject(new Object[] { NOT_CONVERTABLE_TO_INT, "abc" });
+        String notConvertableToInt = "x";
+        request.setParamsAsObject(new Object[] { notConvertableToInt, "abc" });
         // when
         instance.handleRequest(request, reply);
         // then

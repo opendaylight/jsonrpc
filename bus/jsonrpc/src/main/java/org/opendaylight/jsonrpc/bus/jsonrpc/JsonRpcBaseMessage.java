@@ -7,29 +7,29 @@
  */
 package org.opendaylight.jsonrpc.bus.jsonrpc;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abstract base class for JSON RPC messages. The derived classes are used for
  * the actual JSON RPC messages. These classes can be used for both sending and
  * receiving messages. When used for sending messages, a custom serializer
  * should be written for Object to JSON conversion.
- * 
+ *
  * @author Shaleen Saxena
- * 
+ *
  */
 public abstract class JsonRpcBaseMessage {
-    public static final Logger logger = LoggerFactory.getLogger(JsonRpcBaseMessage.class);
-    private static final Gson gson = new Gson();
+    private static final Logger LOG = LoggerFactory.getLogger(JsonRpcBaseMessage.class);
+    private static final Gson GSON = new Gson();
     protected static final String VERSION = "2.0";
     protected static final String VERSION_SHORT = "2";
+
     protected String jsonrpc;
     protected JsonElement id;
     protected JsonObject metadata;
@@ -85,15 +85,16 @@ public abstract class JsonRpcBaseMessage {
         this.id = id;
     }
 
-    public void setIdAsIntValue(int id) {
-        this.id = new JsonPrimitive(id);
+    public void setIdAsIntValue(int value) {
+        this.id = new JsonPrimitive(value);
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     public int getIdAsIntValue() {
         try {
             return getId().getAsJsonPrimitive().getAsNumber().intValue();
-        } catch (Exception e) {
-            logger.debug("Unable to parse ID as int", e);
+        } catch (RuntimeException e) {
+            LOG.debug("Unable to parse ID as int", e);
         }
         return 0;
     }
@@ -104,12 +105,12 @@ public abstract class JsonRpcBaseMessage {
      * as the requested object. Perhaps not very efficient, but very convenient
      * though.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "checkstyle:IllegalCatch", "unchecked" })
     protected static <T> T convertJsonElementToClass(JsonElement elem,
             Class<T> cls) throws JsonRpcException {
         if (cls.isInstance(elem)) {
-            return (T) elem; 
-        } 
+            return (T) elem;
+        }
         if (JsonArray.class == cls) {
             return (T) elem.getAsJsonArray();
         }
@@ -117,8 +118,8 @@ public abstract class JsonRpcBaseMessage {
             return (T) elem.getAsJsonObject();
         }
         try {
-            return gson.fromJson(gson.toJson(elem), cls);
-        } catch (Exception e) {
+            return GSON.fromJson(GSON.toJson(elem), cls);
+        } catch (RuntimeException e) {
             throw new JsonRpcException(e);
         }
     }
@@ -132,7 +133,7 @@ public abstract class JsonRpcBaseMessage {
         if (JsonElement.class.isInstance(obj)) {
             return (JsonElement) obj;
         } else {
-            return gson.fromJson(gson.toJson(obj), JsonElement.class);
+            return GSON.fromJson(GSON.toJson(obj), JsonElement.class);
         }
     }
 
@@ -141,7 +142,7 @@ public abstract class JsonRpcBaseMessage {
     }
 
     public static boolean isSupportedVersion(String version) {
-        return VERSION.equals(version) || (VERSION_SHORT.equals(version));
+        return VERSION.equals(version) || VERSION_SHORT.equals(version);
     }
 
     public abstract JsonRpcMessageType getType();

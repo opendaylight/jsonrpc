@@ -7,18 +7,6 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import org.opendaylight.jsonrpc.bus.SessionType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Joiner.MapJoiner;
@@ -27,6 +15,16 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Maps;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import org.opendaylight.jsonrpc.bus.SessionType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Helper/utility class. Some of methods provided by this utility class are not
@@ -35,7 +33,7 @@ import com.google.common.collect.Maps;
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
-public class Util {
+public final class Util {
     public static final int DEFAULT_TIMEOUT = 30000;
     private static final Logger LOG = LoggerFactory.getLogger(Util.class);
     private static final MapJoiner QUERY_JOINER = Joiner.on('&').withKeyValueSeparator("=");
@@ -65,7 +63,7 @@ public class Util {
     /**
      * Same as {@link #createProxy(Class, String, int)}, but using
      * default timeout which is {@value #DEFAULT_TIMEOUT}.EndpointRole is
-     * determined by 'role' query parameter, which is mandatory
+     * determined by 'role' query parameter, which is mandatory.
      *
      * @param <T> API type to proxy, must implement {@link AutoCloseable}
      * @param clazz interface to create proxy against
@@ -80,8 +78,7 @@ public class Util {
     }
 
     /**
-     * Same as {@link #createProxy(Class, String, int)}, but using build-in
-     * {@link LoadingCache}
+     * Same as {@link #createProxy(Class, String, int)}, but using build-in {@link LoadingCache}.
      *
      * @param <T> API type to proxy, must implement {@link AutoCloseable}
      * @param clazz interface to create proxy against
@@ -99,7 +96,7 @@ public class Util {
 
     /**
      * <strong>This method is meant to be used by custom
-     * TransportFactory.</strong> 
+     * TransportFactory.</strong>
      * Create proxy of given interface. Allowed endpoint roles are PUB and
      * REQ.EndpointRole is determined by 'role' query parameter, which is
      * mandatory. It also allows to use custom {@link LoadingCache}
@@ -122,18 +119,17 @@ public class Util {
         final MessageLibrary ml = cache.getUnchecked(uri.getScheme());
         final ProxyService proxy = PROXY_CACHE.getUnchecked(ml);
         switch (role) {
-        case PUB:
-            return proxy.createPublisherProxy(prepareUri(uri), clazz, timeout);
-        case REQ:
-            return proxy.createRequesterProxy(prepareUri(uri), clazz, timeout);
-        default:
-            throw new IllegalArgumentException(String.format("Unrecognized endoint role : %s", role));
+            case PUB:
+                return proxy.createPublisherProxy(prepareUri(uri), clazz, timeout);
+            case REQ:
+                return proxy.createRequesterProxy(prepareUri(uri), clazz, timeout);
+            default:
+                throw new IllegalArgumentException(String.format("Unrecognized endoint role : %s", role));
         }
     }
 
     /**
-     * Create {@link ThreadedSession} of type {@link SessionType#RESPONDER} to
-     * given URI
+     * Create {@link ThreadedSession} of type {@link SessionType#RESPONDER} to given URI.
      *
      * @param <T> handler type
      * @param rawUri URI
@@ -148,7 +144,7 @@ public class Util {
 
     /**
      * <strong>This method is meant to be used by custom
-     * TransportFactory.</strong> 
+     * TransportFactory.</strong>
      * Create {@link ThreadedSession} of type {@link SessionType#RESPONDER} to
      * given URI. It also allows to use custom {@link LoadingCache}
      *
@@ -167,8 +163,7 @@ public class Util {
     }
 
     /**
-     * Create {@link ThreadedSession} of type {@link SessionType#SUBSCRIBER} to
-     * given URI
+     * Create {@link ThreadedSession} of type {@link SessionType#SUBSCRIBER} to given URI.
      *
      * @param <T> handler type
      * @param rawUri URI
@@ -183,7 +178,7 @@ public class Util {
 
     /**
      * <strong>This method is meant to be used by custom
-     * TransportFactory.</strong> 
+     * TransportFactory.</strong>
      * Create {@link ThreadedSession} of type {@link SessionType#SUBSCRIBER} to
      * given URI
      *
@@ -203,7 +198,7 @@ public class Util {
 
     /**
      * Trim schema (protocol) and use "tcp" in URI, remove any recognized
-     * parameters and pass result to underlying transport library
+     * parameters and pass result to underlying transport library.
      *
      * @param inUri inbound URI
      * @return prepared URI
@@ -221,9 +216,8 @@ public class Util {
     }
 
     /**
-     * Removes given query parameters from URI query string. If array of
-     * parameter names to remove is empty, original query string is returned
-     * instead
+     * Removes given query parameters from URI query string. If array of parameter names to remove is empty, original
+     * query string is returned instead.
      *
      * @param rawQuery query string from URI
      * @param paramsToRemove array of parameter names to remove
@@ -238,7 +232,8 @@ public class Util {
         return QUERY_JOINER.join((Map<?, ?>) params.entrySet().stream()
                 .filter(e -> !Arrays.asList(paramsToRemove).contains(e.getKey().trim()))
                 // collect into LinkedHashMap, which preserves insertion order
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, LinkedHashMap::new)));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                    (first, second) -> first, LinkedHashMap::new)));
     }
 
     /**
@@ -255,11 +250,12 @@ public class Util {
         params.put(paramName, paramValue);
         return QUERY_JOINER.join((Map<?, ?>) params.entrySet().stream().filter(e -> e.getValue() != null)
                 // collect into LinkedHashMap, which preserves insertion order
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, LinkedHashMap::new)));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                    (first, second) -> first, LinkedHashMap::new)));
     }
 
     /**
-     * ZMQ does not like ending '?', which is permitted by URI specification
+     * ZMQ does not like ending '?', which is permitted by URI specification.
      */
     private static String trimTrailingQuestionMark(String uri) {
         return uri.endsWith("?") ? uri.substring(0, uri.length() - 1) : uri;
@@ -279,7 +275,7 @@ public class Util {
 
     /**
      * <strong>This method is meant to be used by custom
-     * TransportFactory.</strong> 
+     * TransportFactory.</strong>
      * Open {@link Session} to service at given URI. If query parameters within
      * URI didn't contain 'role' parameter, then roleStr argument will be used.
      *
@@ -333,9 +329,8 @@ public class Util {
     }
 
     /**
-     * Perform global transport factory cleanup, should be called when
-     * application exists, only to ensure that all transports/sessions has been
-     * cleaned-up
+     * Perform global transport factory cleanup, should be called when application exists, only to ensure that all
+     * transports/sessions has been cleaned-up.
      */
     public static void close() {
         PROXY_CACHE.asMap().clear();
@@ -349,7 +344,7 @@ public class Util {
      * not require value, which is perfectly fine with RFC-2396.
      */
     @VisibleForTesting
-    static class UriTokenizer {
+    static final class UriTokenizer {
         private static final Splitter PARAM_SPLITTER = Splitter.on("&");
 
         private UriTokenizer() {

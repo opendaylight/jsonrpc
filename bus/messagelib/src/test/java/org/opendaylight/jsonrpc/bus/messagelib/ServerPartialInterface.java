@@ -9,21 +9,21 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 
 public interface ServerPartialInterface extends AutoCloseable {
 
-    public String echo(String msg);
+    String echo(String msg);
 
-    public String concat(String msg1, String msg2);
+    String concat(String msg1, String msg2);
 
-    public String join(String delim, String[] msgs);
-    
-    public void noReturn(String msg);
+    String join(String delim, String[] msgs);
 
-    public String delayedEcho(String msg, int time);
+    void noReturn(String msg);
 
-    public int increment(int count);
+    String delayedEcho(String msg, int time);
+
+    int increment(int count);
 
     /* Option can be used to throw different exceptions.*/
-    public void returnError(int option) throws Exception;
+    void returnError(int option) throws Exception;
 
     @Override
-    public void close();
+    void close();
 }

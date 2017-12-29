@@ -7,15 +7,13 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import org.opendaylight.jsonrpc.bus.BusSession;
 import org.opendaylight.jsonrpc.bus.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.spi.BusSessionFactoryProvider;
-
-import com.google.common.collect.Lists;
 
 /**
  * The is the main class to create sessions over a bus. This class will help
@@ -31,8 +29,8 @@ public class MessageLibrary implements AutoCloseable {
 
     /**
      * Default constructor which uses {@link TcclBusSessionFactoryProvider} to
-     * discover installed transports
-     * 
+     * discover installed transports.
+     *
      * @param busType bus type to get
      */
     public MessageLibrary(String busType) {
@@ -43,7 +41,7 @@ public class MessageLibrary implements AutoCloseable {
 
     /**
      * Constructor which allows usage of custom
-     * {@link TcclBusSessionFactoryProvider} to discover installed transports
+     * {@link TcclBusSessionFactoryProvider} to discover installed transports.
      *
      * @param bsfp Bus Session Factory Provider
      * @param busType bus type to get
@@ -94,10 +92,10 @@ public class MessageLibrary implements AutoCloseable {
     }
 
     public <T extends AutoCloseable> ThreadedSession threadedSubscriber(String uri, T handler) {
-        return new ThreadedSessionImpl<T>(this, factory.subscriber(uri, ""), handler);
+        return new ThreadedSessionImpl<>(this, factory.subscriber(uri, ""), handler);
     }
 
     public <T extends AutoCloseable> ThreadedSession threadedResponder(String uri, T handler) {
-        return new ThreadedSessionImpl<T>(this, factory.responder(uri), handler);
+        return new ThreadedSessionImpl<>(this, factory.responder(uri), handler);
     }
 }

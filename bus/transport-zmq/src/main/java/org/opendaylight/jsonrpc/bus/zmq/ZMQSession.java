@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.bus.zmq;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-
 import org.opendaylight.jsonrpc.bus.BusSession;
 import org.opendaylight.jsonrpc.bus.BusSessionMsgHandler;
 import org.opendaylight.jsonrpc.bus.BusSessionTimeoutException;
@@ -28,12 +27,11 @@ import org.zeromq.ZMQException;
  * This class implements the
  * {@link org.opendaylight.jsonrpc.bus.BusSession BusSession} interface
  * for the ZeroMQ bus service.
- * 
- * @author Shaleen Saxena
  *
+ * @author Shaleen Saxena
  */
 public class ZMQSession implements BusSession {
-    private static final Logger logger = LoggerFactory.getLogger(ZMQSession.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ZMQSession.class);
     private static final int DEFAULT_TIMEOUT = 30 * 1000; // 30 seconds
 
     private final ZContext zmqContext;
@@ -46,7 +44,7 @@ public class ZMQSession implements BusSession {
     private int timeout;
     private Poller rxPoller;
     private Poller txPoller;
-    private SessionType sessionType;
+    private final SessionType sessionType;
     private Socket loopTransmit = null;
 
     public ZMQSession(ZContext zmqContext, String uri, SessionType sessionType) {
@@ -65,31 +63,32 @@ public class ZMQSession implements BusSession {
         open();
     }
 
-    private URI convertToUri(String uri) {
+    private static URI convertToUri(String uri) {
 
-        if (uri.endsWith("/")) // allow sloppier URLs
+        if (uri.endsWith("/")) {
             uri = uri.substring(0, uri.lastIndexOf('/'));
+        }
 
         try {
             return new URI(uri);
         } catch (URISyntaxException e) {
-            logger.error("Invalid URI: "+uri, e);
+            LOG.error("Invalid URI: " + uri, e);
             throw new IllegalArgumentException(e);
         }
     }
 
     private int convertToSocketType(SessionType type) {
         switch (type) {
-        case REQUESTER:
-            return ZMQ.REQ;
-        case RESPONDER:
-            return ZMQ.REP;
-        case SUBSCRIBER:
-            return ZMQ.SUB;
-        case PUBLISHER:
-            return ZMQ.PUB;
-        default:
-            throw new IllegalArgumentException("Unsupported session type: "+type);
+            case REQUESTER:
+                return ZMQ.REQ;
+            case RESPONDER:
+                return ZMQ.REP;
+            case SUBSCRIBER:
+                return ZMQ.SUB;
+            case PUBLISHER:
+                return ZMQ.PUB;
+            default:
+                throw new IllegalArgumentException("Unsupported session type: " + type);
         }
     }
 
@@ -106,8 +105,8 @@ public class ZMQSession implements BusSession {
                 this.socket.connect(this.uri.toString());
                 this.socket.subscribe(topic);
                 createReceivePoller();
-            } else if ((this.socketType == ZMQ.PUB)
-                    || (this.socketType == ZMQ.REP)) {
+            } else if (this.socketType == ZMQ.PUB
+                    || this.socketType == ZMQ.REP) {
                 this.socket.bind(this.uri.toString());
                 createTransmitPoller();
             } else {
@@ -130,7 +129,7 @@ public class ZMQSession implements BusSession {
         close();
         open();
     }
-    
+
     private void createReceivePoller() {
         rxPoller = new Poller(1);
         rxPoller.register(socket, Poller.POLLIN | Poller.POLLERR);
@@ -142,8 +141,7 @@ public class ZMQSession implements BusSession {
     }
 
     @Override
-    public String readMessage() throws BusSessionTimeoutException 
-    {
+    public String readMessage() throws BusSessionTimeoutException {
         String message = null;
         try {
             if (rxPoller == null) {
@@ -151,40 +149,40 @@ public class ZMQSession implements BusSession {
             } else {
                 // poll socket for a reply, with timeout
                 if (rxPoller.poll(getTimeout()) != 1) {
-                    logger.debug("Receive interrupted");
+                    LOG.debug("Receive interrupted");
                     reopen(); // reopen so that we can send again
                     String msg = String.format("Receive timed out: %d ms", getTimeout());
                     throw new BusSessionTimeoutException(msg);
                 }
                 if (rxPoller.pollerr(0)) {
-                    logger.debug("Receive errored");
+                    LOG.debug("Receive errored");
                 } else if (rxPoller.pollin(0)) {
                     message = recvMessage();
                 }
             }
-            logger.debug("Received: " + message);
+            LOG.debug("Received: " + message);
         } catch (ZMQException e) {
-            logger.error("Unable to read message", e);
+            LOG.error("Unable to read message", e);
         }
         return message;
     }
 
-	private String recvMessage() {
+    private String recvMessage() {
         StringBuilder builder = new StringBuilder(socket.recvStr());
         while (socket.hasReceiveMore()) {
-             builder.append(socket.recvStr());
+            builder.append(socket.recvStr());
         }
         // Trim topic from start of message
         builder.delete(0, topic.length);
         return builder.toString();
-	}
+    }
 
-	private void transmitMessage(String message) {
-		if (socketType == ZMQ.PUB) {
-			socket.sendMore(topic);
-		}
-		socket.send(message, 0);
-	}
+    private void transmitMessage(String message) {
+        if (socketType == ZMQ.PUB) {
+            socket.sendMore(topic);
+        }
+        socket.send(message, 0);
+    }
 
     @Override
     public boolean sendMessage(String message) {
@@ -195,20 +193,20 @@ public class ZMQSession implements BusSession {
             } else {
                 // poll socket to be empty, with timeout
                 if (txPoller.poll(getTimeout()) != 1) {
-                    logger.debug("Send interrupted");
+                    LOG.debug("Send interrupted");
                     return false; // Interrupted
                 }
                 if (txPoller.pollerr(0)) {
-                    logger.debug("Send errored");
+                    LOG.debug("Send errored");
                     return false;
                 } else if (txPoller.pollout(0)) {
-                    logger.debug("Sending: " + message);
+                    LOG.debug("Sending: " + message);
                     transmitMessage(message);
                     return true;
                 }
             }
         } catch (ZMQException e) {
-            logger.error("Unable to send message", e);
+            LOG.error("Unable to send message", e);
         }
         return false;
     }
@@ -221,7 +219,7 @@ public class ZMQSession implements BusSession {
         if (handler == null) {
             throw new IllegalArgumentException("Null handler");
         }
-        if ((socketType != ZMQ.SUB) && (socketType != ZMQ.REP)) {
+        if (socketType != ZMQ.SUB && socketType != ZMQ.REP) {
             throw new UnsupportedOperationException(
                     "This socket type not supported");
         }
@@ -244,18 +242,18 @@ public class ZMQSession implements BusSession {
         // Add poller for main socket
         PollItem item1 = new PollItem(socket, ZMQ.Poller.POLLIN | ZMQ.Poller.POLLERR);
         loop.addPoller(item1,
-                (ZLoop zloop, PollItem item, Object arg) -> {
-                    String msg = recvMessage();
-                    logger.debug("Received: {}", msg);
-                    return (msg.length()>0)?handler.handleIncomingMsg(msg):0;
-                },
-                null);
+            (ZLoop zloop, PollItem item, Object arg) -> {
+                String msg = recvMessage();
+                LOG.debug("Received: {}", msg);
+                return msg.length() > 0 ? handler.handleIncomingMsg(msg) : 0;
+            },
+            null);
 
         // Add poller for loop control socket
         PollItem item2 = new PollItem(loopReceive, ZMQ.Poller.POLLIN | ZMQ.Poller.POLLERR);
         loop.addPoller(item2,
-                (zloop, item, arg) -> -1, // stop on receiving any message
-                null);
+            (zloop, item, arg) -> -1, // stop on receiving any message
+            null);
 
         // Wait in a loop and process messages
         loop.start();

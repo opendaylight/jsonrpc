@@ -42,7 +42,7 @@ public class ProxyServiceRequesterTest {
         server = messaging.threadedResponder("tcp://*:" + port, new TestMessageServer());
 
         proxy = new ProxyServiceImpl(messaging);
-        serverProxy = (ServerInterface) proxy.createRequesterProxy("tcp://127.0.0.1:" + port, ServerInterface.class,
+        serverProxy = proxy.createRequesterProxy("tcp://127.0.0.1:" + port, ServerInterface.class,
                 timeout);
     }
 
@@ -69,7 +69,7 @@ public class ProxyServiceRequesterTest {
     }
 
     @Test(expected = ProxyServiceGenericException.class)
-    public void testProxyServerInvalidFunction() throws Throwable {
+    public void testProxyServerInvalidFunction() {
         showFunctionName();
         String[] params = { "a", "b", "c", "d" };
         serverProxy.notImplemented(params);
@@ -77,7 +77,7 @@ public class ProxyServiceRequesterTest {
     }
 
     @Test
-    public void testProxyServerErrorReturn() throws Throwable {
+    public void testProxyServerErrorReturn() throws Exception {
         showFunctionName();
         try {
             serverProxy.returnError(0);
@@ -102,7 +102,7 @@ public class ProxyServiceRequesterTest {
     @Test
     public void testProxySecondClientJoin() throws ProxyServiceGenericException {
         showFunctionName();
-        ServerPartialInterface serverProxy2 = (ServerPartialInterface) proxy
+        ServerPartialInterface serverProxy2 = proxy
                 .createRequesterProxy("tcp://127.0.0.1:" + port, ServerPartialInterface.class);
         String[] params = { "a", "b", "c", "d" };
         String result = serverProxy2.join(",", params);

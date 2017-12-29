@@ -7,26 +7,26 @@
  */
 package org.opendaylight.jsonrpc.bus.jsonrpc;
 
-import java.lang.reflect.Type;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import java.lang.reflect.Type;
 
 /**
  * This serializer extracts the error data to form a JSON RPC with error.
- * 
+ *
  * @author Shaleen Saxena
  */
 public class JsonRpcMessageErrorSerializer implements JsonSerializer<JsonRpcMessageError> {
     @Override
     public JsonElement serialize(JsonRpcMessageError src, Type typeOfSrc, JsonSerializationContext context) {
-        JsonObject obj = new JsonObject();
         JsonObject err = new JsonObject();
         err.addProperty(JsonRpcConstants.CODE, src.getCode());
         err.addProperty(JsonRpcConstants.MESSAGE, src.getMessage());
         err.add(JsonRpcConstants.DATA, src.getData());
+
+        JsonObject obj = new JsonObject();
         obj.addProperty(JsonRpcConstants.JSONRPC, JsonRpcBaseMessage.getSupportedVersion());
         obj.add(JsonRpcConstants.ID, src.getId());
         obj.add(JsonRpcConstants.ERROR, err);

@@ -8,27 +8,28 @@
 package org.opendaylight.jsonrpc.bus.messagelib;
 
 /**
- * Role of endpoint, used for
- * {@link TransportFactory#createProxy(Class, String)}
- * 
- * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
+ * Role of endpoint, used for {@link TransportFactory#createProxy(Class, String)}.
  *
+ * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public enum EndpointRole {
     /**
-     * Requester
+     * Requester.
      */
     REQ,
+
     /**
-     * Responder
+     * Responder.
      */
     REP,
+
     /**
-     * Publisher
+     * Publisher.
      */
     PUB,
+
     /**
-     * Subscriber
+     * Subscriber.
      */
     SUB;
 }

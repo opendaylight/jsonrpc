@@ -7,9 +7,14 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonPrimitive;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -20,12 +25,6 @@ import org.opendaylight.jsonrpc.bus.BusSession;
 import org.opendaylight.jsonrpc.bus.SessionType;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
-import org.opendaylight.jsonrpc.bus.messagelib.MessageLibrary;
-import org.opendaylight.jsonrpc.bus.messagelib.ThreadedSessionImpl;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonPrimitive;
 
 public class NameMatchingTest {
     private static MessageLibrary messaging;
@@ -60,7 +59,7 @@ public class NameMatchingTest {
     }
 
     /**
-     * Method1 takes no args and returns void
+     * Method1 takes no args and returns void.
      */
     @Test
     public void testInvokeMethodNoParams() {
@@ -72,14 +71,14 @@ public class NameMatchingTest {
 
     /**
      * Invocation of method1 with some arguments must fail, because we have
-     * mismatch in number of parameters and method arguments
+     * mismatch in number of parameters and method arguments.
      */
     @Test
     public void testInvokeMethodNoParamsButArgsProvided() {
         request.setMethod("method1");
         request.setParams(new JsonPrimitive("abc"));
         ts.handleRequest(request, reply);
-        assertEquals(-32602, (int) reply.getError().getCode());
+        assertEquals(-32602, reply.getError().getCode());
     }
 
     @Test
@@ -94,10 +93,10 @@ public class NameMatchingTest {
     @Test
     public void testInvokeMethodNoParamsWithUnderscoreName() {
         request.setMethod("method-2");
-        JsonArray o = new JsonArray();
-        o.add(new JsonPrimitive(2));
-        o.add(new JsonPrimitive("xyz"));
-        request.setParams(o);
+        JsonArray array = new JsonArray();
+        array.add(new JsonPrimitive(2));
+        array.add(new JsonPrimitive("xyz"));
+        request.setParams(array);
         ts.handleRequest(request, reply);
         assertNull(reply.getError());
         assertEquals("xyzxyz", reply.getResult().getAsJsonPrimitive().getAsString());

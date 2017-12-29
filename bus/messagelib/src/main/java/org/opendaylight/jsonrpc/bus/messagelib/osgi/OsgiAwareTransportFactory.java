@@ -7,19 +7,17 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib.osgi;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import java.net.URISyntaxException;
 import java.util.Objects;
-
 import org.opendaylight.jsonrpc.bus.messagelib.MessageLibrary;
 import org.opendaylight.jsonrpc.bus.messagelib.Session;
 import org.opendaylight.jsonrpc.bus.messagelib.ThreadedSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.Util;
 import org.opendaylight.jsonrpc.bus.spi.BusSessionFactoryProvider;
-
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 
 /**
  * Implementation of {@link TransportFactory} which requires semantics of

@@ -15,7 +15,7 @@ import com.google.gson.JsonObject;
  * or used to construct a new Reply message. Both Result and Error component of
  * the Reply message may be set in this class, which is an invalid message. This
  * could be useful in negative testing, or to receive an incorrect message.
- * 
+ *
  * @author Shaleen Saxena
  */
 public class JsonRpcReplyMessage extends JsonRpcBaseMessage {
@@ -27,12 +27,13 @@ public class JsonRpcReplyMessage extends JsonRpcBaseMessage {
         // Fill fields later.
     }
 
-    public JsonRpcReplyMessage(String jsonrpc, JsonElement id, JsonElement result, JsonRpcErrorObject error, JsonObject metadata) {
+    public JsonRpcReplyMessage(String jsonrpc, JsonElement id, JsonElement result, JsonRpcErrorObject error,
+            JsonObject metadata) {
         super(jsonrpc, id, metadata);
         this.result = result;
         this.error = error;
 
-        if ((result != null) && (error != null)) {
+        if (result != null && error != null) {
             throw new IllegalArgumentException("Both result and error defined");
         }
     }
@@ -68,7 +69,7 @@ public class JsonRpcReplyMessage extends JsonRpcBaseMessage {
     /**
      * This returns the result part of the Reply message as the user supplied
      * object. Might throw an exception if the values in the Reply do not match.
-     * 
+     *
      * @param cls The class of expected result object.
      * @return The result as an object of the provided class.
      * @throws JsonRpcException If the result part of message does not match the
@@ -81,7 +82,7 @@ public class JsonRpcReplyMessage extends JsonRpcBaseMessage {
     /**
      * This sets the result part of the Reply message as the user supplied
      * object.
-     * 
+     *
      * @param obj The user supplied result object.
      */
     public void setResultAsObject(Object obj) {

@@ -14,7 +14,7 @@ public class MessageLibraryTimeoutException extends MessageLibraryException {
         super(message);
     }
 
-    public MessageLibraryTimeoutException(Throwable e) {
-        super(e);
+    public MessageLibraryTimeoutException(Throwable cause) {
+        super(cause);
     }
 }

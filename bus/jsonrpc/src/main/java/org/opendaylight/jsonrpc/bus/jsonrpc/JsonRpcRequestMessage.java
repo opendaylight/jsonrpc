@@ -14,7 +14,7 @@ import com.google.gson.JsonObject;
 /**
  * This represents the JSON RPC Request Message. This can be a received message,
  * or used to construct a new Request message.
- * 
+ *
  * @author Shaleen Saxena
  */
 public class JsonRpcRequestMessage extends JsonRpcBaseMessage {
@@ -36,7 +36,8 @@ public class JsonRpcRequestMessage extends JsonRpcBaseMessage {
         this.params = params;
     }
 
-    public JsonRpcRequestMessage(String jsonrpc, JsonElement id, String method, JsonElement params, JsonObject metadata) {
+    public JsonRpcRequestMessage(String jsonrpc, JsonElement id, String method, JsonElement params,
+            JsonObject metadata) {
         super(jsonrpc, id, metadata);
         this.method = method;
         this.params = params;
@@ -74,7 +75,7 @@ public class JsonRpcRequestMessage extends JsonRpcBaseMessage {
      * This method can be used to convert the params to an object of the
      * specified class. This method works when the param is a single JSON
      * object.
-     * 
+     *
      * @param cls The class to convert the params to.
      * @return The params as an object of the specified class
      * @throws JsonRpcException If the params do not match the specified class.
@@ -87,7 +88,7 @@ public class JsonRpcRequestMessage extends JsonRpcBaseMessage {
      * This method can be used to convert one element of the params to an object
      * of the specified class. This method works when the param is an array of
      * JSON objects.
-     * 
+     *
      * @param index The index to get the object from.
      * @param cls The class to convert the params to.
      * @return The params as an object of the specified class
@@ -109,7 +110,7 @@ public class JsonRpcRequestMessage extends JsonRpcBaseMessage {
     /**
      * This method is used to set the parameters as an object. For an array
      * containing params of different types, use an Object[] to store them.
-     * 
+     *
      * @param obj Object to store.
      */
     public void setParamsAsObject(Object obj) {

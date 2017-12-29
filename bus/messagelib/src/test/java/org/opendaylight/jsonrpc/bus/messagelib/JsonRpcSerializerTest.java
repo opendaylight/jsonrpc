@@ -7,22 +7,21 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseMessage;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcMessageError;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcSerializer;
-
-import java.util.List;
-
 import static org.junit.Assert.assertFalse;
 
+import java.util.List;
+import org.junit.Test;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseMessage;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcSerializer;
+
 /**
+ * Unit tests for JsonRpcSerializer.
+ *
  * @author Allan Clarke
  */
 public class JsonRpcSerializerTest {
 
-    private final String EMPTY = "";
+    private static final String EMPTY = "";
 
     @Test
     public void parsingEmptyJsonShouldBeNoticed() {
