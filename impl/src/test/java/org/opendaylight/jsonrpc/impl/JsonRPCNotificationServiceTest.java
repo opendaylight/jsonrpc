@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.concurrent.CountDownLatch;
@@ -24,7 +25,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.opendaylight.controller.md.sal.dom.api.DOMNotificationListener;
+import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.EndpointRole;
+import org.opendaylight.jsonrpc.bus.messagelib.MessageLibrary;
 import org.opendaylight.jsonrpc.bus.messagelib.Session;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.Util;
@@ -69,14 +72,12 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
         when(governance.governance(anyInt(), anyString(), any())).thenReturn(getPath());
         mod = schemaContext.findModule("test-model", Revision.of("2016-11-17")).get();
 
-        transportFactory = mock(TransportFactory.class);
-        when(transportFactory.createSubscriber(anyString(), any())).thenAnswer(invocation ->
-            Util.createThreadedSubscriberSession((String) invocation.getArguments()[0],
-                (AutoCloseable) invocation.getArguments()[1]));
+        transportFactory = new DefaultTransportFactory();
         svc = new JsonRPCNotificationService(getPeer(),
                 new BuiltinSchemaContextProvider(schemaContext).createSchemaContext(getPeer()), pathMap,
                 transportFactory, governance);
-        pubSession = Util.openSession(getPath(), EndpointRole.PUB.name());
+        URI uri = new URI(getPath());
+        pubSession = Util.openSession(new MessageLibrary(uri.getScheme()), uri, EndpointRole.PUB.name());
     }
 
     @After

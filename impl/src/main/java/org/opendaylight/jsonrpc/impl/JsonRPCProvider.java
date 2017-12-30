@@ -277,7 +277,6 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         governance = null;
         toClose.forEach(
             c -> Util.closeNullableWithExceptionCallback(c, e -> LOG.warn("Failed to close object {}", c, e)));
-        org.opendaylight.jsonrpc.bus.messagelib.Util.close();
         LOG.debug("JsonRPCProvider Closed");
         providerClosed = true;
     }

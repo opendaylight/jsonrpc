@@ -22,20 +22,15 @@ import org.opendaylight.jsonrpc.bus.spi.BusSessionFactoryProvider;
  *
  */
 public class OsgiBusSessionFactoryProvider implements BusSessionFactoryProvider {
-    private List<BusSessionFactory<BusSession>> sessionFactories;
+    private final List<BusSessionFactory<BusSession>> sessionFactories;
+
+    public OsgiBusSessionFactoryProvider(List<BusSessionFactory<BusSession>> sessionFactories) {
+        this.sessionFactories = sessionFactories;
+    }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public <T extends BusSession> Iterator<BusSessionFactory<T>> getBusSessionFactories() {
         return (Iterator) sessionFactories.iterator();
-    }
-
-    /**
-     * List of registered {@link BusSessionFactory} service is set by blueprint container.
-     *
-     * @param sessionFactories list of {@link BusSessionFactory} services
-     */
-    public void setSessionFactories(List<BusSessionFactory<BusSession>> sessionFactories) {
-        this.sessionFactories = sessionFactories;
     }
 }
