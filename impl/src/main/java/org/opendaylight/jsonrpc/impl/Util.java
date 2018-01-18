@@ -210,13 +210,8 @@ public class Util {
         return builder.build();
     }
 
-    public static Optional<Module> findModuleWithLatestRevision(SchemaContext schemaContext, String name) {
-        // We can't use findModule(localName) b/c it will try to find a Module with no revision but we want
-        // the Module with latest revision. So we use findModules. The javadoc indicates the iteration order
-        // of the returned Set guarantees that the latest revision is encountered first however this is not the
-        // case. So we find the one with the latest (max) revision.
-        return schemaContext.findModules(name).stream()
-            .max((m1, m2) -> m1.getRevision().isPresent() && m2.getRevision().isPresent() ? m1.getRevision().get()
-                .compareTo(m2.getRevision().get()) : m1.getRevision().isPresent() ? 1 : -1);
+    static Optional<Module> findModuleWithLatestRevision(SchemaContext schemaContext, String name) {
+        // findModules is guaranteed to return latest revision first
+        return schemaContext.findModules(name).stream().findFirst();
     }
 }
