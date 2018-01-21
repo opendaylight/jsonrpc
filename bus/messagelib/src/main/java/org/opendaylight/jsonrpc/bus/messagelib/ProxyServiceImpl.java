@@ -131,11 +131,7 @@ public class ProxyServiceImpl implements ProxyService {
         }
 
         try {
-            if ((params != null) && (params.length == 1)) {
-                msg = session.sendRequestAndReadReply(methodName, params[0]);
-            } else {
-                msg = session.sendRequestAndReadReply(methodName, params);
-            }
+            msg = session.sendRequestAndReadReply(methodName, params);
         } catch (MessageLibraryTimeoutException e) {
             throw new ProxyServiceTimeoutException(e);
         } catch (MessageLibraryException e) {
