@@ -62,8 +62,8 @@ public final class YangInstanceIdentifierDeserializer {
         }
 
         private QName lookupByLocalName(String localName) {
-            final Optional<Module> possibleModule = Util.findModuleWithLatestRevision(schemaContext, localName);
-            return possibleModule.isPresent() ? QName.create(possibleModule.get().getQNameModule(), localName) : null;
+            return Util.findModuleWithLatestRevision(schemaContext, localName)
+                .map(module -> QName.create(module.getQNameModule(), localName)).orElse(null);
         }
 
         private YangInstanceIdentifier parse(JsonElement path) {
