@@ -57,38 +57,16 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <artifactId>bus-jsonrpc</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.opendaylight.mdsal</groupId>
-            <artifactId>features-mdsal</artifactId>
-            <classifier>features</classifier>
+            <groupId>org.opendaylight.controller</groupId>
+            <artifactId>odl-mdsal-broker</artifactId>
             <type>xml</type>
+            <classifier>features</classifier>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.mdsal.model</groupId>
-            <artifactId>features-mdsal-model</artifactId>
-            <classifier>features</classifier>
+            <artifactId>odl-mdsal-models</artifactId>
             <type>xml</type>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.netconf</groupId>
-            <artifactId>features-restconf</artifactId>
             <classifier>features</classifier>
-            <type>xml</type>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.yangtools</groupId>
-            <artifactId>features-yangtools</artifactId>
-            <classifier>features</classifier>
-            <type>xml</type>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.odlparent</groupId>
-            <artifactId>features-odlparent</artifactId>
-            <classifier>features</classifier>
-            <type>xml</type>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.controller</groupId>
-            <artifactId>sal-common-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.zeromq</groupId>
