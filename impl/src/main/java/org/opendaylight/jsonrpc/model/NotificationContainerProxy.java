@@ -119,7 +119,7 @@ public final class NotificationContainerProxy implements ContainerSchemaNode {
 
     @Override
     public Optional<DataSchemaNode> findDataChildByName(QName name) {
-        return null;
+        return Optional.empty();
     }
 
     @Override

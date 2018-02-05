@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -122,8 +123,8 @@ public final class Util {
         final Map<String, String> params = tokenizeQuery(uri.getQuery() == null ? "" : uri.getQuery());
         // get role from URI or use default if not provided
         final EndpointRole role = EndpointRole.valueOf(!params.containsKey(ROLE)
-                ? Objects.requireNonNull(roleStr, "No role specified in URI or argument").trim().toUpperCase()
-                        : params.get(ROLE));
+                ? Objects.requireNonNull(roleStr, "No role specified in URI or argument").trim()
+                        .toUpperCase(Locale.ROOT) : params.get(ROLE));
         final String preparedUri = prepareUri(uri);
         LOG.debug("Prepared URI : '{}', original URI : {}", preparedUri, uri);
         if (EndpointRole.REP.equals(role)) {

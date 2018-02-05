@@ -9,6 +9,7 @@ package org.opendaylight.jsonrpc.bus.zmq;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import org.opendaylight.jsonrpc.bus.BusSession;
 import org.opendaylight.jsonrpc.bus.BusSessionMsgHandler;
 import org.opendaylight.jsonrpc.bus.BusSessionTimeoutException;
@@ -54,7 +55,7 @@ public class ZMQSession implements BusSession {
     public ZMQSession(ZContext zmqContext, String uri, SessionType sessionType, String topic) {
         this.zmqContext = zmqContext;
         this.sessionType = sessionType;
-        this.topic = topic.getBytes();
+        this.topic = topic.getBytes(StandardCharsets.UTF_8);
         this.uri = convertToUri(uri);
 
         // Set other fields.
@@ -269,7 +270,7 @@ public class ZMQSession implements BusSession {
     public void stopLoop() {
         // Tell loop to stop. Any message would do.
         if (loopTransmit != null) {
-            loopTransmit.send("Stop".getBytes());
+            loopTransmit.send("Stop".getBytes(StandardCharsets.UTF_8));
         }
     }
 

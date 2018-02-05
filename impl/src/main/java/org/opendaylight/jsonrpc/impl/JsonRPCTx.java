@@ -20,6 +20,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URISyntaxException;
@@ -124,6 +125,8 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
 
     @Override
     @SuppressWarnings("checkstyle:IllegalCatch")
+    // jsonParser may be null in the finally block below - this is OK but FB flags it.
+    @SuppressFBWarnings("NP_LOAD_OF_KNOWN_NULL_VALUE")
     public CheckedFuture<Optional<NormalizedNode<?, ?>>, ReadFailedException> read(final LogicalDatastoreType store,
             final YangInstanceIdentifier path) {
         final JSONRPCArg arg = jsonConverter.convert(path, null);

@@ -19,11 +19,9 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
-import org.opendaylight.controller.md.sal.dom.api.DOMTransactionChain;
 import org.opendaylight.jsonrpc.model.TransactionFactory;
 
 public class DataModificationContext implements AutoCloseable {
-    private DOMTransactionChain chain;
     private List<Throwable> errors = Collections.emptyList();
     private final List<DOMDataWriteTransaction> txs = new ArrayList<>();
     private final AtomicLong completed = new AtomicLong(-1);
@@ -131,14 +129,11 @@ public class DataModificationContext implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
-        if (chain != null) {
-            chain.close();
-        }
+    public void close() {
     }
 
     @Override
     public String toString() {
-        return "DataModificationContext [chain=" + chain + ", errors=" + errors + ", txs=" + txs + "]";
+        return "DataModificationContext [errors=" + errors + ", txs=" + txs + "]";
     }
 }

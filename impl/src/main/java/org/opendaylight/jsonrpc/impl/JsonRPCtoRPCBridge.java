@@ -60,7 +60,7 @@ import org.opendaylight.yangtools.yang.model.api.SchemaPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
+public final class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
     private static final int MAX_QUEUE_DEPTH = 64;
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCtoRPCBridge.class);
     private final SchemaContext schemaContext;
@@ -98,7 +98,7 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
             LOG.warn("No RPCs to map for " + peer.getName());
         }
         requestQueue = new ArrayBlockingQueue<>(MAX_QUEUE_DEPTH);
-        requestProcessorThread = new Thread(new RPCRequestProcessor(this));
+        requestProcessorThread = new Thread(this::requestProcessorThreadLoop);
         requestProcessorThread.start();
         LOG.info("RPC bridge instantiated for {}", peer.getName());
     }
@@ -338,22 +338,13 @@ public class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
         mappedRpcs.clear();
     }
 
-    private class RPCRequestProcessor implements Runnable {
-        private final JsonRPCtoRPCBridge bridge;
-
-        RPCRequestProcessor(JsonRPCtoRPCBridge bridge) {
-            this.bridge = bridge;
-        }
-
-        @Override
-        public void run() {
-            try {
-                while (bridge.opStatus()) {
-                    bridge.doInvokeRpc(bridge.deQueue());
-                }
-            } catch (java.lang.InterruptedException e) {
-                bridge.flushQueue();
+    private void requestProcessorThreadLoop() {
+        try {
+            while (opStatus()) {
+                doInvokeRpc(deQueue());
             }
+        } catch (InterruptedException e) {
+            flushQueue();
         }
     }
 
