@@ -11,9 +11,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Joiner.MapJoiner;
 import com.google.common.base.Splitter;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Maps;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -22,7 +19,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.opendaylight.jsonrpc.bus.SessionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,162 +34,9 @@ public final class Util {
     private static final Logger LOG = LoggerFactory.getLogger(Util.class);
     private static final MapJoiner QUERY_JOINER = Joiner.on('&').withKeyValueSeparator("=");
     private static final String ROLE = "role";
-    // Simple cache to re-use MessageLibrary instances
-    private static final LoadingCache<String, MessageLibrary> ML_CACHE = CacheBuilder.newBuilder()
-            .build(new CacheLoader<String, MessageLibrary>() {
-                @Override
-                public MessageLibrary load(String key) throws Exception {
-                    return new MessageLibrary(key);
-                }
-            });
-
-    // Cache also proxy instances so they can be reused
-    private static final LoadingCache<MessageLibrary, ProxyService> PROXY_CACHE = CacheBuilder.newBuilder()
-            .build(new CacheLoader<MessageLibrary, ProxyService>() {
-                @Override
-                public ProxyService load(MessageLibrary key) throws Exception {
-                    return new ProxyServiceImpl(key);
-                }
-            });
 
     private Util() {
         // noop
-    }
-
-    /**
-     * Same as {@link #createProxy(Class, String, int)}, but using
-     * default timeout which is {@value #DEFAULT_TIMEOUT}.EndpointRole is
-     * determined by 'role' query parameter, which is mandatory.
-     *
-     * @param <T> API type to proxy, must implement {@link AutoCloseable}
-     * @param clazz interface to create proxy against
-     * @param rawUri URI pointing to service
-     * @return proxy instance of T
-     * @throws URISyntaxException when URI syntax is incorrect
-     * @throws IllegalArgumentException when provided endpoint role is not
-     *             allowed
-     */
-    public static <T extends AutoCloseable> T createProxy(Class<T> clazz, String rawUri) throws URISyntaxException {
-        return createProxy(clazz, rawUri, DEFAULT_TIMEOUT);
-    }
-
-    /**
-     * Same as {@link #createProxy(Class, String, int)}, but using build-in {@link LoadingCache}.
-     *
-     * @param <T> API type to proxy, must implement {@link AutoCloseable}
-     * @param clazz interface to create proxy against
-     * @param rawUri URI pointing to service
-     * @param timeout connection timeout
-     * @return proxy instance of T
-     * @throws URISyntaxException when URI syntax is incorrect
-     * @throws IllegalArgumentException when provided endpoint role is not
-     *             allowed
-     */
-    public static <T extends AutoCloseable> T createProxy(Class<T> clazz, String rawUri, int timeout)
-            throws URISyntaxException {
-        return createProxy(ML_CACHE, clazz, rawUri, timeout);
-    }
-
-    /**
-     * <strong>This method is meant to be used by custom
-     * TransportFactory.</strong>
-     * Create proxy of given interface. Allowed endpoint roles are PUB and
-     * REQ.EndpointRole is determined by 'role' query parameter, which is
-     * mandatory. It also allows to use custom {@link LoadingCache}
-     *
-     * @param cache {@link LoadingCache} used to get/create instances of
-     *            {@link MessageLibrary}
-     * @param <T> API type to proxy, must implement {@link AutoCloseable}
-     * @param clazz interface to create proxy against
-     * @param rawUri URI pointing to service
-     * @param timeout connection timeout
-     * @return proxy instance of T
-     * @throws URISyntaxException if URI syntax is incorrect
-     * @throws IllegalArgumentException when provided endpoint role is not
-     *             allowed
-     */
-    public static <T extends AutoCloseable> T createProxy(LoadingCache<String, MessageLibrary> cache, Class<T> clazz,
-            String rawUri, int timeout) throws URISyntaxException {
-        final URI uri = new URI(rawUri);
-        final EndpointRole role = EndpointRole.valueOf(tokenizeQuery(uri.getQuery()).get("role"));
-        final MessageLibrary ml = cache.getUnchecked(uri.getScheme());
-        final ProxyService proxy = PROXY_CACHE.getUnchecked(ml);
-        switch (role) {
-            case PUB:
-                return proxy.createPublisherProxy(prepareUri(uri), clazz, timeout);
-            case REQ:
-                return proxy.createRequesterProxy(prepareUri(uri), clazz, timeout);
-            default:
-                throw new IllegalArgumentException(String.format("Unrecognized endoint role : %s", role));
-        }
-    }
-
-    /**
-     * Create {@link ThreadedSession} of type {@link SessionType#RESPONDER} to given URI.
-     *
-     * @param <T> handler type
-     * @param rawUri URI
-     * @param handler used to handle requests
-     * @return {@link ThreadedSession}
-     * @throws URISyntaxException if URI syntax is incorrect
-     */
-    public static <T extends AutoCloseable> ThreadedSession createThreadedResponderSession(String rawUri, T handler)
-            throws URISyntaxException {
-        return createThreadedResponderSession(ML_CACHE, rawUri, handler);
-    }
-
-    /**
-     * <strong>This method is meant to be used by custom
-     * TransportFactory.</strong>
-     * Create {@link ThreadedSession} of type {@link SessionType#RESPONDER} to
-     * given URI. It also allows to use custom {@link LoadingCache}
-     *
-     * @param cache {@link LoadingCache} used to get/create instances of
-     *            {@link MessageLibrary}
-     * @param <T> handler type
-     * @param rawUri URI
-     * @param handler used to handle requests
-     * @return {@link ThreadedSession}
-     * @throws URISyntaxException if URI syntax is incorrect
-     */
-    public static <T extends AutoCloseable> ThreadedSession createThreadedResponderSession(
-            LoadingCache<String, MessageLibrary> cache, String rawUri, T handler) throws URISyntaxException {
-        final URI uri = new URI(rawUri);
-        return cache.getUnchecked(uri.getScheme()).threadedResponder(prepareUri(uri), handler);
-    }
-
-    /**
-     * Create {@link ThreadedSession} of type {@link SessionType#SUBSCRIBER} to given URI.
-     *
-     * @param <T> handler type
-     * @param rawUri URI
-     * @param handler used to handle requests
-     * @return {@link ThreadedSession}
-     * @throws URISyntaxException if URI syntax is incorrect
-     */
-    public static <T extends AutoCloseable> ThreadedSession createThreadedSubscriberSession(String rawUri, T handler)
-            throws URISyntaxException {
-        return createThreadedSubscriberSession(ML_CACHE, rawUri, handler);
-    }
-
-    /**
-     * <strong>This method is meant to be used by custom
-     * TransportFactory.</strong>
-     * Create {@link ThreadedSession} of type {@link SessionType#SUBSCRIBER} to
-     * given URI
-     *
-     * @param cache {@link LoadingCache} used to get/create instances of
-     *            {@link MessageLibrary}
-     * @param <T> handler type
-     * @param rawUri URI
-     * @param handler used to handle requests
-     * @return {@link ThreadedSession}
-     * @throws URISyntaxException if URI syntax is incorrect
-     */
-    public static <T extends AutoCloseable> ThreadedSession createThreadedSubscriberSession(
-            LoadingCache<String, MessageLibrary> cache, String rawUri, T handler) throws URISyntaxException {
-        final URI uri = new URI(rawUri);
-        return cache.getUnchecked(uri.getScheme()).threadedSubscriber(prepareUri(uri), handler);
     }
 
     /**
@@ -229,11 +72,12 @@ public final class Util {
             return rawQuery;
         }
         final Map<String, String> params = tokenizeQuery(rawQuery);
-        return QUERY_JOINER.join((Map<?, ?>) params.entrySet().stream()
+        Map<String, String> map = params.entrySet().stream()
                 .filter(e -> !Arrays.asList(paramsToRemove).contains(e.getKey().trim()))
                 // collect into LinkedHashMap, which preserves insertion order
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                    (first, second) -> first, LinkedHashMap::new)));
+                    (first, second) -> first, LinkedHashMap::new));
+        return QUERY_JOINER.join(map);
     }
 
     /**
@@ -248,10 +92,11 @@ public final class Util {
     public static String replaceParam(String rawQuery, String paramName, String paramValue) {
         final Map<String, String> params = Maps.newLinkedHashMap(tokenizeQuery(rawQuery));
         params.put(paramName, paramValue);
-        return QUERY_JOINER.join((Map<?, ?>) params.entrySet().stream().filter(e -> e.getValue() != null)
+        Map<String, String> map = params.entrySet().stream().filter(e -> e.getValue() != null)
                 // collect into LinkedHashMap, which preserves insertion order
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                    (first, second) -> first, LinkedHashMap::new)));
+                    (first, second) -> first, LinkedHashMap::new));
+        return QUERY_JOINER.join(map);
     }
 
     /**
@@ -262,80 +107,39 @@ public final class Util {
     }
 
     /**
-     * Similar to {@link #openSession(String, String)}, but it is required here
-     * that query already contains 'role' parameter, otherwise error will be
-     * raised.
-     *
-     * @param rawUri Service URI
-     * @return {@link Session}
-     */
-    public static Session openSession(String rawUri) {
-        return openSession(rawUri, null);
-    }
-
-    /**
      * <strong>This method is meant to be used by custom
      * TransportFactory.</strong>
      * Open {@link Session} to service at given URI. If query parameters within
      * URI didn't contain 'role' parameter, then roleStr argument will be used.
      *
-     * @param cache {@link LoadingCache} used to get/create instances of
-     *            {@link MessageLibrary}
-     * @param rawUri Service URI
+     * @param messageLibrary the {@link MessageLibrary}
+     * @param uri Service URI
      * @param roleStr Role, @see {@link EndpointRole}
      * @return {@link Session}
      * @throws IllegalArgumentException if given role is not recognized
      */
-    public static Session openSession(LoadingCache<String, MessageLibrary> cache, String rawUri, String roleStr) {
-        try {
-            final URI uri = new URI(rawUri);
-            final Map<String, String> params = tokenizeQuery(uri.getQuery() == null ? "" : uri.getQuery());
-            // get role from URI or use default if not provided
-            final EndpointRole role = EndpointRole.valueOf(!params.containsKey(ROLE)
-                    ? Objects.requireNonNull(roleStr.trim().toUpperCase(), "No role specified in URI or argument")
-                    : params.get(ROLE));
-            final String preparedUri = prepareUri(uri);
-            LOG.debug("Prepared URI : '{}', original URI : {}", preparedUri, rawUri);
-            final MessageLibrary ml = cache.getUnchecked(uri.getScheme());
-            if (EndpointRole.REP.equals(role)) {
-                return ml.responder(preparedUri);
-            }
-            if (EndpointRole.REQ.equals(role)) {
-                return ml.requester(preparedUri);
-            }
-            if (EndpointRole.PUB.equals(role)) {
-                return ml.publisher(preparedUri);
-            }
-            if (EndpointRole.SUB.equals(role)) {
-                return ml.subscriber(preparedUri);
-            }
-        } catch (URISyntaxException e) {
-            throw new IllegalStateException("Invalid URI", e);
+    public static Session openSession(MessageLibrary messageLibrary, URI uri, String roleStr) {
+        final Map<String, String> params = tokenizeQuery(uri.getQuery() == null ? "" : uri.getQuery());
+        // get role from URI or use default if not provided
+        final EndpointRole role = EndpointRole.valueOf(!params.containsKey(ROLE)
+                ? Objects.requireNonNull(roleStr, "No role specified in URI or argument").trim().toUpperCase()
+                        : params.get(ROLE));
+        final String preparedUri = prepareUri(uri);
+        LOG.debug("Prepared URI : '{}', original URI : {}", preparedUri, uri);
+        if (EndpointRole.REP.equals(role)) {
+            return messageLibrary.responder(preparedUri);
         }
+        if (EndpointRole.REQ.equals(role)) {
+            return messageLibrary.requester(preparedUri);
+        }
+        if (EndpointRole.PUB.equals(role)) {
+            return messageLibrary.publisher(preparedUri);
+        }
+        if (EndpointRole.SUB.equals(role)) {
+            return messageLibrary.subscriber(preparedUri);
+        }
+
         throw new IllegalArgumentException("Unrecognized role");
-    }
-
-    /**
-     * Open {@link Session} to service at given URI. If query parameters within
-     * URI didn't contain 'role' parameter, then roleStr argument will be used.
-     *
-     * @param rawUri Service URI
-     * @param roleStr Role, @see {@link EndpointRole}
-     * @return {@link Session}
-     * @throws IllegalArgumentException if given role is not recognized
-     */
-    public static Session openSession(String rawUri, String roleStr) {
-        return openSession(ML_CACHE, rawUri, roleStr);
-    }
-
-    /**
-     * Perform global transport factory cleanup, should be called when application exists, only to ensure that all
-     * transports/sessions has been cleaned-up.
-     */
-    public static void close() {
-        PROXY_CACHE.asMap().clear();
-        ML_CACHE.asMap().values().spliterator().forEachRemaining(MessageLibrary::close);
-        ML_CACHE.asMap().clear();
     }
 
     /**
@@ -365,7 +169,7 @@ public final class Util {
         }
     }
 
-    private static Map<String, String> tokenizeQuery(String rawUri) {
+    static Map<String, String> tokenizeQuery(String rawUri) {
         return UriTokenizer.tokenize(rawUri);
     }
 }

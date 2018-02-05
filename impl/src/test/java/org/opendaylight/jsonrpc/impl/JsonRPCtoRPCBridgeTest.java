@@ -21,6 +21,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.stream.JsonReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.After;
@@ -94,8 +95,10 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         NormalizedNodesHelper.init(schemaContext);
         bi2baCodec = NormalizedNodesHelper.getBindingToNormalizedNodeCodec();
         transportFactory = mock(TransportFactory.class);
-        when(transportFactory.createSession(anyString())).thenAnswer(invocation ->
-            Util.openSession((String) invocation.getArguments()[0], "REQ"));
+        when(transportFactory.createSession(anyString())).thenAnswer(invocation -> {
+            URI uri = new URI((String) invocation.getArguments()[0]);
+            return Util.openSession(new MessageLibrary(uri.getScheme()), uri, "REQ");
+        });
         bridge = new JsonRPCtoRPCBridge(getPeer(), schemaContext, pathMap, mock(RemoteGovernance.class),
                 transportFactory);
         mod = schemaContext.findModule("test-model", Revision.of("2016-11-17")).get();

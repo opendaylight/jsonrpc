@@ -14,11 +14,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <service ref="transportFactory" interface="org.opendaylight.jsonrpc.bus.messagelib.TransportFactory" />
 
     <bean id="busSessionFactoryProvider" class="org.opendaylight.jsonrpc.bus.messagelib.osgi.OsgiBusSessionFactoryProvider">
-        <property name="sessionFactories" ref="sessionFactories" />
+        <argument ref="sessionFactories" />
     </bean>
 
-    <bean id="transportFactory" class="org.opendaylight.jsonrpc.bus.messagelib.osgi.OsgiAwareTransportFactory" init-method="init"
-        destroy-method="close">
-        <property name="busSessionFactoryProvider" ref="busSessionFactoryProvider" />
+    <bean id="transportFactory" class="org.opendaylight.jsonrpc.bus.messagelib.osgi.OsgiAwareTransportFactory"
+            destroy-method="close">
+        <argument ref="busSessionFactoryProvider" />
     </bean>
 </blueprint>

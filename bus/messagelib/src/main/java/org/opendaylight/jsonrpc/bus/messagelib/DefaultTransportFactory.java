@@ -7,55 +7,14 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
-import java.net.URISyntaxException;
-
 /**
  * Default implementation of {@link TransportFactory} normally used in
  * standalone applications and tests.
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
-public class DefaultTransportFactory implements TransportFactory {
-    /**
-     * {@inheritDoc}.
-     *
-     * @see Util#createProxy(Class, String)
-     */
-    @Override
-    public <T extends AutoCloseable> T createProxy(Class<T> clazz, String rawUri) throws URISyntaxException {
-        return Util.createProxy(clazz, rawUri);
-    }
-
-    /**
-     * {@inheritDoc}.
-     *
-     * @see Util#createThreadedResponderSession(String, AutoCloseable)
-     */
-    @Override
-    public <T extends AutoCloseable> ThreadedSession createResponder(String rawUri, T handler)
-            throws URISyntaxException {
-        return Util.createThreadedResponderSession(rawUri, handler);
-    }
-
-    /**
-     * {@inheritDoc}.
-     *
-     * @see Util#createThreadedSubscriberSession(String, AutoCloseable)
-     */
-    @Override
-    public <T extends AutoCloseable> ThreadedSession createSubscriber(String rawUri, T handler)
-            throws URISyntaxException {
-        return Util.createThreadedSubscriberSession(rawUri, handler);
-    }
-
-    /**
-     * {@inheritDoc}.
-     *
-     * @see Util#openSession(String)
-     * @see Util#openSession(String, String)
-     */
-    @Override
-    public Session createSession(String rawUri) throws URISyntaxException {
-        return Util.openSession(rawUri);
+public class DefaultTransportFactory extends AbstractTransportFactory {
+    public DefaultTransportFactory() {
+        super(TcclBusSessionFactoryProvider.getInstance());
     }
 }
