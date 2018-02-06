@@ -8,6 +8,8 @@
 package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
@@ -17,13 +19,12 @@ import com.google.gson.stream.JsonReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcAvailabilityListener;
@@ -65,11 +66,11 @@ public final class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCtoRPCBridge.class);
     private final SchemaContext schemaContext;
     private final JsonConverter jsonConverter;
-    private final Collection<DOMRpcIdentifier> availableRpcs = new ArrayList<>();
-    private final Map<String, RpcState> mappedRpcs = new HashMap<>();
-    private final ArrayBlockingQueue<JsonRPCDOMRpcResultFuture> requestQueue;
+    private final Collection<DOMRpcIdentifier> availableRpcs;
+    private final Map<String, RpcState> mappedRpcs;
+    private final BlockingQueue<JsonRPCDOMRpcResultFuture> requestQueue = new ArrayBlockingQueue<>(MAX_QUEUE_DEPTH);
     private final Thread requestProcessorThread;
-    private boolean shuttingDown = false;
+    private volatile boolean shuttingDown = false;
 
     /**
      * Instantiates a new RPC Bridge.
@@ -91,20 +92,30 @@ public final class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
         Objects.requireNonNull(peer);
         this.schemaContext = Objects.requireNonNull(schemaContext);
         this.jsonConverter = new JsonConverter(schemaContext);
+
+        final ImmutableList.Builder<DOMRpcIdentifier> availableRpcsBuilder = ImmutableList.builder();
+        final ImmutableMap.Builder<String, RpcState> mappedRpcsBuilder = ImmutableMap.builder();
         for (final RpcDefinition def : schemaContext.getOperations()) {
-            addRpcDefinition(peer, pathMap, governance, def, transportFactory);
+            addRpcDefinition(peer, pathMap, governance, def, transportFactory, schemaContext, availableRpcsBuilder,
+                    mappedRpcsBuilder);
         }
+
+        mappedRpcs = mappedRpcsBuilder.build();
+        availableRpcs = availableRpcsBuilder.build();
+
         if (mappedRpcs.isEmpty()) {
             LOG.warn("No RPCs to map for " + peer.getName());
         }
-        requestQueue = new ArrayBlockingQueue<>(MAX_QUEUE_DEPTH);
+
         requestProcessorThread = new Thread(this::requestProcessorThreadLoop);
         requestProcessorThread.start();
         LOG.info("RPC bridge instantiated for {}", peer.getName());
     }
 
-    private void addRpcDefinition(Peer peer, HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
-            RemoteGovernance governance, RpcDefinition def, TransportFactory transportFactory)
+    private static void addRpcDefinition(Peer peer, HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
+            RemoteGovernance governance, RpcDefinition def, TransportFactory transportFactory,
+            SchemaContext schemaContext, ImmutableList.Builder<DOMRpcIdentifier> toRpcIdentifiers,
+            ImmutableMap.Builder<String, RpcState> toMappedRpcs)
                     throws URISyntaxException {
         final QNameModule qmodule = def.getQName().getModule();
         final Optional<Module> possibleModule = schemaContext.findModule(qmodule.getNamespace(), qmodule.getRevision());
@@ -136,9 +147,9 @@ public final class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
         LOG.debug("Method endpoint - governance+map lookup is  {}", methodEndpoint);
         if (methodEndpoint != null) {
             LOG.debug("RPC {} mapped to {}", topLevel, methodEndpoint);
-            mappedRpcs.put(def.getQName().getLocalName(),
+            toMappedRpcs.put(def.getQName().getLocalName(),
                     new RpcState(def.getQName().getLocalName(), def, methodEndpoint, transportFactory));
-            availableRpcs.add(DOMRpcIdentifier.create(def.getPath()));
+            toRpcIdentifiers.add(DOMRpcIdentifier.create(def.getPath()));
         } else {
             LOG.error("RPC {} cannot be mapped, no known endpoint", topLevel);
         }
@@ -210,8 +221,12 @@ public final class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
         final QName rpcQName = request.getType().getLastComponent();
         JsonObject jsonForm = null;
         try {
-            RpcState rpcState = Preconditions.checkNotNull(mappedRpcs.get(rpcQName.getLocalName()),
-                    "Unknown rpc %s, available rpcs: %s", rpcQName, mappedRpcs.keySet());
+            RpcState rpcState = mappedRpcs.get(rpcQName.getLocalName());
+            if (rpcState == null) {
+                throw new IllegalArgumentException(String.format("Unknown rpc %s, available rpcs: %s", rpcQName,
+                        mappedRpcs.keySet()));
+            }
+
             if (!request.isPollingForResult()) {
                 if (isNotEmpty(rpcState.rpc().getInput())) {
                     Preconditions.checkArgument(request.getInput() instanceof ContainerNode,
@@ -335,7 +350,6 @@ public final class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
         } catch (java.lang.InterruptedException e) {
             // Do nothing - this gets us out of the loop
         }
-        mappedRpcs.clear();
     }
 
     private void requestProcessorThreadLoop() {
