@@ -20,7 +20,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import java.util.stream.Collectors;
@@ -66,8 +69,8 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private DataBroker dataBroker;
     private DOMDataBroker domDataBroker;
     private DOMSchemaService schemaService;
-    private RemoteGovernance governance;
-    private ThreadedSession remoteControl = null;
+    private volatile RemoteGovernance governance;
+    private volatile ThreadedSession remoteControl;
     private final Map<String, MappedPeerContext> peerState = Maps.newConcurrentMap();
     private final List<AutoCloseable> toClose = new LinkedList<>();
     private final ReentrantReadWriteLock changeLock = new ReentrantReadWriteLock();
@@ -266,14 +269,22 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         peerState.values().forEach(p -> doUnmount(p.getName()));
         peerState.clear();
         if (remoteControl != null) {
-            remoteControl.stop();
-            remoteControl.joinAndClose();
+            try {
+                remoteControl.stop().get(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                LOG.warn("Interrupted while stopping remote control session", e);
+                Thread.currentThread().interrupt();
+            } catch (ExecutionException | TimeoutException e) {
+                LOG.warn("Fail to stop remote control session", e);
+            }
+            remoteControl = null;
         }
-        Util.closeNullable(governance);
+
+        Util.closeNullableWithExceptionCallback(governance, e -> LOG.warn("Failed to close RemoteGovernance", e));
         governance = null;
         toClose.forEach(
             c -> Util.closeNullableWithExceptionCallback(c, e -> LOG.warn("Failed to close object {}", c, e)));

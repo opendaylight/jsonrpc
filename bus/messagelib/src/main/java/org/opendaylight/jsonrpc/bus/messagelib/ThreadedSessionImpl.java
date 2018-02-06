@@ -8,6 +8,11 @@
 package org.opendaylight.jsonrpc.bus.messagelib;
 
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.JdkFutureAdapters;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonPrimitive;
@@ -16,7 +21,6 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -49,8 +53,26 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
     }
 
     @Override
-    public void stop() {
+    public ListenableFuture<Void> stop() {
         session.stopLoop();
+
+        final ListenableFuture<Void> resultFuture = Futures.transform(JdkFutureAdapters.listenInPoolThread(future),
+            r -> null, MoreExecutors.directExecutor());
+        Futures.addCallback(resultFuture, new FutureCallback<Void>() {
+                @Override
+                public void onSuccess(Void notUsed) {
+                    LOG.debug("Successfully stopped session {}", session);
+                    session.close();
+                }
+
+                @Override
+                public void onFailure(Throwable failure) {
+                    LOG.error("Error stopping session {}", session, failure);
+                    session.close();
+                }
+        }, MoreExecutors.directExecutor());
+
+        return resultFuture;
     }
 
     /**
@@ -322,17 +344,6 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
             session.startLoop(this);
         } finally {
             Thread.currentThread().setName(threadName);
-        }
-    }
-
-    @Override
-    public void joinAndClose() {
-        try {
-            future.get();
-            session.close();
-            LOG.trace("Thread stopped");
-        } catch (InterruptedException | ExecutionException e) {
-            LOG.debug("Thread interrupted", e);
         }
     }
 }

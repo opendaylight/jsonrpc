@@ -84,8 +84,7 @@ public class ProxyServicePublisherTest {
     @AfterClass
     public static void teardown() throws Exception {
         showFunctionName();
-        subscriber.stop();
-        subscriber.joinAndClose();
+        subscriber.stop().get(10, TimeUnit.SECONDS);
         publisherProxy.close();
         messaging.close();
     }

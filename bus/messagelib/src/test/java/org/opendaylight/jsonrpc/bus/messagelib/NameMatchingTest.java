@@ -15,6 +15,9 @@ import static org.mockito.Mockito.when;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonPrimitive;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -53,9 +56,9 @@ public class NameMatchingTest {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws InterruptedException, ExecutionException, TimeoutException {
         Mockito.reset(busSession);
-        ts.joinAndClose();
+        ts.stop().get(10, TimeUnit.SECONDS);
     }
 
     /**

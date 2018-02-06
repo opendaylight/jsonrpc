@@ -11,6 +11,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
@@ -20,8 +22,13 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.opendaylight.controller.md.sal.dom.api.DOMNotification;
 import org.opendaylight.controller.md.sal.dom.api.DOMNotificationListener;
@@ -119,10 +126,17 @@ public class JsonRPCNotificationService implements DOMNotificationService, Notif
     @Override
     public void close() {
         // Close all notification listeners
-        mappedNotifications.values().forEach(ns -> {
-            ns.client().stop();
-            ns.client().joinAndClose();
-        });
+        ListenableFuture<List<Void>> futures = Futures.allAsList(mappedNotifications.values().stream()
+                .map(ns -> ns.client().stop()).collect(Collectors.toList()));
+        try {
+            futures.get(10, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            LOG.warn("Interrupted while stopping notification listener sessions", e);
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException | TimeoutException e) {
+            LOG.warn("Failed to stop some/all notification listener sessions", e);
+        }
+
         mappedNotifications.clear();
         listeners.clear();
     }

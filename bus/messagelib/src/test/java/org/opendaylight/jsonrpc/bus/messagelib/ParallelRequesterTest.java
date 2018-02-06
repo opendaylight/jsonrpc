@@ -9,6 +9,8 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -130,10 +132,9 @@ public class ParallelRequesterTest {
     }
 
     @AfterClass
-    public static void teardown() {
+    public static void teardown() throws InterruptedException, ExecutionException, TimeoutException {
         showFunctionName();
-        server.stop();
-        server.joinAndClose();
+        server.stop().get();
         messaging.close();
     }
 }

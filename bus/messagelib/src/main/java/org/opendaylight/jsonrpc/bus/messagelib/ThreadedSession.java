@@ -7,10 +7,9 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
 public interface ThreadedSession {
 
-    void stop();
-
-    void joinAndClose();
-
+    ListenableFuture<Void> stop();
 }

@@ -11,6 +11,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -136,10 +139,9 @@ public class ProxyServiceRequesterTest {
     }
 
     @AfterClass
-    public static void teardown() {
+    public static void teardown() throws InterruptedException, ExecutionException, TimeoutException {
         showFunctionName();
-        server.stop();
-        server.joinAndClose();
+        server.stop().get(10, TimeUnit.SECONDS);
         serverProxy.close();
         messaging.close();
     }
