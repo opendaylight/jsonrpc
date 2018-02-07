@@ -31,7 +31,7 @@ public class NameMatchingTest {
     private BusSession busSession;
     private ThreadedSessionImpl<AutoCloseable> ts;
     private final JsonRpcReplyMessage.Builder replyBuilder = JsonRpcReplyMessage.builder();
-    private final JsonRpcRequestMessage.Builder requestBuilder = JsonRpcRequestMessage.builder();
+    private final JsonRpcRequestMessage.Builder requestBuilder = JsonRpcRequestMessage.builder().idFromIntValue(1);
 
     @BeforeClass
     public static void setupBeforeClass() {
@@ -65,7 +65,7 @@ public class NameMatchingTest {
         ts.handleRequest(requestBuilder.build(), replyBuilder);
         JsonRpcReplyMessage reply = replyBuilder.build();
         assertNull(reply.getError());
-        assertTrue(reply.getResult() instanceof JsonNull);
+        assertTrue("" + reply, reply.getResult() instanceof JsonNull);
     }
 
     /**

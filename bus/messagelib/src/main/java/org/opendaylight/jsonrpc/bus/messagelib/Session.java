@@ -19,9 +19,9 @@ import org.opendaylight.jsonrpc.bus.SessionType;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseMessage.JsonRpcMessageType;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage.Builder;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,23 +89,7 @@ public class Session implements AutoCloseable {
      *             that does not support sending messges.
      */
     public void sendRequest(String method, Object params) throws MessageLibraryMismatchException {
-        // Check if we have valid session
-        if (sessionType == SessionType.SUBSCRIBER || sessionType == SessionType.RESPONDER) {
-            throw new MessageLibraryMismatchException("Send not supported for this session.");
-        }
-
-        // Build Request
-        Builder requestBuilder = JsonRpcRequestMessage.builder().method(method);
-
-        if (sessionType != SessionType.PUBLISHER) {
-            requestBuilder.idFromIntValue(newId());
-        }
-
-        if (params != null) {
-            requestBuilder.paramsFromObject(params);
-        }
-
-        sendMessage(requestBuilder.build());
+        sendRequest(method, params, null);
     }
 
     /**
@@ -127,20 +111,13 @@ public class Session implements AutoCloseable {
         }
 
         // Build Request
-        Builder requestBuilder = JsonRpcRequestMessage.builder().method(method);
-
-        if (sessionType != SessionType.PUBLISHER) {
-            requestBuilder.idFromIntValue(newId());
+        if (sessionType == SessionType.PUBLISHER) {
+            sendMessage(JsonRpcNotificationMessage.builder().method(method).paramsFromObject(params)
+                    .metadata(metadata).build());
+        } else {
+            sendMessage(JsonRpcRequestMessage.builder().idFromIntValue(newId()).method(method)
+                    .paramsFromObject(params).metadata(metadata).build());
         }
-
-        if (params != null) {
-            requestBuilder.paramsFromObject(params);
-        }
-
-        if (metadata != null) {
-            requestBuilder.metadata(metadata);
-        }
-        sendMessage(requestBuilder.build());
     }
 
     /**
@@ -373,7 +350,7 @@ public class Session implements AutoCloseable {
             return;
         }
         try {
-            notificationMessageHandler.handleNotification((JsonRpcRequestMessage) msg);
+            notificationMessageHandler.handleNotification((JsonRpcNotificationMessage) msg);
         } catch (RuntimeException e) {
             LOG.error("Unable to handle notification", e);
         }

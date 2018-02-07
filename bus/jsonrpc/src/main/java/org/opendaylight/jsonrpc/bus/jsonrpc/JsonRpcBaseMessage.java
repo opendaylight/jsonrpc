@@ -134,7 +134,7 @@ public abstract class JsonRpcBaseMessage {
         }
 
         @SuppressWarnings("unchecked")
-        private T self() {
+        protected T self() {
             return (T) this;
         }
 

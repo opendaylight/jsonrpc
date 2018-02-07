@@ -53,8 +53,17 @@ public final class JsonRpcSerializer {
         }
 
         if (obj.has(JsonRpcConstants.METHOD)) {
-            // This is a request message
-            return processRequestMessage(obj, id);
+            // This is a Request or Notification - Verify it does not contain either result or error fields.
+            if (obj.has(JsonRpcConstants.ERROR) || obj.has(JsonRpcConstants.RESULT)) {
+                return JsonRpcMessageError.builder().id(id).code(-32700).message("Request message has error or result")
+                        .build();
+            }
+
+            if (id != null) {
+                return processRequestMessage(obj, id);
+            } else {
+                return processNotificationMessage(obj);
+            }
         } else {
             // This is a reply message
             return processReplyMessage(obj, id);
@@ -89,19 +98,24 @@ public final class JsonRpcSerializer {
     }
 
     private static JsonRpcBaseMessage processRequestMessage(JsonObject obj, JsonElement id) {
-        // Verify that Request does not contain either result or error fields.
-        if (obj.has(JsonRpcConstants.ERROR) || obj.has(JsonRpcConstants.RESULT)) {
-            return JsonRpcMessageError.builder().id(id).code(-32700).message("Request message has error or result")
-                    .build();
+        if (obj.has(JsonRpcConstants.METADATA)) {
+            return JsonRpcRequestMessage.builder().id(id).method(obj.get(JsonRpcConstants.METHOD).getAsString())
+                    .params(obj.get(JsonRpcConstants.PARAMS))
+                    .metadata(obj.get(JsonRpcConstants.METADATA).getAsJsonObject()).build();
         } else {
-            if (obj.has(JsonRpcConstants.METADATA)) {
-                return JsonRpcRequestMessage.builder().id(id).method(obj.get(JsonRpcConstants.METHOD).getAsString())
-                        .params(obj.get(JsonRpcConstants.PARAMS))
-                        .metadata(obj.get(JsonRpcConstants.METADATA).getAsJsonObject()).build();
-            } else {
-                return JsonRpcRequestMessage.builder().id(id).method(obj.get(JsonRpcConstants.METHOD).getAsString())
-                        .params(obj.get(JsonRpcConstants.PARAMS)).build();
-            }
+            return JsonRpcRequestMessage.builder().id(id).method(obj.get(JsonRpcConstants.METHOD).getAsString())
+                    .params(obj.get(JsonRpcConstants.PARAMS)).build();
+        }
+    }
+
+    private static JsonRpcBaseMessage processNotificationMessage(JsonObject obj) {
+        if (obj.has(JsonRpcConstants.METADATA)) {
+            return JsonRpcNotificationMessage.builder().method(obj.get(JsonRpcConstants.METHOD).getAsString())
+                    .params(obj.get(JsonRpcConstants.PARAMS))
+                    .metadata(obj.get(JsonRpcConstants.METADATA).getAsJsonObject()).build();
+        } else {
+            return JsonRpcNotificationMessage.builder().method(obj.get(JsonRpcConstants.METHOD).getAsString())
+                    .params(obj.get(JsonRpcConstants.PARAMS)).build();
         }
     }
 
@@ -153,6 +167,7 @@ public final class JsonRpcSerializer {
                 .registerTypeAdapter(JsonRpcMessageError.class, new JsonRpcMessageErrorSerializer())
                 .registerTypeAdapter(JsonRpcReplyMessage.class, new JsonRpcReplyMessageSerializer())
                 .registerTypeAdapter(JsonRpcRequestMessage.class, new JsonRpcRequestMessageSerializer())
+                .registerTypeAdapter(JsonRpcNotificationMessage.class, new JsonRpcNotificationMessageSerializer())
                 .serializeNulls().create();
         return gson.toJson(obj);
     }

@@ -24,8 +24,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.opendaylight.jsonrpc.bus.BusSession;
 import org.opendaylight.jsonrpc.bus.BusSessionMsgHandler;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseRequestMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 import org.slf4j.Logger;
@@ -63,9 +65,9 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
      * the number of method arguments is not a factor in the match
      */
     private static class NameMatchingPredicate implements Predicate<Method> {
-        protected final JsonRpcRequestMessage msg;
+        protected final JsonRpcBaseRequestMessage msg;
 
-        NameMatchingPredicate(JsonRpcRequestMessage msg) {
+        NameMatchingPredicate(JsonRpcBaseRequestMessage msg) {
             this.msg = msg;
         }
 
@@ -113,7 +115,7 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
      */
     private static class StrictMatchingPredicate extends NameMatchingPredicate {
 
-        StrictMatchingPredicate(JsonRpcRequestMessage msg) {
+        StrictMatchingPredicate(JsonRpcBaseRequestMessage msg) {
             super(msg);
         }
 
@@ -147,7 +149,7 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
         };
     }
 
-    private static int getParametersCount(JsonRpcRequestMessage msg) {
+    private static int getParametersCount(JsonRpcBaseRequestMessage msg) {
         int size = 0;
         if (msg.getParams() instanceof JsonArray) {
             size = ((JsonArray) msg.getParams()).size();
@@ -158,14 +160,14 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
         return size;
     }
 
-    private List<Method> findMethodStrict(JsonRpcRequestMessage msg) {
+    private List<Method> findMethodStrict(JsonRpcBaseRequestMessage msg) {
         return Arrays.stream(handler.getClass().getDeclaredMethods())
                 .filter(new StrictMatchingPredicate(msg))
                 .sorted(nameSorter())
                 .collect(Collectors.toList());
     }
 
-    private List<Method> findMethodLenient(JsonRpcRequestMessage msg) {
+    private List<Method> findMethodLenient(JsonRpcBaseRequestMessage msg) {
         return Arrays.stream(handler.getClass().getDeclaredMethods())
                 .filter(new NameMatchingPredicate(msg))
                 .sorted(nameSorter())
@@ -177,7 +179,7 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
      * assuming that number of parameters is already matching number of
      * arguments
      */
-    private Object[] getArgumentsForMethod(Method method, JsonRpcRequestMessage message) throws JsonRpcException {
+    private Object[] getArgumentsForMethod(Method method, JsonRpcBaseRequestMessage message) throws JsonRpcException {
         final Object[] args = new Object[getParametersCount(message)];
         final Class<?>[] argsTypes = method.getParameterTypes();
         for (int i = 0; i < args.length; i++) {
@@ -187,7 +189,7 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
     }
 
     @SuppressWarnings("squid:S1166")
-    private Object invokeHandler(JsonRpcRequestMessage message)
+    private Object invokeHandler(JsonRpcBaseRequestMessage message)
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 
         List<Method> opt = findMethodStrict(message);
@@ -226,12 +228,10 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
      * Handles JSON-RPC request. If handler instance provided in constructor is
      * instance of {@link RequestMessageHandler} then handling is delegated to
      * it instead.
-     *
-     * @see NotificationMessageHandler#handleNotification(JsonRpcRequestMessage)
      */
     @Override
     @SuppressWarnings("squid:S1166")
-    public void handleNotification(JsonRpcRequestMessage notification) {
+    public void handleNotification(JsonRpcNotificationMessage notification) {
         try {
             if (handler instanceof NotificationMessageHandler) {
                 ((NotificationMessageHandler) handler).handleNotification(notification);

@@ -9,6 +9,7 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 import org.slf4j.Logger;
@@ -85,7 +86,7 @@ public class TestMessageHandler implements RequestMessageHandler, ReplyMessageHa
     }
 
     @Override
-    public void handleNotification(JsonRpcRequestMessage notification) {
+    public void handleNotification(JsonRpcNotificationMessage notification) {
         try {
             this.noticeMethod = notification.getMethod();
             this.noticeParam = notification.getParamsAsObject(String.class);

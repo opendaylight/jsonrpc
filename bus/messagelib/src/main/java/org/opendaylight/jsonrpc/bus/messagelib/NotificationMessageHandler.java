@@ -7,7 +7,7 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;
 
 /**
  * This interface needs to be implemented by classes that wish to handle
@@ -16,7 +16,7 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
  * @author Shaleen Saxena
  */
 public interface NotificationMessageHandler extends AutoCloseable {
-    void handleNotification(JsonRpcRequestMessage notification);
+    void handleNotification(JsonRpcNotificationMessage notification);
 
     @Override
     default void close() throws Exception {

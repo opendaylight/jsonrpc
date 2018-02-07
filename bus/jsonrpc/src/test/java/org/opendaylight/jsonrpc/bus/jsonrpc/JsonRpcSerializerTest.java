@@ -44,7 +44,7 @@ public class JsonRpcSerializerTest {
     @Test
     public void testParamAsStringArray() {
         String[] param1 = {"first", "second"};
-        JsonRpcRequestMessage request1 = JsonRpcRequestMessage.builder().method("echo")
+        JsonRpcRequestMessage request1 = JsonRpcRequestMessage.builder().idFromIntValue(1).method("echo")
                 .paramsFromObject(param1).build();
 
         String requestStr = JsonRpcSerializer.toJson(request1);
@@ -88,16 +88,25 @@ public class JsonRpcSerializerTest {
         String[] msgs = {
             "{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": [42, 23], \"id\": 1}",
             "{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": {\"subtrahend\": 23, \"minuend\": 42}"
-                + ", \"id\": 3}",
-            "{\"jsonrpc\": \"2.0\", \"method\": \"foobar\", \"id\": \"1\"}",
-            "{\"jsonrpc\": \"2.0\", \"method\": \"update\", \"params\": [1,2,3,4,5]}",
-            "{\"jsonrpc\": \"2.0\", \"method\": \"foobar\", \"params\": [\"bar\", \"baz\"]}",
-            "{\"jsonrpc\": \"2.0\", \"method\": 1, \"params\": \"bar\"}",
-            "[{\"jsonrpc\": \"2.0\", \"method\": \"notify_sum\", \"params\": [1,2,4]}, {\"jsonrpc\": \"2.0\""
-                + ", \"method\": \"notify_hello\", \"params\": [7]}]"
+                + ", \"id\": 2}",
+            "{\"jsonrpc\": \"2.0\", \"method\": \"foobar\", \"id\": \"3\"}",
+            "{\"jsonrpc\": \"2.0\", \"method\": \"update\", \"params\": [1,2,3,4,5], \"id\": 4}",
+            "{\"jsonrpc\": \"2.0\", \"method\": \"foobar\", \"params\": [\"bar\", \"baz\"], \"id\": 5}",
+            "{\"jsonrpc\": \"2.0\", \"method\": 1, \"params\": \"bar\", \"id\": 6}",
+            "[{\"jsonrpc\": \"2.0\", \"method\": \"notify_sum\", \"params\": [1,2,4], \"id\": 7}, {\"jsonrpc\": \"2.0\""
+                + ", \"method\": \"notify_hello\", \"params\": [7], \"id\": 8}]"
         };
 
         testMessagesHelper(msgs, 8, JsonRpcRequestMessage.class);
+    }
+
+    @Test
+    public void testNotificationMessages() {
+        String[] msgs = {
+            "{\"jsonrpc\": \"2.0\", \"method\": \"subtract\", \"params\": [42, 23]}"
+        };
+
+        testMessagesHelper(msgs, 1, JsonRpcNotificationMessage.class);
     }
 
     @Test
