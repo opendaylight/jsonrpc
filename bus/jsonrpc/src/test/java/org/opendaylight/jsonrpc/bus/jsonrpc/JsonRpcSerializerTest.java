@@ -43,11 +43,9 @@ public class JsonRpcSerializerTest {
 
     @Test
     public void testParamAsStringArray() {
-        JsonRpcRequestMessage request1 = new JsonRpcRequestMessage();
         String[] param1 = {"first", "second"};
-        request1.setMethod("echo");
-        request1.setParamsAsObject(param1);
-        request1.setDefaultJsonrpc();
+        JsonRpcRequestMessage request1 = JsonRpcRequestMessage.builder().method("echo")
+                .paramsFromObject(param1).build();
 
         String requestStr = JsonRpcSerializer.toJson(request1);
         logger.info(requestStr);

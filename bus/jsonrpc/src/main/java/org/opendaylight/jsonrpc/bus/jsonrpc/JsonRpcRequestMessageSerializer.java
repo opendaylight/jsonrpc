@@ -31,9 +31,7 @@ public class JsonRpcRequestMessageSerializer extends Object implements JsonSeria
             obj.add(JsonRpcConstants.ID, src.getId());
         }
 
-        if (src.getMethod() != null) {
-            obj.addProperty(JsonRpcConstants.METHOD, src.getMethod());
-        }
+        obj.addProperty(JsonRpcConstants.METHOD, src.getMethod());
 
         if (src.getParams() != null) {
             obj.add(JsonRpcConstants.PARAMS, src.getParams());

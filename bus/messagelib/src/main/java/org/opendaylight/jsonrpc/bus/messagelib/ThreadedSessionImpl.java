@@ -251,30 +251,30 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
      * it instead.
      *
      * @see RequestMessageHandler#handleRequest(JsonRpcRequestMessage,
-     *      JsonRpcReplyMessage)
+     *      JsonRpcReplyMessage.Builder)
      */
     @Override
     @SuppressWarnings("squid:S1166")
-    public void handleRequest(JsonRpcRequestMessage request, JsonRpcReplyMessage reply) {
+    public void handleRequest(JsonRpcRequestMessage request, JsonRpcReplyMessage.Builder replyBuilder) {
         if (handler instanceof RequestMessageHandler) {
-            ((RequestMessageHandler) handler).handleRequest(request, reply);
+            ((RequestMessageHandler) handler).handleRequest(request, replyBuilder);
             return;
         }
         try {
             Object response = invokeHandler(request);
-            reply.setResultAsObject(response);
+            replyBuilder.resultFromObject(response);
         } catch (IllegalAccessException | NoSuchMethodException e) {
             LOG.error("Request method not found: {}", request.getMethod());
             JsonRpcErrorObject error = new JsonRpcErrorObject(-32601, "Method not found", null);
-            reply.setError(error);
+            replyBuilder.error(error);
         } catch (IllegalArgumentException e) {
             LOG.error("Invalid arguments");
             JsonRpcErrorObject error = new JsonRpcErrorObject(-32602, "Invalid params", null);
-            reply.setError(error);
+            replyBuilder.error(error);
         } catch (InvocationTargetException e) {
             LOG.error("Error while executing method: {}", request.getMethod());
             JsonRpcErrorObject error = new JsonRpcErrorObject(-32000, getErrorMessage(e), null);
-            reply.setError(error);
+            replyBuilder.error(error);
         }
     }
 

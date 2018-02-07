@@ -30,8 +30,8 @@ public class NameMatchingTest {
     private static MessageLibrary messaging;
     private BusSession busSession;
     private ThreadedSessionImpl<AutoCloseable> ts;
-    private JsonRpcReplyMessage reply;
-    private JsonRpcRequestMessage request;
+    private final JsonRpcReplyMessage.Builder replyBuilder = JsonRpcReplyMessage.builder();
+    private final JsonRpcRequestMessage.Builder requestBuilder = JsonRpcRequestMessage.builder();
 
     @BeforeClass
     public static void setupBeforeClass() {
@@ -45,8 +45,6 @@ public class NameMatchingTest {
 
     @Before
     public void setUp() {
-        reply = new JsonRpcReplyMessage();
-        request = new JsonRpcRequestMessage();
         busSession = Mockito.mock(BusSession.class);
         when(busSession.getSessionType()).thenReturn(SessionType.REQUESTER);
         ts = new ThreadedSessionImpl<>(messaging, busSession, new MockHandler());
@@ -63,8 +61,9 @@ public class NameMatchingTest {
      */
     @Test
     public void testInvokeMethodNoParams() {
-        request.setMethod("method1");
-        ts.handleRequest(request, reply);
+        requestBuilder.method("method1");
+        ts.handleRequest(requestBuilder.build(), replyBuilder);
+        JsonRpcReplyMessage reply = replyBuilder.build();
         assertNull(reply.getError());
         assertTrue(reply.getResult() instanceof JsonNull);
     }
@@ -75,38 +74,38 @@ public class NameMatchingTest {
      */
     @Test
     public void testInvokeMethodNoParamsButArgsProvided() {
-        request.setMethod("method1");
-        request.setParams(new JsonPrimitive("abc"));
-        ts.handleRequest(request, reply);
-        assertEquals(-32602, reply.getError().getCode());
+        requestBuilder.method("method1").params(new JsonPrimitive("abc"));
+        ts.handleRequest(requestBuilder.build(), replyBuilder);
+        assertEquals(-32602, replyBuilder.build().getError().getCode());
     }
 
     @Test
     public void testInvokeMethodWithArgs() {
-        request.setMethod("method-with-camel-case");
-        request.setParams(new JsonPrimitive(8));
-        ts.handleRequest(request, reply);
+        requestBuilder.method("method-with-camel-case").params(new JsonPrimitive(8));
+        ts.handleRequest(requestBuilder.build(), replyBuilder);
+        JsonRpcReplyMessage reply = replyBuilder.build();
         assertNull(reply.getError());
         assertEquals(256, (int) reply.getResult().getAsDouble());
     }
 
     @Test
     public void testInvokeMethodNoParamsWithUnderscoreName() {
-        request.setMethod("method-2");
+        requestBuilder.method("method-2");
         JsonArray array = new JsonArray();
         array.add(new JsonPrimitive(2));
         array.add(new JsonPrimitive("xyz"));
-        request.setParams(array);
-        ts.handleRequest(request, reply);
+        requestBuilder.params(array);
+        ts.handleRequest(requestBuilder.build(), replyBuilder);
+        JsonRpcReplyMessage reply = replyBuilder.build();
         assertNull(reply.getError());
         assertEquals("xyzxyz", reply.getResult().getAsJsonPrimitive().getAsString());
     }
 
     @Test
     public void testNamePreference() {
-        request.setMethod("similar_method_name");
-        request.setParams(new JsonPrimitive("abc"));
-        ts.handleRequest(request, reply);
+        requestBuilder.method("similar_method_name").params(new JsonPrimitive("abc"));
+        ts.handleRequest(requestBuilder.build(), replyBuilder);
+        JsonRpcReplyMessage reply = replyBuilder.build();
         assertNull(reply.getError());
         assertEquals(13, reply.getResult().getAsJsonPrimitive().getAsInt());
     }

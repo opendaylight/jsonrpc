@@ -34,26 +34,26 @@ public class OmRootMessageHandler implements RequestMessageHandler, AutoCloseabl
     }
 
     @Override
-    public void handleRequest(JsonRpcRequestMessage request, JsonRpcReplyMessage reply) {
+    public void handleRequest(JsonRpcRequestMessage request, JsonRpcReplyMessage.Builder replyBuilder) {
         LOG.info("Req : {}", request);
         try {
             switch (request.getMethod()) {
                 case "source":
-                    reply.setResult(new JsonPrimitive(getYangSource(request.getParams().getAsString())));
+                    replyBuilder.result(new JsonPrimitive(getYangSource(request.getParams().getAsString())));
                     return;
                 case "governance":
-                    reply.setResult(new JsonPrimitive(String.format("zmq://localhost:%d", governancePort)));
+                    replyBuilder.result(new JsonPrimitive(String.format("zmq://localhost:%d", governancePort)));
                     return;
                 case "close":
-                    reply.setResult(new JsonPrimitive("ok"));
+                    replyBuilder.result(new JsonPrimitive("ok"));
                     return;
                 default:
-                    reply.setResultAsObject("ERROR : unknown method : " + request.getMethod());
+                    replyBuilder.resultFromObject("ERROR : unknown method : " + request.getMethod());
                     return;
             }
         } catch (IOException e) {
             LOG.error("I/O error", e);
-            reply.setResultAsObject("ERROR");
+            replyBuilder.resultFromObject("ERROR");
         }
     }
 

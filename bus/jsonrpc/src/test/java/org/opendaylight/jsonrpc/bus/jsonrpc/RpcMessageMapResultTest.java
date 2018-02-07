@@ -20,7 +20,6 @@ public class RpcMessageMapResultTest {
 
     @Test
     public void testResultAsMap() {
-        JsonRpcReplyMessage reply1 = new JsonRpcReplyMessage();
         String[] params = { "first", "second" };
         Map<String, Object> map = new HashMap<>();
 
@@ -30,9 +29,7 @@ public class RpcMessageMapResultTest {
 
         LOG.info("Class: ", map.getClass().toString());
 
-        reply1.setDefaultJsonrpc();
-        reply1.setIdAsIntValue(1);
-        reply1.setResultAsObject(map);
+        JsonRpcReplyMessage reply1 = JsonRpcReplyMessage.builder().idFromIntValue(1).resultFromObject(map).build();
 
         String replyStr = JsonRpcSerializer.toJson(reply1);
         LOG.info(replyStr);

@@ -9,7 +9,9 @@ package org.opendaylight.jsonrpc.bus.jsonrpc;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import java.util.Objects;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * This represents the JSON RPC Request Message. This can be a received message,
@@ -17,58 +19,28 @@ import com.google.gson.JsonObject;
  *
  * @author Shaleen Saxena
  */
-public class JsonRpcRequestMessage extends JsonRpcBaseMessage {
-    protected String method;
-    protected JsonElement params;
+public final class JsonRpcRequestMessage extends JsonRpcBaseMessage {
+    private final String method;
+    private final JsonElement params;
 
-    public JsonRpcRequestMessage() {
-        // Create an empty message.
-        // Fill fields later.
-    }
-
-    public JsonRpcRequestMessage(String jsonrpc, JsonElement id, JsonObject metadata) {
-        super(jsonrpc, id, metadata);
-    }
-
-    public JsonRpcRequestMessage(String jsonrpc, JsonElement id, String method, JsonElement params) {
-        super(jsonrpc, id, null);
-        this.method = method;
-        this.params = params;
-    }
-
-    public JsonRpcRequestMessage(String jsonrpc, JsonElement id, String method, JsonElement params,
-            JsonObject metadata) {
-        super(jsonrpc, id, metadata);
-        this.method = method;
-        this.params = params;
-    }
-
-    public JsonRpcRequestMessage(JsonElement id, String method, JsonElement params, JsonObject metadata) {
-        this(VERSION, id, method, params, metadata);
-    }
-
-    public JsonRpcRequestMessage(JsonElement id, String method, JsonElement params) {
-        this(VERSION, id, method, params);
+    private JsonRpcRequestMessage(Builder builder) {
+        super(builder);
+        this.method = Objects.requireNonNull(builder.method);
+        this.params = builder.params;
     }
 
     public boolean isNotification() {
-        return id == null;
+        return getId() == null;
     }
 
+    @Nonnull
     public String getMethod() {
         return method;
     }
 
-    public void setMethod(String method) {
-        this.method = method;
-    }
-
+    @Nullable
     public JsonElement getParams() {
         return params;
-    }
-
-    public void setParams(JsonElement params) {
-        this.params = params;
     }
 
     /**
@@ -107,26 +79,51 @@ public class JsonRpcRequestMessage extends JsonRpcBaseMessage {
         return null;
     }
 
-    /**
-     * This method is used to set the parameters as an object. For an array
-     * containing params of different types, use an Object[] to store them.
-     *
-     * @param obj Object to store.
-     */
-    public void setParamsAsObject(Object obj) {
-        setParams(convertClassToJsonElement(obj));
-    }
-
-    @Override
-    public String toString() {
-        return "JsonRpcRequest [jsonrpc=" + jsonrpc + ", id=" + id + ", method=" + method + ", params=" + params + "]";
-    }
-
     @Override
     public JsonRpcMessageType getType() {
         if (isNotification()) {
             return JsonRpcMessageType.NOTIFICATION;
         }
         return JsonRpcMessageType.REQUEST;
+    }
+
+    @Override
+    public String toString() {
+        return "JsonRpcRequest [jsonrpc=" + getJsonrpc() + ", id=" + getId() + ", method=" + method
+                + ", params=" + params + "]";
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder extends AbstractBuilder<Builder, JsonRpcRequestMessage> {
+        private String method;
+        private JsonElement params;
+
+        public Builder method(String value) {
+            this.method = value;
+            return this;
+        }
+
+        public Builder params(JsonElement value) {
+            this.params = value;
+            return this;
+        }
+
+        /**
+         * This method is used to set the parameters as an object. For an array
+         * containing params of different types, use an Object[] to store them.
+         *
+         * @param obj Object to store.
+         */
+        public Builder paramsFromObject(Object obj) {
+            return params(convertClassToJsonElement(obj));
+        }
+
+        @Override
+        protected JsonRpcRequestMessage newInstance() {
+            return new JsonRpcRequestMessage(this);
+        }
     }
 }

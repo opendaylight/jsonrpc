@@ -38,8 +38,8 @@ public class ThreadedSesssionImplTest {
 
     private ThreadedSessionImpl<TestHandler> instance;
 
-    private JsonRpcRequestMessage request;
-    private JsonRpcReplyMessage reply = mock(JsonRpcReplyMessage.class);
+    private final JsonRpcRequestMessage.Builder requestBuilder = JsonRpcRequestMessage.builder().idFromIntValue(ANYID);
+    private final JsonRpcReplyMessage.Builder replyBuilder = JsonRpcReplyMessage.builder().idFromIntValue(ANYID);
 
     private static final String TARGET_METHOD = "concat"; // from TestHandler class above
     private static final int ANYID = 1;
@@ -52,42 +52,36 @@ public class ThreadedSesssionImplTest {
         when(mockBusSession.getSessionType()).thenReturn(SessionType.RESPONDER);
 
         instance = new ThreadedSessionImpl<>(mockMessaging, mockBusSession, handler);
-
-        request = new JsonRpcRequestMessage();
-        request.setIdAsIntValue(ANYID);
-
-        reply = new JsonRpcReplyMessage();
     }
 
     @Test
     public void canSuccessfullyInvokeTargetMethod() {
         // given
-        request.setMethod(TARGET_METHOD);
-        request.setParamsAsObject(new Object[] { 1, "abc" });
+        requestBuilder.method(TARGET_METHOD).paramsFromObject(new Object[] { 1, "abc" });
         // when
-        instance.handleRequest(request, reply);
+        instance.handleRequest(requestBuilder.build(), replyBuilder);
         // then
-        assertEquals("1abc", reply.getResult().getAsString());
+        assertEquals("1abc", replyBuilder.build().getResult().getAsString());
     }
 
     @Test
     public void canSuccessfullyCoerceParameters() {
         // given
-        request.setMethod(TARGET_METHOD);
-        request.setParamsAsObject(new Object[] { "1", "abc" });
+        requestBuilder.method(TARGET_METHOD).paramsFromObject(new Object[] { "1", "abc" });
         // when
-        instance.handleRequest(request, reply);
+        instance.handleRequest(requestBuilder.build(), replyBuilder);
         // then
-        assertEquals("1abc", reply.getResult().getAsString());
+        assertEquals("1abc", replyBuilder.build().getResult().getAsString());
     }
 
     @Test
     public void invalidMethodCallIsNoticed() {
         // given
-        request.setMethod("foobar");
+        requestBuilder.method("foobar");
         // when
-        instance.handleRequest(request, reply);
+        instance.handleRequest(requestBuilder.build(), replyBuilder);
         // then
+        JsonRpcReplyMessage reply = replyBuilder.build();
         assertTrue(reply.isError());
         assertEquals(METHOD_NOT_FOUND, reply.getError().getCode());
     }
@@ -95,11 +89,11 @@ public class ThreadedSesssionImplTest {
     @Test
     public void invalidParameterCountIsNoticed() {
         // given
-        request.setMethod(TARGET_METHOD);
-        request.setParamsAsObject(new Object[] { 1 });
+        requestBuilder.method(TARGET_METHOD).paramsFromObject(new Object[] { 1 });
         // when
-        instance.handleRequest(request, reply);
+        instance.handleRequest(requestBuilder.build(), replyBuilder);
         // then
+        JsonRpcReplyMessage reply = replyBuilder.build();
         assertTrue(reply.isError());
         assertEquals(INVALID_PARAMS, reply.getError().getCode());
     }
@@ -107,13 +101,12 @@ public class ThreadedSesssionImplTest {
     @Test
     public void invalidParameterTypeIsNoticed() {
         // given
-        request.setMethod(TARGET_METHOD);
-        // and
         String notConvertableToInt = "x";
-        request.setParamsAsObject(new Object[] { notConvertableToInt, "abc" });
+        requestBuilder.method(TARGET_METHOD).paramsFromObject(new Object[] { notConvertableToInt, "abc" });
         // when
-        instance.handleRequest(request, reply);
+        instance.handleRequest(requestBuilder.build(), replyBuilder);
         // then
+        JsonRpcReplyMessage reply = replyBuilder.build();
         assertTrue(reply.isError());
         assertEquals(INVALID_PARAMS, reply.getError().getCode());
     }

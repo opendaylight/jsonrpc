@@ -33,24 +33,23 @@ public class TestMessageHandler implements RequestMessageHandler, ReplyMessageHa
     }
 
     @Override
-    public void handleRequest(JsonRpcRequestMessage request,
-            JsonRpcReplyMessage reply) {
+    public void handleRequest(JsonRpcRequestMessage request, JsonRpcReplyMessage.Builder replyBuilder) {
         String method = request.getMethod();
 
         try {
             if (method.equals("echo")) {
                 String params = request.getParamsAsObject(String.class);
                 String res = server.echo(params);
-                reply.setResultAsObject(res);
+                replyBuilder.resultFromObject(res);
             } else if (method.equals("concat")) {
                 String[] params = request.getParamsAsObject(String[].class);
-                reply.setResultAsObject(server.concat(params[0], params[1]));
+                replyBuilder.resultFromObject(server.concat(params[0], params[1]));
             } else if (method.equals("join")) {
                 String delim = request
                         .getParamsAtIndexAsObject(0, String.class);
                 String[] args = request.getParamsAtIndexAsObject(1,
                         String[].class);
-                reply.setResultAsObject(server.join(delim, args));
+                replyBuilder.resultFromObject(server.join(delim, args));
             } else if (method.equals("noReturn")) {
                 String params = request.getParamsAsObject(String.class);
                 server.noReturn(params);
@@ -58,19 +57,19 @@ public class TestMessageHandler implements RequestMessageHandler, ReplyMessageHa
                 String msg = request.getParamsAtIndexAsObject(0, String.class);
                 int delay = request.getParamsAtIndexAsObject(1, int.class);
                 String res = server.delayedEcho(msg, delay);
-                reply.setResultAsObject(res);
+                replyBuilder.resultFromObject(res);
             } else if (method.equals("increment")) {
                 int incount = request.getParamsAtIndexAsObject(0, int.class);
                 int outcount = server.increment(incount);
-                reply.setResultAsObject(outcount);
+                replyBuilder.resultFromObject(outcount);
 
             } else if (method.equals("close")) {
                 server.close();
             } else {
-                reply.setError(new JsonRpcErrorObject(-32601, "Method not found", null));
+                replyBuilder.error(new JsonRpcErrorObject(-32601, "Method not found", null));
             }
         } catch (JsonRpcException e) {
-            reply.setError(new JsonRpcErrorObject(-32602, "Invalid Params", null));
+            replyBuilder.error(new JsonRpcErrorObject(-32602, "Invalid Params", null));
         }
     }
 
