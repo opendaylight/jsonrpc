@@ -34,7 +34,7 @@ import org.opendaylight.controller.md.sal.dom.api.DOMNotification;
 import org.opendaylight.controller.md.sal.dom.api.DOMNotificationListener;
 import org.opendaylight.controller.md.sal.dom.api.DOMNotificationService;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.NotificationMessageHandler;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
@@ -202,7 +202,7 @@ public class JsonRPCNotificationService implements DOMNotificationService, Notif
     }
 
     @Override
-    public void handleNotification(JsonRpcRequestMessage notification) {
+    public void handleNotification(JsonRpcNotificationMessage notification) {
         String method = notification.getMethod();
         JsonElement parsed;
         NotificationState ns;

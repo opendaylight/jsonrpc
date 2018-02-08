@@ -55,7 +55,7 @@ public class ProxyServicePublisherTest {
         }
     }
 
-    @Test
+    @Test(timeout = 10000)
     public void testProxyPublish() throws InterruptedException, MessageLibraryTimeoutException {
         String msg1 = "abcdef";
 

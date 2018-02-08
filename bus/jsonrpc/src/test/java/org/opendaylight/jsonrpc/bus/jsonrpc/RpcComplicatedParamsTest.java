@@ -39,7 +39,7 @@ public class RpcComplicatedParamsTest {
     public void testSingleParam() {
         RpcComplicatedParams param1 = createParams();
 
-        JsonRpcRequestMessage request1 = JsonRpcRequestMessage.builder().method("echo")
+        JsonRpcRequestMessage request1 = JsonRpcRequestMessage.builder().method("echo").idFromIntValue(1)
                 .paramsFromObject(param1).build();
 
         String requestStr = JsonRpcSerializer.toJson(request1);
@@ -68,7 +68,7 @@ public class RpcComplicatedParamsTest {
         Object[] param1 = { complicated, "alpha", 10, complicated, 20, "beta" };
         logger.info(Arrays.deepToString(param1));
 
-        JsonRpcRequestMessage request1 = JsonRpcRequestMessage.builder().method("echo")
+        JsonRpcRequestMessage request1 = JsonRpcRequestMessage.builder().method("echo").idFromIntValue(1)
                 .paramsFromObject(param1).build();
 
         String requestStr = JsonRpcSerializer.toJson(request1);

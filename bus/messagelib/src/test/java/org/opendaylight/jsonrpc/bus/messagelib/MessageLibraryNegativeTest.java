@@ -14,9 +14,10 @@ import static org.junit.Assert.fail;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseRequestMessage;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage.Builder;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,14 +70,14 @@ public class MessageLibraryNegativeTest {
     /*
      * Create a generic request message. Contents are not important.
      */
-    private JsonRpcRequestMessage createRequestMessage(boolean isNotification) {
+    private JsonRpcBaseRequestMessage createRequestMessage(boolean isNotification) {
         String method = "method1";
         String msg = "zyxwuv";
-        Builder builder = JsonRpcRequestMessage.builder().method(method).paramsFromObject(msg);
         if (!isNotification) {
-            builder.idFromIntValue(100);
+            return JsonRpcRequestMessage.builder().method(method).paramsFromObject(msg).idFromIntValue(100).build();
         }
-        return builder.build();
+
+        return JsonRpcNotificationMessage.builder().method(method).paramsFromObject(msg).build();
     }
 
     /*
@@ -122,7 +123,7 @@ public class MessageLibraryNegativeTest {
      */
     @Test(expected = MessageLibraryMismatchException.class)
     public void testRequesterReceiveBadJson() throws MessageLibraryException {
-        JsonRpcRequestMessage request = createRequestMessage(false);
+        JsonRpcBaseRequestMessage request = createRequestMessage(false);
         client.sendMessage(request);
         server.readMessage();
         server.sendMessage(BAD_JSON_STRING);
@@ -161,7 +162,7 @@ public class MessageLibraryNegativeTest {
      */
     @Test
     public void testResponderReceiveNotification() throws MessageLibraryException {
-        JsonRpcRequestMessage notification = createRequestMessage(true);
+        JsonRpcBaseRequestMessage notification = createRequestMessage(true);
         client.sendMessage(notification);
         server.handleIncomingMessage();
         client.handleIncomingMessage();
@@ -176,7 +177,7 @@ public class MessageLibraryNegativeTest {
      */
     @Test(expected = MessageLibraryMismatchException.class)
     public void testRequesterReceiveRequest() throws MessageLibraryException {
-        JsonRpcRequestMessage request = createRequestMessage(false);
+        JsonRpcBaseRequestMessage request = createRequestMessage(false);
         client.sendMessage(request);
         server.readMessage();
         server.sendMessage(request);
@@ -189,11 +190,11 @@ public class MessageLibraryNegativeTest {
      */
     @Test(expected = MessageLibraryMismatchException.class)
     public void testRequesterReceiveNotification() throws MessageLibraryException {
-        JsonRpcRequestMessage request = createRequestMessage(false);
+        JsonRpcBaseRequestMessage request = createRequestMessage(false);
         client.sendMessage(request);
         String rxMsg = server.readMessage();
         assertEquals(JsonRpcSerializer.toJson(request), rxMsg);
-        JsonRpcRequestMessage notification = createRequestMessage(true);
+        JsonRpcBaseRequestMessage notification = createRequestMessage(true);
         server.sendMessage(notification);
         client.handleIncomingMessage();
     }
@@ -204,7 +205,7 @@ public class MessageLibraryNegativeTest {
      */
     @Test(expected = MessageLibraryMismatchException.class)
     public void testSubscriberReceiveRequest() throws MessageLibraryException {
-        JsonRpcRequestMessage request = createRequestMessage(false);
+        JsonRpcBaseRequestMessage request = createRequestMessage(false);
         publisher.sendMessage(request);
         subscriber.handleIncomingMessage();
     }
