@@ -120,7 +120,8 @@ public class ZMQSession implements BusSession {
     @Override
     public void close() {
         if (socket != null) {
-            socket.close();
+            unregisterPollers();
+            zmqContext.destroySocket(socket);
             socket = null;
             opened = false;
         }
@@ -132,13 +133,26 @@ public class ZMQSession implements BusSession {
     }
 
     private void createReceivePoller() {
-        rxPoller = new Poller(1);
+        if (rxPoller == null) {
+            rxPoller = new Poller(1);
+        }
         rxPoller.register(socket, Poller.POLLIN | Poller.POLLERR);
     }
 
     private void createTransmitPoller() {
-        txPoller = new Poller(1);
+        if (txPoller == null) {
+            txPoller = new Poller(1);
+        }
         txPoller.register(socket, Poller.POLLOUT | Poller.POLLERR);
+    }
+
+    private void unregisterPollers() {
+        if (rxPoller != null) {
+            rxPoller.unregister(socket);
+        }
+        if (txPoller != null) {
+            txPoller.unregister(socket);
+        }
     }
 
     @Override
