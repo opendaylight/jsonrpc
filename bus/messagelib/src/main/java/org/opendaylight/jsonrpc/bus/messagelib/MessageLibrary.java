@@ -7,10 +7,9 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
-import com.google.common.collect.Lists;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import org.opendaylight.jsonrpc.bus.BusSession;
 import org.opendaylight.jsonrpc.bus.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.spi.BusSessionFactoryProvider;
@@ -24,8 +23,8 @@ import org.opendaylight.jsonrpc.bus.spi.BusSessionFactoryProvider;
  *
  */
 public class MessageLibrary implements AutoCloseable {
-    private BusSessionFactory<BusSession> factory;
-    private final List<Session> sessions = new ArrayList<>();
+    private final BusSessionFactory<BusSession> factory;
+    private final Collection<Session> sessions = ConcurrentHashMap.newKeySet();
 
     /**
      * Default constructor which uses {@link TcclBusSessionFactoryProvider} to
@@ -47,16 +46,21 @@ public class MessageLibrary implements AutoCloseable {
      * @param busType bus type to get
      */
     public MessageLibrary(BusSessionFactoryProvider bsfp, String busType) {
+        BusSessionFactory<BusSession> desiredFactory = null;
         final Iterator<BusSessionFactory<BusSession>> it = bsfp.getBusSessionFactories();
         while (it.hasNext()) {
             final BusSessionFactory<BusSession> f = it.next();
             if (busType.equalsIgnoreCase(f.name())) {
-                factory = f;
+                desiredFactory = f;
+                break;
             }
         }
-        if (factory == null) {
+
+        if (desiredFactory == null) {
             throw new IllegalArgumentException(String.format("Bus Type not supported : %s", busType));
         }
+
+        this.factory = desiredFactory;
     }
 
     public void add(Session session) {
@@ -64,14 +68,12 @@ public class MessageLibrary implements AutoCloseable {
     }
 
     public void remove(Session session) {
-        if (sessions.contains(session)) {
-            sessions.remove(session);
-        }
+        sessions.remove(session);
     }
 
     @Override
     public void close() {
-        Lists.newArrayList(sessions).spliterator().forEachRemaining(Session::close);
+        sessions.forEach(Session::close);
         factory.close();
     }
 
