@@ -9,6 +9,7 @@ package org.opendaylight.jsonrpc.bus.jsonrpc;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import javax.annotation.Nullable;
 
 /**
  * This represents the JSON RPC Reply message. This can be the received message,
@@ -18,36 +19,14 @@ import com.google.gson.JsonObject;
  *
  * @author Shaleen Saxena
  */
-public class JsonRpcReplyMessage extends JsonRpcBaseMessage {
-    private JsonElement result;
-    private JsonRpcErrorObject error;
+public final class JsonRpcReplyMessage extends JsonRpcBaseMessage {
+    private final JsonElement result;
+    private final JsonRpcErrorObject error;
 
-    public JsonRpcReplyMessage() {
-        // Create an empty message.
-        // Fill fields later.
-    }
-
-    public JsonRpcReplyMessage(String jsonrpc, JsonElement id, JsonElement result, JsonRpcErrorObject error,
-            JsonObject metadata) {
-        super(jsonrpc, id, metadata);
-        this.result = result;
-        this.error = error;
-
-        if (result != null && error != null) {
-            throw new IllegalArgumentException("Both result and error defined");
-        }
-    }
-
-    public JsonRpcReplyMessage(JsonElement id, JsonElement result, JsonObject metadata) {
-        this(VERSION, id, result, null, metadata);
-    }
-
-    public JsonRpcReplyMessage(JsonElement id, JsonElement result) {
-        this(VERSION, id, result, null, null);
-    }
-
-    public JsonRpcReplyMessage(JsonElement id, JsonRpcErrorObject error) {
-        this(VERSION, id, null, error, null);
+    private JsonRpcReplyMessage(Builder builder) {
+        super(builder);
+        this.result = builder.result;
+        this.error = builder.error;
     }
 
     public boolean isResult() {
@@ -58,12 +37,9 @@ public class JsonRpcReplyMessage extends JsonRpcBaseMessage {
         return error != null;
     }
 
+    @Nullable
     public JsonElement getResult() {
         return result;
-    }
-
-    public void setResult(JsonElement result) {
-        this.result = result;
     }
 
     /**
@@ -79,32 +55,62 @@ public class JsonRpcReplyMessage extends JsonRpcBaseMessage {
         return convertJsonElementToClass(getResult(), cls);
     }
 
-    /**
-     * This sets the result part of the Reply message as the user supplied
-     * object.
-     *
-     * @param obj The user supplied result object.
-     */
-    public void setResultAsObject(Object obj) {
-        setResult(convertClassToJsonElement(obj));
-    }
-
+    @Nullable
     public JsonRpcErrorObject getError() {
         return error;
-    }
-
-    public void setError(JsonRpcErrorObject error) {
-        this.error = error;
-    }
-
-    @Override
-    public String toString() {
-        return "JsonRpcReplyMessage [jsonrpc=" + jsonrpc + ", id=" + id + ",result=" + result + ", error=" + error
-                + "]";
     }
 
     @Override
     public JsonRpcMessageType getType() {
         return JsonRpcMessageType.REPLY;
+    }
+
+    @Override
+    public String toString() {
+        return "JsonRpcReplyMessage [jsonrpc=" + getJsonrpc() + ", id=" + getId() + ",result=" + result
+                + ", error=" + error + "]";
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder extends AbstractBuilder<Builder, JsonRpcReplyMessage> {
+        private JsonElement result;
+        private JsonRpcErrorObject error;
+
+        public Builder result(JsonElement value) {
+            this.result = value;
+            return this;
+        }
+
+        /**
+         * This sets the result part of the Reply message as the user supplied
+         * object.
+         *
+         * @param obj The user supplied result object.
+         */
+        public Builder resultFromObject(Object obj) {
+            return result(convertClassToJsonElement(obj));
+        }
+
+        public Builder error(JsonRpcErrorObject value) {
+            this.error = value;
+            return this;
+        }
+
+        @Override
+        protected JsonRpcReplyMessage newInstance() {
+            if (result != null && error != null) {
+                throw new IllegalArgumentException("Both result and error defined");
+            }
+
+            if (result == null && error == null) {
+                // no result or error was set so set a dummy value.
+                result(new JsonObject());
+            }
+
+            return new JsonRpcReplyMessage(this);
+        }
     }
 }

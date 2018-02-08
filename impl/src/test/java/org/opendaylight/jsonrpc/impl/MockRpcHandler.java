@@ -53,7 +53,7 @@ public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
     }
 
     @Override
-    public void handleRequest(JsonRpcRequestMessage request, JsonRpcReplyMessage response) {
+    public void handleRequest(JsonRpcRequestMessage request, JsonRpcReplyMessage.Builder replyBuilder) {
         LOG.info("Received request : {}", request);
 
         switch (request.getMethod()) {
@@ -62,57 +62,57 @@ public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
                 break;
 
             case "multiply-ll":
-                processMultiplyLeafList(request.getParams(), response);
+                processMultiplyLeafList(request.getParams(), replyBuilder);
                 break;
 
             case "multiply-list":
-                processMultiplyList(request.getParams(), response);
+                processMultiplyList(request.getParams(), replyBuilder);
                 break;
 
             case "get-all-numbers":
-                processGetAllNumbers(request.getParams(), response);
+                processGetAllNumbers(request.getParams(), replyBuilder);
                 break;
 
             case "error-method":
-                response.setError(new JsonRpcErrorObject(12345, "It just failed", new JsonObject()));
+                replyBuilder.error(new JsonRpcErrorObject(12345, "It just failed", new JsonObject()));
                 break;
 
             case "factorial":
-                processFactorial(request.getParams(), response);
+                processFactorial(request.getParams(), replyBuilder);
                 break;
 
             case "method-with-anyxml":
-                processAnyXml(request.getParams(), response);
+                processAnyXml(request.getParams(), replyBuilder);
                 break;
 
             case "get-any-xml":
-                processGetAnyXml(request.getParams(), response);
+                processGetAnyXml(request.getParams(), replyBuilder);
                 break;
 
             case "removeCoffeePot":
-                processRemoveCoffeePot(request.getParams(), response);
+                processRemoveCoffeePot(request.getParams(), replyBuilder);
                 break;
 
             default:
                 // we should not land here
                 break;
         }
-        LOG.info("Sending response : {}", response);
+        LOG.info("Sending response : {}", replyBuilder);
     }
 
-    private void processRemoveCoffeePot(JsonElement params, JsonRpcReplyMessage response) {
-        response.setResult(PARSER.parse("{\"drink\": \"coffee\", \"cups-brewed\": 3}"));
+    private void processRemoveCoffeePot(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
+        replyBuilder.result(PARSER.parse("{\"drink\": \"coffee\", \"cups-brewed\": 3}"));
     }
 
-    private void processGetAnyXml(JsonElement params, JsonRpcReplyMessage response) {
-        response.setResult(PARSER.parse("{\"outdata\": { \"data\" : 42 }}"));
+    private void processGetAnyXml(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
+        replyBuilder.result(PARSER.parse("{\"outdata\": { \"data\" : 42 }}"));
     }
 
-    private void processAnyXml(JsonElement params, JsonRpcReplyMessage response) {
-        response.setResult(JsonNull.INSTANCE);
+    private void processAnyXml(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
+        replyBuilder.result(JsonNull.INSTANCE);
     }
 
-    private void processFactorial(JsonElement params, JsonRpcReplyMessage response) {
+    private void processFactorial(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
         int in = params.getAsJsonObject().get("in-number").getAsInt();
         int out = 1;
         for (int i = 2; i <= in; i++) {
@@ -120,14 +120,14 @@ public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
         }
         JsonObject obj = new JsonObject();
         obj.addProperty("out-number", out);
-        response.setResult(obj);
+        replyBuilder.result(obj);
     }
 
-    private void processGetAllNumbers(JsonElement params, JsonRpcReplyMessage response) {
-        response.setResult(MOCK_RESP_JSON);
+    private void processGetAllNumbers(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
+        replyBuilder.result(MOCK_RESP_JSON);
     }
 
-    private void processMultiplyList(JsonElement params, JsonRpcReplyMessage response) {
+    private void processMultiplyList(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
         JsonObject in = params.getAsJsonObject();
         int multiplier = in.get("multiplier").getAsInt();
         int[] numbers = intArrayfromJsonArray(in.get("numbers").getAsJsonArray());
@@ -139,10 +139,10 @@ public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
             arr.add(jo);
         }
         obj.add("numbers", arr);
-        response.setResult(obj);
+        replyBuilder.result(obj);
     }
 
-    private void processMultiplyLeafList(JsonElement params, JsonRpcReplyMessage response) {
+    private void processMultiplyLeafList(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
         JsonObject in = params.getAsJsonObject();
         int multiplier = in.get("multiplier").getAsInt();
         int[] numbers = intArrayfromJsonArray(in.get("numbers").getAsJsonArray());
@@ -152,7 +152,7 @@ public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
             arr.add(new JsonPrimitive(n * multiplier));
         }
         obj.add("numbers", arr);
-        response.setResult(obj);
+        replyBuilder.result(obj);
     }
 
     private static int[] intArrayfromJsonArray(JsonArray arr) {

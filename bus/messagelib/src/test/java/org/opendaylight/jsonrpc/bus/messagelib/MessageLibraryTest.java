@@ -98,13 +98,10 @@ public class MessageLibraryTest {
     public void testServerClientInvalidMessage() throws MessageLibraryException {
         showFunctionName();
         // Create method and params and send on request channel
-        JsonRpcRequestMessage msg = new JsonRpcRequestMessage();
-        msg.setMethod("dummy");
-        msg.setIdAsIntValue(4);
-        client.sendMessage(msg);
+        client.sendMessage(JsonRpcRequestMessage.builder().method("dummy").idFromIntValue(4).build());
         final int serverCount = server.handleIncomingMessage();
         final int clientCount = client.handleIncomingMessage();
-        assertEquals(-32700, handler.error.getCode());
+        assertEquals(-32601, handler.error.getCode());
         assertEquals(null, handler.result);
         assertEquals(1, serverCount);
         assertEquals(1, clientCount);

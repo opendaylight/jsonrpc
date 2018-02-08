@@ -22,7 +22,7 @@ public class JsonRpcMessageErrorSerializer implements JsonSerializer<JsonRpcMess
     @Override
     public JsonElement serialize(JsonRpcMessageError src, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject err = new JsonObject();
-        err.addProperty(JsonRpcConstants.CODE, src.getCode());
+        err.addProperty(JsonRpcConstants.CODE, Integer.valueOf(src.getCode()));
         err.addProperty(JsonRpcConstants.MESSAGE, src.getMessage());
         err.add(JsonRpcConstants.DATA, src.getData());
 

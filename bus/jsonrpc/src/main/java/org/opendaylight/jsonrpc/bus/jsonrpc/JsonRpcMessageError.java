@@ -8,6 +8,9 @@
 package org.opendaylight.jsonrpc.bus.jsonrpc;
 
 import com.google.gson.JsonElement;
+import java.util.Objects;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * This class is used when there are errors in parsing an incoming JSON RPC
@@ -17,75 +20,78 @@ import com.google.gson.JsonElement;
  *
  * @author Shaleen Saxena
  */
-public class JsonRpcMessageError extends JsonRpcBaseMessage {
-    private Integer code;
-    private String message;
-    private JsonElement data;
+public final class JsonRpcMessageError extends JsonRpcBaseMessage {
+    private final int code;
+    private final String message;
+    private final JsonElement data;
 
-    public JsonRpcMessageError() {
-        id = null;
-        message = null;
-        code = null;
-        data = null;
+    private JsonRpcMessageError(Builder builder) {
+        super(builder);
+        this.code = builder.code;
+        this.message = Objects.requireNonNull(builder.message);
+        this.data = builder.data;
     }
 
-    public JsonRpcMessageError(JsonElement id, Integer code, String message, JsonElement data) {
-        setDefaultJsonrpc();
-        this.id = id;
-        this.message = message;
-        this.code = code;
-        this.data = data;
-    }
-
+    @Nonnull
     public String getMessage() {
         return message;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public Integer getCode() {
+    public int getCode() {
         return code;
     }
 
-    public void setCode(Integer code) {
-        this.code = code;
-    }
-
+    @Nullable
     public JsonElement getData() {
         return data;
-    }
-
-    public void setData(JsonElement data) {
-        this.data = data;
     }
 
     public <T> T getDataAsObject(Class<T> cls) throws JsonRpcException {
         return convertJsonElementToClass(getData(), cls);
     }
 
-    public void setDataAsObject(Object obj) throws JsonRpcException {
-        setData(convertClassToJsonElement(obj));
-    }
-
     @Override
-    public JsonElement getId() {
-        return id;
-    }
-
-    @Override
-    public void setId(JsonElement id) {
-        this.id = id;
+    public JsonRpcMessageType getType() {
+        return JsonRpcMessageType.PARSE_ERROR;
     }
 
     @Override
     public String toString() {
-        return "JsonRpcMessageError [id=" + id + ", code=" + code + ", message=" + message + ", data=" + data + "]";
+        return "JsonRpcMessageError [id=" + getId() + ", code=" + code + ", message=" + message
+                + ", data=" + data + "]";
     }
 
-    @Override
-    public JsonRpcMessageType getType() {
-        return JsonRpcMessageType.PARSE_ERROR;
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder extends AbstractBuilder<Builder, JsonRpcMessageError> {
+        private int code;
+        private String message;
+        private JsonElement data;
+
+        public Builder code(int value) {
+            this.code = value;
+            return this;
+        }
+
+        public Builder message(String value) {
+            this.message = value;
+            return this;
+        }
+
+        public Builder data(JsonElement value) {
+            this.data = value;
+            return this;
+        }
+
+        public Builder dataFromObject(Object obj) throws JsonRpcException {
+            return data(convertClassToJsonElement(obj));
+        }
+
+        @Override
+        protected JsonRpcMessageError newInstance() {
+            return new JsonRpcMessageError(this);
+        }
     }
 }

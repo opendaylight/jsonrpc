@@ -21,6 +21,7 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseMessage.JsonRpcMessageTyp
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage.Builder;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,21 +95,17 @@ public class Session implements AutoCloseable {
         }
 
         // Build Request
-        JsonRpcRequestMessage request = new JsonRpcRequestMessage();
-        request.setDefaultJsonrpc();
-        request.setMethod(method);
+        Builder requestBuilder = JsonRpcRequestMessage.builder().method(method);
 
         if (sessionType != SessionType.PUBLISHER) {
-            request.setIdAsIntValue(newId());
+            requestBuilder.idFromIntValue(newId());
         }
 
         if (params != null) {
-            request.setParamsAsObject(params);
+            requestBuilder.paramsFromObject(params);
         }
 
-        sendMessage(request);
-
-        return;
+        sendMessage(requestBuilder.build());
     }
 
     /**
@@ -130,24 +127,20 @@ public class Session implements AutoCloseable {
         }
 
         // Build Request
-        JsonRpcRequestMessage request = new JsonRpcRequestMessage();
-        request.setDefaultJsonrpc();
-        request.setMethod(method);
+        Builder requestBuilder = JsonRpcRequestMessage.builder().method(method);
 
         if (sessionType != SessionType.PUBLISHER) {
-            request.setIdAsIntValue(newId());
+            requestBuilder.idFromIntValue(newId());
         }
 
         if (params != null) {
-            request.setParamsAsObject(params);
+            requestBuilder.paramsFromObject(params);
         }
 
         if (metadata != null) {
-            request.setMetadata(metadata);
+            requestBuilder.metadata(metadata);
         }
-        sendMessage(request);
-
-        return;
+        sendMessage(requestBuilder.build());
     }
 
     /**
@@ -159,11 +152,7 @@ public class Session implements AutoCloseable {
      */
     public void sendReplyWithResult(JsonElement idElem, Object result) throws MessageLibraryMismatchException {
         // Build Result Reply
-        JsonRpcReplyMessage reply = new JsonRpcReplyMessage();
-        reply.setDefaultJsonrpc();
-        reply.setId(idElem);
-        reply.setResultAsObject(result);
-        sendMessage(reply);
+        sendMessage(JsonRpcReplyMessage.builder().id(idElem).resultFromObject(result).build());
     }
 
     /**
@@ -177,12 +166,7 @@ public class Session implements AutoCloseable {
     public void sendReplyWithResult(JsonElement idElem, Object result, JsonObject metadata)
             throws MessageLibraryMismatchException {
         // Build Result Reply
-        JsonRpcReplyMessage reply = new JsonRpcReplyMessage();
-        reply.setDefaultJsonrpc();
-        reply.setId(idElem);
-        reply.setResultAsObject(result);
-        reply.setMetadata(metadata);
-        sendMessage(reply);
+        sendMessage(JsonRpcReplyMessage.builder().id(idElem).resultFromObject(result).metadata(metadata).build());
     }
 
     /**
@@ -195,11 +179,7 @@ public class Session implements AutoCloseable {
     public void sendReplyWithError(JsonElement idElem, JsonRpcErrorObject error)
             throws MessageLibraryMismatchException {
         // Build Error Reply
-        JsonRpcReplyMessage reply = new JsonRpcReplyMessage();
-        reply.setDefaultJsonrpc();
-        reply.setId(idElem);
-        reply.setError(error);
-        sendMessage(reply);
+        sendMessage(JsonRpcReplyMessage.builder().id(idElem).error(error).build());
     }
 
     /**
@@ -359,30 +339,26 @@ public class Session implements AutoCloseable {
         if (msg.getType() == JsonRpcMessageType.PARSE_ERROR) {
             return msg;
         }
-        JsonRpcReplyMessage reply = new JsonRpcReplyMessage();
-        reply.setDefaultJsonrpc();
-        reply.setId(msg.getId());
+
+        JsonRpcReplyMessage.Builder replyBuilder = JsonRpcReplyMessage.builder().id(msg.getId());
+
         // Responder should receive only Requests
         if (msg.getType() != JsonRpcMessageType.REQUEST) {
             JsonRpcErrorObject error = new JsonRpcErrorObject(-32600, "Invalid request", null);
-            reply.setError(error);
+            replyBuilder.error(error);
         } else if (requestMessageHandler == null) {
             JsonRpcErrorObject error = new JsonRpcErrorObject(-32601, "Method not found", null);
-            reply.setError(error);
+            replyBuilder.error(error);
         } else {
             try {
-                requestMessageHandler.handleRequest((JsonRpcRequestMessage) msg, reply);
-                if (!reply.isError() && !reply.isResult()) {
-                    // handler didn't set a result, so set a dummy value.
-                    reply.setResult(new JsonObject());
-                }
+                requestMessageHandler.handleRequest((JsonRpcRequestMessage) msg, replyBuilder);
             } catch (RuntimeException e) {
                 LOG.error("Unable to handle request", e);
                 JsonRpcErrorObject error = new JsonRpcErrorObject(-32603, "Internal error", null);
-                reply.setError(error);
+                replyBuilder.error(error);
             }
         }
-        return reply;
+        return replyBuilder.build();
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")

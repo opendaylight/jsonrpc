@@ -16,6 +16,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage.Builder;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,26 +72,18 @@ public class MessageLibraryNegativeTest {
     private JsonRpcRequestMessage createRequestMessage(boolean isNotification) {
         String method = "method1";
         String msg = "zyxwuv";
-        JsonRpcRequestMessage request = new JsonRpcRequestMessage();
-        request.setDefaultJsonrpc();
-        request.setMethod(method);
-        request.setParamsAsObject(msg);
+        Builder builder = JsonRpcRequestMessage.builder().method(method).paramsFromObject(msg);
         if (!isNotification) {
-            request.setIdAsIntValue(100);
+            builder.idFromIntValue(100);
         }
-        return request;
+        return builder.build();
     }
 
     /*
      * Create a generic reply message. Contents are not important.
      */
     private JsonRpcReplyMessage createReplyMessage() {
-        String result = "zyxwuv";
-        JsonRpcReplyMessage reply = new JsonRpcReplyMessage();
-        reply.setDefaultJsonrpc();
-        reply.setIdAsIntValue(100);
-        reply.setResultAsObject(result);
-        return reply;
+        return JsonRpcReplyMessage.builder().idFromIntValue(100).resultFromObject("zyxwuv").build();
     }
 
     /*

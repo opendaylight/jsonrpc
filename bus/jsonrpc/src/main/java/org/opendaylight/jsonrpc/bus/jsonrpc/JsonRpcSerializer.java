@@ -34,21 +34,22 @@ public final class JsonRpcSerializer {
     private static JsonRpcBaseMessage processOneElement(JsonElement elem) {
         JsonObject obj = elem.getAsJsonObject();
         if (obj == null) {
-            return new JsonRpcMessageError(null, -32700, "Unable to parse object", null);
+            return JsonRpcMessageError.builder().code(-32700).message("Unable to parse object").build();
         }
 
         JsonElement id = obj.get(JsonRpcConstants.ID);
 
         JsonElement jsonrpcElem = obj.get(JsonRpcConstants.JSONRPC);
         if (jsonrpcElem == null || jsonrpcElem.isJsonNull()) {
-            return new JsonRpcMessageError(id, -32700, "JSON RPC version is not defined", null);
+            return JsonRpcMessageError.builder().id(id).code(-32700).message("JSON RPC version is not defined").build();
         }
 
         String jsonrpc = jsonrpcElem.getAsString();
         if (!JsonRpcBaseMessage.isSupportedVersion(jsonrpc)) {
             JsonObject data = new JsonObject();
             data.addProperty(JsonRpcConstants.JSONRPC, jsonrpc);
-            return new JsonRpcMessageError(id, -32700, "JSON RPC version is not supported", data);
+            return JsonRpcMessageError.builder().id(id).code(-32700).data(data)
+                    .message("JSON RPC version is not supported").build();
         }
 
         if (obj.has(JsonRpcConstants.METHOD)) {
@@ -65,36 +66,41 @@ public final class JsonRpcSerializer {
         if (obj.has(JsonRpcConstants.RESULT)) {
             if (obj.has(JsonRpcConstants.ERROR)) {
                 // Invalid message with result and error fields
-                return new JsonRpcMessageError(id, -32700, "Reply has both error and result", null);
+                return JsonRpcMessageError.builder().id(id).code(-32700)
+                        .message("Reply has both error and result").build();
             } else {
                 // Valid result message
                 if (obj.has(JsonRpcConstants.METADATA)) {
-                    return new JsonRpcReplyMessage(id, obj.get(JsonRpcConstants.RESULT),
-                            obj.get(JsonRpcConstants.METADATA).getAsJsonObject());
+                    return JsonRpcReplyMessage.builder().id(id).result(obj.get(JsonRpcConstants.RESULT))
+                            .metadata(obj.get(JsonRpcConstants.METADATA).getAsJsonObject()).build();
                 } else {
-                    return new JsonRpcReplyMessage(id, obj.get(JsonRpcConstants.RESULT));
+                    return JsonRpcReplyMessage.builder().id(id).result(obj.get(JsonRpcConstants.RESULT)).build();
                 }
             }
         } else if (obj.has(JsonRpcConstants.ERROR)) {
             // Valid error message
-            return new JsonRpcReplyMessage(id, new JsonRpcErrorObject(obj.get(JsonRpcConstants.ERROR)));
+            return JsonRpcReplyMessage.builder().id(id).error(new JsonRpcErrorObject(obj.get(JsonRpcConstants.ERROR)))
+                    .build();
         } else {
             // Unable to determine reply message type
-            return new JsonRpcMessageError(id, -32700, "Reply has neither error nor result", null);
+            return JsonRpcMessageError.builder().id(id).code(-32700).message("Reply has neither error nor result")
+                    .build();
         }
     }
 
     private static JsonRpcBaseMessage processRequestMessage(JsonObject obj, JsonElement id) {
         // Verify that Request does not contain either result or error fields.
         if (obj.has(JsonRpcConstants.ERROR) || obj.has(JsonRpcConstants.RESULT)) {
-            return new JsonRpcMessageError(id, -32700, "Request message has error or result", null);
+            return JsonRpcMessageError.builder().id(id).code(-32700).message("Request message has error or result")
+                    .build();
         } else {
             if (obj.has(JsonRpcConstants.METADATA)) {
-                return new JsonRpcRequestMessage(id, obj.get(JsonRpcConstants.METHOD).getAsString(),
-                        obj.get(JsonRpcConstants.PARAMS),  obj.get(JsonRpcConstants.METADATA).getAsJsonObject());
+                return JsonRpcRequestMessage.builder().id(id).method(obj.get(JsonRpcConstants.METHOD).getAsString())
+                        .params(obj.get(JsonRpcConstants.PARAMS))
+                        .metadata(obj.get(JsonRpcConstants.METADATA).getAsJsonObject()).build();
             } else {
-                return new JsonRpcRequestMessage(id, obj.get(JsonRpcConstants.METHOD).getAsString(),
-                        obj.get(JsonRpcConstants.PARAMS));
+                return JsonRpcRequestMessage.builder().id(id).method(obj.get(JsonRpcConstants.METHOD).getAsString())
+                        .params(obj.get(JsonRpcConstants.PARAMS)).build();
             }
         }
     }
@@ -121,7 +127,8 @@ public final class JsonRpcSerializer {
         }
 
         if (parsedJson == null) {
-            JsonRpcMessageError err = new JsonRpcMessageError(null, -32700, "Unable to parse incoming message", null);
+            JsonRpcMessageError err = JsonRpcMessageError.builder().code(-32700)
+                    .message("Unable to parse incoming message").build();
             list.add(err);
             return list;
         }
@@ -133,8 +140,8 @@ public final class JsonRpcSerializer {
         } else if (parsedJson.isJsonObject()) {
             list.add(processOneElement(parsedJson));
         } else {
-            JsonRpcMessageError err = new JsonRpcMessageError(null, -32700, "Unable to determine incoming message",
-                    null);
+            JsonRpcMessageError err = JsonRpcMessageError.builder().code(-32700)
+                    .message("Unable to determine incoming message").build();
             list.add(err);
         }
 

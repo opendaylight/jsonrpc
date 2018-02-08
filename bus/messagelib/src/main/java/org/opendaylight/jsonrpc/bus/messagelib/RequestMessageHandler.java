@@ -22,5 +22,5 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
  */
 @FunctionalInterface
 public interface RequestMessageHandler {
-    void handleRequest(JsonRpcRequestMessage request, JsonRpcReplyMessage reply);
+    void handleRequest(JsonRpcRequestMessage request, JsonRpcReplyMessage.Builder replyBuilder);
 }

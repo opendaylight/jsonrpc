@@ -12,6 +12,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import java.util.Objects;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,15 +28,6 @@ import org.slf4j.LoggerFactory;
  *
  */
 public abstract class JsonRpcBaseMessage {
-    private static final Logger LOG = LoggerFactory.getLogger(JsonRpcBaseMessage.class);
-    private static final Gson GSON = new Gson();
-    protected static final String VERSION = "2.0";
-    protected static final String VERSION_SHORT = "2";
-
-    protected String jsonrpc;
-    protected JsonElement id;
-    protected JsonObject metadata;
-
     public enum JsonRpcMessageType {
         REQUEST,      // A request which expects a reply
         NOTIFICATION, // A notification which has no reply
@@ -41,52 +35,34 @@ public abstract class JsonRpcBaseMessage {
         PARSE_ERROR   // Incoming invalid message is marshaled into this pseudo-message
     }
 
-    public JsonRpcBaseMessage() {
-        // Create an empty message.
-        // Fill fields later.
+    private static final Logger LOG = LoggerFactory.getLogger(JsonRpcBaseMessage.class);
+    private static final Gson GSON = new Gson();
+    protected static final String VERSION = "2.0";
+    protected static final String VERSION_SHORT = "2";
+
+    private final String jsonrpc;
+    private final JsonElement id;
+    private final JsonObject metadata;
+
+    protected JsonRpcBaseMessage(AbstractBuilder<?, ?> builder) {
+        this.jsonrpc = Objects.requireNonNull(builder.jsonrpc);
+        this.id = builder.id;
+        this.metadata = builder.metadata;
     }
 
-    public JsonRpcBaseMessage(String jsonrpc, JsonElement id) {
-        this.jsonrpc = jsonrpc;
-        this.id = id;
-    }
-
-    public JsonRpcBaseMessage(String jsonrpc, JsonElement id, JsonObject metadata) {
-        this.jsonrpc = jsonrpc;
-        this.id = id;
-        this.metadata = metadata;
-    }
-
+    @Nonnull
     public String getJsonrpc() {
         return jsonrpc;
     }
 
+    @Nullable
     public JsonObject getMetadata() {
         return metadata;
     }
 
-    public void setJsonrpc(String jsonrpc) {
-        this.jsonrpc = jsonrpc;
-    }
-
-    public void setMetadata(JsonObject metadata) {
-        this.metadata = metadata;
-    }
-
-    public void setDefaultJsonrpc() {
-        this.jsonrpc = VERSION;
-    }
-
+    @Nullable
     public JsonElement getId() {
         return id;
-    }
-
-    public void setId(JsonElement id) {
-        this.id = id;
-    }
-
-    public void setIdAsIntValue(int value) {
-        this.id = new JsonPrimitive(value);
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
@@ -145,5 +121,46 @@ public abstract class JsonRpcBaseMessage {
         return VERSION.equals(version) || VERSION_SHORT.equals(version);
     }
 
+    @Nonnull
     public abstract JsonRpcMessageType getType();
+
+    protected abstract static class AbstractBuilder<T extends AbstractBuilder<T, M>, M extends JsonRpcBaseMessage> {
+        private String jsonrpc;
+        private JsonElement id;
+        private JsonObject metadata;
+
+        protected AbstractBuilder() {
+            jsonrpc = VERSION;
+        }
+
+        @SuppressWarnings("unchecked")
+        private T self() {
+            return (T) this;
+        }
+
+        public T jsonrpc(String value) {
+            this.jsonrpc = value;
+            return self();
+        }
+
+        public T id(JsonElement value) {
+            this.id = value;
+            return self();
+        }
+
+        public T idFromIntValue(int value) {
+            return id(new JsonPrimitive(value));
+        }
+
+        public T metadata(JsonObject value) {
+            this.metadata = value;
+            return self();
+        }
+
+        public final M build() {
+            return newInstance();
+        }
+
+        protected abstract M newInstance();
+    }
 }
