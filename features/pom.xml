@@ -57,14 +57,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <artifactId>bus-jsonrpc</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.opendaylight.controller</groupId>
-            <artifactId>odl-mdsal-broker</artifactId>
+            <groupId>org.opendaylight.mdsal.model</groupId>
+            <artifactId>odl-mdsal-models</artifactId>
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
         <dependency>
-            <groupId>org.opendaylight.mdsal.model</groupId>
-            <artifactId>odl-mdsal-models</artifactId>
+            <groupId>org.opendaylight.netconf</groupId>
+            <artifactId>odl-restconf</artifactId>
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
