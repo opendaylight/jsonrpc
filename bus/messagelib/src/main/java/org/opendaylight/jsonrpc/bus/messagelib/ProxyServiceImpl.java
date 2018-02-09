@@ -10,6 +10,7 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 import com.google.gson.JsonElement;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,15 +36,16 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class ProxyServiceImpl implements ProxyService {
+    private static final Logger LOG = LoggerFactory.getLogger(ProxyServiceImpl.class);
+
     private static final String TO_STRING_METHOD_NAME = "toString";
     private static final String CLOSE_METHOD_NAME = "close";
-    private static final Logger LOG = LoggerFactory.getLogger(ProxyServiceImpl.class);
-    private final Map<Object, Session> proxyMap;
+
+    private final Map<Object, Session> proxyMap = Collections.synchronizedMap(new IdentityHashMap<>());
     private final MessageLibrary messaging;
 
     public ProxyServiceImpl(MessageLibrary messaging) {
         this.messaging = Objects.requireNonNull(messaging);
-        proxyMap = new IdentityHashMap<>();
     }
 
     @Override
@@ -77,24 +79,22 @@ public class ProxyServiceImpl implements ProxyService {
     }
 
     private void deleteProxy(Object obj) {
-        if (proxyMap.containsKey(obj)) {
-            try (Session session = proxyMap.get(obj)) {
-                proxyMap.remove(obj);
-            }
+        Session session = proxyMap.remove(obj);
+        if (session != null) {
+            session.close();
         }
     }
 
     public void setTimeout(Object obj, int time) {
-        if (proxyMap.containsKey(obj)) {
-            proxyMap.get(obj).setTimeout(time);
+        Session session = proxyMap.get(obj);
+        if (session != null) {
+            session.setTimeout(time);
         }
     }
 
     public int getTimeout(Object obj) {
-        if (proxyMap.containsKey(obj)) {
-            return proxyMap.get(obj).getTimeout();
-        }
-        return 0;
+        Session session = proxyMap.get(obj);
+        return session != null ? session.getTimeout() : 0;
     }
 
     @Override
