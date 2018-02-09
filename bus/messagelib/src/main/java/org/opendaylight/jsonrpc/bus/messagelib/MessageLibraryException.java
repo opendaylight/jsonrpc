@@ -12,7 +12,7 @@ package org.opendaylight.jsonrpc.bus.messagelib;
  *
  * @author Shaleen Saxena
  */
-public class MessageLibraryException extends Exception {
+public class MessageLibraryException extends RuntimeException {
     private static final long serialVersionUID = -8361140234723755252L;
 
     public MessageLibraryException(String message) {

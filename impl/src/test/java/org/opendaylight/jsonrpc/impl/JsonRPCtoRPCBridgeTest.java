@@ -8,33 +8,33 @@
 package org.opendaylight.jsonrpc.impl;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
 import com.google.gson.stream.JsonReader;
+
 import java.io.IOException;
 import java.io.StringReader;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodec;
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcException;
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcResult;
+import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.MessageLibrary;
-import org.opendaylight.jsonrpc.bus.messagelib.ThreadedSession;
+import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
-import org.opendaylight.jsonrpc.bus.messagelib.Util;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
@@ -83,39 +83,40 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     private BindingToNormalizedNodeCodec bi2baCodec;
     private Module mod;
     private int rpcResponderPort = -1;
-    private ThreadedSession rpcResponder;
+    private ResponderSession rpcResponder;
     private TransportFactory transportFactory;
     private HierarchicalEnumMap<JsonElement, DataType, String> pathMap;
+    private static final String TRANSPORT = "zmq";
+    @Rule
+    public TestName nameRule = new TestName();
 
     @Before
     public void setUp() throws Exception {
         pathMap = HierarchicalEnumHashMap.create(DataType.class, JsonPathCodec.create());
         rpcResponderPort = getFreeTcpPort();
-        startZeroMq();
+        startTransport();
         NormalizedNodesHelper.init(schemaContext);
         bi2baCodec = NormalizedNodesHelper.getBindingToNormalizedNodeCodec();
-        transportFactory = mock(TransportFactory.class);
-        when(transportFactory.createSession(anyString())).thenAnswer(invocation -> {
-            URI uri = new URI((String) invocation.getArguments()[0]);
-            return Util.openSession(new MessageLibrary(uri.getScheme()), uri, "REQ");
-        });
+        transportFactory = new DefaultTransportFactory();
         bridge = new JsonRPCtoRPCBridge(getPeer(), schemaContext, pathMap, mock(RemoteGovernance.class),
                 transportFactory);
         mod = schemaContext.findModule("test-model", Revision.of("2016-11-17")).get();
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         bridge.close();
-        stopZeroMq();
+        stopTransport();
+        transportFactory.close();
     }
 
     /**
      * Test case : Invoke non-existent RPC method. <br />
      * Expected result : exception from RPC bridge
      */
-    @Test(expected = DOMRpcException.class)
+    @Test(expected = DOMRpcException.class, timeout = 15_000)
     public void testRpcUnknownMethod() throws Exception {
+        logTestName();
         NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "unknown-method"));
         SchemaPath path = rpcPath(mod, "unknown-method");
         bridge.invokeRpc(path, rpcDef).checkedGet();
@@ -125,8 +126,9 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      * Test case : Invoke simple method, no input and no output. <br />
      * Expected result : {@link DOMRpcResult} with no errors and no inner result
      */
-    @Test
+    @Test(timeout = 15_000)
     public void testRpcSimpleMethod() throws Exception {
+        logTestName();
         NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "simple-method"));
         SchemaPath path = rpcPath(mod, "simple-method");
         DOMRpcResult result = bridge.invokeRpc(path, rpcDef).checkedGet();
@@ -137,13 +139,13 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
 
     /**
      * Test case : Invoke RPC method with input and output parameters. details :
-     * {@link TestModelService#MultiplyLlInput}.
-     * <br />
+     * {@link TestModelService#MultiplyLlInput}. <br />
      * Expected result : {@link DOMRpcResult} with payload filled from remote
      * RPC service. This tests de/serialization of leaf-lists
      */
-    @Test
+    @Test(timeout = 15_000)
     public void testRpcMultiplyLeafList() throws Exception {
+        logTestName();
         final SchemaPath path = rpcPath(mod, "multiply-ll");
 
         // BA => BI
@@ -162,16 +164,16 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         assertTrue(out.getNumbers().contains(21));
     }
 
-    @Test
+    @Test(timeout = 15_000)
     public void testRpcFactorial() throws Exception {
+        logTestName();
         final SchemaPath path = rpcPath(mod, "factorial");
 
         // BA => BI
         final ContainerNode rpcDef = prepareRpcInput(new FactorialInputBuilder().setInNumber(8).build());
 
         final DOMRpcResult result = bridge.invokeRpc(path, rpcDef).checkedGet();
-        LOG.info("DOM RPC result : {}", result);
-        assertTrue(result.getErrors().isEmpty());
+        logResult(result);
 
         // BI => BA
         final FactorialOutput out = extractRpcOutput(result, FactorialOutput.class, "factorial", mod);
@@ -185,8 +187,9 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      * Expected result : {@link DOMRpcResult} with payload filled from remote
      * RPC service. This tests de/serialization of list
      */
-    @Test
+    @Test(timeout = 15_000)
     public void testRpcMultiplyList() throws Exception {
+        logTestName();
         final SchemaPath path = rpcPath(mod, "multiply-list");
 
         // BA => BI
@@ -199,7 +202,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         LOG.info("Transformed RPC NormalizedNode : {}", rpcDef);
 
         final DOMRpcResult result = bridge.invokeRpc(path, rpcDef).checkedGet();
-        LOG.info("DOM RPC result : {}", result);
+        logResult(result);
         assertTrue(result.getErrors().isEmpty());
 
         // BI => BA
@@ -208,39 +211,29 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         assertEquals(3, out.getNumbers().size());
     }
 
-    @Ignore
-    @Test(expected = IllegalArgumentException.class)
-    public void testMethodWithAnyXml() throws IOException, DOMRpcException {
-        final SchemaPath path = rpcPath(mod, "method-with-anyxml");
-        final NormalizedNodeResult resultHolder = new NormalizedNodeResult();
-        final NormalizedNodeStreamWriter writer = ImmutableNormalizedNodeStreamWriter.from(resultHolder);
-        final RpcDefinition rpcDef = mod.getRpcs().stream()
-                .filter(r -> "method-with-anyxml".equals(r.getQName().getLocalName())).findFirst().get();
-        try (JsonParserStream jsonParser = JsonParserStream.create(writer, schemaContext, rpcDef)) {
-            JsonReader reader = new JsonReader(new StringReader("{\"input\" : {\"some-data\" : null  }}"));
-            jsonParser.parse(reader).flush();
-        }
-        bridge.invokeRpc(path, resultHolder.getResult()).checkedGet();
-    }
-
-    @Test
+    @Test(timeout = 15_000)
     public void testMethodWithAnyXmlNoData() throws IOException, DOMRpcException {
+        logTestName();
         final SchemaPath path = rpcPath(mod, "method-with-anyxml");
         final NormalizedNodeResult resultHolder = new NormalizedNodeResult();
         final NormalizedNodeStreamWriter writer = ImmutableNormalizedNodeStreamWriter.from(resultHolder);
-        final RpcDefinition rpcDef = mod.getRpcs().stream()
-                .filter(r -> "method-with-anyxml".equals(r.getQName().getLocalName())).findFirst().get();
+        final RpcDefinition rpcDef = mod.getRpcs()
+                .stream()
+                .filter(r -> "method-with-anyxml".equals(r.getQName().getLocalName()))
+                .findFirst()
+                .get();
         try (JsonParserStream jsonParser = JsonParserStream.create(writer, schemaContext, rpcDef)) {
             JsonReader reader = new JsonReader(new StringReader("{\"input\" : { }}"));
             jsonParser.parse(reader).flush();
         }
         DOMRpcResult result = bridge.invokeRpc(path, resultHolder.getResult()).checkedGet();
-        LOG.info("DOM RPC result : {}", result);
+        logResult(result);
         assertTrue(result.getErrors().isEmpty());
     }
 
-    @Test
+    @Test(timeout = 15_000)
     public void testRpcComplexResponse() throws Exception {
+        logTestName();
         final SchemaPath path = rpcPath(mod, "get-all-numbers");
         final DOMRpcResult result = bridge.invokeRpc(path, prepareRpcInput(new GetAllNumbersInputBuilder().build()))
                 .checkedGet();
@@ -252,35 +245,20 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      * Test case : return error from RPC implementation. <br />
      * Verify that DOMRpcException is propagated from RPC bridge.
      */
-    @Test(expected = DOMRpcException.class)
+    @Test(expected = DOMRpcException.class, timeout = 15_000)
     public void testRpcError() throws Exception {
+        logTestName();
         NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "error-method"));
         bridge.invokeRpc(rpcPath(mod, "error-method"), rpcDef).checkedGet();
     }
 
-    @Ignore
-    @Test
-    public void test_AnyXmlFailure() throws IOException, DOMRpcException {
-        final SchemaPath path = rpcPath(mod, "get-any-xml");
-        final NormalizedNodeResult resultHolder = new NormalizedNodeResult();
-        final NormalizedNodeStreamWriter writer = ImmutableNormalizedNodeStreamWriter.from(resultHolder);
-        final RpcDefinition rpcDef = mod.getRpcs().stream()
-                .filter(r -> "get-any-xml".equals(r.getQName().getLocalName())).findFirst().get();
-        try (JsonParserStream jsonParser = JsonParserStream.create(writer, schemaContext, rpcDef)) {
-            JsonReader reader = new JsonReader(new StringReader("{\"input\" : {\"indata\" : 10  }}"));
-            jsonParser.parse(reader).flush();
-        }
-        DOMRpcResult result = bridge.invokeRpc(path, resultHolder.getResult()).checkedGet();
-        assertFalse(result.getErrors().isEmpty());
-        assertNull(result.getResult());
-    }
-
-    @Test
+    @Test(timeout = 15_000)
     public void test_2LeafNodesInRpc() throws IOException, DOMRpcException {
+        logTestName();
         final SchemaPath path = rpcPath(mod, "removeCoffeePot");
         final NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "removeCoffeePot"));
         DOMRpcResult result = bridge.invokeRpc(path, rpcDef).checkedGet();
-        LOG.info("Result : {}", result.getResult());
+        logResult(result);
         assertTrue(result.getErrors().isEmpty());
         assertNotNull(result.getResult());
     }
@@ -288,34 +266,47 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     ///////////////////////////////////////////////////////////////////////////
     // Helper methods
     ///////////////////////////////////////////////////////////////////////////
+    private void logResult(DOMRpcResult result) {
+        LOG.info("Result : {}", result.getResult());
+        LOG.info("Errors : {}", result.getErrors());
+    }
+
+    private void logTestName() {
+        LOG.info("{}", Strings.repeat("=", 140));
+        LOG.info("{}", nameRule.getMethodName());
+        LOG.info("{}", Strings.repeat("=", 140));
+    }
+
     private <T extends DataContainer> ContainerNode prepareRpcInput(T dataObject) {
         return bi2baCodec.toNormalizedNodeRpcData(dataObject);
     }
 
     @SuppressWarnings("unchecked")
     private <T> T extractRpcOutput(DOMRpcResult result, Class<T> outputType, String rpcName, Module module) {
-        SchemaPath path2 = SchemaPath.create(false, constructRpcQname(module, rpcName), constructRpcQname(
-                module, "output"));
+        SchemaPath path2 = SchemaPath.create(false, constructRpcQname(module, rpcName),
+                constructRpcQname(module, "output"));
         return (T) bi2baCodec.fromNormalizedNodeRpcData(path2, (ContainerNode) result.getResult());
 
     }
 
     private Peer getPeer() {
         RpcEndpointsBuilder rpcEndpointsBuilder = new RpcEndpointsBuilder();
-        rpcEndpointsBuilder.setEndpointUri(new Uri(String.format("zmq://localhost:%d", rpcResponderPort)));
+        rpcEndpointsBuilder.setEndpointUri(new Uri(String.format(TRANSPORT + "://localhost:%d", rpcResponderPort)));
         rpcEndpointsBuilder.setPath("{}");
         List<RpcEndpoints> list = new ArrayList<>();
         list.add(rpcEndpointsBuilder.build());
         return new ConfiguredEndpointsBuilder().setName("BlahBlah").setRpcEndpoints(list).build();
     }
 
-    private void startZeroMq() {
-        messaging = new MessageLibrary("zmq");
-        rpcResponder = messaging.threadedResponder(String.format("tcp://*:%d", rpcResponderPort), new MockRpcHandler());
+    private void startTransport() {
+        messaging = new MessageLibrary(TRANSPORT);
+        rpcResponder = messaging.responder(String.format(TRANSPORT + "://0.0.0.0:%d", rpcResponderPort),
+                new MockRpcHandler());
     }
 
-    private void stopZeroMq() {
-        rpcResponder.stop();
+    private void stopTransport() {
+        rpcResponder.close();
+        messaging.close();
     }
 
     private static QName constructRpcQname(Module mod, String methodName) {

@@ -12,10 +12,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +29,8 @@ import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFaile
 import org.opendaylight.controller.md.sal.dom.api.DOMMountPoint;
 import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.MessageLibrary;
-import org.opendaylight.jsonrpc.bus.messagelib.ThreadedSession;
+import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
+import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
@@ -62,20 +65,25 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     private JsonRPCProvider provider;
     private int omPort;
     private int governancePort;
+    private int dummyPort;
     private MessageLibrary messaging;
-    private ThreadedSession omResponder;
-    private ThreadedSession governanceResponder;
+    private ResponderSession omResponder;
+    private ResponderSession governanceResponder;
+    private TransportFactory tf;
+    private ResponderSession dummyResponder;
 
     @Before
     public void setUp() throws TransactionCommitFailedException {
         NormalizedNodesHelper.init(schemaContext);
+        tf = new DefaultTransportFactory();
         omPort = getFreeTcpPort();
         governancePort = getFreeTcpPort();
-        startZeroMq(omPort);
+        dummyPort = getFreeTcpPort();
+        startZeroMq();
         updateConfig(
                 new ConfigBuilder().setGovernanceRoot(new Uri(String.format("zmq://localhost:%d", omPort))).build());
         provider = new JsonRPCProvider();
-        provider.setTransportFactory(new DefaultTransportFactory());
+        provider.setTransportFactory(tf);
         provider.setDataBroker(getDataBroker());
         provider.setDomDataBroker(getDomBroker());
         provider.setSchemaService(getSchemaService());
@@ -90,7 +98,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         provider.close();
     }
 
-    @Test(timeout = 15000)
+    @Test(timeout = 15_000)
     public void testMountUnmount() throws InterruptedException, ExecutionException, ReadFailedException {
         DataConfigEndpointsBuilder dataConfigEndpointsBuilder = new DataConfigEndpointsBuilder();
         dataConfigEndpointsBuilder.setEndpointUri(new Uri(String.format("zmq://localhost:%d", governancePort)));
@@ -128,7 +136,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     }
 
     // Here we mount 'device' by updating configuration
-    @Test(timeout = 15000)
+    @Test(timeout = 15_000)
     public void test_ConfigDriven() throws Exception {
         // unconfigure all
         updateConfig(new ConfigBuilder().build());
@@ -144,7 +152,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
                             .setDataConfigEndpoints(Lists.newArrayList(
                                     new DataConfigEndpointsBuilder()
                                         .setKey(new DataConfigEndpointsKey("{}"))
-                                        .setEndpointUri(new Uri("zmq://localhost:12345")).build()))
+                                        .setEndpointUri(new Uri(dummyUri())).build()))
                                     .build()))
                         .build());
         //@formatter:on
@@ -152,7 +160,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     }
 
     // Test build-in (global SchemaContext)
-    @Test(timeout = 15000)
+    @Test(timeout = 15_000)
     public void test_BuiltinSchemaContextProvider() throws Exception {
         // unconfigure all
         updateConfig(new ConfigBuilder().build());
@@ -167,22 +175,22 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
                             .setRpcEndpoints(Lists.newArrayList(
                                     new RpcEndpointsBuilder()
                                         .setKey(new RpcEndpointsKey("{}"))
-                                        .setEndpointUri(new Uri("zmq://localhost:12345"))
+                                        .setEndpointUri(new Uri(dummyUri()))
                                     .build()))
                             .setNotificationEndpoints(Lists.newArrayList(
                                     new NotificationEndpointsBuilder()
                                         .setKey(new NotificationEndpointsKey("{}"))
-                                        .setEndpointUri(new Uri("zmq://localhost:12345"))
+                                        .setEndpointUri(new Uri(dummyUri()))
                                     .build()))
                             .setDataOperationalEndpoints(Lists.newArrayList(
                                     new DataOperationalEndpointsBuilder()
                                         .setKey(new DataOperationalEndpointsKey("{}"))
-                                        .setEndpointUri(new Uri("zmq://localhost:12345"))
+                                        .setEndpointUri(new Uri(dummyUri()))
                                      .build()))
                             .setDataConfigEndpoints(Lists.newArrayList(
                                     new DataConfigEndpointsBuilder()
                                         .setKey(new DataConfigEndpointsKey("{}"))
-                                        .setEndpointUri(new Uri("zmq://localhost:12345")).build()))
+                                        .setEndpointUri(new Uri(dummyUri())).build()))
                                     .build()))
                         .build());
         //@formatter:on
@@ -208,7 +216,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
                             .setDataOperationalEndpoints(Lists.newArrayList(
                                     new DataOperationalEndpointsBuilder()
                                         .setKey(new DataOperationalEndpointsKey("{}"))
-                                        .setEndpointUri(new Uri("zmq://localhost:12345"))
+                                        .setEndpointUri(new Uri(dummyUri()))
                                      .build()))
                             .build()))
                         .build());
@@ -216,6 +224,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         retryAction(TimeUnit.SECONDS, 3, () -> getPeerOpState("test-model-op-only").isPresent());
     }
 
+    @SuppressWarnings("deprecation")
     private Optional<ActualEndpoints> getPeerOpState(String name) throws ReadFailedException {
         final ReadOnlyTransaction rtx = getDataBroker().newReadOnlyTransaction();
         try {
@@ -226,23 +235,32 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         }
     }
 
+    @SuppressWarnings("deprecation")
     private void updateConfig(Config config) throws TransactionCommitFailedException {
         final WriteTransaction wrTrx = getDataBroker().newWriteOnlyTransaction();
         wrTrx.put(LogicalDatastoreType.CONFIGURATION, GLOBAL_CFG_II, config);
         wrTrx.submit().checkedGet();
     }
 
-    private void startZeroMq(int port) {
+    private void startZeroMq() {
         messaging = new MessageLibrary("zmq");
-
-        governanceResponder = messaging.threadedResponder(String.format("tcp://*:%d", governancePort),
+        governanceResponder = messaging.responder(String.format("zmq://0.0.0.0:%d", governancePort),
                 new GovernanceMessageHandler());
-        omResponder = messaging.threadedResponder(String.format("tcp://*:%d", port),
+        omResponder = messaging.responder(String.format("zmq://0.0.0.0:%d", omPort),
                 new OmRootMessageHandler(governancePort));
+        dummyResponder = messaging.responder(String.format("zmq://0.0.0.0:%d", dummyPort), (request, replyBuilder) -> {
+            // NOOP
+        });
     }
 
     private void stopZeroMq() {
-        omResponder.stop();
-        governanceResponder.stop();
+        omResponder.close();
+        governanceResponder.close();
+        dummyResponder.close();
+        messaging.close();
+    }
+
+    private String dummyUri() {
+        return String.format("zmq://localhost:%d", dummyPort);
     }
 }

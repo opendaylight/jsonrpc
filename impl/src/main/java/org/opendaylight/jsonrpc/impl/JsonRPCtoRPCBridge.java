@@ -282,7 +282,7 @@ public final class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
     public void kick(JsonRPCDOMRpcResultFuture request) {
         request.startPollingForResult();
         if (! requestQueue.offer(request)) {
-            LOG.error("Failed to requeue UUID {}", request.getUuid().toString());
+            LOG.error("Failed to requeue UUID {}", request.getUuid());
             request.set(null);
             request.setException(new RpcExceptionImpl("Queue Full"));
         }
@@ -348,6 +348,7 @@ public final class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
             requestProcessorThread.interrupt();
             requestProcessorThread.join();
         } catch (java.lang.InterruptedException e) {
+            Thread.currentThread().interrupt();
             // Do nothing - this gets us out of the loop
         }
     }
@@ -359,6 +360,7 @@ public final class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
             }
         } catch (InterruptedException e) {
             flushQueue();
+            Thread.currentThread().interrupt();
         }
     }
 

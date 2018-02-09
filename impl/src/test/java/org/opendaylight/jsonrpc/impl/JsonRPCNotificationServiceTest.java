@@ -16,21 +16,20 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
-import java.net.URI;
+
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.opendaylight.controller.md.sal.dom.api.DOMNotificationListener;
 import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
-import org.opendaylight.jsonrpc.bus.messagelib.EndpointRole;
 import org.opendaylight.jsonrpc.bus.messagelib.MessageLibrary;
-import org.opendaylight.jsonrpc.bus.messagelib.Session;
+import org.opendaylight.jsonrpc.bus.messagelib.PublisherSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
-import org.opendaylight.jsonrpc.bus.messagelib.Util;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
@@ -59,8 +58,9 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
     private int port;
     private JsonRPCNotificationService svc;
     private RemoteGovernance governance;
-    private Session pubSession;
+    private PublisherSession pubSession;
     private Module mod;
+    private MessageLibrary ml;
     private TransportFactory transportFactory;
     private final HierarchicalEnumMap<JsonElement, DataType, String> pathMap = HierarchicalEnumHashMap
             .create(DataType.class, JsonPathCodec.create());
@@ -76,14 +76,15 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
         svc = new JsonRPCNotificationService(getPeer(),
                 new BuiltinSchemaContextProvider(schemaContext).createSchemaContext(getPeer()), pathMap,
                 transportFactory, governance);
-        URI uri = new URI(getPath());
-        pubSession = Util.openSession(new MessageLibrary(uri.getScheme()), uri, EndpointRole.PUB.name());
+        ml = new MessageLibrary("ws");
+        pubSession = ml.publisher(getPath());
     }
 
     @After
     public void tearDown() {
         pubSession.close();
         svc.close();
+        ml.close();
     }
 
     @Test
@@ -94,12 +95,12 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
             cl.countDown();
         }, notificationPath(mod, "too-many-numbers"));
         TimeUnit.MILLISECONDS.sleep(500L);
-        pubSession.sendRequest("too-many-numbers", new int[] {});
+        pubSession.publish("too-many-numbers", new int[] {});
         assertTrue(cl.await(5, TimeUnit.SECONDS));
     }
 
     private String getPath() {
-        return String.format("zmq://localhost:%d", port);
+        return String.format("ws://localhost:%d", port);
     }
 
     private Peer getPeer() {

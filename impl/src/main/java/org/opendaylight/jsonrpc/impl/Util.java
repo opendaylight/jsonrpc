@@ -13,15 +13,17 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Consumer;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.jsonrpc.bus.messagelib.EndpointRole;
+import org.opendaylight.jsonrpc.bus.api.SessionType;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
@@ -46,20 +48,26 @@ public final class Util {
     private static final String ERR_UNRECOGNIZED_STORE = "Unrecognized store value %s";
     private static final Gson GSON = new Gson();
     private static final BiMap<Integer, LogicalDatastoreType> STORE_MAP = ImmutableBiMap
-            .<Integer, LogicalDatastoreType>builder().put(0, LogicalDatastoreType.CONFIGURATION)
-            .put(1, LogicalDatastoreType.OPERATIONAL).build();
+            .<Integer, LogicalDatastoreType>builder()
+            .put(0, LogicalDatastoreType.CONFIGURATION)
+            .put(1, LogicalDatastoreType.OPERATIONAL)
+            .build();
 
     private static final BiMap<String, Integer> STORE_STR_MAP = ImmutableBiMap.<String, Integer>builder()
-            .put("config", 0).put("operational", 1).build();
+            .put("config", 0)
+            .put("operational", 1)
+            .build();
 
     private Util() {
         // utility-class constructor
     }
 
     /**
-     * Transform JSON RPC 2.0 representation of a data store into {@link LogicalDatastoreType}.
+     * Transform JSON RPC 2.0 representation of a data store into
+     * {@link LogicalDatastoreType}.
      *
-     * @return 0 for CONFIGURATION, 1 for OPERATIONAL
+     * @param store data store in form of number
+     * @return {@link LogicalDatastoreType}.
      */
     public static LogicalDatastoreType int2store(final int store) {
         final LogicalDatastoreType ldt = STORE_MAP.get(store);
@@ -68,7 +76,8 @@ public final class Util {
     }
 
     /**
-     * Transform string representation of a data store into {@link LogicalDatastoreType}.
+     * Transform string representation of a data store into
+     * {@link LogicalDatastoreType}.
      *
      * @param store Logical Data Store
      * @return 0 for "config", 1 for "operational"
@@ -86,7 +95,8 @@ public final class Util {
     }
 
     /**
-     * Transform instance of {@link LogicalDatastoreType} to JSON RPC 2.0 representation of a data store.
+     * Transform instance of {@link LogicalDatastoreType} to JSON RPC 2.0
+     * representation of a data store.
      *
      * @param store Logical Data Store
      * @return 0 for config, 1 for operational
@@ -113,7 +123,9 @@ public final class Util {
     /**
      * Utility method to reduce repeated null checks.
      *
-     * @param closeable - an autocloseable to close
+     * @param closeable an {@link AutoCloseable} to close
+     * @throws Exception if invocation of {@link AutoCloseable#close()} throws
+     *             exception
      */
     public static void closeNullable(@Nullable AutoCloseable closeable) throws Exception {
         if (closeable != null) {
@@ -150,11 +162,10 @@ public final class Util {
      *
      * @param inUri URI to check(and eventually fix) for presence of 'role'
      *            parameter
-     * @param role {@link EndpointRole} to use
+     * @param role {@link SessionType} to use
      * @return URI which will contain 'role' query parameter as requested
-     * @throws URISyntaxException - thrown if URI syntax is incorrect
      */
-    public static String ensureRole(String inUri, EndpointRole role) throws URISyntaxException {
+    public static String ensureRole(String inUri, SessionType role) {
         int idx = inUri.indexOf('?');
         if (idx == -1) {
             return inUri + "?" + "role=" + role.name();
@@ -178,7 +189,8 @@ public final class Util {
     }
 
     /**
-     * Utility method to close {@link AutoCloseable} with eventual exception callback.
+     * Utility method to close {@link AutoCloseable} with eventual exception
+     * callback.
      *
      * @param closeable {@link AutoCloseable} instance to close, can be null
      * @param callback Callback to be invoked when exception occur, must not be

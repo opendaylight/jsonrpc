@@ -9,9 +9,9 @@ package org.opendaylight.jsonrpc.bus.messagelib.osgi;
 
 import java.util.Iterator;
 import java.util.List;
-import org.opendaylight.jsonrpc.bus.BusSession;
-import org.opendaylight.jsonrpc.bus.BusSessionFactory;
-import org.opendaylight.jsonrpc.bus.spi.BusSessionFactoryProvider;
+
+import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
+import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
 
 /**
  * Implementation of {@link BusSessionFactoryProvider} used in OSGi environment.
@@ -22,15 +22,14 @@ import org.opendaylight.jsonrpc.bus.spi.BusSessionFactoryProvider;
  *
  */
 public class OsgiBusSessionFactoryProvider implements BusSessionFactoryProvider {
-    private final List<BusSessionFactory<BusSession>> sessionFactories;
+    private final List<BusSessionFactory> sessionFactories;
 
-    public OsgiBusSessionFactoryProvider(List<BusSessionFactory<BusSession>> sessionFactories) {
+    public OsgiBusSessionFactoryProvider(List<BusSessionFactory> sessionFactories) {
         this.sessionFactories = sessionFactories;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public <T extends BusSession> Iterator<BusSessionFactory<T>> getBusSessionFactories() {
-        return (Iterator) sessionFactories.iterator();
+    public Iterator<BusSessionFactory> getBusSessionFactories() {
+        return sessionFactories.iterator();
     }
 }

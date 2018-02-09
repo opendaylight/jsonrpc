@@ -22,7 +22,7 @@ public class ProxyServiceGenericException extends RuntimeException {
     }
 
     public ProxyServiceGenericException(String message, int code) {
-        super("[code=" + String.valueOf(code) + "] " + message);
+        super("[code=" + code + "] " + message);
     }
 
     public ProxyServiceGenericException(Throwable throwable) {

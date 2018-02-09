@@ -13,7 +13,7 @@ import static org.junit.Assert.assertTrue;
 import java.net.URISyntaxException;
 import org.junit.Test;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.jsonrpc.bus.messagelib.EndpointRole;
+import org.opendaylight.jsonrpc.bus.api.SessionType;
 
 /**
  * Tests for {@link Util} class.
@@ -40,9 +40,9 @@ public class UtilTest {
 
     @Test
     public void testEnsureRole() throws URISyntaxException {
-        assertEquals("zmq://localhost:4234?role=REP", Util.ensureRole("zmq://localhost:4234", EndpointRole.REP));
+        assertEquals("zmq://localhost:4234?role=REP", Util.ensureRole("zmq://localhost:4234", SessionType.REP));
         assertEquals("zmq://localhost:4234?role=SUB",
-                Util.ensureRole("zmq://localhost:4234?role=XYZ", EndpointRole.SUB));
+                Util.ensureRole("zmq://localhost:4234?role=XYZ", SessionType.SUB));
     }
 
     @Test

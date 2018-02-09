@@ -13,27 +13,28 @@ import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcException;
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcResult;
 import org.opendaylight.jsonrpc.model.RpcExceptionImpl;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.model.api.SchemaPath;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Simplistic implementation of CheckedFuture to be returned by the RPC implementation.
  *
  */
 @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
+@SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
 final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOMRpcException> {
-
-    private static final Logger LOG = LoggerFactory.getLogger(JsonRPCDOMRpcResultFuture.class);
     private volatile Exception exception = null;
     private final JsonRPCtoRPCBridge bridge; /* who spawned this future */
 
@@ -81,21 +82,17 @@ final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOM
     }
 
     JsonObject formMetadata() {
-        JsonObject result = new JsonObject();
-        if (this.getUuid() != null) {
-            result.add("async", new JsonPrimitive(this.getUuid().toString()));
-        } else {
+        final JsonObject result = new JsonObject();
+        if (uuid == null) {
             result.add("async", new JsonPrimitive(UUID.randomUUID().toString()));
+        } else {
+            result.add("async", new JsonPrimitive(UUID.fromString(uuid).toString()));
         }
         return result;
     }
 
     public UUID getUuid() {
-        if (this.uuid == null) {
-            return null;
-        } else {
-            return UUID.fromString(this.uuid);
-        }
+        return uuid == null ? null : UUID.fromString(uuid);
     }
 
     @Override

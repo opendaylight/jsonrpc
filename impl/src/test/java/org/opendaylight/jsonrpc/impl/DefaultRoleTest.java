@@ -59,7 +59,7 @@ public class DefaultRoleTest {
             final String endpoint = (String) invocation.getArguments()[1];
             assertNotEquals(-1, endpoint.indexOf("role=REQ"));
             return mock(RemoteOmShard.class);
-        }).when(transportFactory).createProxy(any(), any());
+        }).when(transportFactory).createRequesterProxy(any(), any());
         pm.put(new JsonObject(), DataType.CONFIGURATION_DATA, "zmq://localhost:12345");
         JSONRPCArg arg = new JSONRPCArg(new JsonObject(), new JsonObject());
         doReturn(arg).when(jsonConverter).convert(any(YangInstanceIdentifier.class), any());

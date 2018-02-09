@@ -13,17 +13,17 @@ import java.util.List;
 /* DOM Broker operations */
 public interface RemoteOmShard extends AutoCloseable {
 
-    JsonElement read(int store, String entity, JsonElement path) throws Exception;
+    JsonElement read(int store, String entity, JsonElement path);
 
-    JsonElement read(String store, String entity, JsonElement path) throws Exception;
+    JsonElement read(String store, String entity, JsonElement path);
 
     void put(String txId, int store, String entity, JsonElement path, JsonElement data);
 
     void put(String txId, String store, String entity, JsonElement path, JsonElement data);
 
-    boolean exists(int store, String entity, JsonElement path) throws Exception;
+    boolean exists(int store, String entity, JsonElement path);
 
-    boolean exists(String store, String entity, JsonElement path) throws Exception;
+    boolean exists(String store, String entity, JsonElement path);
 
     void merge(String txId, int store, String entity, JsonElement path, JsonElement data);
 

@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.GuardedBy;
 import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodec;
+import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadWriteTransaction;
@@ -97,20 +98,25 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     }
 
     @Override
-    public JsonElement read(int store, String entity, JsonElement path) throws Exception {
+    public JsonElement read(int store, String entity, JsonElement path) {
         final YangInstanceIdentifier pathAsIId = path2II(path);
         LOG.debug("READ : YII :{}", pathAsIId);
         final DOMDataReadWriteTransaction rTrx = domDataBroker.newReadWriteTransaction();
-        final NormalizedNode<?, ?> result = rTrx.read(int2store(store), pathAsIId).checkedGet().get();
-        LOG.info("Result is {}", result);
-        return jsonConverter.convert(pathAsIId, result).data;
+        NormalizedNode<?, ?> result;
+        try {
+            result = rTrx.read(int2store(store), pathAsIId).checkedGet().get();
+            LOG.info("Result is {}", result);
+            return jsonConverter.convert(pathAsIId, result).data;
+        } catch (ReadFailedException e) {
+            throw new IllegalStateException("Read failed", e);
+        }
     }
 
     /**
      * Overloaded version of {@link #read(int, String, JsonElement)}.
      */
     @Override
-    public JsonElement read(String store, String entity, JsonElement path) throws Exception {
+    public JsonElement read(String store, String entity, JsonElement path) {
         return read(Util.store2int(store), entity, path);
     }
 
@@ -133,11 +139,13 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     }
 
     @Override
-    public boolean exists(int store, String entity, JsonElement path) throws Exception {
+    public boolean exists(int store, String entity, JsonElement path) {
         final YangInstanceIdentifier pathAsIId = path2II(path);
         LOG.debug("EXISTS store={}, entity={}, path={}, YII={}", int2store(store), entity, path, pathAsIId);
         try (DOMDataReadOnlyTransaction trx = domDataBroker.newReadOnlyTransaction()) {
             return trx.exists(int2store(store), pathAsIId).checkedGet();
+        } catch (ReadFailedException e) {
+            throw new IllegalStateException("Read failed", e);
         }
     }
 
@@ -145,7 +153,7 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
      * Overloaded version of {@link #exists(int, String, JsonElement)}.
      */
     @Override
-    public boolean exists(String store, String entity, JsonElement path) throws Exception {
+    public boolean exists(String store, String entity, JsonElement path) {
         return exists(Util.store2int(store), entity, path);
     }
 

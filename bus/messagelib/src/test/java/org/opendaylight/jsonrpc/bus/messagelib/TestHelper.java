@@ -14,16 +14,28 @@ public final class TestHelper {
     private TestHelper() {
     }
 
-    public static String getFreeTcpPort() {
+    public static int getFreeTcpPort() {
         int port = -1;
         try {
             Socket socket = new Socket();
             socket.bind(null);
             port = socket.getLocalPort();
             socket.close();
-            return Integer.toString(port);
+            return port;
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    public static String getConnectUri(String transport, int port) {
+        return getUri(transport, "127.0.0.1", port);
+    }
+
+    public static String getBindUri(String transport, int port) {
+        return getUri(transport, "0.0.0.0", port);
+    }
+
+    private static String getUri(String transport, String ip, int port) {
+        return String.format("%s://%s:%d", transport, ip, port);
     }
 }

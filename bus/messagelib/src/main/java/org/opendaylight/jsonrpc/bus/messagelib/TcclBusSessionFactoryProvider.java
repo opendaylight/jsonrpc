@@ -9,9 +9,9 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 
 import java.util.Iterator;
 import java.util.ServiceLoader;
-import org.opendaylight.jsonrpc.bus.BusSession;
-import org.opendaylight.jsonrpc.bus.BusSessionFactory;
-import org.opendaylight.jsonrpc.bus.spi.BusSessionFactoryProvider;
+
+import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
+import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
 
 /**
  * Implementation of {@link BusSessionFactoryProvider} using Thread-context
@@ -42,9 +42,8 @@ public final class TcclBusSessionFactoryProvider implements BusSessionFactoryPro
         return INSTANCE;
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public <T extends BusSession> Iterator<BusSessionFactory<T>> getBusSessionFactories() {
-        return (Iterator) ServiceLoader.load(BusSessionFactory.class).iterator();
+    public Iterator<BusSessionFactory> getBusSessionFactories() {
+        return ServiceLoader.load(BusSessionFactory.class).iterator();
     }
 }

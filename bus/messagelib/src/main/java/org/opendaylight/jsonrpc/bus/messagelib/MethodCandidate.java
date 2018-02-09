@@ -8,6 +8,8 @@
 package org.opendaylight.jsonrpc.bus.messagelib;
 
 import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseRequestMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
@@ -69,6 +71,10 @@ public class MethodCandidate {
             return;
         }
         try {
+            AccessController.doPrivileged((PrivilegedAction<Void>) () -> {
+                method.setAccessible(true);
+                return null;
+            });
             result = method.invoke(handler, args);
         } catch (Exception e) {
             postInvokeFailure = e;
@@ -78,6 +84,8 @@ public class MethodCandidate {
 
     /**
      * Check if method invocation succeeded.
+     *
+     * @return true if there was no failure.
      */
     public boolean isSuccess() {
         return preInvokeFailure == null && postInvokeFailure == null;
@@ -86,6 +94,8 @@ public class MethodCandidate {
     /**
      * Result of invocation is guaranteed to be available if
      * {@link #isSuccess()} return true.
+     *
+     * @return result of invocation.
      */
     public Object result() {
         return result;
@@ -93,6 +103,9 @@ public class MethodCandidate {
 
     /**
      * Failure of post-invocation phase.
+     *
+     * @return {@link Exception} that occurred at post-invocation phase (can be
+     *         null).
      */
     public Exception getPostInvokeFailure() {
         return postInvokeFailure;
@@ -100,6 +113,9 @@ public class MethodCandidate {
 
     /**
      * Failure of pre-invocation phase.
+     *
+     * @return {@link Exception} that occurred at pre-invocation phase (can be
+     *         null).
      */
     public Exception getPreInvokeFailure() {
         return preInvokeFailure;
@@ -109,6 +125,7 @@ public class MethodCandidate {
      * Get failure of this candidate invocation. Post-invocation takes
      * precedence over pre-invocation phase.
      *
+     * @return {@link Exception}
      */
     public Exception getFailure() {
         if (postInvokeFailure != null) {

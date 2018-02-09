@@ -10,25 +10,38 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.opendaylight.jsonrpc.bus.api.Publisher;
+
 /**
  * Abstraction layer to decouple transport factory implementations.
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
-public interface TransportFactory {
+public interface TransportFactory extends AutoCloseable {
     /**
-     * Create T proxy instance using given URI. EndpointRole is determined by
-     * 'role' query parameter, which is mandatory
+     * Create {@link PublisherSession} T proxy instance using given URI.
      *
      * @param clazz Type of class to proxy
      * @param rawUri URI pointing to responder
-     * @return T instance
+     * @param <T> proxy class
+     * @return T proxy instance
      * @throws URISyntaxException when URI denoted by rawUri has invalid syntax
      */
-    <T extends AutoCloseable> T createProxy(Class<T> clazz, String rawUri) throws URISyntaxException;
+    <T extends AutoCloseable> T createPublisherProxy(Class<T> clazz, String rawUri) throws URISyntaxException;
 
     /**
-     * Create Responder ThreadedSession for given {@link URI}.
+     * Create {@link RequesterSession} T proxy instance using given URI.
+     *
+     * @param clazz Type of class to proxy
+     * @param rawUri URI pointing to responder
+     * @param <T> proxy class
+     * @return T proxy instance
+     * @throws URISyntaxException when URI denoted by rawUri has invalid syntax
+     */
+    <T extends AutoCloseable> T createRequesterProxy(Class<T> clazz, String rawUri) throws URISyntaxException;
+
+    /**
+     * Create {@link ResponderSession} for given {@link URI}.
      *
      * @param rawUri URI where new service will be published
      * @param handler used to handle JSON-RPC requests
@@ -36,11 +49,11 @@ public interface TransportFactory {
      * @return ThreadedSession
      * @throws URISyntaxException when URI denoted by rawUri has invalid syntax
      */
-    <T extends AutoCloseable> ThreadedSession createResponder(String rawUri, T handler) throws URISyntaxException;
+    <T extends AutoCloseable> ResponderSession createResponder(String rawUri, T handler) throws URISyntaxException;
 
     /**
-     * Create {@link ThreadedSessionImpl} to Responder. Specified handler is
-     * used to handle requests.
+     * Create {@link SubscriberSession} to {@link Publisher} endpoint. Specified
+     * handler is used to handle requests.
      *
      * @param rawUri URI pointing to remote service implementing responder
      * @param handler Handler used to handle requests
@@ -48,16 +61,18 @@ public interface TransportFactory {
      * @return ThreadedSession
      * @throws URISyntaxException when URI denoted by rawUri has invalid syntax
      */
-    <T extends AutoCloseable> ThreadedSession createSubscriber(String rawUri, T handler) throws URISyntaxException;
+    <T extends AutoCloseable> SubscriberSession createSubscriber(String rawUri, T handler)
+            throws URISyntaxException;
 
     /**
      * Create general session, actual transport and socket type is determined
      * based on URI scheme and query parameter 'role', which is mandatory.
      *
      * @param rawUri raw uri specification, can be transport specific
-     * @return {@link Session}
+     * @param handler handler to be invoked on message response
+     * @return {@link RequesterSession}
      * @throws URISyntaxException when URI denoted by rawUri has invalid syntax
      * @throws IllegalArgumentException when URI is missing role parameter
      */
-    Session createSession(String rawUri) throws URISyntaxException;
+    RequesterSession createRequester(String rawUri, ReplyMessageHandler handler) throws URISyntaxException;
 }

@@ -77,6 +77,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             </dependency>
             <dependency>
                 <groupId>${project.groupId}.bus</groupId>
+                <artifactId>bus-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}.bus</groupId>
                 <artifactId>bus-jsonrpc</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -97,12 +102,19 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <artifactId>transport-zmq</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <!-- external -->
             <dependency>
-                <groupId>org.zeromq</groupId>
-                <artifactId>jeromq</artifactId>
-                <version>0.3.6</version>
+                <groupId>${project.groupId}.bus</groupId>
+                <artifactId>transport-http</artifactId>
+                <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>${project.groupId}.bus</groupId>
+                <artifactId>bus-config</artifactId>
+                <version>${project.version}</version>
+                <type>cfg</type>
+                <classifier>config</classifier>
+            </dependency>
+            <!-- external -->
             <dependency>
                 <groupId>com.jayway.jsonpath</groupId>
                 <artifactId>json-path</artifactId>

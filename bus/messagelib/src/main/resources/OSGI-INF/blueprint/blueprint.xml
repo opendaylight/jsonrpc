@@ -7,10 +7,14 @@ terms of the Eclipse Public License v1.0 which accompanies this distribution,
 and is available at http://www.eclipse.org/legal/epl-v10.html
 -->
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
-    <reference-list id="sessionFactories" interface="org.opendaylight.jsonrpc.bus.BusSessionFactory" availability="mandatory"
+    <reference-list id="sessionFactories" interface="org.opendaylight.jsonrpc.bus.api.BusSessionFactory" availability="mandatory"
         member-type="service-object" />
-
-    <service ref="busSessionFactoryProvider" interface="org.opendaylight.jsonrpc.bus.spi.BusSessionFactoryProvider" />
+    <reference interface="org.opendaylight.jsonrpc.bus.api.BusSessionFactory" filter="(scheme=http)"  availability="mandatory"/>
+    <reference interface="org.opendaylight.jsonrpc.bus.api.BusSessionFactory" filter="(scheme=https)"  availability="mandatory"/>
+    <reference interface="org.opendaylight.jsonrpc.bus.api.BusSessionFactory" filter="(scheme=ws)"  availability="mandatory"/>
+    <reference interface="org.opendaylight.jsonrpc.bus.api.BusSessionFactory" filter="(scheme=wss)"  availability="mandatory"/>
+    <reference interface="org.opendaylight.jsonrpc.bus.api.BusSessionFactory" filter="(scheme=zmq)"  availability="mandatory"/>
+    <service ref="busSessionFactoryProvider" interface="org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider" />
     <service ref="transportFactory" interface="org.opendaylight.jsonrpc.bus.messagelib.TransportFactory" />
 
     <bean id="busSessionFactoryProvider" class="org.opendaylight.jsonrpc.bus.messagelib.osgi.OsgiBusSessionFactoryProvider">

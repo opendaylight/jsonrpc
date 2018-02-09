@@ -41,6 +41,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         </dependency>
         <dependency>
             <groupId>org.opendaylight.jsonrpc.bus</groupId>
+            <artifactId>transport-http</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.jsonrpc.bus</groupId>
             <artifactId>transport-zmq</artifactId>
         </dependency>
         <dependency>
@@ -49,7 +53,17 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         </dependency>
         <dependency>
             <groupId>org.opendaylight.jsonrpc.bus</groupId>
+            <artifactId>bus-spi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.jsonrpc.bus</groupId>
             <artifactId>bus-messagelib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.jsonrpc.bus</groupId>
+            <artifactId>bus-config</artifactId>
+            <type>cfg</type>
+            <classifier>config</classifier>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.jsonrpc.bus</groupId>
@@ -68,8 +82,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <classifier>features</classifier>
         </dependency>
         <dependency>
-            <groupId>org.zeromq</groupId>
-            <artifactId>jeromq</artifactId>
+            <groupId>org.opendaylight.odlparent</groupId>
+            <artifactId>odl-netty-4</artifactId>
+            <type>xml</type>
+            <classifier>features</classifier>
         </dependency>
     </dependencies>
 </project>

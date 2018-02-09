@@ -33,7 +33,7 @@ import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadWriteTransaction;
-import org.opendaylight.jsonrpc.bus.messagelib.EndpointRole;
+import org.opendaylight.jsonrpc.bus.api.SessionType;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
@@ -106,8 +106,8 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
         final String endpoint = lookupEndPoint(store, path);
         return endPointMap.computeIfAbsent(endpoint, ep -> {
             try {
-                final String fixedEndpoint = Util.ensureRole(endpoint, EndpointRole.REQ);
-                return transportFactory.createProxy(RemoteOmShard.class, fixedEndpoint);
+                final String fixedEndpoint = Util.ensureRole(endpoint, SessionType.REQ);
+                return transportFactory.createRequesterProxy(RemoteOmShard.class, fixedEndpoint);
             } catch (URISyntaxException e) {
                 throw new IllegalStateException("Provided URI is invalid", e);
             }
@@ -275,6 +275,7 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
     }
 
     @Override
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
     public CheckedFuture<Void, TransactionCommitFailedException> submit() {
         final AtomicBoolean result = new AtomicBoolean(true);
         endPointMap.entrySet().forEach(entry -> {

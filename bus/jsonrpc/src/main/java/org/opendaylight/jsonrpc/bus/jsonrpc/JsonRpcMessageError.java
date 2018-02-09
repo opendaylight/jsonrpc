@@ -85,7 +85,7 @@ public final class JsonRpcMessageError extends JsonRpcBaseMessage {
             return this;
         }
 
-        public Builder dataFromObject(Object obj) throws JsonRpcException {
+        public Builder dataFromObject(Object obj) {
             return data(convertClassToJsonElement(obj));
         }
 

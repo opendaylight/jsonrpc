@@ -19,8 +19,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <name>JSON-RPC :: BUS</name>
     <modules>
         <module>api</module>
+        <module>spi</module>
         <module>transport-zmq</module>
+        <module>transport-http</module>
         <module>jsonrpc</module>
         <module>messagelib</module>
+        <module>config</module>
     </modules>
 </project>

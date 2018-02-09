@@ -8,29 +8,22 @@
 package org.opendaylight.jsonrpc.bus.messagelib;
 
 import com.google.gson.JsonElement;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.IdentityHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import org.opendaylight.jsonrpc.bus.SessionType;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseMessage;
+
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcMessageError;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This service provides clients with an ability to define a proxy interface to
- * a server. The proxy interface must be same as the one defined by the server.
- * To define an interface for a notification server (i.e. a publisher), all
- * methods must return void, otherwise a {@link ProxyServiceGenericException} is
- * thrown.
+ * Implementation of {@link ProxyService}.
  *
  * @author Shaleen Saxena
  *
@@ -41,7 +34,7 @@ public class ProxyServiceImpl implements ProxyService {
     private static final String TO_STRING_METHOD_NAME = "toString";
     private static final String CLOSE_METHOD_NAME = "close";
 
-    private final Map<Object, Session> proxyMap = Collections.synchronizedMap(new IdentityHashMap<>());
+    private final Map<Object, BaseSession> proxyMap = Collections.synchronizedMap(new IdentityHashMap<>());
     private final MessageLibrary messaging;
 
     public ProxyServiceImpl(MessageLibrary messaging) {
@@ -50,7 +43,7 @@ public class ProxyServiceImpl implements ProxyService {
 
     @Override
     public <T extends AutoCloseable> T createRequesterProxy(String uri, Class<T> cls) {
-        final Session session = messaging.requester(uri);
+        final RequesterSession session = messaging.requester(uri, NoopReplyMessageHandler.INSTANCE);
         final T obj = getProxySafe(cls);
         proxyMap.put(obj, session);
         return obj;
@@ -65,7 +58,7 @@ public class ProxyServiceImpl implements ProxyService {
 
     @Override
     public <T extends AutoCloseable> T createPublisherProxy(String uri, Class<T> cls) {
-        final Session session = messaging.publisher(uri);
+        final PublisherSession session = messaging.publisher(uri);
         final T obj = getProxySafe(cls);
         proxyMap.put(obj, session);
         return obj;
@@ -79,29 +72,23 @@ public class ProxyServiceImpl implements ProxyService {
     }
 
     private void deleteProxy(Object obj) {
-        Session session = proxyMap.remove(obj);
+        final BaseSession session = proxyMap.remove(obj);
         if (session != null) {
             session.close();
         }
     }
 
-    public void setTimeout(Object obj, int time) {
-        Session session = proxyMap.get(obj);
+    private void setTimeout(Object obj, int time) {
+        final BaseSession session = proxyMap.get(obj);
         if (session != null) {
             session.setTimeout(time);
         }
     }
 
-    public int getTimeout(Object obj) {
-        Session session = proxyMap.get(obj);
-        return session != null ? session.getTimeout() : 0;
-    }
-
     @Override
     public Object invoke(Object obj, Method method, Object[] params) {
         final String methodName = method.getName();
-        final Session session = proxyMap.get(obj);
-        String msg;
+        final BaseSession session = proxyMap.get(obj);
 
         /*
          * Special case to handle #toString() method invocation. It is
@@ -122,47 +109,21 @@ public class ProxyServiceImpl implements ProxyService {
             deleteProxy(obj);
             return null;
         }
-
-        if (session.getSessionType() == SessionType.PUBLISHER && !method.getReturnType().equals(void.class)) {
-            throw new ProxyServiceGenericException("Method expects return value for publisher.");
+        if (session instanceof PublisherSession) {
+            if (!method.getReturnType().equals(void.class)) {
+                throw new ProxyServiceGenericException("Method expects return value for publisher.");
+            } else {
+                ((PublisherSession) session).publish(methodName, params);
+                // no return value for notifications
+                return null;
+            }
         }
-
-        try {
-            msg = session.sendRequestAndReadReply(methodName, params);
-        } catch (MessageLibraryTimeoutException e) {
-            throw new ProxyServiceTimeoutException(e);
-        } catch (MessageLibraryException e) {
-            throw new ProxyServiceGenericException(e);
+        if (session instanceof RequesterSession) {
+            final JsonRpcReplyMessage reply = ((RequesterSession) session).sendRequestAndReadReply(methodName,
+                    params);
+            return getReturnFromReplyMessage(method, (JsonRpcReplyMessage) reply);
         }
-
-        return getResultFromRequest(method, msg);
-    }
-
-
-    private Object getResultFromRequest(Method method, String msg) {
-        if (msg == null) {
-            // nothing to do
-            return null;
-        }
-
-        // Parse reply and process.
-        List<JsonRpcBaseMessage> replyList = JsonRpcSerializer.fromJson(msg);
-
-        if (replyList.isEmpty()) {
-            throw new ProxyServiceGenericException("Empty reply received");
-        } else if (replyList.size() > 1) {
-            throw new ProxyServiceGenericException("Extra responses receieved");
-        }
-
-        if (replyList.get(0) instanceof JsonRpcReplyMessage) {
-            return getReturnFromReplyMessage(method, (JsonRpcReplyMessage) replyList.get(0));
-        } else if (replyList.get(0) instanceof JsonRpcMessageError) {
-            JsonRpcMessageError errorMsg = (JsonRpcMessageError) replyList.get(0);
-            throw new ProxyServiceGenericException(errorMsg.getMessage(), errorMsg.getCode());
-        }
-
-        // We should not be here.
-        throw new ProxyServiceGenericException("Unexpected reply");
+        throw new ProxyServiceGenericException("Logic error");
     }
 
     private Object getReturnFromReplyMessage(Method method, JsonRpcReplyMessage replyMsg) {

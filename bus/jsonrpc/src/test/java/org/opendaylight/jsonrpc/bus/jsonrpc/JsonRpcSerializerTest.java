@@ -36,8 +36,8 @@ public class JsonRpcSerializerTest {
             RpcMessageIntArrayParams intArrMsg = new RpcMessageIntArrayParams(
                     (JsonRpcRequestMessage) elem);
             logger.info(intArrMsg.toString());
-            assertEquals(intArrMsg.getParams()[0], 42);
-            assertEquals(intArrMsg.getParams()[1], 23);
+            assertEquals(42, intArrMsg.getParams()[0]);
+            assertEquals(23, intArrMsg.getParams()[1]);
         }
     }
 

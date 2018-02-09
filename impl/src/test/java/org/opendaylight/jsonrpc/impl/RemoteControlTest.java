@@ -17,13 +17,14 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodec;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
@@ -48,6 +49,7 @@ import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@SuppressWarnings("deprecation")
 public class RemoteControlTest extends AbstractJsonRpcTest {
     private static final String TOPO_TP_DATA = "{\"network-topology:network-topology\":"
             + "{\"topology\":[{\"topology-id\":\"topology1\",\"node\":[{\"node-id\":\"node1\","
@@ -261,7 +263,6 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         retryAction(TimeUnit.SECONDS, 5, () -> ctrl.isTxMapEmpty());
     }
 
-    @Ignore
     @Test
     public void testTxPutMergeDelete() throws Exception {
         //@formatter:off

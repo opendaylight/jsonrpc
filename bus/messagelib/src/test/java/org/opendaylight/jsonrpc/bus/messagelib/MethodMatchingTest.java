@@ -9,17 +9,15 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import com.google.gson.JsonArray;
 
+import java.net.URISyntaxException;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.opendaylight.jsonrpc.bus.BusSession;
-import org.opendaylight.jsonrpc.bus.SessionType;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,16 +30,24 @@ import org.slf4j.LoggerFactory;
  */
 public class MethodMatchingTest {
     private static final Logger LOG = LoggerFactory.getLogger(MethodMatchingTest.class);
-    private final MessageLibrary mockMessaging = mock(MessageLibrary.class);
-    private final BusSession mockBusSession = mock(BusSession.class);
-    private ThreadedSessionImpl<MockHandler> responder;
     private final MockHandler mockHandler = new MockHandler();
+    private ResponderSession responder;
+    private RequesterSession requester;
+    private TransportFactory tf;
 
     @Before
-    public void setup() {
-        when(mockBusSession.getSessionType()).thenReturn(SessionType.RESPONDER);
-        // when(mockHandler.match_test(arg1, arg2, arg3))
-        responder = new ThreadedSessionImpl<>(mockMessaging, mockBusSession, mockHandler);
+    public void setup() throws URISyntaxException {
+        tf = new DefaultTransportFactory();
+        final int port = TestHelper.getFreeTcpPort();
+        responder = tf.createResponder(TestHelper.getBindUri("ws", port), mockHandler);
+        requester = tf.createRequester(TestHelper.getConnectUri("ws", port), NoopReplyMessageHandler.INSTANCE);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        requester.close();
+        responder.close();
+        tf.close();
     }
 
     @Test
@@ -50,17 +56,7 @@ public class MethodMatchingTest {
         params.add("TEST");
         params.add(1);
         params.add("ABCD");
-        JsonRpcRequestMessage request = JsonRpcRequestMessage.builder()
-                .idFromIntValue(2)
-                .method("match_test")
-                .params(params)
-                .build();
-        JsonRpcReplyMessage response;
-        JsonRpcReplyMessage.Builder repBuilder = JsonRpcReplyMessage.builder();
-
-        responder.handleRequest(request, repBuilder);
-
-        response = repBuilder.build();
+        JsonRpcReplyMessage response = requester.sendRequestAndReadReply("match_test", params);
 
         LOG.info("Response : {}", response);
         assertTrue(mockHandler.getCount() > 0);
@@ -71,16 +67,8 @@ public class MethodMatchingTest {
         final JsonArray params = new JsonArray();
         params.add(5);
         params.add("ABCD");
-        JsonRpcRequestMessage request = JsonRpcRequestMessage.builder()
-                .idFromIntValue(2)
-                .method("match_test2")
-                .params(params)
-                .build();
-        JsonRpcReplyMessage response;
-        JsonRpcReplyMessage.Builder repBuilder = JsonRpcReplyMessage.builder();
+        JsonRpcReplyMessage response = requester.sendRequestAndReadReply("match_test2", params);
 
-        responder.handleRequest(request, repBuilder);
-        response = repBuilder.build();
         LOG.info("Response : {}", response);
         assertEquals(response.getError().getCode(), -32000);
     }

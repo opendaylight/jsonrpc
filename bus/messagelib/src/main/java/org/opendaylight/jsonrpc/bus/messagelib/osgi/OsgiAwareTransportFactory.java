@@ -7,9 +7,9 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib.osgi;
 
+import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
 import org.opendaylight.jsonrpc.bus.messagelib.AbstractTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
-import org.opendaylight.jsonrpc.bus.spi.BusSessionFactoryProvider;
 
 /**
  * Implementation of {@link TransportFactory} which requires semantics of

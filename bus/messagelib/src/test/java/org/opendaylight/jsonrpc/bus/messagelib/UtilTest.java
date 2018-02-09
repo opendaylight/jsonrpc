@@ -14,6 +14,7 @@ import static org.junit.Assert.assertNull;
 import java.net.URI;
 import java.util.Map;
 import org.junit.Test;
+import org.opendaylight.jsonrpc.bus.api.SessionType;
 
 /**
  * Tests for {@link Util} class.
@@ -33,8 +34,8 @@ public class UtilTest {
 
     @Test
     public void testReplaceUri() {
-        assertEquals("role=REQ", Util.replaceParam("role=REP", "role", EndpointRole.REQ.name()));
-        assertEquals("role=REP", Util.replaceParam("", "role", EndpointRole.REP.name()));
+        assertEquals("role=REQ", Util.replaceParam("role=REP", "role", SessionType.REQ.name()));
+        assertEquals("role=REP", Util.replaceParam("", "role", SessionType.REP.name()));
     }
 
     @Test

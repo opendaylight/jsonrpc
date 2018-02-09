@@ -8,17 +8,15 @@
 package org.opendaylight.jsonrpc.bus.messagelib;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import java.net.URISyntaxException;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.opendaylight.jsonrpc.bus.BusSession;
-import org.opendaylight.jsonrpc.bus.SessionType;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 import org.slf4j.Logger;
@@ -26,13 +24,12 @@ import org.slf4j.LoggerFactory;
 
 public class ObjectParameterTest {
     private static final Logger LOG = LoggerFactory.getLogger(ObjectParameterTest.class);
-    private MessageLibrary mockMessaging = mock(MessageLibrary.class);
-    private BusSession mockBusSession = mock(BusSession.class);
-
-    private ThreadedSessionImpl<SomeService> instance;
     private SomeService handler = new ServiceImpl();
+    private TransportFactory tf;
+    private ResponderSession responder;
+    private RequesterSession requester;
 
-    private class ServiceImpl implements SomeService {
+    public static class ServiceImpl implements SomeService {
         @Override
         public void close() throws Exception {
             // NOOP
@@ -53,14 +50,18 @@ public class ObjectParameterTest {
     }
 
     @Before
-    public void setup() {
-        when(mockBusSession.getSessionType()).thenReturn(SessionType.RESPONDER);
-        instance = new ThreadedSessionImpl<>(mockMessaging, mockBusSession, handler);
+    public void setup() throws URISyntaxException {
+        final int port = TestHelper.getFreeTcpPort();
+        tf = new DefaultTransportFactory();
+        responder = tf.createResponder(TestHelper.getBindUri("zmq", port), handler);
+        requester = tf.createRequester(TestHelper.getConnectUri("zmq", port), NoopReplyMessageHandler.INSTANCE);
     }
 
     @After
     public void tearDown() throws Exception {
-        instance.close();
+        requester.close();
+        responder.close();
+        tf.close();
     }
 
     @Test
@@ -77,11 +78,10 @@ public class ObjectParameterTest {
         request.paramsFromObject(obj);
         final String expected = obj.toString();
 
-        final JsonRpcReplyMessage.Builder reply = JsonRpcReplyMessage.builder();
-        instance.handleRequest(request.build(), reply);
-        final JsonRpcReplyMessage result = reply.build();
-        LOG.info("Result : {}", result.getResult().getAsString());
-        assertEquals(expected, result.getResult().getAsString());
+        JsonRpcReplyMessage response = requester.sendRequestAndReadReply("translate", obj);
+
+        LOG.info("Result : {}", response.getResult().getAsString());
+        assertEquals(expected, response.getResult().getAsString());
     }
 
     @Test
@@ -97,13 +97,9 @@ public class ObjectParameterTest {
         obj.setPropertyD(no);
         request.params(new Gson().toJsonTree(obj));
         final String expected = obj.toString();
-
-        JsonRpcReplyMessage.Builder reply = JsonRpcReplyMessage.builder();
-        instance.handleRequest(request.build(), reply);
-
-        final JsonRpcReplyMessage result = reply.build();
-        LOG.info("Result : {}", result.getResult().getAsString());
-        assertEquals(expected, result.getResult().getAsString());
+        JsonRpcReplyMessage response = requester.sendRequestAndReadReply("translate", obj);
+        LOG.info("Result : {}", response.getResult().getAsString());
+        assertEquals(expected, response.getResult().getAsString());
     }
 
     @Test
@@ -114,10 +110,7 @@ public class ObjectParameterTest {
         obj.addProperty("value", 10);
         request.params(obj);
 
-        JsonRpcReplyMessage.Builder reply = JsonRpcReplyMessage.builder();
-        instance.handleRequest(request.build(), reply);
-        LOG.info("{}", reply);
-        final JsonRpcReplyMessage result = reply.build();
-        assertEquals(-32000, result.getError().getCode());
+        JsonRpcReplyMessage response = requester.sendRequestAndReadReply("translate", obj);
+        assertEquals(-32000, response.getError().getCode());
     }
 }

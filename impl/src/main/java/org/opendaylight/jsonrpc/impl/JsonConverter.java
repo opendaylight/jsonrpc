@@ -16,6 +16,8 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -279,30 +281,24 @@ public class JsonConverter {
         }
 
         if (data != null) {
-
             /*
              * KLUDGE - TODO we reuse the ODL ser/des which emits string to
              * stream we should have this replaced by something that generates
              * JSON natively
              */
-            try {
-                JsonObject newData = this.doConvert(qnames, data);
-                if (newData == null) {
-                    dataJson = null;
-                } else {
-                    if (!newData.has(lastKey)) {
-                        if (!newData.has(activeModule + COLON + lastKey)) {
-                            dataJson = newData;
-                        } else {
-                            dataJson = decideStrip(newData, activeModule + COLON + lastKey, strip);
-                        }
+            JsonObject newData = this.doConvert(qnames, data);
+            if (newData == null) {
+                dataJson = null;
+            } else {
+                if (!newData.has(lastKey)) {
+                    if (!newData.has(activeModule + COLON + lastKey)) {
+                        dataJson = newData;
                     } else {
-                        dataJson = decideStrip(newData, lastKey, strip);
+                        dataJson = decideStrip(newData, activeModule + COLON + lastKey, strip);
                     }
+                } else {
+                    dataJson = decideStrip(newData, lastKey, strip);
                 }
-            } catch (java.lang.IllegalStateException e) {
-                // We should never land here
-                throw e;
             }
         }
         return new JSONRPCArg(pathJson, dataJson);
@@ -415,10 +411,13 @@ public class JsonConverter {
         final NormalizedNodeStreamWriter writer = Util
                 .wrapWithAnyXmlNullValueCallBack(ImmutableNormalizedNodeStreamWriter.from(resultHolder));
         final SchemaNode parentSchema = findParentSchema(path);
-        final JsonParserStream jsonParser = JsonParserStream.create(writer, schemaContext, parentSchema);
-        final JsonReader reader = new JsonReader(
-                new StringReader((wrap ? wrapReducedJson(path, data) : data).toString()));
-        jsonParser.parse(reader);
+        try (JsonParserStream jsonParser = JsonParserStream.create(writer, schemaContext, parentSchema)) {
+            final JsonReader reader = new JsonReader(
+                    new StringReader((wrap ? wrapReducedJson(path, data) : data).toString()));
+            jsonParser.parse(reader);
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to close JsonParserStream", e);
+        }
         NormalizedNode<?, ?> result = resultHolder.getResult();
         if (result instanceof MapNode) {
             result = Iterables.getOnlyElement(((MapNode) result).getValue());

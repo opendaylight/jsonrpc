@@ -39,7 +39,7 @@ import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev130712.NetworkTopology;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.slf4j.Logger;
@@ -69,7 +69,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         transportFactory = mock(TransportFactory.class);
         NormalizedNodesHelper.init(schemaContext);
         om = mock(RemoteOmShard.class);
-        doReturn(om).when(transportFactory).createProxy(any(), anyString());
+        doReturn(om).when(transportFactory).createRequesterProxy(any(), anyString());
         conv = new JsonConverter(schemaContext);
         trx = new JsonRPCTx(transportFactory, DEVICE_NAME, pathMap, conv, schemaContext);
     }

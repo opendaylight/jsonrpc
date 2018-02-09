@@ -10,21 +10,21 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
-import org.opendaylight.jsonrpc.bus.BusSession;
-import org.opendaylight.jsonrpc.bus.BusSessionFactory;
-import org.opendaylight.jsonrpc.bus.spi.BusSessionFactoryProvider;
+
+import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
+import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
 
 /**
- * The is the main class to create sessions over a bus. This class will help
+ * This is the main class to create sessions over a bus. This class will help
  * create a {@link BusSessionFactory}, then use it to create sessions of various
  * types.
  *
  * @author Shaleen Saxena
  *
  */
-public class MessageLibrary implements AutoCloseable {
-    private final BusSessionFactory<BusSession> factory;
-    private final Collection<Session> sessions = ConcurrentHashMap.newKeySet();
+public class MessageLibrary implements AutoCloseable, CloseCallback {
+    private final BusSessionFactory factory;
+    private final Collection<AbstractSession> sessions = ConcurrentHashMap.newKeySet();
 
     /**
      * Default constructor which uses {@link TcclBusSessionFactoryProvider} to
@@ -46,10 +46,10 @@ public class MessageLibrary implements AutoCloseable {
      * @param busType bus type to get
      */
     public MessageLibrary(BusSessionFactoryProvider bsfp, String busType) {
-        BusSessionFactory<BusSession> desiredFactory = null;
-        final Iterator<BusSessionFactory<BusSession>> it = bsfp.getBusSessionFactories();
+        BusSessionFactory desiredFactory = null;
+        final Iterator<BusSessionFactory> it = bsfp.getBusSessionFactories();
         while (it.hasNext()) {
-            final BusSessionFactory<BusSession> f = it.next();
+            final BusSessionFactory f = it.next();
             if (busType.equalsIgnoreCase(f.name())) {
                 desiredFactory = f;
                 break;
@@ -63,41 +63,46 @@ public class MessageLibrary implements AutoCloseable {
         this.factory = desiredFactory;
     }
 
-    public void add(Session session) {
-        sessions.add(session);
-    }
-
-    public void remove(Session session) {
-        sessions.remove(session);
-    }
-
     @Override
     public void close() {
-        sessions.forEach(Session::close);
+        sessions.forEach(AbstractSession::close);
         factory.close();
     }
 
-    public Session subscriber(String uri) {
-        return new Session(this, factory.subscriber(uri, ""));
+    /**
+     * Create new {@link SubscriberSession}.
+     *
+     * @param uri URI of remote endpoint where publisher listen
+     * @param handler instance of {@link NotificationMessageHandler} which will
+     *            be invoked for every published message,
+     * @return {@link SubscriberSession}
+     */
+    public SubscriberSession subscriber(String uri, NotificationMessageHandler handler) {
+        final SubscriberSessionImpl session = new SubscriberSessionImpl(this, factory, handler, "", uri);
+        sessions.add(session);
+        return session;
     }
 
-    public Session publisher(String uri) {
-        return new Session(this, factory.publisher(uri, ""));
+    public PublisherSession publisher(String uri) {
+        final PublisherSessionImpl session = new PublisherSessionImpl(this, factory, uri);
+        sessions.add(session);
+        return session;
     }
 
-    public Session requester(String uri) {
-        return new Session(this, factory.requester(uri));
+    public RequesterSession requester(String uri, ReplyMessageHandler handler) {
+        final RequesterSessionImpl session = new RequesterSessionImpl(this, factory, uri, handler);
+        sessions.add(session);
+        return session;
     }
 
-    public Session responder(String uri) {
-        return new Session(this, factory.responder(uri));
+    public ResponderSession responder(String uri, RequestMessageHandler handler) {
+        final ResponderSessionImpl session = new ResponderSessionImpl(this, factory, handler, uri);
+        sessions.add(session);
+        return session;
     }
 
-    public <T extends AutoCloseable> ThreadedSession threadedSubscriber(String uri, T handler) {
-        return new ThreadedSessionImpl<>(this, factory.subscriber(uri, ""), handler);
-    }
-
-    public <T extends AutoCloseable> ThreadedSession threadedResponder(String uri, T handler) {
-        return new ThreadedSessionImpl<>(this, factory.responder(uri), handler);
+    @Override
+    public void onClose(AutoCloseable closeable) {
+        sessions.remove(closeable);
     }
 }

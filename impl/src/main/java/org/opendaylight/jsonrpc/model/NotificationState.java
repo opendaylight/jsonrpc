@@ -8,15 +8,17 @@
 package org.opendaylight.jsonrpc.model;
 
 import com.google.common.base.Preconditions;
+
 import java.net.URISyntaxException;
+
 import org.opendaylight.jsonrpc.bus.messagelib.NotificationMessageHandler;
-import org.opendaylight.jsonrpc.bus.messagelib.ThreadedSession;
+import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
 
 public class NotificationState {
     private final NotificationDefinition notification;
-    private final ThreadedSession client;
+    private final SubscriberSession client;
 
     public NotificationState(NotificationDefinition notification, String endpoint, NotificationMessageHandler handler,
             final TransportFactory transportFactory) throws URISyntaxException {
@@ -28,7 +30,7 @@ public class NotificationState {
         return this.notification;
     }
 
-    public ThreadedSession client() {
+    public SubscriberSession client() {
         return this.client;
     }
 }

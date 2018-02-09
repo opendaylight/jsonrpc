@@ -11,18 +11,21 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Joiner.MapJoiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseRequestMessage;
@@ -66,8 +69,9 @@ public final class Util {
     }
 
     /**
-     * Removes given query parameters from URI query string. If array of parameter names to remove is empty, original
-     * query string is returned instead.
+     * Removes given query parameters from URI query string. If array of
+     * parameter names to remove is empty, original query string is returned
+     * instead.
      *
      * @param rawQuery query string from URI
      * @param paramsToRemove array of parameter names to remove
@@ -79,11 +83,12 @@ public final class Util {
             return rawQuery;
         }
         final Map<String, String> params = tokenizeQuery(rawQuery);
-        Map<String, String> map = params.entrySet().stream()
+        Map<String, String> map = params.entrySet()
+                .stream()
                 .filter(e -> !Arrays.asList(paramsToRemove).contains(e.getKey().trim()))
                 // collect into LinkedHashMap, which preserves insertion order
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                    (first, second) -> first, LinkedHashMap::new));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (first, second) -> first,
+                        LinkedHashMap::new));
         return QUERY_JOINER.join(map);
     }
 
@@ -99,54 +104,20 @@ public final class Util {
     public static String replaceParam(String rawQuery, String paramName, String paramValue) {
         final Map<String, String> params = Maps.newLinkedHashMap(tokenizeQuery(rawQuery));
         params.put(paramName, paramValue);
-        Map<String, String> map = params.entrySet().stream().filter(e -> e.getValue() != null)
+        Map<String, String> map = params.entrySet()
+                .stream()
+                .filter(e -> e.getValue() != null)
                 // collect into LinkedHashMap, which preserves insertion order
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                    (first, second) -> first, LinkedHashMap::new));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (first, second) -> first,
+                        LinkedHashMap::new));
         return QUERY_JOINER.join(map);
     }
 
-    /**
+    /*
      * ZMQ does not like ending '?', which is permitted by URI specification.
      */
     private static String trimTrailingQuestionMark(String uri) {
         return uri.endsWith("?") ? uri.substring(0, uri.length() - 1) : uri;
-    }
-
-    /**
-     * <strong>This method is meant to be used by custom
-     * TransportFactory.</strong>
-     * Open {@link Session} to service at given URI. If query parameters within
-     * URI didn't contain 'role' parameter, then roleStr argument will be used.
-     *
-     * @param messageLibrary the {@link MessageLibrary}
-     * @param uri Service URI
-     * @param roleStr Role, @see {@link EndpointRole}
-     * @return {@link Session}
-     * @throws IllegalArgumentException if given role is not recognized
-     */
-    public static Session openSession(MessageLibrary messageLibrary, URI uri, String roleStr) {
-        final Map<String, String> params = tokenizeQuery(uri.getQuery() == null ? "" : uri.getQuery());
-        // get role from URI or use default if not provided
-        final EndpointRole role = EndpointRole.valueOf(!params.containsKey(ROLE)
-                ? Objects.requireNonNull(roleStr, "No role specified in URI or argument").trim()
-                        .toUpperCase(Locale.ROOT) : params.get(ROLE));
-        final String preparedUri = prepareUri(uri);
-        LOG.debug("Prepared URI : '{}', original URI : {}", preparedUri, uri);
-        if (EndpointRole.REP.equals(role)) {
-            return messageLibrary.responder(preparedUri);
-        }
-        if (EndpointRole.REQ.equals(role)) {
-            return messageLibrary.requester(preparedUri);
-        }
-        if (EndpointRole.PUB.equals(role)) {
-            return messageLibrary.publisher(preparedUri);
-        }
-        if (EndpointRole.SUB.equals(role)) {
-            return messageLibrary.subscriber(preparedUri);
-        }
-
-        throw new IllegalArgumentException("Unrecognized role");
     }
 
     /**
@@ -191,5 +162,64 @@ public final class Util {
             return 1;
         }
         return 0;
+    }
+
+    @SuppressWarnings("checkstyle:IllegalCatch")
+    @SuppressFBWarnings("DE_MIGHT_IGNORE")
+    public static void closeQuietly(AutoCloseable autoCloseable) {
+        try {
+            autoCloseable.close();
+        } catch (Exception e) {
+            // NOOP
+        }
+    }
+
+    /**
+     * Sorts list of matched methods based on preference. Currently it only
+     * prefers method without underscore in it's name
+     *
+     * @return {@link Comparator}
+     */
+    public static Comparator<Method> nameSorter() {
+        return (o1, o2) -> {
+            if (o1.getName().contains("_")) {
+                return 1;
+            }
+            if (o2.getName().contains("_")) {
+                return -1;
+            }
+            return o1.getName().compareTo(o2.getName());
+        };
+    }
+
+    /**
+     * In order to have deterministic order of methods, we need to sort them by
+     * argument types. This is because outcome of
+     * {@link Class#getDeclaredMethods()} is not sorted.
+     * @return {@link Comparator}
+     */
+    public static Comparator<Method> argsSorter() {
+        return (left,
+                right) -> Arrays.asList(left.getParameterTypes())
+                        .stream()
+                        .map(Object::toString)
+                        .collect(Collectors.toList())
+                        .hashCode()
+                        - Arrays.asList(right.getParameterTypes())
+                                .stream()
+                                .map(Object::toString)
+                                .collect(Collectors.toList())
+                                .hashCode();
+    }
+
+    /**
+     * Combination of {@link #nameSorter()} and {@link #argsSorter()}.
+     * @return combined {@link Comparator}
+     */
+    public static Comparator<Method> nameAndArgsSorter() {
+        return (left, right) -> ComparisonChain.start()
+                .compare(left, right, argsSorter())
+                .compare(left, right, nameSorter())
+                .result();
     }
 }

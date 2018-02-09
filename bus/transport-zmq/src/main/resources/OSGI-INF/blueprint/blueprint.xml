@@ -7,6 +7,19 @@ terms of the Eclipse Public License v1.0 which accompanies this distribution,
 and is available at http://www.eclipse.org/legal/epl-v10.html
 -->
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
-    <service ref="busSessionFactory" interface="org.opendaylight.jsonrpc.bus.BusSessionFactory" />
-    <bean id="busSessionFactory" class="org.opendaylight.jsonrpc.bus.zmq.ZMQFactory" destroy-method="close" />
+    <reference id="bossGroup" interface="io.netty.channel.EventLoopGroup" filter="(&amp;(type=boss)(name=jsonrpc))" />
+    <reference id="workerGroup" interface="io.netty.channel.EventLoopGroup" filter="(&amp;(type=worker)(name=jsonrpc))" />
+    <reference id="handlerExecutor" interface="io.netty.util.concurrent.EventExecutorGroup" filter="(&amp;(name=jsonrpc))" />
+
+    <service ref="busSessionFactory" interface="org.opendaylight.jsonrpc.bus.api.BusSessionFactory">
+        <service-properties>
+            <entry key="scheme" value="zmq" />
+        </service-properties>
+    </service>
+
+    <bean id="busSessionFactory" class="org.opendaylight.jsonrpc.bus.zmq.ZmqBusSessionFactory" destroy-method="close">
+        <argument ref="bossGroup" />
+        <argument ref="workerGroup" />
+        <argument ref="handlerExecutor" />
+    </bean>
 </blueprint>

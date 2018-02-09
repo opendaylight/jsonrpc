@@ -47,7 +47,7 @@ public class InputObject {
 
     @Override
     public String toString() {
-        return "InputObject [propertyA=" + propertyA + ", propertyB=" + propertyB + ", propertyC=" + propertyC
-                + ", propertyD=" + propertyD + "]";
+        return "InputObject [propertyA=" + getPropertyA() + ", propertyB=" + getPropertyB() + ", propertyC="
+                + getPropertyC() + ", propertyD=" + getPropertyD() + "]";
     }
 }

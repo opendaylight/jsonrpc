@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (C) 2018 Lumina Networks, Inc. All Rights Reserved.
+
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License v1.0 which accompanies this distribution,
+and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
+    <reference id="bossGroup" interface="io.netty.channel.EventLoopGroup" filter="(&amp;(type=boss)(name=jsonrpc))" />
+    <reference id="workerGroup" interface="io.netty.channel.EventLoopGroup" filter="(&amp;(type=worker)(name=jsonrpc))" />
+    <reference id="handlerExecutor" interface="io.netty.util.concurrent.EventExecutorGroup" filter="(&amp;(name=jsonrpc))" />
+
+    <service ref="httpFactory" interface="org.opendaylight.jsonrpc.bus.api.BusSessionFactory">
+        <service-properties>
+            <entry key="scheme" value="http" />
+        </service-properties>
+    </service>
+
+    <service ref="httpsFactory" interface="org.opendaylight.jsonrpc.bus.api.BusSessionFactory">
+        <service-properties>
+            <entry key="scheme" value="https" />
+        </service-properties>
+    </service>
+
+    <service ref="wsFactory" interface="org.opendaylight.jsonrpc.bus.api.BusSessionFactory">
+        <service-properties>
+            <entry key="scheme" value="ws" />
+        </service-properties>
+    </service>
+
+    <service ref="wssFactory" interface="org.opendaylight.jsonrpc.bus.api.BusSessionFactory">
+        <service-properties>
+            <entry key="scheme" value="wss" />
+        </service-properties>
+    </service>
+
+    <bean id="httpFactory" class="org.opendaylight.jsonrpc.bus.http.HttpBusSessionFactory" destroy-method="close">
+        <argument ref="bossGroup" />
+        <argument ref="workerGroup" />
+        <argument ref="handlerExecutor" />
+    </bean>
+
+    <bean id="httpsFactory" class="org.opendaylight.jsonrpc.bus.http.HttpsBusSessionFactory" destroy-method="close">
+        <argument ref="bossGroup" />
+        <argument ref="workerGroup" />
+        <argument ref="handlerExecutor" />
+    </bean>
+
+    <bean id="wsFactory" class="org.opendaylight.jsonrpc.bus.http.WsBusSessionFactory" destroy-method="close">
+        <argument ref="bossGroup" />
+        <argument ref="workerGroup" />
+        <argument ref="handlerExecutor" />
+    </bean>
+
+    <bean id="wssFactory" class="org.opendaylight.jsonrpc.bus.http.WssBusSessionFactory" destroy-method="close">
+        <argument ref="bossGroup" />
+        <argument ref="workerGroup" />
+        <argument ref="handlerExecutor" />
+    </bean>
+</blueprint>

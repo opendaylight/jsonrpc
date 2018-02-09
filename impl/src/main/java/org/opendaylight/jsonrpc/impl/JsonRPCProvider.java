@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
+
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,14 +21,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import java.util.stream.Collectors;
+
 import javax.annotation.concurrent.GuardedBy;
+
 import org.opendaylight.controller.md.sal.binding.api.ClusteredDataTreeChangeListener;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
@@ -37,8 +37,7 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMMountPointService;
-import org.opendaylight.jsonrpc.bus.messagelib.EndpointRole;
-import org.opendaylight.jsonrpc.bus.messagelib.ThreadedSession;
+import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.SchemaContextProvider;
@@ -70,7 +69,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private DOMDataBroker domDataBroker;
     private DOMSchemaService schemaService;
     private volatile RemoteGovernance governance;
-    private volatile ThreadedSession remoteControl;
+    private volatile ResponderSession remoteControl;
     private final Map<String, MappedPeerContext> peerState = Maps.newConcurrentMap();
     private final List<AutoCloseable> toClose = new LinkedList<>();
     private final ReentrantReadWriteLock changeLock = new ReentrantReadWriteLock();
@@ -128,6 +127,9 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
             return false;
         }
 
+        stopGovernance();
+        stopRemoteControl();
+
         final Config peersConfState = getConfig();
         if (peersConfState == null) {
             LOG.info("{} configuration absent", ME);
@@ -168,8 +170,11 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private boolean unmountPeers(final Config peersConfState) {
         boolean result = true;
         final Map<String, Peer> cache = generateCache(peersConfState.getConfiguredEndpoints());
-        final List<String> toUnmountList = peerState.entrySet().stream().filter(e -> !cache.containsKey(e.getKey()))
-                .map(Entry::getKey).collect(Collectors.toList());
+        final List<String> toUnmountList = peerState.entrySet()
+                .stream()
+                .filter(e -> !cache.containsKey(e.getKey()))
+                .map(Entry::getKey)
+                .collect(Collectors.toList());
         for (final String toUnmount : toUnmountList) {
             result &= doUnmount(toUnmount);
         }
@@ -191,8 +196,24 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         return result;
     }
 
+    private void stopRemoteControl() {
+        if (remoteControl != null) {
+            Util.closeNullableWithExceptionCallback(remoteControl,
+                t -> LOG.warn("Failed to close RemoteControl", t));
+            remoteControl = null;
+        }
+    }
+
+    private void stopGovernance() {
+        if (governance != null) {
+            Util.closeNullableWithExceptionCallback(governance,
+                t -> LOG.warn("Failed to close RemoteGovernance", t));
+            governance = null;
+        }
+    }
+
     private boolean initRemoteControl(final Config peersConfState) {
-        if (remoteControl == null && peersConfState.getWhoAmI() != null) {
+        if (peersConfState.getWhoAmI() != null) {
             /* remote control ORB not initialized */
             LOG.debug("Initializing remote control to {}", peersConfState.getWhoAmI());
             try {
@@ -202,6 +223,8 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
                 LOG.error("Invalid URI provided, can't continue", e);
                 return false;
             }
+        } else {
+            LOG.debug("Remote control not configured");
         }
         return true;
     }
@@ -209,17 +232,11 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private boolean resetGovernance(Config peersConfState) {
         try {
             LOG.debug("(Re)setting governance root for JSON RPC to {}", peersConfState.getGovernanceRoot());
-            if (governance != null) {
-                Util.closeNullableWithExceptionCallback(governance,
-                    t -> LOG.warn("Failed to close RemoteGovernance", t));
-                governance = null;
-            }
             final Uri rootOm = rootOm();
             if (rootOm != null) {
                 // Need to re-create proxy, because root-om can point to URI
                 // with different transport then before
-                governance = transportFactory.createProxy(RemoteGovernance.class,
-                        Util.ensureRole(rootOm().getValue(), EndpointRole.REQ));
+                governance = transportFactory.createRequesterProxy(RemoteGovernance.class, rootOm().getValue());
             } else {
                 governance = null;
             }
@@ -272,20 +289,8 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     public void close() {
         peerState.values().forEach(p -> doUnmount(p.getName()));
         peerState.clear();
-        if (remoteControl != null) {
-            try {
-                remoteControl.stop().get(10, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                LOG.warn("Interrupted while stopping remote control session", e);
-                Thread.currentThread().interrupt();
-            } catch (ExecutionException | TimeoutException e) {
-                LOG.warn("Fail to stop remote control session", e);
-            }
-            remoteControl = null;
-        }
-
-        Util.closeNullableWithExceptionCallback(governance, e -> LOG.warn("Failed to close RemoteGovernance", e));
-        governance = null;
+        stopRemoteControl();
+        stopGovernance();
         toClose.forEach(
             c -> Util.closeNullableWithExceptionCallback(c, e -> LOG.warn("Failed to close object {}", c, e)));
         LOG.debug("JsonRPCProvider Closed");
