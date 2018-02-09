@@ -7,9 +7,12 @@
  */
 package org.opendaylight.jsonrpc.bus.zmq;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.concurrent.GuardedBy;
 import org.opendaylight.jsonrpc.bus.BusSession;
 import org.opendaylight.jsonrpc.bus.BusSessionMsgHandler;
 import org.opendaylight.jsonrpc.bus.BusSessionTimeoutException;
@@ -39,14 +42,14 @@ public class ZMQSession implements BusSession {
     private final URI uri;
     private final int socketType;
     private final byte[] topic;
-
-    private Socket socket = null;
-    private boolean opened = false;
-    private int timeout;
-    private Poller rxPoller;
-    private Poller txPoller;
     private final SessionType sessionType;
-    private Socket loopTransmit = null;
+    private final AtomicBoolean closed = new AtomicBoolean(false);
+
+    private volatile Socket socket;
+    private volatile int timeout;
+    private volatile Poller rxPoller;
+    private volatile Poller txPoller;
+    private volatile Socket loopTransmit;
 
     public ZMQSession(ZContext zmqContext, String uri, SessionType sessionType) {
         this(zmqContext, uri, sessionType, "");
@@ -94,7 +97,7 @@ public class ZMQSession implements BusSession {
     }
 
     private void open() {
-        if (!this.opened) {
+        if (!closed()) {
             this.socket = zmqContext.createSocket(this.socketType);
             if (this.socketType == ZMQ.REQ) {
                 this.socket.connect(this.uri.toString());
@@ -113,29 +116,41 @@ public class ZMQSession implements BusSession {
             } else {
                 throw new IllegalArgumentException("Unknown socket type");
             }
-            this.opened = true;
         }
+    }
+
+    private boolean closed() {
+        return closed.get();
     }
 
     @Override
     public void close() {
-        if (socket != null) {
-            unregisterPollers();
-            zmqContext.destroySocket(socket);
-            socket = null;
-            opened = false;
+        if (closed.compareAndSet(false, true)) {
+            synchronized (this) {
+                doClose();
+            }
         }
     }
 
-    public void reopen() {
-        close();
-        open();
+    @GuardedBy("this")
+    private void doClose() {
+        unregisterPollers();
+        zmqContext.destroySocket(socket);
+    }
+
+    @VisibleForTesting
+    void reopen() {
+        synchronized (this) {
+            doClose();
+            open();
+        }
     }
 
     private void createReceivePoller() {
         if (rxPoller == null) {
             rxPoller = new Poller(1);
         }
+
         rxPoller.register(socket, Poller.POLLIN | Poller.POLLERR);
     }
 
@@ -143,6 +158,7 @@ public class ZMQSession implements BusSession {
         if (txPoller == null) {
             txPoller = new Poller(1);
         }
+
         txPoller.register(socket, Poller.POLLOUT | Poller.POLLERR);
     }
 
@@ -157,6 +173,10 @@ public class ZMQSession implements BusSession {
 
     @Override
     public String readMessage() throws BusSessionTimeoutException {
+        if (closed()) {
+            throw new BusSessionTimeoutException("Session is already closed");
+        }
+
         String message = null;
         try {
             if (rxPoller == null) {
@@ -201,6 +221,10 @@ public class ZMQSession implements BusSession {
 
     @Override
     public boolean sendMessage(String message) {
+        if (closed()) {
+            return false;
+        }
+
         try {
             if (txPoller == null) {
                 transmitMessage(message);
