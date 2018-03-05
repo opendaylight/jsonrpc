@@ -8,24 +8,26 @@
 package org.opendaylight.jsonrpc.bus.messagelib;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.JdkFutureAdapters;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonPrimitive;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import org.opendaylight.jsonrpc.bus.BusSession;
 import org.opendaylight.jsonrpc.bus.BusSessionMsgHandler;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseRequestMessage;
@@ -146,7 +148,7 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
         }
 
         private boolean parameterCountMatches(Method method) {
-            return getParametersCount(msg) == method.getParameterTypes().length;
+            return Util.getParametersCount(msg) == method.getParameterTypes().length;
         }
 
         @Override
@@ -171,49 +173,52 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
         };
     }
 
-    private static int getParametersCount(JsonRpcBaseRequestMessage msg) {
-        int size = 0;
-        if (msg.getParams() instanceof JsonArray) {
-            size = ((JsonArray) msg.getParams()).size();
-        }
-        if (msg.getParams() instanceof JsonPrimitive) {
-            size = 1;
-        }
-        return size;
+    /**
+     * In order to have deterministic order of methods, we need to sort them by
+     * argument types. This is because outcome of
+     * {@link Class#getDeclaredMethods()} is not sorted.
+     */
+    private static Comparator<Method> argsSorter() {
+        return (left, right) -> Arrays.asList(left.getParameterTypes())
+                            .stream()
+                            .map(Object::toString)
+                            .collect(Collectors.toList())
+                            .hashCode()
+                        - Arrays.asList(right.getParameterTypes())
+                            .stream()
+                            .map(Object::toString)
+                            .collect(Collectors.toList())
+                            .hashCode();
+    }
+
+    /**
+     * Combination of {@link #nameSorter()} and {@link #argsSorter()}.
+     */
+    private static Comparator<Method> nameAndArgsSorter() {
+        return (left, right) -> ComparisonChain
+                .start()
+                .compare(left, right, argsSorter())
+                .compare(left, right, nameSorter())
+                .result();
     }
 
     private List<Method> findMethodStrict(JsonRpcBaseRequestMessage msg) {
         return Arrays.stream(handler.getClass().getDeclaredMethods())
                 .filter(new StrictMatchingPredicate(msg))
-                .sorted(nameSorter())
+                .sorted(nameAndArgsSorter())
                 .collect(Collectors.toList());
     }
 
     private List<Method> findMethodLenient(JsonRpcBaseRequestMessage msg) {
         return Arrays.stream(handler.getClass().getDeclaredMethods())
                 .filter(new NameMatchingPredicate(msg))
-                .sorted(nameSorter())
+                .sorted(nameAndArgsSorter())
                 .collect(Collectors.toList());
     }
 
-    /*
-     * Create array of values to be used as method arguments. This method is
-     * assuming that number of parameters is already matching number of
-     * arguments
-     */
-    private Object[] getArgumentsForMethod(Method method, JsonRpcBaseRequestMessage message) throws JsonRpcException {
-        final Object[] args = new Object[getParametersCount(message)];
-        final Class<?>[] argsTypes = method.getParameterTypes();
-        for (int i = 0; i < args.length; i++) {
-            args[i] = message.getParamsAtIndexAsObject(i, argsTypes[i]);
-        }
-        return args;
-    }
-
-    @SuppressWarnings("squid:S1166")
-    private Object invokeHandler(JsonRpcBaseRequestMessage message)
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-
+    @SuppressWarnings({"squid:S1166","squid:S00112","checkstyle:IllegalThrows"})
+    private Object invokeHandler(JsonRpcBaseRequestMessage message) throws Exception {
+        final List<MethodCandidate> candidates = new ArrayList<>();
         List<Method> opt = findMethodStrict(message);
         if (!opt.isEmpty()) {
             // We have a method with the incoming method name and have
@@ -223,27 +228,46 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
             // objects with members similar to another might be parsed
             // as one or other
             for (final Method m : opt) {
-                try {
-                    Object[] args = getArgumentsForMethod(m, message);
-                    return m.invoke(handler, args);
-                } catch (JsonRpcException e) {
-                    String msg = String.format("Failed to manage arguments when invoking method %s", m);
-                    LOG.debug(msg);
-                    throw new IllegalArgumentException(msg, e);
+                final MethodCandidate mc = new MethodCandidate(handler, m);
+                LOG.debug("Attempting method candidate {}", mc);
+                candidates.add(mc);
+                // invoke inhibits all exceptions
+                mc.invoke(message);
+                if (mc.isSuccess()) {
+                    return mc.result();
                 }
             }
+            throw findClosestFailure(candidates);
+        } else {
+            // At this point it could be wrong number of arguments.
+            opt = findMethodLenient(message);
+            if (!opt.isEmpty()) {
+                String msg = String.format("Found method but wrong number of arguments: %s", message.getMethod());
+                LOG.debug(msg);
+                throw new IllegalArgumentException(msg);
+            }
         }
-
-        // At this point, could be either wrong number of arguments or wrong argument types
-
-        opt = findMethodLenient(message);
-        if (!opt.isEmpty()) {
-            String msg = String.format("Found method but wrong number of arguments: %s", message.getMethod());
-            LOG.debug(msg);
-            throw new IllegalArgumentException(msg);
-        }
-
         throw new NoSuchMethodException(String.format("Method not found : %s", message.getMethod()));
+    }
+
+    /**
+     * In case of multiple method candidates tried, there might be different
+     * reasons why invocation failed.It is safe to call underlying
+     * {@link Optional#get()} without checking {@link Optional#isPresent()},
+     * because it is guaranteed that at least one exception is found when this
+     * code runs.
+     *
+     * @param candidates list of {@link MethodCandidate} tried.
+     * @see MethodCandidate#getFailure()
+     */
+    @SuppressWarnings("squid:S3655")
+    private Exception findClosestFailure(List<MethodCandidate> candidates) {
+        return Stream
+                .concat(candidates.stream().filter(c -> c.getPostInvokeFailure() != null),
+                        candidates.stream().filter(c -> c.getPreInvokeFailure() != null))
+                .findFirst()
+                .get()
+                .getFailure();
     }
 
     /**
@@ -252,7 +276,7 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
      * it instead.
      */
     @Override
-    @SuppressWarnings("squid:S1166")
+    @SuppressWarnings({"squid:S1166","checkstyle:IllegalCatch"})
     public void handleNotification(JsonRpcNotificationMessage notification) {
         try {
             if (handler instanceof NotificationMessageHandler) {
@@ -260,7 +284,7 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
             } else {
                 invokeHandler(notification);
             }
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+        } catch (Exception e) {
             // We don't care if there are any exceptions.
             // No way to tell the publisher.
             LOG.error("Can't map notification to method : {}", notification.getMethod(), e);
@@ -276,7 +300,7 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
      *      JsonRpcReplyMessage.Builder)
      */
     @Override
-    @SuppressWarnings("squid:S1166")
+    @SuppressWarnings({"squid:S1166", "checkstyle:IllegalCatch"})
     public void handleRequest(JsonRpcRequestMessage request, JsonRpcReplyMessage.Builder replyBuilder) {
         if (handler instanceof RequestMessageHandler) {
             ((RequestMessageHandler) handler).handleRequest(request, replyBuilder);
@@ -285,15 +309,15 @@ public class ThreadedSessionImpl<T extends AutoCloseable>
         try {
             Object response = invokeHandler(request);
             replyBuilder.resultFromObject(response);
-        } catch (IllegalAccessException | NoSuchMethodException e) {
+        } catch (NoSuchMethodException e) {
             LOG.error("Request method not found: {}", request.getMethod());
             JsonRpcErrorObject error = new JsonRpcErrorObject(-32601, "Method not found", null);
             replyBuilder.error(error);
-        } catch (IllegalArgumentException e) {
+        } catch (JsonRpcException | IllegalArgumentException e) {
             LOG.error("Invalid arguments");
             JsonRpcErrorObject error = new JsonRpcErrorObject(-32602, "Invalid params", null);
             replyBuilder.error(error);
-        } catch (InvocationTargetException e) {
+        } catch (Exception e) {
             LOG.error("Error while executing method: {}", request.getMethod());
             JsonRpcErrorObject error = new JsonRpcErrorObject(-32000, getErrorMessage(e), null);
             replyBuilder.error(error);
