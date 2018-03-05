@@ -1,0 +1,18 @@
+module test-model-op-only {
+    namespace "http://opendaylight.org/jsonrpc/test";
+    prefix "test-model-op-only";
+    organization "Lumina Networks";
+    contact "Richard Kosegi <richard.kosegi@gmail.com>";
+
+    revision 2018-03-05 {
+        description "Initial revision";
+    }
+
+    container top-element {
+        config false;
+        leaf some-leaf {
+            type int32;
+        }
+    }
+
+}

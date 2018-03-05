@@ -83,13 +83,13 @@ public final class JsonRPCtoRPCBridge implements DOMRpcService, AutoCloseable {
      * @throws URISyntaxException internal error
      */
     public JsonRPCtoRPCBridge(@Nonnull Peer peer, @Nonnull SchemaContext schemaContext,
-            @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull RemoteGovernance governance,
+            @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nullable RemoteGovernance governance,
             @Nullable TransportFactory transportFactory) throws URISyntaxException {
+        Objects.requireNonNull(peer);
         /* Endpoints via configuration */
         if (peer.getRpcEndpoints() != null) {
             Util.populateFromEndpointList(pathMap, peer.getRpcEndpoints(), DataType.RPC);
         }
-        Objects.requireNonNull(peer);
         this.schemaContext = Objects.requireNonNull(schemaContext);
         this.jsonConverter = new JsonConverter(schemaContext);
 

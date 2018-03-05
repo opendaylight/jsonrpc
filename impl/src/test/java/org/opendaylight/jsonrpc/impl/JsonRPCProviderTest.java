@@ -189,6 +189,33 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         retryAction(TimeUnit.SECONDS, 3, () -> getPeerOpState("test-model").isPresent());
     }
 
+    /**
+     * Test that peer with only operation state can be mounted.
+     * See bug report https://jira.opendaylight.org/browse/JSONRPC-14
+     */
+    @Test
+    public void test_OpStateOnlyModel_NoGovernance() throws Exception {
+        // unconfigure all
+        updateConfig(new ConfigBuilder().build());
+        // wait until nothing there
+        retryAction(TimeUnit.SECONDS, 2, () -> !getPeerOpState("test-model-op-only").isPresent());
+        //@formatter:off
+        updateConfig(new ConfigBuilder()
+                .setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
+                .setConfiguredEndpoints(Lists.newArrayList(
+                        new ConfiguredEndpointsBuilder().setName("test-model-op-only")
+                            .setModules(Lists.newArrayList(new YangIdentifier("test-model-op-only")))
+                            .setDataOperationalEndpoints(Lists.newArrayList(
+                                    new DataOperationalEndpointsBuilder()
+                                        .setKey(new DataOperationalEndpointsKey("{}"))
+                                        .setEndpointUri(new Uri("zmq://localhost:12345"))
+                                     .build()))
+                            .build()))
+                        .build());
+        //@formatter:on
+        retryAction(TimeUnit.SECONDS, 3, () -> getPeerOpState("test-model-op-only").isPresent());
+    }
+
     private Optional<ActualEndpoints> getPeerOpState(String name) throws ReadFailedException {
         final ReadOnlyTransaction rtx = getDataBroker().newReadOnlyTransaction();
         try {

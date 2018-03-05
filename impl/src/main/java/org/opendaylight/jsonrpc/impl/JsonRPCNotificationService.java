@@ -30,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.opendaylight.controller.md.sal.dom.api.DOMNotification;
 import org.opendaylight.controller.md.sal.dom.api.DOMNotificationListener;
 import org.opendaylight.controller.md.sal.dom.api.DOMNotificationService;
@@ -70,7 +72,7 @@ public class JsonRPCNotificationService implements DOMNotificationService, Notif
 
     public JsonRPCNotificationService(@Nonnull Peer peer, @Nonnull SchemaContext schemaContext,
             @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
-            @Nonnull TransportFactory transportFactory, @Nonnull RemoteGovernance governance)
+            @Nonnull TransportFactory transportFactory, @Nullable RemoteGovernance governance)
             throws URISyntaxException {
         this.schemaContext = Preconditions.checkNotNull(schemaContext);
         Preconditions.checkNotNull(peer);
@@ -110,7 +112,7 @@ public class JsonRPCNotificationService implements DOMNotificationService, Notif
             RemoteGovernance governance, final JsonObject path) {
         String notificationEndpoint = pathMap.lookup(path, DataType.NOTIFICATION).orElse(null);
         LOG.debug("Notification endpoint - map lookup is  {}", notificationEndpoint);
-        if (notificationEndpoint == null) {
+        if (notificationEndpoint == null && governance != null) {
             notificationEndpoint = governance.governance(-1, peer.getName(), path);
             if (notificationEndpoint != null) {
                 /*

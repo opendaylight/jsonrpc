@@ -292,35 +292,12 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         providerClosed = true;
     }
 
-    /**
-     * Validates {@link Peer} before attempts to mount.
-     *
-     * @param peer {@link Peer} to validates
-     * @return true if {@link Peer}'s configuration is valid, false otherwise
-     */
-    private boolean isPeerConfigValid(Peer peer) {
-        if (governance == null) {
-            // DataBrokerRequirements
-            if (peer.getDataConfigEndpoints() == null) {
-                return false;
-            }
-            if (peer.getDataOperationalEndpoints() == null) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     /*
      * Do the heavy lifting required in order to mount Presently - configures
      * only data
      */
     public boolean doMountDevice(Peer peer) throws URISyntaxException {
         if (!sessionInitialized) {
-            return false;
-        }
-        if (!isPeerConfigValid(peer)) {
-            LOG.error("Peer configuration is not valid, refusing to mount : '{}'", peer);
             return false;
         }
         LOG.debug("Creating mapping context for peer {}", peer.getName());

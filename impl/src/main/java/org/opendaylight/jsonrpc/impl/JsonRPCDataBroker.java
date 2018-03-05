@@ -15,7 +15,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.util.Collections;
 import java.util.Map;
+
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
@@ -60,7 +63,7 @@ public class JsonRPCDataBroker implements DOMDataBroker, AutoCloseable {
      */
     public JsonRPCDataBroker(@Nonnull Peer peer, @Nonnull SchemaContext schemaContext,
             @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
-            @Nonnull TransportFactory transportFactory, @Nonnull RemoteGovernance governance) {
+            @Nonnull TransportFactory transportFactory, @Nullable RemoteGovernance governance) {
         this.peer = Preconditions.checkNotNull(peer);
         this.schemaContext = Preconditions.checkNotNull(schemaContext);
         this.jsonConverter = new JsonConverter(schemaContext);
@@ -70,15 +73,19 @@ public class JsonRPCDataBroker implements DOMDataBroker, AutoCloseable {
         if (peer.getDataConfigEndpoints() != null) {
             Util.populateFromEndpointList(pathMap, peer.getDataConfigEndpoints(), DataType.CONFIGURATION_DATA);
         } else {
-            pathMap.put(TOP, DataType.CONFIGURATION_DATA,
-                governance.governance(store2str(store2int(LogicalDatastoreType.CONFIGURATION)), peer.getName(), TOP));
+            if (governance != null) {
+                pathMap.put(TOP, DataType.CONFIGURATION_DATA, governance
+                        .governance(store2str(store2int(LogicalDatastoreType.CONFIGURATION)), peer.getName(), TOP));
+            }
         }
 
         if (peer.getDataOperationalEndpoints() != null) {
             Util.populateFromEndpointList(pathMap, peer.getDataOperationalEndpoints(), DataType.OPERATIONAL_DATA);
         } else {
-            pathMap.put(TOP, DataType.OPERATIONAL_DATA,
-                governance.governance(store2str(store2int(LogicalDatastoreType.OPERATIONAL)), peer.getName(), TOP));
+            if (governance != null) {
+                pathMap.put(TOP, DataType.OPERATIONAL_DATA, governance
+                        .governance(store2str(store2int(LogicalDatastoreType.OPERATIONAL)), peer.getName(), TOP));
+            }
         }
         LOG.info("Broker Instantiated for {}", peer.getName());
     }

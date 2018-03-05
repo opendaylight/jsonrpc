@@ -16,6 +16,8 @@ import com.google.gson.JsonElement;
 import java.net.URISyntaxException;
 import java.util.Objects;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
@@ -71,7 +73,7 @@ public class MappedPeerContext implements AutoCloseable {
 
     public MappedPeerContext(@Nonnull Peer peer, @Nonnull TransportFactory transportFactory,
             @Nonnull SchemaContextProvider schemaContextProvider, @Nonnull DataBroker dataBroker,
-            @Nonnull DOMMountPointService mountService, @Nonnull RemoteGovernance governance)
+            @Nonnull DOMMountPointService mountService, @Nullable RemoteGovernance governance)
             throws URISyntaxException {
         this.peer = Objects.requireNonNull(peer);
         this.dataBroker = Objects.requireNonNull(dataBroker);
