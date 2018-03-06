@@ -12,6 +12,9 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Joiner.MapJoiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonPrimitive;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -20,6 +23,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseRequestMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -172,5 +177,15 @@ public final class Util {
 
     static Map<String, String> tokenizeQuery(String rawUri) {
         return UriTokenizer.tokenize(rawUri);
+    }
+
+    public static int getParametersCount(final JsonRpcBaseRequestMessage msg) {
+        if (msg.getParams() instanceof JsonArray) {
+            return ((JsonArray) msg.getParams()).size();
+        }
+        if (msg.getParams() instanceof JsonPrimitive) {
+            return 1;
+        }
+        return 0;
     }
 }
