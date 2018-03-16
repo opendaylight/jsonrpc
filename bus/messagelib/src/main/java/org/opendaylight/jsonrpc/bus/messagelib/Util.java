@@ -13,6 +13,7 @@ import com.google.common.base.Joiner.MapJoiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
 import java.net.URI;
@@ -184,6 +185,9 @@ public final class Util {
             return ((JsonArray) msg.getParams()).size();
         }
         if (msg.getParams() instanceof JsonPrimitive) {
+            return 1;
+        }
+        if (msg.getParams() instanceof JsonObject) {
             return 1;
         }
         return 0;
