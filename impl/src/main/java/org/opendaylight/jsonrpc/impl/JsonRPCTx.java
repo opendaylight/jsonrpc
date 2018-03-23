@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.impl;
 import static org.opendaylight.jsonrpc.impl.Util.store2int;
 import static org.opendaylight.jsonrpc.impl.Util.store2str;
 
-import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -29,7 +28,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nonnull;
-import org.opendaylight.controller.md.sal.common.api.TransactionStatus;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
@@ -42,9 +40,6 @@ import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.JSONRPCArg;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.mdsal.common.api.MappingCheckedFuture;
-import org.opendaylight.yangtools.yang.common.RpcError.ErrorType;
-import org.opendaylight.yangtools.yang.common.RpcResult;
-import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgument;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
@@ -281,26 +276,16 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
 
     @Override
     public CheckedFuture<Void, TransactionCommitFailedException> submit() {
-        final ListenableFuture<Void> commmitFutureAsVoid = Futures.transform(commit(),
-                (Function<RpcResult<TransactionStatus>, Void>) input -> null);
-
-        return Futures.makeChecked(commmitFutureAsVoid,
-            input -> new TransactionCommitFailedException("Submit of transaction " + getIdentifier() + " failed",
-                    input));
-    }
-
-    @Override
-    public ListenableFuture<RpcResult<TransactionStatus>> commit() {
         final AtomicBoolean result = new AtomicBoolean(true);
-        endPointMap.keySet().forEach(k -> {
-            result.set(result.get() && endPointMap.get(k).commit(getTxId(k)));
+        endPointMap.entrySet().forEach(entry -> {
+            result.set(result.get() && entry.getValue().commit(getTxId(entry.getKey())));
         });
+
         if (result.get()) {
-            return Futures.immediateFuture(RpcResultBuilder.success(TransactionStatus.COMMITED).build());
-        } else {
-            final RpcResultBuilder<TransactionStatus> failed = RpcResultBuilder.failed();
-            failed.withError(ErrorType.APPLICATION, "error committing transaction");
-            return Futures.immediateFuture(failed.build());
+            return Futures.immediateCheckedFuture(null);
         }
+
+        return Futures.immediateFailedCheckedFuture(new TransactionCommitFailedException(
+                "Submit of transaction " + getIdentifier() + " failed"));
     }
 }
