@@ -20,16 +20,18 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.google.common.base.Optional;
-import com.google.common.util.concurrent.CheckedFuture;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.net.URISyntaxException;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
@@ -79,66 +81,67 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
     }
 
     @Test
-    public void test_read() throws Exception {
+    public void testRead() throws Exception {
         final JsonElement elem = new JsonObject();
         doReturn(elem).when(om).read(eq(Util.store2str(Util.store2int(LogicalDatastoreType.OPERATIONAL))),
                 eq(DEVICE_NAME), any(JsonElement.class));
-        final CheckedFuture<Optional<NormalizedNode<?, ?>>, ReadFailedException> fopt = trx
+        final ListenableFuture<Optional<NormalizedNode<?, ?>>> fopt = trx
                 .read(LogicalDatastoreType.OPERATIONAL, YangInstanceIdentifier.of(NetworkTopology.QNAME));
 
-        final NormalizedNode<?, ?> nn = fopt.checkedGet().get();
+        final NormalizedNode<?, ?> nn = fopt.get(5, TimeUnit.SECONDS).get();
         LOG.info("Read output : {}", nn);
         assertEquals(NetworkTopology.QNAME.getNamespace().toString(), nn.getNodeType().getNamespace().toString());
         assertNotNull(nn.getValue());
     }
 
     @Test
-    public void test_read_null() throws Exception {
+    public void testReadNull() throws Exception {
         /* Special case - null read (allowed by RPC spec) should result in an empty container
          * and no barfs on the ODL side */
         final JsonElement elem = null;
         doReturn(elem).when(om).read(eq(Util.store2str(Util.store2int(LogicalDatastoreType.OPERATIONAL))),
                 eq(DEVICE_NAME), any(JsonElement.class));
-        final CheckedFuture<Optional<NormalizedNode<?, ?>>, ReadFailedException> fopt = trx
+        final ListenableFuture<Optional<NormalizedNode<?, ?>>> fopt = trx
                 .read(LogicalDatastoreType.OPERATIONAL, YangInstanceIdentifier.of(NetworkTopology.QNAME));
 
-        final NormalizedNode<?, ?> nn = fopt.checkedGet().get();
+        final NormalizedNode<?, ?> nn = fopt.get(5, TimeUnit.SECONDS).get();
         LOG.info("Read output : {}", nn);
     }
 
     @Test
-    public void test_exists() throws Exception {
+    public void testExists() throws Exception {
         doReturn(true).when(om).exists(anyString(), anyString(), any(JsonElement.class));
         assertTrue(trx.exists(LogicalDatastoreType.CONFIGURATION, YangInstanceIdentifier.of(NetworkTopology.QNAME))
-                .checkedGet());
+                .get());
         verify(om, times(1)).exists(eq("config"), anyString(),
                 any(JsonElement.class));
     }
 
     @Test
-    public void test_put() throws TransactionCommitFailedException {
+    public void testPut() throws InterruptedException, ExecutionException, TimeoutException {
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest.createContainerNodeData();
         trx.put(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
         doReturn(true).when(om).commit(anyString());
-        CheckedFuture<Void, TransactionCommitFailedException> rf = trx.submit();
-        rf.checkedGet();
+        ListenableFuture<Void> rf = trx.submit();
+        rf.get(5, TimeUnit.SECONDS);
         assertTrue(rf.isDone());
         verify(om, times(1)).put(anyString(), eq("config"), anyString(),
                 any(JsonElement.class), any(JsonElement.class));
     }
 
     @Test
-    public void delete() throws TransactionCommitFailedException {
+    public void testDelete() throws InterruptedException, ExecutionException, TimeoutException {
+        doReturn(true).when(om).commit(anyString());
         trx.delete(LogicalDatastoreType.CONFIGURATION, YangInstanceIdentifier.of(NetworkTopology.QNAME));
-        CheckedFuture<Void, TransactionCommitFailedException> rf = trx.submit();
-        assertTrue(rf.isDone());
+        ListenableFuture<Void> rf = trx.submit();
+        rf.get(5, TimeUnit.SECONDS);
         verify(om, times(1)).delete(anyString(), eq("config"), anyString(),
                 any(JsonElement.class));
         assertNotNull(trx.getIdentifier());
     }
 
     @Test
-    public void cancel() throws TransactionCommitFailedException {
+    public void testCancel() {
         trx.delete(LogicalDatastoreType.CONFIGURATION, YangInstanceIdentifier.of(NetworkTopology.QNAME));
         assertTrue(trx.cancel());
         verify(om, times(1)).delete(anyString(), eq("config"), anyString(),
@@ -147,14 +150,33 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
     }
 
     @Test
-    public void test_merge() throws TransactionCommitFailedException {
+    public void testMerge() throws InterruptedException, ExecutionException, TimeoutException {
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest.createContainerNodeData();
         doReturn(true).when(om).commit(anyString());
         trx.merge(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
-        CheckedFuture<Void, TransactionCommitFailedException> rf = trx.submit();
-        rf.checkedGet();
+        ListenableFuture<Void> rf = trx.submit();
+        rf.get(5, TimeUnit.SECONDS);
         assertTrue(rf.isDone());
         verify(om, times(1)).merge(anyString(), eq("config"), anyString(),
                 any(JsonElement.class), any(JsonElement.class));
+    }
+
+    @SuppressWarnings("checkstyle:AvoidHidingCauseException")
+    @Test(expected = TransactionCommitFailedException.class)
+    public void testSubmitFailure() throws InterruptedException, TimeoutException, ExecutionException,
+            TransactionCommitFailedException {
+        doReturn(false).when(om).commit(anyString());
+        trx.delete(LogicalDatastoreType.CONFIGURATION, YangInstanceIdentifier.of(NetworkTopology.QNAME));
+
+        ListenableFuture<Void> rf = trx.submit();
+        try {
+            rf.get(5, TimeUnit.SECONDS);
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof TransactionCommitFailedException) {
+                throw (TransactionCommitFailedException)e.getCause();
+            }
+
+            throw e;
+        }
     }
 }
