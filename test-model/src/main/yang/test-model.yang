@@ -161,6 +161,10 @@ module test-model {
                 "Base for various coffee drinks";
     }
 
+    identity coffee {
+        base drinks;
+    }
+
     rpc removeCoffeePot {
         description "Remove coffee from the brewer";
         output {

@@ -13,6 +13,9 @@ import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -31,6 +34,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
+@SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
 final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOMRpcException> {
 
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCDOMRpcResultFuture.class);
