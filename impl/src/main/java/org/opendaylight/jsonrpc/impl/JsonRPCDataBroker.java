@@ -11,32 +11,45 @@ import static org.opendaylight.jsonrpc.impl.Util.store2int;
 import static org.opendaylight.jsonrpc.impl.Util.store2str;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import java.util.Collections;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Map;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBrokerExtension;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadWriteTransaction;
+import org.opendaylight.controller.md.sal.dom.api.DOMDataTreeChangeListener;
+import org.opendaylight.controller.md.sal.dom.api.DOMDataTreeChangeService;
+import org.opendaylight.controller.md.sal.dom.api.DOMDataTreeIdentifier;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
 import org.opendaylight.controller.md.sal.dom.api.DOMTransactionChain;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
+import org.opendaylight.jsonrpc.model.ListenerKey;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
+import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
+import org.opendaylight.yangtools.concepts.AbstractListenerRegistration;
+import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JsonRPCDataBroker extends AbstractJsonRPCComponent implements DOMDataBroker, AutoCloseable {
+public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker, DOMDataTreeChangeService {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCDataBroker.class);
     private static final JsonObject TOP = new JsonObject();
+    private final Map<Class<? extends DOMDataBrokerExtension>, DOMDataBrokerExtension> extensions;
     private final Peer peer;
 
     /**
@@ -57,6 +70,9 @@ public class JsonRPCDataBroker extends AbstractJsonRPCComponent implements DOMDa
             @Nonnull TransportFactory transportFactory, @Nullable RemoteGovernance governance,
             @Nonnull JsonConverter jsonConverter) {
         super(schemaContext, transportFactory, pathMap, jsonConverter);
+        extensions = ImmutableMap.<Class<? extends DOMDataBrokerExtension>, DOMDataBrokerExtension>builder()
+                .put(DOMDataTreeChangeService.class, this)
+                .build();
         this.peer = Preconditions.checkNotNull(peer);
         if (peer.getDataConfigEndpoints() != null) {
             Util.populateFromEndpointList(pathMap, peer.getDataConfigEndpoints(), DataType.CONFIGURATION_DATA);
@@ -99,12 +115,34 @@ public class JsonRPCDataBroker extends AbstractJsonRPCComponent implements DOMDa
     }
 
     @Override
-    public void close() {
-        // no-op
+    public Map<Class<? extends DOMDataBrokerExtension>, DOMDataBrokerExtension> getSupportedExtensions() {
+        return extensions;
     }
 
     @Override
-    public Map<Class<? extends DOMDataBrokerExtension>, DOMDataBrokerExtension> getSupportedExtensions() {
-        return Collections.emptyMap();
+    public <L extends DOMDataTreeChangeListener> ListenerRegistration<L> registerDataTreeChangeListener(
+            DOMDataTreeIdentifier treeId, L listener) {
+        final JsonElement busPath = jsonConverter.toBus(treeId.getRootIdentifier(), null).getPath();
+        final RemoteOmShard shard = getShard(treeId.getDatastoreType(), busPath);
+        final DOMDataTreeChangeListenerAdapter adapter;
+        final ListenerKey listenerKey;
+        try {
+            listenerKey = shard.addListener(Util.store2int(treeId.getDatastoreType()), "", busPath);
+            adapter = new DOMDataTreeChangeListenerAdapter(listener, transportFactory, listenerKey.getUri(),
+                    jsonConverter, schemaContext);
+        } catch (URISyntaxException e) {
+            // remote shard provided us wrong URI
+            throw new IllegalStateException("Invalid URI provided from remote shard", e);
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to create subscriber", e);
+        }
+
+        return new AbstractListenerRegistration<L>(listener) {
+            @Override
+            protected void removeRegistration() {
+                shard.deleteListener(listenerKey.getUri(), listenerKey.getName());
+                adapter.close();
+            }
+        };
     }
 }

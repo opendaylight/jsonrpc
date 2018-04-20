@@ -20,21 +20,23 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.io.IOException;
 import java.io.StringReader;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.annotation.Nonnull;
+
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadWriteTransaction;
-import org.opendaylight.jsonrpc.bus.api.SessionType;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
@@ -58,7 +60,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("deprecation")
-public class JsonRPCTx extends AbstractJsonRPCComponent
+public class JsonRPCTx extends RemoteShardAware
         implements DOMDataReadWriteTransaction, DOMDataReadOnlyTransaction {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCTx.class);
     private final String deviceName;
@@ -94,19 +96,10 @@ public class JsonRPCTx extends AbstractJsonRPCComponent
          */
     }
 
-    private String lookupEndPoint(final LogicalDatastoreType store, JsonElement path) {
-        return pathMap.lookup(path, DataType.forDatastore(store)).orElse(null);
-    }
-
     private RemoteOmShard getOmShard(final LogicalDatastoreType store, JsonElement path) {
         final String endpoint = lookupEndPoint(store, path);
-        return endPointMap.computeIfAbsent(endpoint, ep -> {
-            try {
-                final String fixedEndpoint = Util.ensureRole(endpoint, SessionType.REQ);
-                return transportFactory.createRequesterProxy(RemoteOmShard.class, fixedEndpoint);
-            } catch (URISyntaxException e) {
-                throw new IllegalStateException("Provided URI is invalid", e);
-            }
+        return endPointMap.computeIfAbsent(endpoint, shard -> {
+            return getShard(store, path);
         });
     }
 
@@ -145,7 +138,7 @@ public class JsonRPCTx extends AbstractJsonRPCComponent
             while (pathIterator.hasNext()) {
                 final PathArgument step = pathIterator.next();
                 if (pathIterator.hasNext()) {
-                    final DataSchemaNode nextNode = tracker.getDataChildByName(step.getNodeType());
+                    final DataSchemaNode nextNode = tracker.findDataChildByName(step.getNodeType()).get();
                     if (nextNode == null) {
                         LOG.error("cannot locate corresponding schema node {}", step.getNodeType().getLocalName());
                         return readFailure();
@@ -214,12 +207,6 @@ public class JsonRPCTx extends AbstractJsonRPCComponent
         } catch (Exception e) {
             return MappingCheckedFuture.create(Futures.immediateFailedFuture(e), ReadFailedException.MAPPER);
         }
-    }
-
-    @Override
-    public void close() {
-        endPointMap.entrySet().forEach(e -> Util.closeNullableWithExceptionCallback(e.getValue(),
-            t -> LOG.warn("Failed to close RemoteOmShard proxy", t)));
     }
 
     @Override

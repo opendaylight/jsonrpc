@@ -49,6 +49,7 @@ import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.RpcExceptionImpl;
 import org.opendaylight.jsonrpc.model.RpcState;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
+import org.opendaylight.yangtools.concepts.AbstractListenerRegistration;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.QNameModule;
@@ -323,16 +324,10 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
             @Nonnull final T listener) {
         LOG.info("registered RPC implementation for json rpc broker");
         listener.onRpcAvailable(availableRpcs);
-
-        return new ListenerRegistration<T>() {
+        return new AbstractListenerRegistration<T>(listener) {
             @Override
-            public void close() {
+            protected void removeRegistration() {
                 // NOOP, no rpcs appear and disappear in this implementation
-            }
-
-            @Override
-            public T getInstance() {
-                return listener;
             }
         };
     }

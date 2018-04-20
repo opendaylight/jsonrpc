@@ -163,6 +163,10 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
                         .build());
         //@formatter:on
         retryAction(TimeUnit.SECONDS, 3, () -> getPeerOpState(DEMO1_MODEL).isPresent());
+
+        provider.forceReload(null).get();
+
+        retryAction(TimeUnit.SECONDS, 3, () -> getPeerOpState(DEMO1_MODEL).isPresent());
     }
 
     // Test build-in (global SchemaContext)

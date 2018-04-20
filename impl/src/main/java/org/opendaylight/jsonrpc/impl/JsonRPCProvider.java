@@ -223,7 +223,8 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
             try {
                 remoteControl = transportFactory.createResponder(peersConfState.getWhoAmI().getValue(),
                         new RemoteControl(domDataBroker, schemaService.getGlobalContext(), codec,
-                                scheduledExecutorService));
+                                scheduledExecutorService, transportFactory));
+
             } catch (URISyntaxException e) {
                 LOG.error("Invalid URI provided, can't continue", e);
                 return false;

@@ -51,6 +51,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     </build>
     <dependencies>
         <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.opendaylight.controller</groupId>
             <artifactId>sal-core-api</artifactId>
         </dependency>

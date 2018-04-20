@@ -14,6 +14,7 @@ import com.google.common.collect.Maps;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.List;
@@ -39,6 +40,8 @@ import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadWriteTransaction;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
+import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.model.ListenerKey;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.jsonrpc.model.TransactionFactory;
 import org.opendaylight.yangtools.yang.common.QName;
@@ -49,6 +52,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RemoteControl implements RemoteOmShard, AutoCloseable {
+    // Time-to-live for failed transactions
+    private static final long TRX_TTL_MILLIS = 900000; // 15 minutes
+    private static final long TRX_CLEANUP_INTERVAL = 90000;
     private static final Logger LOG = LoggerFactory.getLogger(RemoteControl.class);
     private final DOMDataBroker domDataBroker;
     private final SchemaContext schemaContext;
@@ -57,17 +63,17 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     private final ReadWriteLock trxGuard = new ReentrantReadWriteLock();
     private final Future<?> cleanerFuture;
     private final TransactionFactory transactionFactory;
-    // Time-to-live for failed transactions
-    private static final long TRX_TTL_MILLIS = 900000; // 15 minutes
+    private final DataChangeListenerRegistry dataChangeRegistry;
 
     public RemoteControl(@Nonnull final DOMDataBroker domDataBroker, @Nonnull final SchemaContext schemaContext,
-            @Nonnull final BindingToNormalizedNodeCodec codec, ScheduledExecutorService scheduledExecutorService) {
-        this(domDataBroker, schemaContext, codec, 90000, scheduledExecutorService);
+            @Nonnull final BindingToNormalizedNodeCodec codec, ScheduledExecutorService scheduledExecutorService,
+            TransportFactory transportFactory) {
+        this(domDataBroker, schemaContext, codec, TRX_CLEANUP_INTERVAL, scheduledExecutorService, transportFactory);
     }
 
     public RemoteControl(@Nonnull final DOMDataBroker domDataBroker, @Nonnull final SchemaContext schemaContext,
             @Nonnull final BindingToNormalizedNodeCodec codec, long cleanupIntervalMilliseconds,
-            @Nonnull ScheduledExecutorService scheduledExecutorService) {
+            @Nonnull ScheduledExecutorService scheduledExecutorService, @Nonnull TransportFactory transportFactory) {
         this.domDataBroker = Objects.requireNonNull(domDataBroker);
         this.schemaContext = Objects.requireNonNull(schemaContext);
         this.jsonConverter = new JsonConverter(schemaContext);
@@ -75,6 +81,7 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
                 this::cleanupStaleTransactions, cleanupIntervalMilliseconds, cleanupIntervalMilliseconds,
                 TimeUnit.MILLISECONDS);
         this.transactionFactory = new EnsureParentTransactionFactory(domDataBroker, Objects.requireNonNull(codec));
+        this.dataChangeRegistry = new DataChangeListenerRegistry(domDataBroker, transportFactory, jsonConverter);
     }
 
     /**
@@ -164,7 +171,8 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     }
 
     /**
-     * Overloaded version of {@link #merge(String, int, String, JsonElement, JsonElement)}.
+     * Overloaded version of
+     * {@link #merge(String, int, String, JsonElement, JsonElement)}.
      */
     @Override
     public void merge(String txId, String store, String entity, JsonElement path, JsonElement data) {
@@ -355,8 +363,34 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         cleanerFuture.cancel(true);
         txmap.clear();
+        dataChangeRegistry.close();
+    }
+
+    @Override
+    public ListenerKey addListener(int store, String entity, JsonElement path) throws IOException {
+        return addListener(store, entity, path, null);
+    }
+
+    @Override
+    public ListenerKey addListener(String store, String entity, JsonElement path) throws IOException {
+        return addListener(Util.store2int(store), entity, path);
+    }
+
+    @Override
+    public ListenerKey addListener(String store, String entity, JsonElement path, String transport) throws IOException {
+        return addListener(Util.store2int(store), entity, path, transport);
+    }
+
+    @Override
+    public ListenerKey addListener(int store, String entity, JsonElement path, String transport) throws IOException {
+        return dataChangeRegistry.createListener(path2II(path), Util.int2store(store), transport);
+    }
+
+    @Override
+    public boolean deleteListener(String uri, String name) {
+        return dataChangeRegistry.removeListener(uri, name);
     }
 }

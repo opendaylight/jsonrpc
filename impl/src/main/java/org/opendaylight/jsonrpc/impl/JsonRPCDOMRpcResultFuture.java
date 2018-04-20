@@ -113,6 +113,7 @@ final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOM
         return jsonRPCFuture.set(value);
     }
 
+    @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
     public boolean setException(Exception ex) {
         this.uuid = null; /* cancel async ops */
         this.exception = ex;
