@@ -9,8 +9,10 @@ package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.io.Resources;
 import com.google.gson.JsonPrimitive;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.RequestMessageHandler;

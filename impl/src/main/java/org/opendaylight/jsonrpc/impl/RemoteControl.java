@@ -13,6 +13,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.List;
@@ -21,7 +22,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -29,8 +29,10 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.GuardedBy;
+
 import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodec;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
@@ -53,24 +55,25 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     private final JsonConverter jsonConverter;
     private final ConcurrentMap<String, DataModificationContext> txmap = Maps.newConcurrentMap();
     private final ReadWriteLock trxGuard = new ReentrantReadWriteLock();
-    private final ScheduledExecutorService exec = Executors.newScheduledThreadPool(1);
     private final Future<?> cleanerFuture;
     private final TransactionFactory transactionFactory;
     // Time-to-live for failed transactions
     private static final long TRX_TTL_MILLIS = 900000; // 15 minutes
 
     public RemoteControl(@Nonnull final DOMDataBroker domDataBroker, @Nonnull final SchemaContext schemaContext,
-            @Nonnull final BindingToNormalizedNodeCodec codec) {
-        this(domDataBroker, schemaContext, codec, 90000);
+            @Nonnull final BindingToNormalizedNodeCodec codec, ScheduledExecutorService scheduledExecutorService) {
+        this(domDataBroker, schemaContext, codec, 90000, scheduledExecutorService);
     }
 
     public RemoteControl(@Nonnull final DOMDataBroker domDataBroker, @Nonnull final SchemaContext schemaContext,
-            @Nonnull final BindingToNormalizedNodeCodec codec, long cleanupIntervalMilliseconds) {
+            @Nonnull final BindingToNormalizedNodeCodec codec, long cleanupIntervalMilliseconds,
+            @Nonnull ScheduledExecutorService scheduledExecutorService) {
         this.domDataBroker = Objects.requireNonNull(domDataBroker);
         this.schemaContext = Objects.requireNonNull(schemaContext);
         this.jsonConverter = new JsonConverter(schemaContext);
-        cleanerFuture = exec.scheduleAtFixedRate(this::cleanupStaleTransactions, cleanupIntervalMilliseconds,
-                cleanupIntervalMilliseconds, TimeUnit.MILLISECONDS);
+        cleanerFuture = Objects.requireNonNull(scheduledExecutorService).scheduleAtFixedRate(
+                this::cleanupStaleTransactions, cleanupIntervalMilliseconds, cleanupIntervalMilliseconds,
+                TimeUnit.MILLISECONDS);
         this.transactionFactory = new EnsureParentTransactionFactory(domDataBroker, Objects.requireNonNull(codec));
     }
 
@@ -106,15 +109,12 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
         try {
             result = rTrx.read(int2store(store), pathAsIId).checkedGet().get();
             LOG.info("Result is {}", result);
-            return jsonConverter.convert(pathAsIId, result).data;
+            return jsonConverter.toBus(pathAsIId, result).getData();
         } catch (ReadFailedException e) {
             throw new IllegalStateException("Read failed", e);
         }
     }
 
-    /**
-     * Overloaded version of {@link #read(int, String, JsonElement)}.
-     */
     @Override
     public JsonElement read(String store, String entity, JsonElement path) {
         return read(Util.store2int(store), entity, path);
@@ -130,9 +130,6 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
                 jsonConverter.jsonElementToNormalizedNode(injectQName(pathAsIId, data), pathAsIId));
     }
 
-    /**
-     * Overloaded version of {@link #put(String, int, String, JsonElement, JsonElement)}.
-     */
     @Override
     public void put(String txId, String store, String entity, JsonElement path, JsonElement data) {
         put(txId, Util.store2int(store), entity, path, data);
@@ -360,7 +357,6 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     @Override
     public void close() throws Exception {
         cleanerFuture.cancel(true);
-        exec.shutdown();
         txmap.clear();
     }
 }

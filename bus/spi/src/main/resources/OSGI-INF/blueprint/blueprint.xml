@@ -15,6 +15,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <cm:default-properties>
             <cm:property name="boss.group.size" value="4" />
             <cm:property name="worker.group.size" value="16" />
+            <cm:property name="handler.group.size" value="16" />
         </cm:default-properties>
     </cm:property-placeholder>
 
@@ -26,7 +27,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <argument value="${worker.group.size}" />
     </bean>
 
-    <bean id="handlerExecutor" class="io.netty.util.concurrent.DefaultEventExecutor" destroy-method="shutdown" />
+    <bean id="handlerExecutor" class="io.netty.util.concurrent.DefaultEventExecutorGroup" destroy-method="shutdown">
+        <argument value="${handler.group.size}" />
+    </bean>
 
     <service interface="io.netty.channel.EventLoopGroup" ref="bossGroup">
         <service-properties>
@@ -43,6 +46,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     </service>
 
     <service interface="io.netty.util.concurrent.EventExecutorGroup" ref="handlerExecutor">
+        <service-properties>
+            <entry key="name" value="jsonrpc" />
+        </service-properties>
+    </service>
+
+    <service interface="java.util.concurrent.ScheduledExecutorService" ref="handlerExecutor">
         <service-properties>
             <entry key="name" value="jsonrpc" />
         </service-properties>

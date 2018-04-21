@@ -13,8 +13,11 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.JsonElement;
+
 import java.net.URISyntaxException;
 import java.util.Objects;
+import java.util.concurrent.ScheduledExecutorService;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -64,6 +67,7 @@ public class MappedPeerContext implements AutoCloseable {
     private final Peer peer;
     private final HierarchicalEnumMap<JsonElement, DataType, String> pathMap = HierarchicalEnumHashMap
             .create(DataType.class, JsonPathCodec.create());
+    private final JsonConverter jsonConverter;
     private final JsonRPCtoRPCBridge rpcBridge;
     private final JsonRPCDataBroker rpcDataBroker;
     private final JsonRPCNotificationService notificationService;
@@ -73,7 +77,8 @@ public class MappedPeerContext implements AutoCloseable {
 
     public MappedPeerContext(@Nonnull Peer peer, @Nonnull TransportFactory transportFactory,
             @Nonnull SchemaContextProvider schemaContextProvider, @Nonnull DataBroker dataBroker,
-            @Nonnull DOMMountPointService mountService, @Nullable RemoteGovernance governance)
+            @Nonnull DOMMountPointService mountService, @Nullable RemoteGovernance governance,
+            @Nonnull ScheduledExecutorService scheduledExecutorService)
             throws URISyntaxException {
         this.peer = Objects.requireNonNull(peer);
         this.dataBroker = Objects.requireNonNull(dataBroker);
@@ -88,13 +93,13 @@ public class MappedPeerContext implements AutoCloseable {
          * versions
          */
         final SchemaContext schema = schemaContextProvider.createSchemaContext(peer);
-
+        jsonConverter = new JsonConverter(schema);
         mountBuilder.addInitialSchemaContext(schema);
 
         /*
          * DataBroker
          */
-        rpcDataBroker = new JsonRPCDataBroker(peer, schema, pathMap, transportFactory, governance);
+        rpcDataBroker = new JsonRPCDataBroker(peer, schema, pathMap, transportFactory, governance, jsonConverter);
         mountBuilder.addService(DOMDataBroker.class, rpcDataBroker);
 
         pathMap.toMap(DataType.CONFIGURATION_DATA).entrySet().stream()
@@ -109,7 +114,8 @@ public class MappedPeerContext implements AutoCloseable {
         /*
          * RPC bridge
          */
-        rpcBridge = new JsonRPCtoRPCBridge(peer, schema, pathMap, governance, transportFactory);
+        rpcBridge = new JsonRPCtoRPCBridge(peer, schema, pathMap, governance, transportFactory,
+                scheduledExecutorService, jsonConverter);
         mountBuilder.addService(DOMRpcService.class, rpcBridge);
         pathMap.toMap(DataType.RPC).entrySet().stream().forEach(e -> newPeer.addRpcEndpoint(new RpcEndpointsBuilder()
                 .setPath(e.getKey().getAsJsonObject().toString()).setEndpointUri(new Uri(e.getValue())).build()));
@@ -117,7 +123,8 @@ public class MappedPeerContext implements AutoCloseable {
         /*
          * Notification service
          */
-        notificationService = new JsonRPCNotificationService(peer, schema, pathMap, transportFactory, governance);
+        notificationService = new JsonRPCNotificationService(peer, schema, pathMap, jsonConverter, transportFactory,
+                governance);
         pathMap.toMap(DataType.NOTIFICATION).entrySet().stream()
                 .forEach(e -> newPeer.addNotificationEndpoint(
                         new NotificationEndpointsBuilder().setPath(e.getKey().getAsJsonObject().toString())

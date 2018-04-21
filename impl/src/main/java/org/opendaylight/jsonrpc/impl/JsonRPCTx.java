@@ -56,13 +56,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("deprecation")
-public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTransaction {
+public class JsonRPCTx extends AbstractJsonRPCComponent
+        implements DOMDataReadWriteTransaction, DOMDataReadOnlyTransaction {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCTx.class);
-    private final SchemaContext schemaContext;
     private final String deviceName;
-    private final JsonConverter jsonConverter;
-    private final HierarchicalEnumMap<JsonElement, DataType, String> pathMap;
-    private final TransportFactory transportFactory;
 
     /* Transaction ID */
     private final Map<String, RemoteOmShard> endPointMap;
@@ -80,12 +77,9 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
     public JsonRPCTx(@Nonnull TransportFactory transportFactory, @Nonnull String deviceName,
             @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull JsonConverter jsonConverter,
             @Nonnull SchemaContext schemaContext) {
-        this.transportFactory = Preconditions.checkNotNull(transportFactory);
+        super(schemaContext, transportFactory, pathMap, jsonConverter);
         Preconditions.checkArgument(!Strings.isNullOrEmpty(deviceName), "Peer name is missing");
         this.deviceName = deviceName;
-        this.pathMap = Preconditions.checkNotNull(pathMap);
-        this.schemaContext = Preconditions.checkNotNull(schemaContext);
-        this.jsonConverter = Preconditions.checkNotNull(jsonConverter);
         this.endPointMap = new HashMap<>();
         this.txIdMap = new HashMap<>();
         /*
@@ -124,15 +118,16 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
     @SuppressFBWarnings("NP_LOAD_OF_KNOWN_NULL_VALUE")
     public CheckedFuture<Optional<NormalizedNode<?, ?>>, ReadFailedException> read(final LogicalDatastoreType store,
             final YangInstanceIdentifier path) {
-        final JSONRPCArg arg = jsonConverter.convert(path, null);
+        final JSONRPCArg arg = jsonConverter.toBus(path, null);
         if (path.getPathArguments().isEmpty()) {
             return readFailure();
         }
-        final RemoteOmShard omshard = getOmShard(store, arg.path);
+        final RemoteOmShard omshard = getOmShard(store, arg.getPath());
         /* Read from the bus and adjust for BUS to ODL differences */
         JsonObject rootJson = null;
         try {
-            rootJson = jsonConverter.busToODL(path, omshard.read(store2str(store2int(store)), deviceName, arg.path));
+            rootJson = jsonConverter.fromBus(path,
+                    omshard.read(store2str(store2int(store)), deviceName, arg.getPath()));
         } catch (Exception e) {
             return readFailure(e);
         }
@@ -209,10 +204,11 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
     @Override
     @SuppressWarnings("checkstyle:IllegalCatch")
     public CheckedFuture<Boolean, ReadFailedException> exists(LogicalDatastoreType store, YangInstanceIdentifier path) {
-        final JSONRPCArg arg = jsonConverter.convert(path, null);
-        final RemoteOmShard omshard = getOmShard(store, arg.path);
+        final JSONRPCArg arg = jsonConverter.toBus(path, null);
+        final RemoteOmShard omshard = getOmShard(store, arg.getPath());
         try {
-            return Futures.immediateCheckedFuture(omshard.exists(store2str(store2int(store)), deviceName, arg.path));
+            return Futures.immediateCheckedFuture(omshard.exists(store2str(store2int(store)),
+                    deviceName, arg.getPath()));
         } catch (Exception e) {
             return MappingCheckedFuture.create(Futures.immediateFailedFuture(e), ReadFailedException.MAPPER);
         }
@@ -227,31 +223,32 @@ public class JsonRPCTx implements DOMDataReadWriteTransaction, DOMDataReadOnlyTr
     @Override
     public void put(final LogicalDatastoreType store, final YangInstanceIdentifier path,
             final NormalizedNode<?, ?> data) {
-        final JSONRPCArg arg = jsonConverter.convertWithStripControl(path, data, true);
-        if (arg.data != null) {
+        final JSONRPCArg arg = jsonConverter.toBusWithStripControl(path, data, true);
+        if (arg.getData() != null) {
             /* ODL supplies a null arg to create an entry before setting it */
-            RemoteOmShard omshard = getOmShard(store, arg.path);
+            RemoteOmShard omshard = getOmShard(store, arg.getPath());
             /* this is ugly - extra lookup, needs fixing on another pass */
-            omshard.put(getTxId(lookupEndPoint(store, arg.path)), store2str(store2int(store)), deviceName,
-                    arg.path, arg.data);
+            omshard.put(getTxId(lookupEndPoint(store, arg.getPath())), store2str(store2int(store)), deviceName,
+                    arg.getPath(), arg.getData());
         }
     }
 
     @Override
     public void merge(final LogicalDatastoreType store, final YangInstanceIdentifier path,
             final NormalizedNode<?, ?> data) {
-        final JSONRPCArg arg = jsonConverter.convert(path, data);
-        final RemoteOmShard omshard = getOmShard(store, arg.path);
-        omshard.merge(getTxId(lookupEndPoint(store, arg.path)), store2str(store2int(store)), deviceName,
-                arg.path, arg.data);
+        final JSONRPCArg arg = jsonConverter.toBus(path, data);
+        final RemoteOmShard omshard = getOmShard(store, arg.getPath());
+        omshard.merge(getTxId(lookupEndPoint(store, arg.getPath())), store2str(store2int(store)), deviceName,
+                arg.getPath(), arg.getData());
 
     }
 
     @Override
     public void delete(final LogicalDatastoreType store, final YangInstanceIdentifier path) {
-        final JSONRPCArg arg = jsonConverter.convert(path, null);
-        final RemoteOmShard omshard = getOmShard(store, arg.path);
-        omshard.delete(getTxId(lookupEndPoint(store, arg.path)), store2str(store2int(store)), deviceName, arg.path);
+        final JSONRPCArg arg = jsonConverter.toBus(path, null);
+        final RemoteOmShard omshard = getOmShard(store, arg.getPath());
+        omshard.delete(getTxId(lookupEndPoint(store, arg.getPath())),
+                store2str(store2int(store)), deviceName, arg.getPath());
     }
 
     @Override

@@ -7,15 +7,52 @@
  */
 package org.opendaylight.jsonrpc.model;
 
-/* Governance operations */
+/**
+ * Governance operations.
+ */
 public interface RemoteGovernance extends AutoCloseable {
-
-    /* store is enum - we should support both forms */
+    /**
+     * Find endpoint uri of the service which governs the data store subtree
+     * specified by path for a named entity.
+     *
+     * @param store data store that is the subject of this procedure
+     * @param entity name of the managed entity that is the subject of this
+     *            procedure
+     * @param path path specifying the model subtree that is the subject of this
+     *            procedure
+     * @return endpoint uri of the service which governs the data store subtree
+     *         or null if there is no such mapping
+     */
     String governance(int store, String entity, Object path);
 
+    /**
+     * Find endpoint uri of the service which governs the data store subtree
+     * specified by path for a named entity.
+     *
+     * @param store data store that is the subject of this procedure
+     * @param entity name of the managed entity that is the subject of this
+     *            procedure
+     * @param path path specifying the model subtree that is the subject of this
+     *            procedure
+     * @return endpoint uri of the service which governs the data store subtree
+     *         or null if there is no such mapping
+     */
     String governance(String store, String entity, Object path);
 
+    /**
+     * Return the YANG source text of the specified YANG module.
+     *
+     * @param name name of YANG module
+     * @return YANG source text or null if no such module is found
+     */
     String source(String name);
 
+    /**
+     * Return the YANG source text of the specified YANG module.
+     *
+     * @param name YANG module name
+     * @param revision YANG module revision
+     * @return YANG source text or null if no such module is found
+     */
     String source(String name, String revision);
 }

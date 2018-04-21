@@ -75,7 +75,7 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
         transportFactory = new DefaultTransportFactory();
         svc = new JsonRPCNotificationService(getPeer(),
                 new BuiltinSchemaContextProvider(schemaContext).createSchemaContext(getPeer()), pathMap,
-                transportFactory, governance);
+                new JsonConverter(schemaContext), transportFactory, governance);
         ml = new MessageLibrary("ws");
         pubSession = ml.publisher(getPath());
     }

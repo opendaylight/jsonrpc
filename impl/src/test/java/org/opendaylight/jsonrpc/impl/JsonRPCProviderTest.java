@@ -16,6 +16,8 @@ import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -71,9 +73,11 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     private ResponderSession governanceResponder;
     private TransportFactory tf;
     private ResponderSession dummyResponder;
+    private ScheduledExecutorService exec;
 
     @Before
     public void setUp() throws TransactionCommitFailedException {
+        exec = Executors.newScheduledThreadPool(1);
         NormalizedNodesHelper.init(schemaContext);
         tf = new DefaultTransportFactory();
         omPort = getFreeTcpPort();
@@ -89,6 +93,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         provider.setSchemaService(getSchemaService());
         provider.setCodec(NormalizedNodesHelper.getBindingToNormalizedNodeCodec());
         provider.setDomMountPointService(getDOMMountPointService());
+        provider.setScheduledExecutorService(exec);
         provider.init();
     }
 
@@ -96,6 +101,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     public void tearDown() throws Exception {
         stopZeroMq();
         provider.close();
+        exec.shutdownNow();
     }
 
     @Test(timeout = 15_000)

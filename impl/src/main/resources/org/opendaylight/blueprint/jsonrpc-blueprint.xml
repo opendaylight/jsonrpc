@@ -15,6 +15,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <reference id="domMountPointService" interface="org.opendaylight.controller.md.sal.dom.api.DOMMountPointService" />
     <reference id="schemaService" interface="org.opendaylight.mdsal.dom.api.DOMSchemaService" />
     <reference id="transportFactory" interface="org.opendaylight.jsonrpc.bus.messagelib.TransportFactory" />
+    <reference id="scheduledExecutorService" interface="java.util.concurrent.ScheduledExecutorService"  filter="(&amp;(name=jsonrpc))"/>
 
     <bean id="mappingCodec" class="org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodecFactory" factory-method="newInstance">
         <argument ref="classLoadingStrategy" />
@@ -27,6 +28,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <property name="codec" ref="mappingCodec" />
         <property name="domMountPointService" ref="domMountPointService" />
         <property name="schemaService" ref="schemaService" />
+        <property name="scheduledExecutorService" ref="scheduledExecutorService" />
     </bean>
 
     <odl:rpc-implementation ref="jsonRpcProvider" />

@@ -18,6 +18,9 @@ import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
 import java.net.URISyntaxException;
 import java.util.Map.Entry;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,15 +58,17 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     private RemoteGovernance governance;
     private RemoteOmShard shard;
     private TransportFactory transportFactory;
+    private ScheduledExecutorService exec;
     private final HierarchicalEnumMap<JsonElement, DataType, String> pathMap = HierarchicalEnumHashMap
             .create(DataType.class, JsonPathCodec.create());
 
     @Before
     public void setUp() throws URISyntaxException {
+        exec = Executors.newScheduledThreadPool(1);
         NormalizedNodesHelper.init(schemaContext);
         transportFactory = mock(TransportFactory.class);
         shard = new RemoteControl(getDomBroker(), schemaContext,
-                NormalizedNodesHelper.getBindingToNormalizedNodeCodec());
+                NormalizedNodesHelper.getBindingToNormalizedNodeCodec(), exec);
         peer = new MutablePeer();
         peer.name("test");
         governance = mock(RemoteGovernance.class);
@@ -71,7 +76,8 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         pathMap.put(jsonParser.parse("{\"network-topology:network-topology\":{}}"),
                 DataType.OPERATIONAL_DATA, "zmq://localhost");
 
-        jrbroker = new JsonRPCDataBroker(peer, schemaContext, pathMap, transportFactory, governance);
+        jrbroker = new JsonRPCDataBroker(peer, schemaContext, pathMap, transportFactory, governance,
+                new JsonConverter(schemaContext));
     }
 
     @After
@@ -80,6 +86,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         final DOMDataWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
         wtx.delete(LogicalDatastoreType.OPERATIONAL, yiiFromJson("{ \"network-topology:network-topology\": {}}"));
         wtx.submit().checkedGet();
+        exec.shutdown();
     }
 
     @Test

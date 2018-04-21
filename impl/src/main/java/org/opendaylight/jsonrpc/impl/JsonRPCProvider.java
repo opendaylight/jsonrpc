@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import java.util.stream.Collectors;
@@ -77,6 +78,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private volatile boolean providerClosed = false;
     private DOMMountPointService domMountPointService;
     private BindingToNormalizedNodeCodec codec;
+    private ScheduledExecutorService scheduledExecutorService;
 
     /**
      * Get current configuration state configuration can be set or deleted by
@@ -215,10 +217,11 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private boolean initRemoteControl(final Config peersConfState) {
         if (peersConfState.getWhoAmI() != null) {
             /* remote control ORB not initialized */
-            LOG.debug("Initializing remote control to {}", peersConfState.getWhoAmI());
+            LOG.debug("Exposing remote control at {}", peersConfState.getWhoAmI());
             try {
                 remoteControl = transportFactory.createResponder(peersConfState.getWhoAmI().getValue(),
-                        new RemoteControl(domDataBroker, schemaService.getGlobalContext(), codec));
+                        new RemoteControl(domDataBroker, schemaService.getGlobalContext(), codec,
+                                scheduledExecutorService));
             } catch (URISyntaxException e) {
                 LOG.error("Invalid URI provided, can't continue", e);
                 return false;
@@ -307,7 +310,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         }
         LOG.debug("Creating mapping context for peer {}", peer.getName());
         final MappedPeerContext ctx = new MappedPeerContext(peer, transportFactory, getSchemaContextProvider(),
-                dataBroker, domMountPointService, governance);
+                dataBroker, domMountPointService, governance, scheduledExecutorService);
         peerState.put(peer.getName(), ctx);
         LOG.info("Peer mounted : {}", ctx);
         return true;
@@ -399,5 +402,9 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
 
     public void setSchemaService(DOMSchemaService schemaService) {
         this.schemaService = schemaService;
+    }
+
+    public void setScheduledExecutorService(ScheduledExecutorService scheduledExecutorService) {
+        this.scheduledExecutorService = scheduledExecutorService;
     }
 }

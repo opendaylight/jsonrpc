@@ -14,7 +14,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -32,9 +31,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Endpoint;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpoints;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
-import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.NodeIdentifier;
-import org.opendaylight.yangtools.yang.data.api.schema.stream.ForwardingNormalizedNodeStreamWriter;
-import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
@@ -131,29 +127,6 @@ public final class Util {
         if (closeable != null) {
             closeable.close();
         }
-    }
-
-    /**
-     * Allows to intercept anyXmlNode in stream and handle it.
-     *
-     * @param delegate an instance of NormalizedStreamWriter
-     * @return an instance of NormalizedStreamWriter
-     */
-    public static NormalizedNodeStreamWriter wrapWithAnyXmlNullValueCallBack(NormalizedNodeStreamWriter delegate) {
-        return new ForwardingNormalizedNodeStreamWriter() {
-            @Override
-            public void anyxmlNode(NodeIdentifier name, Object value) throws IOException {
-                if (value == null) {
-                    throw new IllegalArgumentException("NULL anyxml value encountered at " + name);
-                }
-                super.anyxmlNode(name, value);
-            }
-
-            @Override
-            protected NormalizedNodeStreamWriter delegate() {
-                return delegate;
-            }
-        };
     }
 
     /**

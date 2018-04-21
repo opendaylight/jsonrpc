@@ -21,6 +21,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
+
+import javax.annotation.Nullable;
 
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcException;
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcResult;
@@ -36,8 +39,7 @@ import org.opendaylight.yangtools.yang.model.api.SchemaPath;
 @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
 final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOMRpcException> {
     private volatile Exception exception = null;
-    private final JsonRPCtoRPCBridge bridge; /* who spawned this future */
-
+    private final Consumer<JsonRPCDOMRpcResultFuture> consumer; /* who spawned this future */
     private final SettableFuture<DOMRpcResult> jsonRPCFuture;
     private final SettableFuture<String> uuidFuture;
     private String uuid;
@@ -46,19 +48,19 @@ final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOM
     private boolean pollingForResult;
 
     JsonRPCDOMRpcResultFuture(SettableFuture<DOMRpcResult> jsonRPCFuture, SettableFuture<String> uuidFuture,
-            JsonRPCtoRPCBridge bridge, final SchemaPath type, final NormalizedNode<?, ?> input) {
+            Consumer<JsonRPCDOMRpcResultFuture> consumer, final SchemaPath type, final NormalizedNode<?, ?> input) {
         this.jsonRPCFuture = jsonRPCFuture;
         this.uuidFuture = uuidFuture;
-        this.bridge = bridge;
+        this.consumer = consumer;
         this.type = type;
         this.input = input;
         this.pollingForResult = false;
     }
 
     static CheckedFuture<DOMRpcResult, DOMRpcException> create(SettableFuture<DOMRpcResult> jsonRPCFuture,
-            SettableFuture<String> uuidFuture, JsonRPCtoRPCBridge bridge, final SchemaPath type,
+            SettableFuture<String> uuidFuture, Consumer<JsonRPCDOMRpcResultFuture> consumer, final SchemaPath type,
             final NormalizedNode<?, ?> input) {
-        return new JsonRPCDOMRpcResultFuture(jsonRPCFuture, uuidFuture, bridge, type, input);
+        return new JsonRPCDOMRpcResultFuture(jsonRPCFuture, uuidFuture, consumer, type, input);
     }
 
     public void setUuid(String uuid) {
@@ -106,7 +108,8 @@ final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOM
         jsonRPCFuture.addListener(listener, executor);
     }
 
-    public boolean set(DOMRpcResult value) {
+    @SuppressFBWarnings("NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE")
+    public boolean set(@Nullable DOMRpcResult value) {
         return jsonRPCFuture.set(value);
     }
 
@@ -122,11 +125,11 @@ final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOM
 
     @Override
     public DOMRpcResult get() throws InterruptedException, ExecutionException {
-        this.uuid = this.uuidFuture.get();
-        if (this.uuid != null) {
-            this.bridge.kick(this);
+        uuid = this.uuidFuture.get();
+        if (uuid != null) {
+            consumer.accept(this);
         }
-        DOMRpcResult result =  jsonRPCFuture.get();
+        final DOMRpcResult result =  jsonRPCFuture.get();
         if (this.exception == null) {
             return result;
         } else {
@@ -139,7 +142,7 @@ final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOM
             TimeoutException, ExecutionException {
         this.uuid = this.uuidFuture.get(timeout, unit);
         if (uuid != null) {
-            this.bridge.kick(this);
+            this.consumer.accept(this);
         }
         DOMRpcResult result =  jsonRPCFuture.get(timeout, unit);
         if (this.exception == null) {

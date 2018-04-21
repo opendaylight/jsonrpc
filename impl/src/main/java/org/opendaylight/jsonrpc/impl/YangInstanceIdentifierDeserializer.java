@@ -116,7 +116,7 @@ public final class YangInstanceIdentifierDeserializer {
                     processLeaf(e.getValue());
                     continue;
                 }
-                throwJsonPathError(e.getValue());
+                throwJsonPathError(el);
             }
             return builder.build();
         }

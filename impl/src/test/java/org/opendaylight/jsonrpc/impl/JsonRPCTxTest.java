@@ -8,6 +8,7 @@
 package org.opendaylight.jsonrpc.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -23,11 +24,13 @@ import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
 import java.net.URISyntaxException;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -106,6 +109,13 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
 
         final NormalizedNode<?, ?> nn = fopt.get(5, TimeUnit.SECONDS).get();
         LOG.info("Read output : {}", nn);
+    }
+
+    @Test
+    public void testReadEmpty() throws InterruptedException, ExecutionException {
+        doReturn(null).when(om).read(eq(Util.store2str(Util.store2int(LogicalDatastoreType.OPERATIONAL))),
+                eq(DEVICE_NAME), any(JsonElement.class));
+        assertFalse(trx.read(LogicalDatastoreType.OPERATIONAL, YangInstanceIdentifier.EMPTY).get().isPresent());
     }
 
     @Test

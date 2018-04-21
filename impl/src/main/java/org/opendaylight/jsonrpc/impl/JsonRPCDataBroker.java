@@ -40,14 +40,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("deprecation")
-public class JsonRPCDataBroker implements DOMDataBroker, AutoCloseable {
+public class JsonRPCDataBroker extends AbstractJsonRPCComponent implements DOMDataBroker, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCDataBroker.class);
-    private final SchemaContext schemaContext;
-    private final JsonConverter jsonConverter;
-    private final Peer peer;
-    private final TransportFactory transportFactory;
-    private final HierarchicalEnumMap<JsonElement, DataType, String> pathMap;
     private static final JsonObject TOP = new JsonObject();
+    private final Peer peer;
 
     /**
      * Instantiates a new JSON-RPC data broker.
@@ -59,17 +55,15 @@ public class JsonRPCDataBroker implements DOMDataBroker, AutoCloseable {
      *            connections
      * @param governance {@link RemoteGovernance} used to provide additional
      *            governance info
+     * @param jsonConverter shared {@link JsonConverter}
      * @see DOMDataBroker
      */
     public JsonRPCDataBroker(@Nonnull Peer peer, @Nonnull SchemaContext schemaContext,
             @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
-            @Nonnull TransportFactory transportFactory, @Nullable RemoteGovernance governance) {
+            @Nonnull TransportFactory transportFactory, @Nullable RemoteGovernance governance,
+            @Nonnull JsonConverter jsonConverter) {
+        super(schemaContext, transportFactory, pathMap, jsonConverter);
         this.peer = Preconditions.checkNotNull(peer);
-        this.schemaContext = Preconditions.checkNotNull(schemaContext);
-        this.jsonConverter = new JsonConverter(schemaContext);
-        this.transportFactory = Preconditions.checkNotNull(transportFactory);
-        this.pathMap = Preconditions.checkNotNull(pathMap);
-
         if (peer.getDataConfigEndpoints() != null) {
             Util.populateFromEndpointList(pathMap, peer.getDataConfigEndpoints(), DataType.CONFIGURATION_DATA);
         } else {

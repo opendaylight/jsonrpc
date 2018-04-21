@@ -21,6 +21,8 @@ import com.google.gson.JsonParser;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -64,12 +66,14 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     private RemoteControl ctrl;
     private JsonParser parser;
     private JsonConverter conv;
+    private ScheduledExecutorService exec;
 
     @Before
     public void setUp() {
         NormalizedNodesHelper.init(schemaContext);
+        exec = Executors.newScheduledThreadPool(1);
         ctrl = new RemoteControl(getDomBroker(), schemaContext, NormalizedNodesHelper.getBindingToNormalizedNodeCodec(),
-                500);
+                500, exec);
         parser = new JsonParser();
         conv = new JsonConverter(schemaContext);
     }
@@ -77,6 +81,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     @After
     public void tearDown() throws Exception {
         ctrl.close();
+        exec.shutdown();
     }
 
     @Test
@@ -132,7 +137,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         YangInstanceIdentifier yii = codec.toYangInstanceIdentifier(nii);
         dumpYii(yii);
 
-        final JsonElement path = conv.convert(yii, null).path;
+        final JsonElement path = conv.toBus(yii, null).getPath();
         final YangInstanceIdentifier parsedYii = ctrl.path2II(path);
         assertEquals(yii, parsedYii);
 
@@ -286,7 +291,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
 
         uuid = UUID.randomUUID();
         ctrl.merge(uuid.toString(),
-                Util.store2int(LogicalDatastoreType.CONFIGURATION),
+                Util.store2str(Util.store2int(LogicalDatastoreType.CONFIGURATION)),
                 "something",
                 parser.parse(MLX_JSON_PATH),
                 parser.parse(MLX_CONFIG_DATA));

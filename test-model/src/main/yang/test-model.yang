@@ -1,6 +1,11 @@
 module test-model {
     namespace "urn:opendaylight:jsonrpc:test";
     prefix "tm";
+
+    import ietf-inet-types {
+        prefix "inet";
+    }
+
     organization "Brocade";
     contact "Richard Kosegi <rkosegi@brocade.com>";
     description "Mock model to test various aspects of JSON-RPC ODL plugin";
@@ -192,6 +197,15 @@ module test-model {
         }
         leaf max-level {
             type watermark-value;
+        }
+    }
+
+    list ipv4 {
+        description "Top level list to test https://jira.opendaylight.org/browse/JSONRPC-9";
+        key "name";
+        leaf name {
+            type string;
+            description "The interfaces's name.";
         }
     }
 }

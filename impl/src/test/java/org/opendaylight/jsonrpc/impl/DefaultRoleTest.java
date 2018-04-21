@@ -62,7 +62,7 @@ public class DefaultRoleTest {
         }).when(transportFactory).createRequesterProxy(any(), any());
         pm.put(new JsonObject(), DataType.CONFIGURATION_DATA, "zmq://localhost:12345");
         JSONRPCArg arg = new JSONRPCArg(new JsonObject(), new JsonObject());
-        doReturn(arg).when(jsonConverter).convert(any(YangInstanceIdentifier.class), any());
+        doReturn(arg).when(jsonConverter).toBus(any(YangInstanceIdentifier.class), any());
         tx.read(LogicalDatastoreType.CONFIGURATION,
                 YangInstanceIdentifier.builder().node(NetworkTopology.QNAME).build());
     }

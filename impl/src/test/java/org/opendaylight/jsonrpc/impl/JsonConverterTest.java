@@ -18,18 +18,23 @@ import static org.junit.Assert.assertThat;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.opendaylight.jsonrpc.model.JSONRPCArg;
-import org.opendaylight.mdsal.binding.dom.adapter.test.AbstractDataBrokerTest;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.Ipv4;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.Ipv4Builder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.Ipv4Key;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopologyBuilder;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
@@ -49,7 +54,6 @@ import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgum
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.data.impl.schema.Builders;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNodes;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.opendaylight.yangtools.yang.model.api.SchemaPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,16 +64,9 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
-public class JsonConverterTest extends AbstractDataBrokerTest {
+public class JsonConverterTest extends AbstractJsonRpcTest {
     private static final Logger LOG = LoggerFactory.getLogger(JsonConverter.class);
     private JsonConverter conv;
-    private SchemaContext schemaContext;
-
-    @Override
-    protected void setupWithSchema(SchemaContext context) {
-        this.schemaContext = context;
-        super.setupWithSchema(context);
-    }
 
     @Before
     public void setUp() {
@@ -89,11 +86,11 @@ public class JsonConverterTest extends AbstractDataBrokerTest {
         Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = createContainerNodeData();
         dump((NormalizedNode<PathArgument, ?>) data.getValue(), sw, 1);
         LOG.info("Normalized node content : \n{}", sw.toString());
-        JSONRPCArg arg = conv.convert(data.getKey(), data.getValue());
-        LOG.info("Path : '{}' Data : '{}'", arg.path, arg.data);
-        assertThat(arg.data.toString(), hasJsonPath("$.topology[0].topology-id", equalTo("topo-id")));
-        assertThat(arg.data.toString(), hasJsonPath("$.topology[0].node", hasSize(2)));
-        assertThat(arg.path.toString(), hasJsonPath("$.network-topology:network-topology.*", hasSize(0)));
+        JSONRPCArg arg = conv.toBus(data.getKey(), data.getValue());
+        LOG.info("Path : '{}' Data : '{}'", arg.getPath(), arg.getData());
+        assertThat(arg.getData().toString(), hasJsonPath("$.topology[0].topology-id", equalTo("topo-id")));
+        assertThat(arg.getData().toString(), hasJsonPath("$.topology[0].node", hasSize(2)));
+        assertThat(arg.getPath().toString(), hasJsonPath("$.network-topology:network-topology.*", hasSize(0)));
     }
 
     @SuppressWarnings("unchecked")
@@ -103,36 +100,36 @@ public class JsonConverterTest extends AbstractDataBrokerTest {
         Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = createLeafNodeData();
         dump((NormalizedNode<PathArgument, ?>) data.getValue(), sw, 1);
         LOG.info("Normalized node content : \n{}", sw.toString());
-        JSONRPCArg arg = conv.convert(data.getKey(), data.getValue());
-        LOG.info("Path : '{}' Data : '{}'", arg.path, arg.data);
-        assertThat(arg.path.toString(), hasJsonPath("$..topology[0].topology-id", contains("topo-id")));
+        JSONRPCArg arg = conv.toBus(data.getKey(), data.getValue());
+        LOG.info("Path : '{}' Data : '{}'", arg.getPath(), arg.getData());
+        assertThat(arg.getPath().toString(), hasJsonPath("$..topology[0].topology-id", contains("topo-id")));
     }
 
     @Test
     public void testConvertListNode() throws IOException {
         Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = createListNodeData();
-        JSONRPCArg arg = conv.convert(data.getKey(), data.getValue());
-        LOG.info("Path : '{}' Data : '{}'", arg.path, arg.data);
-        assertThat(arg.path.toString(), hasJsonPath("$..topology.topology", hasSize(1)));
+        JSONRPCArg arg = conv.toBus(data.getKey(), data.getValue());
+        LOG.info("Path : '{}' Data : '{}'", arg.getPath(), arg.getData());
+        assertThat(arg.getPath().toString(), hasJsonPath("$..topology.topology", hasSize(1)));
     }
 
     @Test
     public void testConvertEmptyPath() throws IOException {
-        JSONRPCArg arg = conv.convert(YangInstanceIdentifier.EMPTY,
+        JSONRPCArg arg = conv.toBus(YangInstanceIdentifier.EMPTY,
                 Builders.containerBuilder().withNodeIdentifier(new NodeIdentifier(NetworkTopology.QNAME)).build());
-        LOG.info("Path : '{}' Data : '{}'", arg.path, arg.data);
-        assertNull(arg.data);
-        assertNull(arg.path);
+        LOG.info("Path : '{}' Data : '{}'", arg.getPath(), arg.getData());
+        assertNull(arg.getData());
+        assertNull(arg.getPath());
     }
 
     @Test
     public void testConvertNullData() throws IOException {
-        JSONRPCArg arg = conv.convert(YangInstanceIdentifier.of(NetworkTopology.QNAME), null);
-        LOG.info("Path : '{}' Data : '{}'", arg.path, arg.data);
-        assertNull(arg.data);
+        JSONRPCArg arg = conv.toBus(YangInstanceIdentifier.of(NetworkTopology.QNAME), null);
+        LOG.info("Path : '{}' Data : '{}'", arg.getPath(), arg.getData());
+        assertNull(arg.getData());
         JsonObject obj = new JsonObject();
         obj.add(NetworkTopology.QNAME.getLocalName() + ':' + NetworkTopology.QNAME.getLocalName(), new JsonObject());
-        assertEquals(obj, arg.path);
+        assertEquals(obj, arg.getPath());
     }
 
     @Test
@@ -140,6 +137,35 @@ public class JsonConverterTest extends AbstractDataBrokerTest {
         JsonObject obj = conv.rpcConvert(SchemaPath.create(true), ImmutableNodes.containerNode(NetworkTopology.QNAME));
         LOG.info("JSON object : '{}'", obj);
         assertNotNull(obj);
+    }
+
+
+    /**
+     * Unit test for <a href="https://jira.opendaylight.org/browse/JSONRPC-9">JSONRPC-9 bug</a>.
+     */
+    @Test
+    public void testTopLevelListDeserialization() {
+        JsonElement path = jsonParser.parse("{\"test-model:ipv4\":[{\"name\":\"eth0\"}]}");
+        YangInstanceIdentifier yii = YangInstanceIdentifierDeserializer.toYangInstanceIdentifier(path, schemaContext);
+        LOG.info("{}", yii);
+        assertNotNull(yii);
+        path = jsonParser.parse("{\"test-model:ipv4\":{\"ipv4\":[{\"name\":\"eth0\"}]}}");
+        yii = YangInstanceIdentifierDeserializer.toYangInstanceIdentifier(path, schemaContext);
+        LOG.info("{}", yii);
+        assertNotNull(yii);
+    }
+
+    @Test
+    public void testTopListSerialization() {
+        Ipv4 ipv4 = new Ipv4Builder().setKey(new Ipv4Key("eth0"))
+                .build();
+        InstanceIdentifier<Ipv4> path = InstanceIdentifier.builder(Ipv4.class, new Ipv4Key("eth0")).build();
+        Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> normalized = NormalizedNodesHelper
+                .getBindingToNormalizedNodeCodec().toNormalizedNode(path, ipv4);
+        JSONRPCArg arg = conv.toBus(normalized.getKey(), normalized.getValue());
+        LOG.info("Result : {}", arg.getPath());
+        assertEquals("{\"test-model:ipv4\":[{\"name\":\"eth0\"}]}",arg.getPath().toString());
+
     }
 
     @SuppressWarnings("unchecked")
