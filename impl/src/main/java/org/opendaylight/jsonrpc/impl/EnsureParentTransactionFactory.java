@@ -17,7 +17,7 @@ import org.opendaylight.controller.md.sal.common.impl.util.compat.DataNormalizat
 import org.opendaylight.controller.md.sal.common.impl.util.compat.DataNormalizationOperation;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
-import org.opendaylight.jsonrpc.model.ForwardingDOMDataWriteTransaction;
+import org.opendaylight.controller.md.sal.dom.spi.ForwardingDOMDataWriteTransaction;
 import org.opendaylight.jsonrpc.model.TransactionFactory;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgument;
@@ -40,7 +40,8 @@ class EnsureParentTransactionFactory implements TransactionFactory {
 
     @Override
     public DOMDataWriteTransaction get() {
-        return new ForwardingDOMDataWriteTransaction(domDataBroker.newWriteOnlyTransaction()) {
+        final DOMDataWriteTransaction delegateTx = domDataBroker.newWriteOnlyTransaction();
+        return new ForwardingDOMDataWriteTransaction() {
             @Override
             public void merge(LogicalDatastoreType store, YangInstanceIdentifier path, NormalizedNode<?, ?> data) {
                 ensureParentsByMerge(store, path);
@@ -63,8 +64,13 @@ class EnsureParentTransactionFactory implements TransactionFactory {
                     currentArguments.add(currentArg);
                     YangInstanceIdentifier currentPath = YangInstanceIdentifier.create(currentArguments);
 
-                    delegate.merge(store, currentPath, currentOp.createDefault(currentArg));
+                    delegate().merge(store, currentPath, currentOp.createDefault(currentArg));
                 }
+            }
+
+            @Override
+            protected DOMDataWriteTransaction delegate() {
+                return delegateTx;
             }
         };
     }
