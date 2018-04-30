@@ -24,13 +24,11 @@ import com.google.common.base.Optional;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import java.net.URISyntaxException;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -132,9 +130,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest.createContainerNodeData();
         trx.put(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
         doReturn(true).when(om).commit(anyString());
-        ListenableFuture<Void> rf = trx.submit();
-        rf.get(5, TimeUnit.SECONDS);
-        assertTrue(rf.isDone());
+        trx.commit().get(5, TimeUnit.SECONDS);
         verify(om, times(1)).put(anyString(), eq("config"), anyString(),
                 any(JsonElement.class), any(JsonElement.class));
     }
@@ -143,8 +139,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
     public void testDelete() throws InterruptedException, ExecutionException, TimeoutException {
         doReturn(true).when(om).commit(anyString());
         trx.delete(LogicalDatastoreType.CONFIGURATION, YangInstanceIdentifier.of(NetworkTopology.QNAME));
-        ListenableFuture<Void> rf = trx.submit();
-        rf.get(5, TimeUnit.SECONDS);
+        trx.commit().get(5, TimeUnit.SECONDS);
         verify(om, times(1)).delete(anyString(), eq("config"), anyString(),
                 any(JsonElement.class));
         assertNotNull(trx.getIdentifier());
@@ -164,9 +159,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest.createContainerNodeData();
         doReturn(true).when(om).commit(anyString());
         trx.merge(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
-        ListenableFuture<Void> rf = trx.submit();
-        rf.get(5, TimeUnit.SECONDS);
-        assertTrue(rf.isDone());
+        trx.commit().get(5, TimeUnit.SECONDS);
         verify(om, times(1)).merge(anyString(), eq("config"), anyString(),
                 any(JsonElement.class), any(JsonElement.class));
     }
@@ -178,9 +171,8 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         doReturn(false).when(om).commit(anyString());
         trx.delete(LogicalDatastoreType.CONFIGURATION, YangInstanceIdentifier.of(NetworkTopology.QNAME));
 
-        ListenableFuture<Void> rf = trx.submit();
         try {
-            rf.get(5, TimeUnit.SECONDS);
+            trx.commit().get(5, TimeUnit.SECONDS);
         } catch (ExecutionException e) {
             if (e.getCause() instanceof TransactionCommitFailedException) {
                 throw (TransactionCommitFailedException)e.getCause();

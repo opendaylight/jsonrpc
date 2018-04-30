@@ -17,7 +17,6 @@ import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
@@ -43,7 +42,6 @@ import org.opendaylight.jsonrpc.model.JSONRPCArg;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.mdsal.common.api.MappingCheckedFuture;
-import org.opendaylight.yangtools.util.concurrent.ExceptionMapper;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgument;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
@@ -273,17 +271,6 @@ public class JsonRPCTx extends AbstractJsonRPCComponent
             }
         }
         return result;
-    }
-
-    @Override
-    public CheckedFuture<Void, TransactionCommitFailedException> submit() {
-        return MappingCheckedFuture.create(commit().transform(ignored -> null, MoreExecutors.directExecutor()),
-            new ExceptionMapper<TransactionCommitFailedException>("commit", TransactionCommitFailedException.class) {
-                @Override
-                protected TransactionCommitFailedException newWithCause(String message, Throwable cause) {
-                    return new TransactionCommitFailedException(message, cause);
-                }
-            });
     }
 
     @Override
