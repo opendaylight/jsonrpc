@@ -15,15 +15,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.util.Collections;
 import java.util.Map;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBrokerExtension;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataChangeListener;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadWriteTransaction;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
@@ -33,13 +30,10 @@ import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
-import org.opendaylight.yangtools.concepts.ListenerRegistration;
-import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SuppressWarnings("deprecation")
 public class JsonRPCDataBroker extends AbstractJsonRPCComponent implements DOMDataBroker, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCDataBroker.class);
     private static final JsonObject TOP = new JsonObject();
@@ -107,12 +101,6 @@ public class JsonRPCDataBroker extends AbstractJsonRPCComponent implements DOMDa
     @Override
     public void close() {
         // no-op
-    }
-
-    @Override
-    public ListenerRegistration<DOMDataChangeListener> registerDataChangeListener(LogicalDatastoreType store,
-            YangInstanceIdentifier path, DOMDataChangeListener listener, DataChangeScope triggeringScope) {
-        throw new UnsupportedOperationException("Listener registrations are not supported by this DataBroker");
     }
 
     @Override
