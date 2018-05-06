@@ -273,7 +273,7 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
      */
     @VisibleForTesting
     static boolean shouldRequeue(JsonElement result, JsonObject metadata) {
-        return result == null || result.isJsonNull() && metadata != null;
+        return (result == null || result.isJsonNull()) && metadata != null;
     }
 
     @Override
