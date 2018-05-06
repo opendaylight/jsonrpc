@@ -34,6 +34,7 @@ import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.NotificationState;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
+import org.opendaylight.yangtools.concepts.AbstractListenerRegistration;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.common.QNameModule;
 import org.opendaylight.yangtools.yang.model.api.Module;
@@ -124,18 +125,12 @@ public class JsonRPCNotificationService extends AbstractJsonRPCComponent
         for (final SchemaPath type : types) {
             listeners.put(type, listener);
         }
-
-        return new ListenerRegistration<T>() {
+        return new AbstractListenerRegistration<T>(listener) {
             @Override
-            public void close() {
+            protected void removeRegistration() {
                 for (final SchemaPath type : types) {
                     listeners.remove(type, listener);
                 }
-            }
-
-            @Override
-            public T getInstance() {
-                return listener;
             }
         };
     }
