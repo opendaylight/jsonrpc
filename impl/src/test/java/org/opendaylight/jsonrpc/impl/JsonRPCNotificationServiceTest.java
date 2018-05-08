@@ -16,9 +16,12 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -40,6 +43,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.NotificationEndpointsBuilder;
+import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.Revision;
 import org.opendaylight.yangtools.yang.model.api.Module;
@@ -88,14 +92,44 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
     }
 
     @Test
+    public void testMultiple() throws InterruptedException {
+        final int listeners = 10;
+        final int count = 10;
+        final CountDownLatch cl = new CountDownLatch(listeners * count);
+        final Set<ListenerRegistration<DOMNotificationListener>> regs = new HashSet<>();
+        for (int i = 0; i < listeners; i++) {
+            regs.add(svc.registerNotificationListener((DOMNotificationListener) notification -> {
+                LOG.info("Received notification : {}", notification);
+                cl.countDown();
+            }, notificationPath(mod, "too-many-numbers")));
+        }
+        TimeUnit.MILLISECONDS.sleep(5000L);
+        for (int i = 0; i < count; i++) {
+            pubSession.publish("too-many-numbers", new int[] { 1, 2 });
+        }
+        assertTrue(cl.await(5, TimeUnit.SECONDS));
+        regs.stream().forEach(ListenerRegistration<DOMNotificationListener>::close);
+    }
+
+    @Test
     public void test() throws URISyntaxException, Exception {
-        final CountDownLatch cl = new CountDownLatch(1);
+        final CountDownLatch cl = new CountDownLatch(4);
         svc.registerNotificationListener((DOMNotificationListener) notification -> {
             LOG.info("Received notification : {}", notification);
             cl.countDown();
         }, notificationPath(mod, "too-many-numbers"));
         TimeUnit.MILLISECONDS.sleep(500L);
-        pubSession.publish("too-many-numbers", new int[] {});
+        // send primitive value - this is against specification, but we can
+        // handle it easily
+        pubSession.publish("too-many-numbers", 1);
+        JsonObject obj = new JsonObject();
+        obj.addProperty("current-level", 1);
+        obj.addProperty("max-level", 2);
+        // named parameters
+        pubSession.publish("too-many-numbers", obj);
+        // positional parameters, but not all values are present
+        pubSession.publish("too-many-numbers", new int[] { 1 });
+        pubSession.publish("too-many-numbers", new int[] { 1, 2 });
         assertTrue(cl.await(5, TimeUnit.SECONDS));
     }
 

@@ -114,43 +114,40 @@ public class JsonConverter {
      */
     public DOMNotification notificationConvert(final JsonRpcNotificationMessage notification,
             final Map<String, NotificationState> mappedNotifications) {
-        String method = notification.getMethod();
-        JsonElement parsed;
-        NotificationState ns;
+        final String method = notification.getMethod();
+        final JsonElement parsed;
+        final NotificationState ns;
 
         LOG.debug("Got notification {}", notification);
+        if (!mappedNotifications.containsKey(method)) {
+            LOG.error("Notification not mapped {}", method);
+            return null;
+        }
+        ns = mappedNotifications.get(method);
         try {
             parsed = notification.getParamsAsObject(JsonElement.class);
-            ns = Preconditions.checkNotNull(mappedNotifications.get(method));
         } catch (JsonRpcException e) {
             LOG.error("Error processing notification", e);
             return null;
-        } catch (IllegalStateException e) {
-            LOG.error("Notification not mapped {}", method, e);
-            return null;
         }
 
-        JsonObject digested;
+        final JsonObject digested;
         if (parsed.isJsonObject()) {
             digested = parsed.getAsJsonObject();
+        } else if (parsed.isJsonArray()) {
+            digested = new JsonObject();
+            final List<DataSchemaNode> childNodes = new ArrayList<>(ns.notification().getChildNodes());
+            for (int i = 0; i < childNodes.size() && i < parsed.getAsJsonArray().size(); i++) {
+                digested.add(childNodes.get(i).getQName().getLocalName(), parsed.getAsJsonArray().get(i));
+            }
         } else {
             digested = new JsonObject();
-            int count = 0;
-            for (DataSchemaNode child : ns.notification().getChildNodes()) {
-                try {
-                    digested.add(child.getQName().getLocalName(), parsed.getAsJsonArray().get(count));
-                } catch (IndexOutOfBoundsException e) {
-                    // Do nothing - leave that element empty - we got a null
-                    LOG.debug("Failed to process element as array : {}", parsed, e);
-                }
-                count++;
-            }
+            LOG.warn("Invalid JSON in payload will be ignored : {}", parsed);
         }
 
-        final DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> notificationBuilder =
-                ImmutableContainerNodeBuilder.create().withNodeIdentifier(NodeIdentifier.create(
-                        ns.notification().getQName()));
-        final DOMNotification deserialized = extractNotification(ns, digested, notificationBuilder);
+        final DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> builder = ImmutableContainerNodeBuilder
+                .create().withNodeIdentifier(NodeIdentifier.create(ns.notification().getQName()));
+        final DOMNotification deserialized = extractNotification(ns, digested, builder);
         LOG.debug("Deserialized {}", deserialized);
         return deserialized;
     }

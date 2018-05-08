@@ -62,6 +62,7 @@ public final class NotificationContainerProxy implements ContainerSchemaNode {
         return Collections.emptySet();
     }
 
+    @Deprecated
     @Override
     public DataSchemaNode getDataChildByName(final QName child) {
         return childNodes.get(child);
@@ -104,7 +105,7 @@ public final class NotificationContainerProxy implements ContainerSchemaNode {
 
     @Override
     public SchemaPath getPath() {
-        throw new UnsupportedOperationException();
+        return SchemaPath.create(true, qname);
     }
 
     @Override
