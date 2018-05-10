@@ -35,7 +35,7 @@ public final class CommonConstants {
     public static final LoggingHandler LOG_HANDLER;
 
     static {
-        DEBUG_MODE = SystemPropertyUtil.getBoolean("org.opendaylight.jsonrpc.bus.debug", true);
+        DEBUG_MODE = SystemPropertyUtil.getBoolean("org.opendaylight.jsonrpc.bus.debug", false);
         LOG_HANDLER = new LoggingHandler(LogLevel.INFO);
     }
 
