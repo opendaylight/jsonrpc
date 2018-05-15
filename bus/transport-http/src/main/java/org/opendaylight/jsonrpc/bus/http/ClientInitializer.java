@@ -70,7 +70,7 @@ class ClientInitializer extends AbstractChannelInitializer {
     @Override
     public void initChannel(SocketChannel ch) throws Exception {
         super.initChannel(ch);
-        ch.attr(CommonConstants.ATTR_PEER_CONTEXT).set(new PeerContextImpl(ch, isWebsocket));
+        ch.attr(CommonConstants.ATTR_PEER_CONTEXT).set(new PeerContextImpl(ch, isWebsocket, useSsl));
         ch.attr(CommonConstants.ATTR_RESPONSE_QUEUE).set(currentRequest);
         if (useSsl) {
             ch.pipeline().addLast(Constants.HANDLER_SSL, sslContext.newHandler(ch.alloc()));

@@ -32,8 +32,8 @@ import org.opendaylight.jsonrpc.bus.spi.AbstractPeerContext;
 public class PeerContextImpl extends AbstractPeerContext {
     private final boolean isWebsocket;
 
-    public PeerContextImpl(Channel channel, final boolean isWebsocket) {
-        super(channel);
+    public PeerContextImpl(Channel channel, final boolean isWebsocket, final boolean isSsl) {
+        super(channel, HttpUtil.getTransport(isWebsocket, isSsl));
         this.isWebsocket = isWebsocket;
     }
 

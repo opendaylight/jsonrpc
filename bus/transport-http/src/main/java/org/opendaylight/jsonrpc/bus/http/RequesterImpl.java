@@ -25,7 +25,7 @@ import org.opendaylight.jsonrpc.bus.spi.CommonConstants;
  */
 class RequesterImpl extends AbstractClientSession implements Requester {
     RequesterImpl(String uri, int defaultPort, Bootstrap clientBootstrap,
-            ChannelInitializer<SocketChannel> channelInitializer, boolean isWebsocket) {
+            ChannelInitializer<SocketChannel> channelInitializer, boolean isWebsocket, boolean useSsl) {
         super(uri, defaultPort, clientBootstrap, channelInitializer, isWebsocket, SessionType.REQ);
         connectInternal();
     }

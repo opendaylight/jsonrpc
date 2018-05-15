@@ -29,4 +29,11 @@ public interface PeerContext {
      * @param message message to send
      */
     void send(String message);
+
+    /**
+     * Name of transport (protocol).
+     *
+     * @return name of transport
+     */
+    String transport();
 }

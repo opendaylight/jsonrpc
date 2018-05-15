@@ -87,6 +87,7 @@ public final class Constants {
     public static final String HANDLER_DECODER = "encoder";
     public static final String HANDLER_SUBSCRIBER_INITIALIZER = "topic-init";
     public static final String HANDSHAKE_COMPLETED = "HANDSHAKE_COMPLETED";
+    public static final String TRANSPORT_NAME = "zmq";
 
     public static byte getZmtp20Socket(SessionType sessionType) {
         return ZMTP20_SOCKETS.get(sessionType);

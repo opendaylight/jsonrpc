@@ -26,7 +26,7 @@ import org.opendaylight.jsonrpc.bus.spi.AbstractServerSession;
 class PublisherImpl extends AbstractServerSession implements Publisher {
 
     PublisherImpl(String uri, int defaultPort, ServerBootstrap serverBootstrap,
-            ChannelInitializer<SocketChannel> channelInitializer, ChannelGroup channelGroup) {
+            ChannelInitializer<SocketChannel> channelInitializer, ChannelGroup channelGroup, boolean useSsl) {
         super(uri, defaultPort, channelGroup, SessionType.PUB);
         channelFuture = serverBootstrap.childHandler(channelInitializer)
                 .childOption(ChannelOption.SO_KEEPALIVE, true)

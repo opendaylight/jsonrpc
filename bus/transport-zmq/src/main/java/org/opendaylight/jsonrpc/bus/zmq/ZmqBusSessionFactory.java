@@ -30,12 +30,12 @@ import org.opendaylight.jsonrpc.bus.spi.AbstractBusSessionFactory;
 public class ZmqBusSessionFactory extends AbstractBusSessionFactory {
 
     public ZmqBusSessionFactory() {
-        super("zmq");
+        super(Constants.TRANSPORT_NAME);
     }
 
     public ZmqBusSessionFactory(EventLoopGroup bossGroup, EventLoopGroup workerGroup,
             EventExecutorGroup handlerExecutor) {
-        super("zmq", bossGroup, workerGroup, handlerExecutor);
+        super(Constants.TRANSPORT_NAME, bossGroup, workerGroup, handlerExecutor);
     }
 
     @Override

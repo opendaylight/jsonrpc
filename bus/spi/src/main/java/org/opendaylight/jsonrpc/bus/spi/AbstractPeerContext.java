@@ -21,13 +21,19 @@ import org.opendaylight.jsonrpc.bus.api.PeerContext;
  */
 public abstract class AbstractPeerContext implements PeerContext {
     protected final Channel channel;
+    protected final String transport;
 
-    public AbstractPeerContext(final Channel channel) {
+    public AbstractPeerContext(final Channel channel, final String transport) {
         this.channel = Objects.requireNonNull(channel);
+        this.transport = Objects.requireNonNull(transport);
     }
 
     @Override
     public Channel channel() {
         return channel;
+    }
+
+    public String transport() {
+        return transport;
     }
 }

@@ -72,7 +72,7 @@ abstract class AbstractWebBusSessionFactory extends AbstractBusSessionFactory {
         final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
         final Publisher session = new PublisherImpl(uri, defaultPort, serverBootstrap,
                 createServerInitializer(SessionType.PUB, DiscardingMessageListener.INSTANCE, channelGroup, uri),
-                channelGroup);
+                channelGroup, useSsl);
         addSession(session);
         return session;
     }
@@ -91,7 +91,7 @@ abstract class AbstractWebBusSessionFactory extends AbstractBusSessionFactory {
     @Override
     public Requester requester(String uri, MessageListener listener) {
         final Requester session = new RequesterImpl(uri, defaultPort, clientBootstrap,
-                createClientInitializer(SessionType.REQ, handlerExecutor, uri, listener), isWebsocket);
+                createClientInitializer(SessionType.REQ, handlerExecutor, uri, listener), isWebsocket, useSsl);
         addSession(session);
         return session;
     }

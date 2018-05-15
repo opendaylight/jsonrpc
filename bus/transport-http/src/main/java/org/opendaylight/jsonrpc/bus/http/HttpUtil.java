@@ -31,6 +31,21 @@ final class HttpUtil {
         // no instantiation here
     }
 
+    /**
+     * Get transport name (protocol).
+     *
+     * @param isWebsocket flag to indicate websocket
+     * @param isSsl flag to indicate use of SSL/TLS
+     * @return transport name
+     */
+    public static String getTransport(boolean isWebsocket, boolean isSsl) {
+        if (isWebsocket) {
+            return isSsl ? "wss" : "ws";
+        } else {
+            return isSsl ? "https" : "http";
+        }
+    }
+
     public static Object createRequestObject(final boolean isWebSocket, final String message) {
         return isWebSocket ? createWebsocketFrame(message) : createHttpRequest(message);
     }
