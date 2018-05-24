@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -21,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
@@ -45,8 +45,10 @@ import org.opendaylight.jsonrpc.model.SchemaContextProvider;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshOutput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReloadInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReloadOutput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReloadOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.JsonrpcService;
@@ -351,7 +353,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
      * JSON Rpc Force refresh
      */
     @Override
-    public Future<RpcResult<ForceRefreshOutput>> forceRefresh() {
+    public ListenableFuture<RpcResult<ForceRefreshOutput>> forceRefresh(ForceRefreshInput input) {
         LOG.debug("Refreshing json rpc state");
         return Futures.immediateFuture(RpcResultBuilder
                 .<ForceRefreshOutput>success(new ForceRefreshOutputBuilder().setResult(processNotification()).build())
@@ -362,7 +364,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
      * JSON Rpc Force reload
      */
     @Override
-    public Future<RpcResult<ForceReloadOutput>> forceReload() {
+    public ListenableFuture<RpcResult<ForceReloadOutput>> forceReload(ForceReloadInput input) {
         final ForceReloadOutputBuilder outputBuilder = new ForceReloadOutputBuilder();
         LOG.debug("Remounting all json rpc peers");
         boolean result = true;

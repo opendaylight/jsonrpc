@@ -127,7 +127,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
 
         // Verify that peer appeared
         retryAction(TimeUnit.SECONDS, 2, () -> TOASTER.equals(getPeerOpState(TOASTER).get().getName()));
-        provider.forceRefresh().get();
+        provider.forceRefresh(null).get();
         // Verify that peer vanished
         retryAction(TimeUnit.SECONDS, 2, () -> !getPeerOpState(TOASTER).isPresent());
         Optional<DOMMountPoint> mp = this.getDOMMountPointService().getMountPoint(yii);
