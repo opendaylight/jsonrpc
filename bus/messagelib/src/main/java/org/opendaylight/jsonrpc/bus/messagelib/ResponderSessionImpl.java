@@ -40,16 +40,23 @@ public class ResponderSessionImpl extends AbstractSession implements MessageList
     @Override
     public void onMessage(PeerContext peerContext, String message) {
         final List<JsonRpcBaseMessage> incomming = JsonRpcSerializer.fromJson(message);
-        for (final JsonRpcBaseMessage msg : incomming) {
-            if (msg.getType() == JsonRpcMessageType.REQUEST) {
-                final Builder replyBuilder = JsonRpcReplyMessage.builder().id(msg.getId());
-                handler.handleRequest((JsonRpcRequestMessage) msg, replyBuilder);
-                peerContext.send(JsonRpcSerializer.toJson(replyBuilder.build()));
-            } else {
-                peerContext.send(JsonRpcSerializer.toJson(JsonRpcMessageError.builder().code(-32600)
-                        .message("Unexpected message type : " + msg.getType()).build()));
-                return;
+        try {
+            PeerContextHolder.set(peerContext);
+            for (final JsonRpcBaseMessage msg : incomming) {
+                if (msg.getType() == JsonRpcMessageType.REQUEST) {
+                    final Builder replyBuilder = JsonRpcReplyMessage.builder().id(msg.getId());
+                    handler.handleRequest((JsonRpcRequestMessage) msg, replyBuilder);
+                    peerContext.send(JsonRpcSerializer.toJson(replyBuilder.build()));
+                } else {
+                    peerContext.send(JsonRpcSerializer.toJson(JsonRpcMessageError.builder()
+                            .code(-32600)
+                            .message("Unexpected message type : " + msg.getType())
+                            .build()));
+                    return;
+                }
             }
+        } finally {
+            PeerContextHolder.remove();
         }
     }
 }

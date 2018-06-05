@@ -27,7 +27,7 @@ public class PeerContextImpl extends AbstractPeerContext {
     private String identity;
 
     public PeerContextImpl(final Channel channel) {
-        super(channel);
+        super(channel, Constants.TRANSPORT_NAME);
     }
 
     public void setServerSocket(boolean isServer) {

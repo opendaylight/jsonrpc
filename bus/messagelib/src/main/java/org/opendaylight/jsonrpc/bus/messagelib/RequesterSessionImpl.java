@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RequesterSessionImpl extends AbstractSession implements MessageListener, RequesterSession {
     private static final Logger LOG = LoggerFactory.getLogger(RequesterSessionImpl.class);
+
     private final Object lock = new Object();
     private final Requester requester;
     private final ReplyMessageHandler handler;
@@ -55,13 +56,18 @@ public class RequesterSessionImpl extends AbstractSession implements MessageList
     public void onMessage(PeerContext peerContext, String message) {
         LOG.info("Response : {}", message);
         final List<JsonRpcBaseMessage> messages = JsonRpcSerializer.fromJson(message);
-        for (final JsonRpcBaseMessage msg : messages) {
-            if (msg.getType() == JsonRpcMessageType.REPLY) {
-                handler.handleReply((JsonRpcReplyMessage) msg);
-            } else {
-                throw new MessageLibraryMismatchException(
-                        String.format("Requester received %s message", msg.getType().name()));
+        try {
+            PeerContextHolder.set(peerContext);
+            for (final JsonRpcBaseMessage msg : messages) {
+                if (msg.getType() == JsonRpcMessageType.REPLY) {
+                    handler.handleReply((JsonRpcReplyMessage) msg);
+                } else {
+                    throw new MessageLibraryMismatchException(
+                            String.format("Requester received %s message", msg.getType().name()));
+                }
             }
+        } finally {
+            PeerContextHolder.remove();
         }
     }
 
