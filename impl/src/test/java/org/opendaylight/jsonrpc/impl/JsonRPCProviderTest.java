@@ -157,7 +157,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
                             .setModules(Lists.newArrayList(new YangIdentifier(DEMO1_MODEL)))
                             .setDataConfigEndpoints(Lists.newArrayList(
                                     new DataConfigEndpointsBuilder()
-                                        .setKey(new DataConfigEndpointsKey("{}"))
+                                        .withKey(new DataConfigEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri())).build()))
                                     .build()))
                         .build());
@@ -180,22 +180,22 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
                             .setModules(Lists.newArrayList(new YangIdentifier("test-model")))
                             .setRpcEndpoints(Lists.newArrayList(
                                     new RpcEndpointsBuilder()
-                                        .setKey(new RpcEndpointsKey("{}"))
+                                        .withKey(new RpcEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri()))
                                     .build()))
                             .setNotificationEndpoints(Lists.newArrayList(
                                     new NotificationEndpointsBuilder()
-                                        .setKey(new NotificationEndpointsKey("{}"))
+                                        .withKey(new NotificationEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri()))
                                     .build()))
                             .setDataOperationalEndpoints(Lists.newArrayList(
                                     new DataOperationalEndpointsBuilder()
-                                        .setKey(new DataOperationalEndpointsKey("{}"))
+                                        .withKey(new DataOperationalEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri()))
                                      .build()))
                             .setDataConfigEndpoints(Lists.newArrayList(
                                     new DataConfigEndpointsBuilder()
-                                        .setKey(new DataConfigEndpointsKey("{}"))
+                                        .withKey(new DataConfigEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri())).build()))
                                     .build()))
                         .build());
@@ -221,7 +221,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
                             .setModules(Lists.newArrayList(new YangIdentifier("test-model-op-only")))
                             .setDataOperationalEndpoints(Lists.newArrayList(
                                     new DataOperationalEndpointsBuilder()
-                                        .setKey(new DataOperationalEndpointsKey("{}"))
+                                        .withKey(new DataOperationalEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri()))
                                      .build()))
                             .build()))

@@ -157,7 +157,7 @@ public class JsonConverterTest extends AbstractJsonRpcTest {
 
     @Test
     public void testTopListSerialization() {
-        Ipv4 ipv4 = new Ipv4Builder().setKey(new Ipv4Key("eth0"))
+        Ipv4 ipv4 = new Ipv4Builder().withKey(new Ipv4Key("eth0"))
                 .build();
         InstanceIdentifier<Ipv4> path = InstanceIdentifier.builder(Ipv4.class, new Ipv4Key("eth0")).build();
         Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> normalized = NormalizedNodesHelper

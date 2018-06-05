@@ -55,7 +55,7 @@ public final class TestUtils {
                                 .setNodeId(new NodeId("node1"))
                                 .setTerminationPoint(Lists.<TerminationPoint>newArrayList(
                                         new TerminationPointBuilder()
-                                        .setKey(new TerminationPointKey(new TpId("eth0")))
+                                        .withKey(new TerminationPointKey(new TpId("eth0")))
                                         .build()
                                         ))
                                 .build()
