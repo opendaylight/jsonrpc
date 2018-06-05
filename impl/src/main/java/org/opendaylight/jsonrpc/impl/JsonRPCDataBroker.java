@@ -111,7 +111,7 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
 
     @Override
     public DOMTransactionChain createTransactionChain(TransactionChainListener listener) {
-        throw new UnsupportedOperationException("Transaction chains not supported for json rpc mount point");
+        return new TxChain(this, listener, transportFactory, peer.getName(), pathMap, jsonConverter, schemaContext);
     }
 
     @Override
