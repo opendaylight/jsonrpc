@@ -21,6 +21,7 @@ import org.opendaylight.jsonrpc.bus.api.PeerContext;
 import org.opendaylight.jsonrpc.bus.api.Publisher;
 import org.opendaylight.jsonrpc.bus.api.Subscriber;
 import org.opendaylight.jsonrpc.bus.spi.AbstractSessionTest;
+import org.opendaylight.jsonrpc.security.noop.NoopSecurityService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,6 +75,6 @@ public class PubSubTest extends AbstractSessionTest {
 
     @Override
     protected BusSessionFactory createFactory() {
-        return new WsBusSessionFactory(config);
+        return new WsBusSessionFactory(config, NoopSecurityService.INSTANCE);
     }
 }

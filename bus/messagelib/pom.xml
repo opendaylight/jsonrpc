@@ -43,21 +43,29 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.opendaylight.jsonrpc.bus</groupId>
             <artifactId>bus-jsonrpc</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.opendaylight.jsonrpc.bus</groupId>
             <artifactId>bus-api</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.opendaylight.jsonrpc.bus</groupId>
             <artifactId>bus-spi</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.jsonrpc.security</groupId>
+            <artifactId>security-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.jsonrpc.security</groupId>
+            <artifactId>security-noop</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -83,15 +91,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <artifactId>slf4j-simple</artifactId>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.opendaylight.jsonrpc.bus</groupId>
             <artifactId>transport-zmq</artifactId>
-            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.opendaylight.jsonrpc.bus</groupId>
             <artifactId>transport-http</artifactId>
-            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>

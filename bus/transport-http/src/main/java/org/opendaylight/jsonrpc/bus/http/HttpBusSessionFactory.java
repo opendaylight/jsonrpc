@@ -9,6 +9,9 @@ package org.opendaylight.jsonrpc.bus.http;
 
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
+import org.opendaylight.jsonrpc.security.api.SecurityService;
+import org.opendaylight.jsonrpc.security.noop.NoopSecurityService;
+
 
 /**
  * {@link BusSessionFactory} implemented using plain HTTP/1.1 channel.
@@ -21,7 +24,11 @@ public class HttpBusSessionFactory extends AbstractWebBusSessionFactory {
         super("http", false, false, 80);
     }
 
+    public HttpBusSessionFactory(EventLoopConfiguration config, SecurityService securityService) {
+        super("http", false, false, 80, config, securityService);
+    }
+
     public HttpBusSessionFactory(EventLoopConfiguration config) {
-        super("http", false, false, 80, config);
+        this(config, NoopSecurityService.INSTANCE);
     }
 }

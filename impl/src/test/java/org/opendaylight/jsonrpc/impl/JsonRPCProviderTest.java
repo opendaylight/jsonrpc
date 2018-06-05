@@ -114,7 +114,6 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         updateConfig(new ConfigBuilder().build());
         // wait until nothing there
         retryAction(TimeUnit.SECONDS, 2, () -> !getPeerOpState(DEMO1_MODEL).isPresent());
-        //@formatter:off
         updateConfig(new ConfigBuilder()
                 .setGovernanceRoot(new Uri(String.format("zmq://localhost:%d", governancePort)))
                 .setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
@@ -142,34 +141,25 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         updateConfig(new ConfigBuilder().build());
         // wait until nothing there
         retryAction(TimeUnit.SECONDS, 2, () -> !getPeerOpState(DEMO1_MODEL).isPresent());
-        //@formatter:off
         updateConfig(new ConfigBuilder()
                 .setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
-                .setConfiguredEndpoints(Lists.newArrayList(
-                        new ConfiguredEndpointsBuilder().setName("test-model")
-                            .setModules(Lists.newArrayList(new YangIdentifier("test-model")))
-                            .setRpcEndpoints(Lists.newArrayList(
-                                    new RpcEndpointsBuilder()
-                                        .withKey(new RpcEndpointsKey("{}"))
+                .setConfiguredEndpoints(Lists.newArrayList(new ConfiguredEndpointsBuilder().setName("test-model")
+                        .setModules(Lists.newArrayList(new YangIdentifier("test-model")))
+                        .setRpcEndpoints(Lists.newArrayList(new RpcEndpointsBuilder().withKey(new RpcEndpointsKey("{}"))
+                                .setEndpointUri(new Uri(dummyUri()))
+                                .build()))
+                        .setNotificationEndpoints(Lists.newArrayList(
+                                new NotificationEndpointsBuilder().withKey(new NotificationEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri()))
-                                    .build()))
-                            .setNotificationEndpoints(Lists.newArrayList(
-                                    new NotificationEndpointsBuilder()
-                                        .withKey(new NotificationEndpointsKey("{}"))
+                                        .build()))
+                        .setDataOperationalEndpoints(Lists.newArrayList(
+                                new DataOperationalEndpointsBuilder().withKey(new DataOperationalEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri()))
-                                    .build()))
-                            .setDataOperationalEndpoints(Lists.newArrayList(
-                                    new DataOperationalEndpointsBuilder()
-                                        .withKey(new DataOperationalEndpointsKey("{}"))
-                                        .setEndpointUri(new Uri(dummyUri()))
-                                     .build()))
-                            .setDataConfigEndpoints(Lists.newArrayList(
-                                    new DataConfigEndpointsBuilder()
-                                        .withKey(new DataConfigEndpointsKey("{}"))
-                                        .setEndpointUri(new Uri(dummyUri())).build()))
-                                    .build()))
-                        .build());
-        //@formatter:on
+                                        .build()))
+                        .setDataConfigEndpoints(Lists.newArrayList(new DataConfigEndpointsBuilder()
+                                .withKey(new DataConfigEndpointsKey("{}")).setEndpointUri(new Uri(dummyUri())).build()))
+                        .build()))
+                .build());
         retryAction(TimeUnit.SECONDS, 3, () -> getPeerOpState("test-model").isPresent());
     }
 
@@ -220,20 +210,17 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         updateConfig(new ConfigBuilder().build());
         // wait until nothing there
         retryAction(TimeUnit.SECONDS, 2, () -> !getPeerOpState("test-model-op-only").isPresent());
-        //@formatter:off
         updateConfig(new ConfigBuilder()
                 .setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
-                .setConfiguredEndpoints(Lists.newArrayList(
-                        new ConfiguredEndpointsBuilder().setName("test-model-op-only")
-                            .setModules(Lists.newArrayList(new YangIdentifier("test-model-op-only")))
-                            .setDataOperationalEndpoints(Lists.newArrayList(
-                                    new DataOperationalEndpointsBuilder()
+                .setConfiguredEndpoints(
+                        Lists.newArrayList(new ConfiguredEndpointsBuilder().setName("test-model-op-only")
+                                .setModules(Lists.newArrayList(new YangIdentifier("test-model-op-only")))
+                                .setDataOperationalEndpoints(Lists.newArrayList(new DataOperationalEndpointsBuilder()
                                         .withKey(new DataOperationalEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri()))
-                                     .build()))
-                            .build()))
-                        .build());
-        //@formatter:on
+                                        .build()))
+                                .build()))
+                .build());
         retryAction(TimeUnit.SECONDS, 3, () -> getPeerOpState("test-model-op-only").isPresent());
     }
 

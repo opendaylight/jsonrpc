@@ -67,4 +67,15 @@ public class UtilTest {
         Util.closeNullableWithExceptionCallback(cl, t -> bool.set(true));
         assertTrue(bool.get());
     }
+
+    @Test
+    public void testStripUri() {
+        assertEquals("ws://localhost:12345/path/path2/", Util.stripUri("ws://localhost:12345/path/path2/?q=123"));
+        assertEquals("ws://localhost/path/path2/", Util.stripUri("ws://localhost/path/path2/?q=123"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testStripUriInvalid() {
+        Util.stripUri("|invalid-uri:abc:xyz");
+    }
 }

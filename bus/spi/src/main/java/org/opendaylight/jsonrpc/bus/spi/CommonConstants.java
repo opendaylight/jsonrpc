@@ -29,8 +29,7 @@ import org.opendaylight.jsonrpc.bus.api.SessionType;
 public final class CommonConstants {
     public static final boolean DEBUG_MODE;
     /**
-     * {@link LoggingHandler} is {@link Sharable}, so it is possible to reuse
-     * single instance.
+     * {@link LoggingHandler} is {@link Sharable}, so it is possible to reuse single instance.
      */
     public static final LoggingHandler LOG_HANDLER;
 
@@ -39,12 +38,15 @@ public final class CommonConstants {
         LOG_HANDLER = new LoggingHandler(LogLevel.INFO);
     }
 
-    public static final AttributeKey<AtomicReference<ProgressivePromise<String>>> ATTR_RESPONSE_QUEUE = AttributeKey
-            .valueOf(CommonConstants.class, "responseQueue");
-
     private CommonConstants() {
         // no instantiation here
     }
+
+    /**
+     * Attribute to hold reference to response queue.
+     */
+    public static final AttributeKey<AtomicReference<ProgressivePromise<String>>> ATTR_RESPONSE_QUEUE = AttributeKey
+            .valueOf(CommonConstants.class, "responseQueue");
 
     /**
      * Flag to indicate that protocol handshake is done.
@@ -59,9 +61,19 @@ public final class CommonConstants {
 
     public static final AttributeKey<PeerContext> ATTR_PEER_CONTEXT = AttributeKey.valueOf(CommonConstants.class,
             "PEER_CONTEXT");
-
+    /**
+     * Attribute to hold negotiated SSL session parameters.
+     */
+    public static final AttributeKey<SslSessionInfo> ATTR_SSL_INFO = AttributeKey.valueOf(CommonConstants.class,
+            "SSL_INFO");
+    /**
+     * Attribute to hold authentication parameters.
+     */
+    public static final AttributeKey<ChannelAuthentication> ATTR_AUTH_INFO = AttributeKey.valueOf(CommonConstants.class,
+            "AUTH_INFO");
     public static final String HANDLER_CONN_TRACKER = "conn-tracker";
     public static final String HANDLER_LOGGING = "logging";
     public static final String HANDLER_LISTENER = "listener-adapter";
     public static final String HANDLER_CODEC = "codec";
+    public static final String HANDLER_SSL_INFO = "ssl-info";
 }

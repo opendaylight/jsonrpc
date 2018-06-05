@@ -8,6 +8,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 -->
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
     <reference id="config" interface="org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration" filter="(name=jsonrpc)" />
+    <reference id="securityService" interface="org.opendaylight.jsonrpc.security.api.SecurityService" />
 
     <service ref="httpFactory" interface="org.opendaylight.jsonrpc.bus.api.BusSessionFactory">
         <service-properties>
@@ -35,17 +36,21 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <bean id="httpFactory" class="org.opendaylight.jsonrpc.bus.http.HttpBusSessionFactory" destroy-method="close">
         <argument ref="config" />
+        <argument ref="securityService" />
     </bean>
 
     <bean id="httpsFactory" class="org.opendaylight.jsonrpc.bus.http.HttpsBusSessionFactory" destroy-method="close">
         <argument ref="config" />
+        <argument ref="securityService" />
     </bean>
 
     <bean id="wsFactory" class="org.opendaylight.jsonrpc.bus.http.WsBusSessionFactory" destroy-method="close">
         <argument ref="config" />
+        <argument ref="securityService" />
     </bean>
 
     <bean id="wssFactory" class="org.opendaylight.jsonrpc.bus.http.WssBusSessionFactory" destroy-method="close">
         <argument ref="config" />
+        <argument ref="securityService" />
     </bean>
 </blueprint>

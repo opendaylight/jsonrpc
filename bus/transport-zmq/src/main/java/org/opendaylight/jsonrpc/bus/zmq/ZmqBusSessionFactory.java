@@ -19,6 +19,8 @@ import org.opendaylight.jsonrpc.bus.api.Responder;
 import org.opendaylight.jsonrpc.bus.api.Subscriber;
 import org.opendaylight.jsonrpc.bus.spi.AbstractBusSessionFactory;
 import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
+import org.opendaylight.jsonrpc.security.noop.NoopSecurityService;
+
 
 /**
  * {@link BusSessionFactory} implemented using ZeroMQ 3.0 protocol.
@@ -32,7 +34,7 @@ public class ZmqBusSessionFactory extends AbstractBusSessionFactory {
     }
 
     public ZmqBusSessionFactory(EventLoopConfiguration config) {
-        super(Constants.TRANSPORT_NAME, config);
+        super(Constants.TRANSPORT_NAME, config, NoopSecurityService.INSTANCE);
     }
 
     @Override

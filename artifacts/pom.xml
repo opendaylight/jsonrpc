@@ -39,6 +39,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <scope>import</scope>
             </dependency>
             <dependency>
+                <groupId>org.opendaylight.aaa</groupId>
+                <artifactId>aaa-artifacts</artifactId>
+                <version>0.10.0-SNAPSHOT</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>jsonrpc-api</artifactId>
                 <version>${project.version}</version>
@@ -65,6 +72,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <groupId>${project.groupId}.bus</groupId>
                 <artifactId>bus-spi</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.opendaylight.jsonrpc.bus</groupId>
+                <artifactId>bus-spi</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>${project.groupId}.bus</groupId>
@@ -112,6 +126,27 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <version>${project.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
+            </dependency>
+            <!-- auth stuff -->
+            <dependency>
+                <groupId>${project.groupId}.security</groupId>
+                <artifactId>security-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}.security</groupId>
+                <artifactId>security-noop</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}.security</groupId>
+                <artifactId>security-aaa</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}.security</groupId>
+                <artifactId>security-service</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <!-- external -->
             <dependency>

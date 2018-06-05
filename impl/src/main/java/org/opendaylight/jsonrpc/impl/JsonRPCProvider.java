@@ -80,14 +80,14 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private String lastWhoAmIUri;
 
     /**
-     * Get current configuration state configuration can be set or deleted by
-     * the user via restconf. Operational state will reflect actual result of
-     * configuration via restconf and other sources.
+     * Get current configuration or operational state. Configuration can be set
+     * or deleted by the user via restconf. Operational state will reflect
+     * actual result of configuration via restconf and other sources.
      */
     @Nullable
-    private Config getConfig() {
+    private Config getConfig(LogicalDatastoreType store) {
         try (ReadTransaction roTrx = dataBroker.newReadOnlyTransaction()) {
-            return roTrx.read(LogicalDatastoreType.CONFIGURATION, GLOBAL_CFG_II).get().orElse(null);
+            return roTrx.read(store, GLOBAL_CFG_II).get().orElse(null);
         } catch (InterruptedException | ExecutionException e) {
             LOG.error("Failed to read configuration", e);
             return null;
@@ -113,12 +113,12 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
             return false;
         }
 
-        final Config peersConfState = getConfig();
+        final Config peersConfState = getConfig(LogicalDatastoreType.CONFIGURATION);
         if (peersConfState == null) {
-            LOG.info("{} configuration absent", ME);
             // in case entire config was wiped, we still need to unconfigure
             // existing peers, hence supply empty list
             unmountPeers(new ConfigBuilder().setConfiguredEndpoints(Collections.emptyList()).build());
+            LOG.info("{} configuration absent", ME);
             stopGovernance();
             stopRemoteControl();
             lastGovernanceUri = null;
@@ -154,6 +154,8 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
 
         /* 4, Unmount peers */
         result &= unmountPeers(peersConfState);
+
+
         return result;
     }
 
@@ -209,7 +211,6 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
                 if (!whoAmI.getValue().equals(lastWhoAmIUri)) {
                     lastWhoAmIUri = whoAmI.getValue();
                     stopRemoteControl();
-                    /* remote control ORB not initialized */
                     LOG.debug("Exposing remote control at {}", whoAmI);
                     remoteControl = transportFactory.endpointBuilder().responder().create(whoAmI.getValue(),
                             new RemoteControl(domDataBroker, schemaService.getGlobalContext(), transportFactory));
@@ -229,12 +230,12 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private boolean resetGovernance(final Uri rootOm) {
         try {
             if (rootOm != null) {
+                // Need to re-create proxy, because root-om can point to URI
+                // with different transport then before
                 if (!rootOm.getValue().equals(lastGovernanceUri)) {
-                    LOG.debug("(Re)setting governance root for JSON RPC to {}", rootOm);
                     lastGovernanceUri = rootOm.getValue();
                     stopGovernance();
-                    // Need to re-create proxy, because root-om can point to URI
-                    // with different transport then before
+                    LOG.debug("(Re)setting governance root for JSON RPC to {}", rootOm.getValue());
                     governance = transportFactory.endpointBuilder().requester().createProxy(RemoteGovernance.class,
                             rootOm.getValue());
                 }

@@ -17,6 +17,7 @@ import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.RecoverableTransportException;
 import org.opendaylight.jsonrpc.bus.api.Requester;
+import org.opendaylight.jsonrpc.security.noop.NoopSecurityService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +46,6 @@ public class HttpReqRepTest extends AbstractReqRepTest {
 
     @Override
     protected BusSessionFactory createFactory() {
-        return new HttpBusSessionFactory(config);
+        return new HttpBusSessionFactory(config, NoopSecurityService.INSTANCE);
     }
 }

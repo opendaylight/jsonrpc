@@ -16,6 +16,9 @@ import java.util.concurrent.TimeoutException;
 
 import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
+import org.opendaylight.jsonrpc.bus.api.UriBuilder;
+import org.opendaylight.jsonrpc.security.api.SecurityConstants;
+import org.opendaylight.jsonrpc.security.noop.NoopSecurityService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,9 +29,11 @@ public class HttpsReqRepTest extends AbstractReqRepTest {
     public void testSmallMessageSize() throws InterruptedException, ExecutionException, TimeoutException, IOException {
         final int port = getFreeTcpPort();
         final String certFile = copyResource("/cert.p12");
-        final String uri = new UriBuilder(getBindUri(port)).add(Constants.OPT_CERT_FILE, certFile)
-                .add(Constants.OPT_PRIVATE_KEY_PASSWORD, "123456")
-                .add(Constants.OPT_CERT_TRUST, Constants.DEFAULT_CERT_POLICY)
+        final String uri = new UriBuilder(getBindUri(port))
+                .add(SecurityConstants.OPT_KEYSTORE_TYPE, SecurityConstants.KEYSTORE_TYPE_PKCS12)
+                .add(SecurityConstants.OPT_KEYSTORE_FILE, certFile)
+                .add(SecurityConstants.OPT_KEYSTORE_PASSWORD, "123456")
+                .add(SecurityConstants.OPT_CERT_POLICY, SecurityConstants.CERT_POLICY_STRICT)
                 .build();
 
         testReqRep(uri, uri, "ABCD", "1234567890");
@@ -38,9 +43,11 @@ public class HttpsReqRepTest extends AbstractReqRepTest {
     public void testBigMessageSize() throws InterruptedException, ExecutionException, TimeoutException, IOException {
         final int port = getFreeTcpPort();
         final String certFile = copyResource("/cert.p12");
-        final String uri = new UriBuilder(getBindUri(port)).add(Constants.OPT_CERT_FILE, certFile)
-                .add(Constants.OPT_PRIVATE_KEY_PASSWORD, "123456")
-                .add(Constants.OPT_CERT_TRUST, Constants.DEFAULT_CERT_POLICY)
+        final String uri = new UriBuilder(getBindUri(port))
+                .add(SecurityConstants.OPT_KEYSTORE_TYPE, SecurityConstants.KEYSTORE_TYPE_PKCS12)
+                .add(SecurityConstants.OPT_KEYSTORE_FILE, certFile)
+                .add(SecurityConstants.OPT_KEYSTORE_PASSWORD, "123456")
+                .add(SecurityConstants.OPT_CERT_POLICY, SecurityConstants.CERT_POLICY_IGNORE)
                 .build();
 
         testReqRep(uri, uri, "ABCD", "1234567890");
@@ -50,14 +57,16 @@ public class HttpsReqRepTest extends AbstractReqRepTest {
     @Test(expected = IllegalStateException.class)
     public void testFailureNoCertificate() {
         final int port = getFreeTcpPort();
-        final String uri = new UriBuilder(getBindUri(port)).add(Constants.OPT_CERT_FILE, UUID.randomUUID().toString())
-                .add(Constants.OPT_PRIVATE_KEY_PASSWORD, UUID.randomUUID().toString())
+        final String uri = new UriBuilder(getBindUri(port))
+                .add(SecurityConstants.OPT_KEYSTORE_TYPE, SecurityConstants.KEYSTORE_TYPE_PKCS12)
+                .add(SecurityConstants.OPT_KEYSTORE_FILE, UUID.randomUUID().toString())
+                .add(SecurityConstants.OPT_KEYSTORE_PASSWORD, UUID.randomUUID().toString())
                 .build();
         factory.responder(uri, (peerContext, message) -> LOG.info("Received message {}", message));
     }
 
     @Override
     protected BusSessionFactory createFactory() {
-        return new HttpsBusSessionFactory(config);
+        return new HttpsBusSessionFactory(config, NoopSecurityService.INSTANCE);
     }
 }

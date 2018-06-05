@@ -9,6 +9,9 @@ package org.opendaylight.jsonrpc.bus.http;
 
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
+import org.opendaylight.jsonrpc.security.api.SecurityService;
+import org.opendaylight.jsonrpc.security.noop.NoopSecurityService;
+
 
 /**
  * {@link BusSessionFactory} implemented using secured websocket channel.
@@ -21,7 +24,11 @@ public class WssBusSessionFactory extends AbstractWebBusSessionFactory {
         super("wss", true, true, 443);
     }
 
+    public WssBusSessionFactory(EventLoopConfiguration config, SecurityService securityService) {
+        super("wss", true, true, 443, config, securityService);
+    }
+
     public WssBusSessionFactory(EventLoopConfiguration config) {
-        super("wss", true, true, 443, config);
+        this(config, NoopSecurityService.INSTANCE);
     }
 }

@@ -7,6 +7,7 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
@@ -14,6 +15,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -174,5 +177,35 @@ public final class Util {
     static Optional<Module> findModuleWithLatestRevision(SchemaContext schemaContext, String name) {
         // findModules is guaranteed to return latest revision first
         return schemaContext.findModules(name).stream().findFirst();
+    }
+
+    @VisibleForTesting
+    static boolean isNullableTrue(@Nullable Boolean condition) {
+        return condition != null && condition;
+    }
+
+    /**
+     * Strip query parameters off URI.
+     *
+     * @param baseUri base URI to strip query parameters from
+     * @return stripped URI
+     */
+    @VisibleForTesting
+    static String stripUri(String baseUri) {
+        try {
+            final URI uri = new URI(baseUri);
+            final StringBuilder sb = new StringBuilder();
+            sb.append(uri.getScheme());
+            sb.append("://");
+            sb.append(uri.getHost());
+            if (uri.getPort() != -1) {
+                sb.append(':');
+                sb.append(uri.getPort());
+            }
+            sb.append(uri.getPath());
+            return sb.toString();
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 }

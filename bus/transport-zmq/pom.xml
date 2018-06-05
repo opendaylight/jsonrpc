@@ -28,11 +28,31 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.opendaylight.jsonrpc.security</groupId>
+            <artifactId>security-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.jsonrpc.security</groupId>
+            <artifactId>security-noop</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>bus-spi</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <!-- test stuff -->
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>bus-spi</artifactId>
@@ -41,21 +61,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-library</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-codec</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>

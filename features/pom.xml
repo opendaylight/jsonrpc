@@ -70,6 +70,22 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <artifactId>bus-jsonrpc</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.opendaylight.jsonrpc.security</groupId>
+            <artifactId>security-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.jsonrpc.security</groupId>
+            <artifactId>security-aaa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.jsonrpc.security</groupId>
+            <artifactId>security-noop</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.jsonrpc.security</groupId>
+            <artifactId>security-service</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.opendaylight.netconf</groupId>
             <artifactId>odl-mdsal-apidocs</artifactId>
             <type>xml</type>
@@ -82,6 +98,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <classifier>features</classifier>
         </dependency>
         <dependency>
+            <groupId>org.opendaylight.aaa</groupId>
+            <artifactId>odl-aaa-shiro</artifactId>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
             <groupId>org.opendaylight.netconf</groupId>
             <artifactId>odl-restconf-all</artifactId>
             <type>xml</type>
@@ -90,6 +112,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <dependency>
             <groupId>org.opendaylight.odlparent</groupId>
             <artifactId>odl-netty-4</artifactId>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.aaa</groupId>
+            <artifactId>odl-aaa-cli</artifactId>
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>

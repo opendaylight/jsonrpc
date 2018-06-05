@@ -9,12 +9,12 @@
 
 package org.opendaylight.jsonrpc.impl;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonElement;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -129,7 +129,7 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
         // from List#remove does not cause NPE
         try {
             lock.lock();
-            Optional.fromNullable(pendingTransactions.remove(tx)).or(() -> {
+            Optional.ofNullable(pendingTransactions.remove(tx)).orElse(() -> {
                 // NOOP
             }).close();
         } catch (Exception e) {

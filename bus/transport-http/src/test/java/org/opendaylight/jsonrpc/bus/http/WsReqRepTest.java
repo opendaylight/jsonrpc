@@ -14,6 +14,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
+import org.opendaylight.jsonrpc.security.noop.NoopSecurityService;
 
 public class WsReqRepTest extends AbstractReqRepTest {
     @Test
@@ -30,6 +31,6 @@ public class WsReqRepTest extends AbstractReqRepTest {
 
     @Override
     protected BusSessionFactory createFactory() {
-        return new WsBusSessionFactory(config);
+        return new WsBusSessionFactory(config, NoopSecurityService.INSTANCE);
     }
 }

@@ -29,7 +29,7 @@ public abstract class AbstractInbandModelsService implements InbandModelsService
 
     static {
         MODULES = Streams.stream(ServiceLoader.load(YangModelBindingProvider.class).iterator())
-                .map(ymbi -> ymbi.getModuleInfo())
+                .map(YangModelBindingProvider::getModuleInfo)
                 .filter(ymi -> !ymi.getName().getLocalName().startsWith("jsonrpc"))
                 .map(ymi -> {
                     try {

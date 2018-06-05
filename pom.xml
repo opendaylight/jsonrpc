@@ -27,6 +27,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <module>impl</module>
         <module>test-model</module>
         <module>parent</module>
+        <module>security</module>
     </modules>
 
     <profiles>

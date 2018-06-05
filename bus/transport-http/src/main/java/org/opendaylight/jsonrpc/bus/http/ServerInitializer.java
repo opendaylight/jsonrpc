@@ -7,8 +7,6 @@
  */
 package org.opendaylight.jsonrpc.bus.http;
 
-import com.google.common.base.Splitter;
-
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -16,24 +14,21 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.util.concurrent.EventExecutorGroup;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.security.GeneralSecurityException;
-import java.security.KeyStore;
 import java.util.Map;
-
-import javax.net.ssl.KeyManagerFactory;
 
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 import org.opendaylight.jsonrpc.bus.spi.AbstractServerChannelInitializer;
 import org.opendaylight.jsonrpc.bus.spi.ChannelGroupHandler;
 import org.opendaylight.jsonrpc.bus.spi.CommonConstants;
+import org.opendaylight.jsonrpc.bus.spi.SslSessionListener;
+import org.opendaylight.jsonrpc.security.api.AuthenticationProvider;
+import org.opendaylight.jsonrpc.security.api.SecurityConstants;
+import org.opendaylight.jsonrpc.security.api.SslContextHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link ChannelInitializer} for server-based endpoints (responder, publisher).
@@ -42,53 +37,46 @@ import org.opendaylight.jsonrpc.bus.spi.CommonConstants;
  * @since Feb 8, 2018
  */
 class ServerInitializer extends AbstractServerChannelInitializer {
+    private static final Logger LOG = LoggerFactory.getLogger(ServerInitializer.class);
     private final boolean useSsl;
     private final Boolean isWebSocket;
     private final SslContext sslContext;
-    private static final Splitter COMMA_SPLITTER = Splitter.on(',');
+    private final Map<String, String> opts;
+    private final AuthenticationProvider authenticationProvider;
 
     ServerInitializer(final SessionType socketType, final EventExecutorGroup handlerExecutor,
             final ChannelGroup channelGroup, final MessageListener messageListener, boolean useSsl,
-            Map<String, String> opts, final boolean isWebSocket) {
+            Map<String, String> opts, final boolean isWebSocket, final AuthenticationProvider authenticationProvider) {
         super(socketType, handlerExecutor, channelGroup, messageListener);
+        this.opts = opts;
         this.useSsl = useSsl;
         this.isWebSocket = isWebSocket;
-        sslContext = useSsl ? setupSsl(opts) : null;
-    }
-
-    private SslContext setupSsl(Map<String, String> opts) {
-        try {
-            final File certFile = new File(opts.get(Constants.OPT_CERT_FILE));
-            final String password = opts.get(Constants.OPT_PRIVATE_KEY_PASSWORD);
-            final Iterable<String> ciphers = opts.containsKey(Constants.OPT_CIPHERS)
-                    ? COMMA_SPLITTER.split(opts.get(Constants.OPT_CIPHERS)) : null;
-            final KeyStore ks = KeyStore
-                    .getInstance(opts.computeIfAbsent(Constants.OPT_KEYSTORE, k -> Constants.DEFAULT_KEYSTORE));
-            try (InputStream is = Files.newInputStream(certFile.toPath())) {
-                ks.load(is, password.toCharArray());
-            }
-            final KeyManagerFactory kmf = KeyManagerFactory.getInstance(opts
-                    .computeIfAbsent(Constants.OPT_KEY_MANAGER_FACTORY, v -> Constants.DEFAULT_KEY_MANAGER_FACTORY));
-            kmf.init(ks, password.toCharArray());
-            return SslContextBuilder.forServer(kmf).ciphers(ciphers).build();
-        } catch (GeneralSecurityException | IOException e) {
-            throw new IllegalStateException("Failed to initialize SSL", e);
-        }
+        this.authenticationProvider = authenticationProvider;
+        sslContext = useSsl ? SslContextHelper.forServer(opts) : null;
     }
 
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
         super.initChannel(ch);
+        ch.attr(Constants.ATTR_URI_OPTIONS).set(opts);
         ch.attr(CommonConstants.ATTR_PEER_CONTEXT).set(new PeerContextImpl(ch, isWebSocket, useSsl));
         if (useSsl) {
             ch.pipeline().addLast(Constants.HANDLER_SSL, sslContext.newHandler(ch.alloc()));
+            ch.pipeline().addLast(CommonConstants.HANDLER_SSL_INFO, new SslSessionListener());
         }
         configureLogging(ch);
         ch.pipeline().addLast(CommonConstants.HANDLER_CONN_TRACKER, new ChannelGroupHandler(channelGroup));
         ch.pipeline().addLast(CommonConstants.HANDLER_CODEC, new HttpServerCodec());
         ch.pipeline().addLast(Constants.HANDLER_AGGREGATOR, new HttpObjectAggregator(Constants.MESSAGE_SIZE));
+        // setup authentication handler
+        if (opts.containsKey(SecurityConstants.OPT_REQ_AUTH)) {
+            LOG.debug("Authentication requested on channel {}, adding handler", ch);
+            // don't invoke authentication handler on I/O loop, because it might involve blocking calls in AAA
+            ch.pipeline().addLast(handlerExecutor, Constants.HANDLER_AUTH,
+                    new ServerAuthHandler(authenticationProvider));
+        }
         if (isWebSocket) {
-            ch.pipeline().addLast(new WebSocketServerProtocolHandler("/"));
+            ch.pipeline().addLast(new WebSocketServerProtocolHandler("/", true));
             ch.pipeline().addLast(handlerExecutor, CommonConstants.HANDLER_LISTENER,
                     new WebSocketServerHandler(messageListener));
         } else {

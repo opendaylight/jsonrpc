@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.opendaylight.jsonrpc.bus.api.BusSession;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
+import org.opendaylight.jsonrpc.security.api.SecurityService;
+import org.opendaylight.jsonrpc.security.noop.NoopSecurityService;
 
 /**
  * Common code for {@link BusSessionFactory} implementations.
@@ -37,17 +39,24 @@ public abstract class AbstractBusSessionFactory implements BusSessionFactory {
     protected final Bootstrap clientBootstrap;
     protected final EventExecutorGroup handlerExecutor;
     protected final Set<WeakReference<BusSession>> sessions = ConcurrentHashMap.newKeySet();
+    protected final SecurityService securityService;
 
     public AbstractBusSessionFactory(final String name) {
-        this(name, EventLoopGroupProvider.config());
+        this(name, EventLoopGroupProvider.config(), NoopSecurityService.INSTANCE);
     }
 
     public AbstractBusSessionFactory(final String name, final EventLoopConfiguration config) {
+        this(name, config, NoopSecurityService.INSTANCE);
+    }
+
+    public AbstractBusSessionFactory(final String name, final EventLoopConfiguration config,
+            final SecurityService securityService) {
         this.name = name;
         serverBootstrap = new ServerBootstrap().channel(NioServerSocketChannel.class).group(config.bossGroup(),
                 config.workerGroup());
         clientBootstrap = new Bootstrap().channel(NioSocketChannel.class).group(config.workerGroup());
         this.handlerExecutor = config.handlerGroup();
+        this.securityService = securityService;
     }
 
     @Override
@@ -56,8 +65,7 @@ public abstract class AbstractBusSessionFactory implements BusSessionFactory {
     }
 
     /**
-     * Add {@link BusSession} into set of created sessions so that it can be
-     * cleaned at shutdown.
+     * Add {@link BusSession} into set of created sessions so that it can be cleaned at shutdown.
      *
      * @param session session to add to set.
      */

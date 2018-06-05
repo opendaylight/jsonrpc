@@ -16,6 +16,7 @@ import io.netty.channel.socket.SocketChannel;
 import org.opendaylight.jsonrpc.bus.api.Publisher;
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 import org.opendaylight.jsonrpc.bus.spi.AbstractServerSession;
+import org.opendaylight.jsonrpc.bus.spi.CommonConstants;
 
 /**
  * Implementation of {@link Publisher} session.
@@ -36,6 +37,7 @@ class PublisherImpl extends AbstractServerSession implements Publisher {
 
     @Override
     public void publish(String message, String topic) {
-        channelGroup.writeAndFlush(HttpUtil.createRequestObject(true, message));
+        channelGroup.writeAndFlush(HttpUtil.createPayload(channelFuture.channel()
+                .attr(CommonConstants.ATTR_AUTH_INFO).get(), true, message));
     }
 }

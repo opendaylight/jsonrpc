@@ -19,30 +19,41 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <artifactId>transport-http</artifactId>
     <packaging>bundle</packaging>
     <name>JSON-RPC :: BUS :: HTTP transport</name>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.opendaylight.jsonrpc</groupId>
+                <artifactId>jsonrpc-artifacts</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.jsonrpc.bus</groupId>
             <artifactId>bus-api</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
+            <groupId>org.opendaylight.jsonrpc.bus</groupId>
             <artifactId>bus-spi</artifactId>
-            <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>bus-spi</artifactId>
-            <version>${project.version}</version>
-            <type>test-jar</type>
-            <scope>test</scope>
+            <groupId>org.opendaylight.jsonrpc.security</groupId>
+            <artifactId>security-api</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-            <scope>test</scope>
+            <groupId>org.opendaylight.jsonrpc.security</groupId>
+            <artifactId>security-noop</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
@@ -54,6 +65,18 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <artifactId>netty-handler</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- test stuff -->
+        <dependency>
+            <groupId>org.opendaylight.jsonrpc.bus</groupId>
+            <artifactId>bus-spi</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -61,10 +84,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-library</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
         </dependency>
     </dependencies>
 </project>

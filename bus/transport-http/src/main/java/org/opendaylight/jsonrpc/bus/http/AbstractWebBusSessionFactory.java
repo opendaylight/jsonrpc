@@ -7,9 +7,6 @@
  */
 package org.opendaylight.jsonrpc.bus.http;
 
-import com.google.common.base.Splitter;
-import com.google.common.base.Splitter.MapSplitter;
-import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
 import io.netty.channel.ChannelInitializer;
@@ -19,8 +16,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
-import java.net.URI;
-import java.util.Collections;
 import java.util.Map;
 
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
@@ -30,10 +25,13 @@ import org.opendaylight.jsonrpc.bus.api.Requester;
 import org.opendaylight.jsonrpc.bus.api.Responder;
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 import org.opendaylight.jsonrpc.bus.api.Subscriber;
+import org.opendaylight.jsonrpc.bus.api.UriParser;
 import org.opendaylight.jsonrpc.bus.spi.AbstractBusSessionFactory;
 import org.opendaylight.jsonrpc.bus.spi.AbstractChannelInitializer;
 import org.opendaylight.jsonrpc.bus.spi.DiscardingMessageListener;
 import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
+import org.opendaylight.jsonrpc.security.api.SecurityService;
+
 
 /**
  * Base class of web-based {@link BusSessionFactory} implementations.
@@ -42,7 +40,6 @@ import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
  * @since Mar 9, 2018
  */
 abstract class AbstractWebBusSessionFactory extends AbstractBusSessionFactory {
-    private static final MapSplitter QUERY_SPLITER = Splitter.on('&').withKeyValueSeparator('=');
     protected final boolean useSsl;
     protected final boolean isWebsocket;
     protected final int defaultPort;
@@ -55,8 +52,8 @@ abstract class AbstractWebBusSessionFactory extends AbstractBusSessionFactory {
     }
 
     AbstractWebBusSessionFactory(String name, final boolean useSsl, final boolean isWebsocket, int defaultPort,
-            EventLoopConfiguration config) {
-        super(name, config);
+            EventLoopConfiguration config, SecurityService securityService) {
+        super(name, config, securityService);
         this.isWebsocket = isWebsocket;
         this.useSsl = useSsl;
         this.defaultPort = defaultPort;
@@ -109,13 +106,11 @@ abstract class AbstractWebBusSessionFactory extends AbstractBusSessionFactory {
     private ChannelInitializer<SocketChannel> createServerInitializer(SessionType socketType, MessageListener listener,
             ChannelGroup channelGroup, String uri) {
         return new ServerInitializer(socketType, handlerExecutor, channelGroup, listener, useSsl, getOptions(uri),
-                isWebsocket);
+                isWebsocket, securityService.getAuthenticationProvider());
     }
 
     private Map<String, String> getOptions(String uriStr) {
-        final URI uri = createUriUnchecked(uriStr);
-        return Maps.newLinkedHashMap(
-                !Strings.isNullOrEmpty(uri.getQuery()) ? QUERY_SPLITER.split(uri.getQuery()) : Collections.emptyMap());
+        return Maps.newLinkedHashMap(UriParser.parse(uriStr));
     }
 
     private AbstractChannelInitializer createClientInitializer(SessionType socketType,

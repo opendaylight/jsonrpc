@@ -7,11 +7,7 @@
  */
 package org.opendaylight.jsonrpc.bus.spi;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Joiner.MapJoiner;
-import com.google.common.escape.Escaper;
 import com.google.common.io.Resources;
-import com.google.common.net.UrlEscapers;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -22,8 +18,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import org.junit.After;
 import org.junit.Before;
@@ -79,35 +73,11 @@ public abstract class AbstractSessionTest {
     }
 
     protected String getBindUri(int port) {
-        return String.format("%s://0.0.0.0:%d", factory.name(), port);
+        return String.format("%s://0.0.0.0:%d/", factory.name(), port);
     }
 
     protected String getConnectUri(int port) {
-        return String.format("%s://127.0.0.1:%d", factory.name(), port);
-    }
-
-    protected static class UriBuilder {
-        Escaper escaper = UrlEscapers.urlFormParameterEscaper();
-        private final String base;
-        private final Map<String, String> params = new LinkedHashMap<>();
-        private static final MapJoiner PARAM_JOINER = Joiner.on('&').withKeyValueSeparator('=');
-
-        public UriBuilder(String base) {
-            this.base = base;
-        }
-
-        public UriBuilder add(String name, String value) {
-            params.put(escaper.escape(name), escaper.escape(value));
-            return this;
-        }
-
-        public String build() {
-            final StringBuilder sb = new StringBuilder();
-            sb.append(base);
-            sb.append('?');
-            sb.append(PARAM_JOINER.join(params));
-            return sb.toString();
-        }
+        return String.format("%s://127.0.0.1:%d/", factory.name(), port);
     }
 
     public static int getFreeTcpPort() {

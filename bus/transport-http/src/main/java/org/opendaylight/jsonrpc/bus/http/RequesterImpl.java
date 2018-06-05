@@ -38,7 +38,8 @@ class RequesterImpl extends AbstractClientSession implements Requester {
         }
         final DefaultProgressivePromise<String> promise = new DefaultProgressivePromise<>(GlobalEventExecutor.INSTANCE);
         channelFuture.channel().attr(CommonConstants.ATTR_RESPONSE_QUEUE).get().set(promise);
-        channelFuture.channel().writeAndFlush(HttpUtil.createRequestObject(isWebsocket, message));
+        channelFuture.channel().writeAndFlush(HttpUtil.createPayload(channelFuture.channel()
+                .attr(CommonConstants.ATTR_AUTH_INFO).get(), isWebsocket, message));
         return promise;
     }
 }
