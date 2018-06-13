@@ -11,14 +11,14 @@
     <parent>
         <groupId>org.opendaylight.mdsal</groupId>
         <artifactId>binding-parent</artifactId>
-        <version>0.12.2-SNAPSHOT</version>
+        <version>0.12.3-SNAPSHOT</version>
         <relativePath/>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opendaylight.jsonrpc</groupId>
     <artifactId>jsonrpc-parent</artifactId>
-    <version>1.3.4-SNAPSHOT</version>
+    <version>1.3.5-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>JSON-RPC :: Parent</name>
 
