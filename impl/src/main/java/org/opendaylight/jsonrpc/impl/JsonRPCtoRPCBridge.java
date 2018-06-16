@@ -59,6 +59,7 @@ import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.NodeIdent
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStreamWriter;
+import org.opendaylight.yangtools.yang.data.codec.gson.JSONCodecFactorySupplier;
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.data.impl.schema.builder.api.DataContainerNodeAttrBuilder;
@@ -304,7 +305,8 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
     private DOMRpcResult extractResultInternal(RpcState rpcState, JsonElement jsonResult,
             DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> resultBuilder,
             NormalizedNodeStreamWriter streamWriter) {
-        try (JsonParserStream jsonParser = JsonParserStream.create(streamWriter, schemaContext,
+        try (JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
+                JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext),
                 rpcState.rpc().getOutput())) {
             jsonParser.parse(new JsonReader(new StringReader(jsonResult.toString())));
             return new DefaultDOMRpcResult(resultBuilder.build());

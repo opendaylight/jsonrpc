@@ -100,7 +100,7 @@ public class JsonRPCtoRPCBridgeAsyncTest extends AbstractJsonRpcTest {
         // BA => BI
         final ContainerNode rpcDef = prepareRpcInput(new FactorialInputBuilder().setInNumber(8).build());
 
-        final DOMRpcResult result = bridge.invokeRpc(path, rpcDef).checkedGet();
+        final DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
         logResult(result);
 
         // BI => BA

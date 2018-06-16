@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -35,7 +36,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.concurrent.GuardedBy;
 
 import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodec;
-import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadWriteTransaction;
@@ -114,10 +114,10 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
         final DOMDataReadWriteTransaction rTrx = domDataBroker.newReadWriteTransaction();
         NormalizedNode<?, ?> result;
         try {
-            result = rTrx.read(int2store(store), pathAsIId).checkedGet().get();
+            result = rTrx.read(int2store(store), pathAsIId).get().get();
             LOG.info("Result is {}", result);
             return jsonConverter.toBus(pathAsIId, result).getData();
-        } catch (ReadFailedException e) {
+        } catch (InterruptedException | ExecutionException e) {
             throw new IllegalStateException("Read failed", e);
         }
     }
@@ -147,8 +147,8 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
         final YangInstanceIdentifier pathAsIId = path2II(path);
         LOG.debug("EXISTS store={}, entity={}, path={}, YII={}", int2store(store), entity, path, pathAsIId);
         try (DOMDataReadOnlyTransaction trx = domDataBroker.newReadOnlyTransaction()) {
-            return trx.exists(int2store(store), pathAsIId).checkedGet();
-        } catch (ReadFailedException e) {
+            return trx.exists(int2store(store), pathAsIId).get();
+        } catch (InterruptedException | ExecutionException e) {
             throw new IllegalStateException("Read failed", e);
         }
     }

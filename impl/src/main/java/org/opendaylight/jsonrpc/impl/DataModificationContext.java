@@ -8,16 +8,19 @@
 package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.collect.ImmutableList;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import javax.annotation.Nonnull;
-import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
+
 import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
 import org.opendaylight.jsonrpc.model.TransactionFactory;
 
@@ -121,15 +124,16 @@ public class DataModificationContext implements AutoCloseable {
      */
     private static Optional<Throwable> extractError(DOMDataWriteTransaction tx) {
         try {
-            tx.submit().checkedGet();
+            tx.commit().get();
             return Optional.empty();
-        } catch (TransactionCommitFailedException e) {
+        } catch (InterruptedException | ExecutionException e) {
             return Optional.of(e);
         }
     }
 
     @Override
     public void close() {
+        //NOOP
     }
 
     @Override

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
@@ -35,7 +36,6 @@ import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodec;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMMountPointService;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
@@ -90,8 +90,8 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private Config getConfig() {
         final ReadOnlyTransaction roTrx = dataBroker.newReadOnlyTransaction();
         try {
-            return roTrx.read(LogicalDatastoreType.CONFIGURATION, GLOBAL_CFG_II).checkedGet().orNull();
-        } catch (ReadFailedException e) {
+            return roTrx.read(LogicalDatastoreType.CONFIGURATION, GLOBAL_CFG_II).get().orNull();
+        } catch (InterruptedException | ExecutionException e) {
             LOG.error("Failed to read configuration", e);
             return null;
         } finally {

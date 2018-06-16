@@ -18,6 +18,7 @@ import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
 import java.net.URISyntaxException;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -81,11 +82,11 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     }
 
     @After
-    public void tearDown() throws TransactionCommitFailedException {
+    public void tearDown() throws TransactionCommitFailedException, InterruptedException, ExecutionException {
         LOG.info(Strings.repeat("-", 120));
         final DOMDataWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
         wtx.delete(LogicalDatastoreType.OPERATIONAL, yiiFromJson("{ \"network-topology:network-topology\": {}}"));
-        wtx.submit().checkedGet();
+        wtx.commit().get();
         exec.shutdown();
     }
 
@@ -95,7 +96,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(schemaContext);
         final DOMDataWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
         wtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
-        wtx.submit().checkedGet();
+        wtx.commit().get();
 
         // Read using JSON-RPC databroker
         final DOMDataReadTransaction rtx = jrbroker.newReadOnlyTransaction();
@@ -109,7 +110,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(schemaContext);
         final DOMDataWriteTransaction wtx = jrbroker.newWriteOnlyTransaction();
         wtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
-        wtx.submit().checkedGet();
+        wtx.commit().get();
 
         // Read using DOM databroker
         final DOMDataReadTransaction rtx = getDomBroker().newReadOnlyTransaction();

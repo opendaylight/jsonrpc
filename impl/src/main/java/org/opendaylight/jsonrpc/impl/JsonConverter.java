@@ -50,6 +50,7 @@ import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeWriter;
 import org.opendaylight.yangtools.yang.data.codec.gson.JSONCodecFactory;
+import org.opendaylight.yangtools.yang.data.codec.gson.JSONCodecFactorySupplier;
 import org.opendaylight.yangtools.yang.data.codec.gson.JSONNormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonWriterFactory;
@@ -156,7 +157,8 @@ public class JsonConverter {
             DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> notificationBuilder) {
         final Date eventTime = new Date();
         try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(notificationBuilder);
-                JsonParserStream jsonParser = JsonParserStream.create(streamWriter, schemaContext,
+                JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
+                        JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext),
                         new NotificationContainerProxy(notificationState.notification()))) {
             jsonParser.parse(new JsonReader(new StringReader(jsonResult.toString())));
             return new JsonRpcNotification(notificationBuilder.build(), eventTime,
@@ -166,7 +168,6 @@ public class JsonConverter {
             return null;
         }
     }
-
 
     /**
      * Performs the data conversion for an RPC argument.
@@ -179,8 +180,9 @@ public class JsonConverter {
         LOG.debug("Converting node {} at path {}", data, path);
         final StringWriter writer = new StringWriter();
         final JsonWriter jsonWriter = JsonWriterFactory.createJsonWriter(writer);
-        final NormalizedNodeStreamWriter streamWriter = JSONNormalizedNodeStreamWriter
-                .createNestedWriter(JSONCodecFactory.createSimple(schemaContext), path, null, jsonWriter);
+        final NormalizedNodeStreamWriter streamWriter = JSONNormalizedNodeStreamWriter.createNestedWriter(
+                JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.createSimple(schemaContext), path, null,
+                jsonWriter);
         final NormalizedNodeWriter nodeWriter = NormalizedNodeWriter.forStreamWriter(streamWriter);
         try {
             jsonWriter.beginObject();
@@ -238,7 +240,8 @@ public class JsonConverter {
     private JsonObject doConvert(SchemaPath schemaPath, NormalizedNode<?, ?> data) {
         final StringWriter writer = new StringWriter();
         final JsonWriter jsonWriter = JsonWriterFactory.createJsonWriter(writer);
-        final JSONCodecFactory codecFactory = JSONCodecFactory.createSimple(schemaContext);
+        final JSONCodecFactory codecFactory = JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02
+                .createSimple(schemaContext);
         final NormalizedNodeStreamWriter jsonStream;
         if (data instanceof MapEntryNode) {
             jsonStream = JSONNormalizedNodeStreamWriter.createNestedWriter(
@@ -472,13 +475,13 @@ public class JsonConverter {
     }
 
     private SchemaNode findParentSchema(YangInstanceIdentifier yii) {
-        final DataSchemaContextNode<?> child = DataSchemaContextTree.from(schemaContext).getChild(yii);
+        final Optional<DataSchemaContextNode<?>> child = DataSchemaContextTree.from(schemaContext).findChild(yii);
         SchemaNode parentSchema;
-        if (SchemaPath.ROOT.equals(child.getDataSchemaNode().getPath().getParent())) {
+        if (SchemaPath.ROOT.equals(child.get().getDataSchemaNode().getPath().getParent())) {
             parentSchema = schemaContext;
         } else {
             parentSchema = SchemaContextUtil.findDataSchemaNode(schemaContext,
-                    child.getDataSchemaNode().getPath().getParent());
+                    child.get().getDataSchemaNode().getPath().getParent());
         }
         return parentSchema;
     }
@@ -509,7 +512,8 @@ public class JsonConverter {
         final NormalizedNodeResult resultHolder = new NormalizedNodeResult();
         final NormalizedNodeStreamWriter writer = ImmutableNormalizedNodeStreamWriter.from(resultHolder);
         final SchemaNode parentSchema = findParentSchema(path);
-        try (JsonParserStream jsonParser = JsonParserStream.create(writer, schemaContext, parentSchema)) {
+        try (JsonParserStream jsonParser = JsonParserStream.create(writer,
+                JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext), parentSchema)) {
             final JsonReader reader = new JsonReader(
                     new StringReader((wrap ? wrapReducedJson(path, data) : data).toString()));
             jsonParser.parse(reader);

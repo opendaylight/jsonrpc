@@ -8,9 +8,7 @@
 package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.JsonElement;
 
@@ -24,7 +22,6 @@ import javax.annotation.Nullable;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMMountPoint;
 import org.opendaylight.controller.md.sal.dom.api.DOMMountPointService;
@@ -38,6 +35,7 @@ import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
 import org.opendaylight.jsonrpc.model.MutablePeer;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.SchemaContextProvider;
+import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
@@ -163,11 +161,9 @@ public class MappedPeerContext implements AutoCloseable {
      */
     private void commitTransaction(final WriteTransaction transaction, final String device, final String txType) {
         LOG.trace("{}: Committing Transaction {}:{}", device, txType, transaction.getIdentifier());
-        final CheckedFuture<Void, TransactionCommitFailedException> result = transaction.submit();
-
-        Futures.addCallback(result, new FutureCallback<Void>() {
+        transaction.commit().addCallback(new FutureCallback<CommitInfo>() {
             @Override
-            public void onSuccess(final Void noop) {
+            public void onSuccess(final CommitInfo info) {
                 LOG.trace("{}: Transaction({}) SUCCESSFUL", txType, transaction.getIdentifier());
             }
 
