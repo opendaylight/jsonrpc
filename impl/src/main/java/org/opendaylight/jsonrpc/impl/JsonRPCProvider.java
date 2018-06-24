@@ -12,7 +12,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,14 +26,11 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import java.util.stream.Collectors;
-
 import javax.annotation.concurrent.GuardedBy;
-
 import org.opendaylight.controller.md.sal.binding.api.ClusteredDataTreeChangeListener;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
 import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
-import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodec;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMMountPointService;
@@ -79,7 +75,6 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private volatile boolean sessionInitialized = false;
     private volatile boolean providerClosed = false;
     private DOMMountPointService domMountPointService;
-    private BindingToNormalizedNodeCodec codec;
     private ScheduledExecutorService scheduledExecutorService;
 
     /**
@@ -222,8 +217,8 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
             LOG.debug("Exposing remote control at {}", peersConfState.getWhoAmI());
             try {
                 remoteControl = transportFactory.createResponder(peersConfState.getWhoAmI().getValue(),
-                        new RemoteControl(domDataBroker, schemaService.getGlobalContext(), codec,
-                                scheduledExecutorService, transportFactory));
+                        new RemoteControl(domDataBroker, schemaService.getGlobalContext(), scheduledExecutorService,
+                                transportFactory));
 
             } catch (URISyntaxException e) {
                 LOG.error("Invalid URI provided, can't continue", e);
@@ -281,8 +276,6 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         Objects.requireNonNull(dataBroker, "DataBroker was not set");
         Objects.requireNonNull(domDataBroker, "DOMDataBroker was not set");
         Objects.requireNonNull(domMountPointService, "DOMMountPointService was not set");
-        Objects.requireNonNull(codec, "BindingToNromalizedNodeCodec was not set");
-        toClose.add(codec);
         toClose.add(dataBroker.registerDataTreeChangeListener(OPER_DTI,
                 (ClusteredDataTreeChangeListener<Config>) changes -> processNotification()));
         toClose.add(dataBroker.registerDataTreeChangeListener(CFG_DTI,
@@ -389,10 +382,6 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
 
     public void setDataBroker(DataBroker dataBroker) {
         this.dataBroker = dataBroker;
-    }
-
-    public void setCodec(BindingToNormalizedNodeCodec codec) {
-        this.codec = codec;
     }
 
     public void setDomMountPointService(DOMMountPointService domMountPointService) {

@@ -13,7 +13,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.Collections;
@@ -31,11 +30,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
-
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.GuardedBy;
-
-import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodec;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadOnlyTransaction;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataReadWriteTransaction;
@@ -66,21 +62,21 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     private final DataChangeListenerRegistry dataChangeRegistry;
 
     public RemoteControl(@Nonnull final DOMDataBroker domDataBroker, @Nonnull final SchemaContext schemaContext,
-            @Nonnull final BindingToNormalizedNodeCodec codec, ScheduledExecutorService scheduledExecutorService,
-            TransportFactory transportFactory) {
-        this(domDataBroker, schemaContext, codec, TRX_CLEANUP_INTERVAL, scheduledExecutorService, transportFactory);
+            ScheduledExecutorService scheduledExecutorService, TransportFactory transportFactory) {
+        this(domDataBroker, schemaContext, TRX_CLEANUP_INTERVAL, scheduledExecutorService, transportFactory);
     }
 
     public RemoteControl(@Nonnull final DOMDataBroker domDataBroker, @Nonnull final SchemaContext schemaContext,
-            @Nonnull final BindingToNormalizedNodeCodec codec, long cleanupIntervalMilliseconds,
-            @Nonnull ScheduledExecutorService scheduledExecutorService, @Nonnull TransportFactory transportFactory) {
+            long cleanupIntervalMilliseconds, @Nonnull ScheduledExecutorService scheduledExecutorService,
+            @Nonnull TransportFactory transportFactory) {
         this.domDataBroker = Objects.requireNonNull(domDataBroker);
         this.schemaContext = Objects.requireNonNull(schemaContext);
         this.jsonConverter = new JsonConverter(schemaContext);
         cleanerFuture = Objects.requireNonNull(scheduledExecutorService).scheduleAtFixedRate(
                 this::cleanupStaleTransactions, cleanupIntervalMilliseconds, cleanupIntervalMilliseconds,
                 TimeUnit.MILLISECONDS);
-        this.transactionFactory = new EnsureParentTransactionFactory(domDataBroker, Objects.requireNonNull(codec));
+        this.transactionFactory = new EnsureParentTransactionFactory(domDataBroker,
+                Objects.requireNonNull(schemaContext));
         this.dataChangeRegistry = new DataChangeListenerRegistry(domDataBroker, transportFactory, jsonConverter);
     }
 

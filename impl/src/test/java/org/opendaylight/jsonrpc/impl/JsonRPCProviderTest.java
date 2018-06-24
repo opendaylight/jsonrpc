@@ -12,14 +12,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -91,7 +89,6 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         provider.setDataBroker(getDataBroker());
         provider.setDomDataBroker(getDomBroker());
         provider.setSchemaService(getSchemaService());
-        provider.setCodec(NormalizedNodesHelper.getBindingToNormalizedNodeCodec());
         provider.setDomMountPointService(getDOMMountPointService());
         provider.setScheduledExecutorService(exec);
         provider.init();

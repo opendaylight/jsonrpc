@@ -17,7 +17,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -27,11 +26,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodec;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
 import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
@@ -41,6 +38,7 @@ import org.opendaylight.jsonrpc.bus.messagelib.TestHelper;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.ListenerKey;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
+import org.opendaylight.mdsal.binding.dom.adapter.BindingToNormalizedNodeCodec;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
@@ -84,8 +82,8 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         NormalizedNodesHelper.init(schemaContext);
         exec = Executors.newScheduledThreadPool(1);
         transportFactory = new DefaultTransportFactory();
-        ctrl = new RemoteControl(getDomBroker(), schemaContext, NormalizedNodesHelper.getBindingToNormalizedNodeCodec(),
-                500, exec, transportFactory);
+        ctrl = new RemoteControl(getDomBroker(), schemaContext, 500,
+                exec, transportFactory);
         parser = new JsonParser();
         conv = new JsonConverter(schemaContext);
     }

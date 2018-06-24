@@ -8,19 +8,30 @@
 package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import junit.framework.AssertionFailedError;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.opendaylight.controller.md.sal.binding.test.DataBrokerTestCustomizer;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMMountPointService;
+import org.opendaylight.controller.md.sal.dom.broker.impl.mount.DOMMountPointServiceImpl;
 import org.opendaylight.mdsal.binding.dom.adapter.test.AbstractSchemaAwareTest;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.TopElement;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
+import org.opendaylight.yangtools.yang.binding.YangModuleInfo;
+import org.opendaylight.yangtools.yang.binding.util.BindingReflections;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +41,10 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
-abstract class AbstractJsonRpcTest extends AbstractSchemaAwareTest {
+public abstract class AbstractJsonRpcTest extends AbstractSchemaAwareTest {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractJsonRpcTest.class);
     private DataBrokerTestCustomizer testCustomizer;
+    private final DOMMountPointService domMountPointService = new DOMMountPointServiceImpl();
     private DataBroker dataBroker;
     private DOMDataBroker domBroker;
     protected SchemaContext schemaContext;
@@ -48,6 +60,15 @@ abstract class AbstractJsonRpcTest extends AbstractSchemaAwareTest {
         setupWithDataBroker(this.dataBroker);
     }
 
+    @Override
+    protected Iterable<YangModuleInfo> getModuleInfos() throws Exception {
+        return Arrays.asList(BindingReflections.getModuleInfo(Config.class),
+                BindingReflections.getModuleInfo(NetworkTopology.class),
+                BindingReflections.getModuleInfo(TopElement.class),
+                BindingReflections.getModuleInfo(
+                        org.opendaylight.yang.gen.v1.http.opendaylight.org.jsonrpc.test.rev180305.TopElement.class));
+    }
+
     protected DOMSchemaService getSchemaService() {
         return this.testCustomizer.getSchemaService();
     }
@@ -56,7 +77,12 @@ abstract class AbstractJsonRpcTest extends AbstractSchemaAwareTest {
     }
 
     protected DataBrokerTestCustomizer createDataBrokerTestCustomizer() {
-        return new DataBrokerTestCustomizer();
+        return new DataBrokerTestCustomizer() {
+            @Override
+            public ListeningExecutorService getDataTreeChangeListenerExecutor() {
+                return MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+            }
+        };
     }
 
     public DataBroker getDataBroker() {
@@ -68,7 +94,7 @@ abstract class AbstractJsonRpcTest extends AbstractSchemaAwareTest {
     }
 
     public DOMMountPointService getDOMMountPointService() {
-        return this.testCustomizer.getDOMMountPointService();
+        return this.domMountPointService;
     }
 
     protected static final void assertCommit(ListenableFuture<Void> commit)
