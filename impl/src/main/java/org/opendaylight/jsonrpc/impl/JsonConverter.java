@@ -309,6 +309,7 @@ public class JsonConverter {
         JsonObject previous;
         JsonObject tracker;
         String lastKey;
+        String rootKey;
         String activeModule;
 
         if (pathIterator.hasNext()) {
@@ -329,8 +330,9 @@ public class JsonConverter {
                     qmodule.getRevision());
 
             activeModule = possibleModule.get().getName();
-            lastKey = makeQualifiedName(possibleModule.get(), root.getNodeType());
-            pathJson.add(lastKey, tracker);
+            rootKey = makeQualifiedName(possibleModule.get(), root.getNodeType());
+            lastKey = rootKey;
+            pathJson.add(rootKey, tracker);
         } else {
             return EMPTY_RPC_ARG;
         }
@@ -352,14 +354,14 @@ public class JsonConverter {
                 JsonArray jsonArray = new JsonArray();
                 jsonArray.add(nextLevel);
 
+                lastKey = pathArg.getNodeType().getLocalName();
                 if (topLevel) {
-                    pathJson.add(lastKey, jsonArray);
-                    topLevel = false;
+                    pathJson.remove(rootKey);
+                    pathJson.add(rootKey, jsonArray);
                 } else {
+                    previous.remove(lastKey);
                     previous.add(lastKey, jsonArray);
                 }
-                lastKey = pathArg.getNodeType().getLocalName();
-                previous.remove(lastKey);
             } else {
                 if (pathIterator.hasNext()) {
                     qnames.add(pathArg.getNodeType());
@@ -369,6 +371,7 @@ public class JsonConverter {
             }
             previous = tracker;
             tracker = nextLevel;
+            topLevel = false;
         }
 
         if (data != null) {

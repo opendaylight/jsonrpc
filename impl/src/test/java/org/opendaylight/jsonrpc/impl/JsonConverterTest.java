@@ -103,6 +103,9 @@ public class JsonConverterTest extends AbstractJsonRpcTest {
         JSONRPCArg arg = conv.toBus(data.getKey(), data.getValue());
         LOG.info("Path : '{}' Data : '{}'", arg.getPath(), arg.getData());
         assertThat(arg.getPath().toString(), hasJsonPath("$..topology[0].topology-id", contains("topo-id")));
+        // This doubles up as a test for the JSONRPC-9 regression
+        assertEquals("{\"network-topology:network-topology\":{\"topology\":[{\"topology-id\":\"topo-id\"}]}}",
+                arg.getPath().toString());
     }
 
     @Test
