@@ -69,7 +69,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         NormalizedNodesHelper.init(schemaContext);
         transportFactory = mock(TransportFactory.class);
         shard = new RemoteControl(getDomBroker(), schemaContext,
-                NormalizedNodesHelper.getBindingToNormalizedNodeCodec(), exec, transportFactory);
+                exec, transportFactory);
         peer = new MutablePeer();
         peer.name("test");
         governance = mock(RemoteGovernance.class);

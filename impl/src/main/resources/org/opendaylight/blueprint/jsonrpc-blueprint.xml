@@ -17,15 +17,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <reference id="transportFactory" interface="org.opendaylight.jsonrpc.bus.messagelib.TransportFactory" />
     <reference id="scheduledExecutorService" interface="java.util.concurrent.ScheduledExecutorService"  filter="(&amp;(name=jsonrpc))"/>
 
-    <bean id="mappingCodec" class="org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodecFactory" factory-method="newInstance">
-        <argument ref="classLoadingStrategy" />
-    </bean>
-
     <bean id="jsonRpcProvider" class="org.opendaylight.jsonrpc.impl.JsonRPCProvider" init-method="init" destroy-method="close">
         <property name="dataBroker" ref="dataBroker" />
         <property name="domDataBroker" ref="domDataBroker" />
         <property name="transportFactory" ref="transportFactory" />
-        <property name="codec" ref="mappingCodec" />
         <property name="domMountPointService" ref="domMountPointService" />
         <property name="schemaService" ref="schemaService" />
         <property name="scheduledExecutorService" ref="scheduledExecutorService" />

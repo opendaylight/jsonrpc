@@ -7,20 +7,16 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-
 import org.opendaylight.controller.md.sal.binding.impl.AbstractWriteTransaction;
-import org.opendaylight.controller.md.sal.binding.impl.BindingToNormalizedNodeCodec;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
 import org.opendaylight.controller.md.sal.dom.spi.ForwardingDOMDataWriteTransaction;
 import org.opendaylight.jsonrpc.model.TransactionFactory;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
-import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgument;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
+import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNodes;
+import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
 /**
  * Implementation of {@link TransactionFactory} which follows semantics of
@@ -30,12 +26,12 @@ import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
  *
  */
 class EnsureParentTransactionFactory implements TransactionFactory {
-    private final BindingToNormalizedNodeCodec codec;
+    private final SchemaContext schemaContext;
     protected final DOMDataBroker domDataBroker;
 
-    EnsureParentTransactionFactory(final DOMDataBroker domDataBroker, final BindingToNormalizedNodeCodec codec) {
+    EnsureParentTransactionFactory(final DOMDataBroker domDataBroker, final SchemaContext schemaContext) {
         this.domDataBroker = domDataBroker;
-        this.codec = codec;
+        this.schemaContext = schemaContext;
     }
 
     @Override
@@ -44,13 +40,10 @@ class EnsureParentTransactionFactory implements TransactionFactory {
         return new ForwardingDOMDataWriteTransaction() {
             @Override
             public void merge(LogicalDatastoreType store, YangInstanceIdentifier path, NormalizedNode<?, ?> data) {
-                final List<PathArgument> currentArguments = new ArrayList<>();
-                final Iterator<PathArgument> iterator = path.getPathArguments().iterator();
-                while (iterator.hasNext()) {
-                    final PathArgument currentArg = iterator.next();
-                    currentArguments.add(currentArg);
-                    final YangInstanceIdentifier yii = YangInstanceIdentifier.create(currentArguments);
-                    delegate().merge(store, yii, codec.getDefaultNodeFor(yii));
+                final YangInstanceIdentifier parentPath = path.getParent();
+                if (parentPath != null) {
+                    final NormalizedNode<?, ?> parentNode = ImmutableNodes.fromInstanceId(schemaContext, parentPath);
+                    delegate().merge(store, YangInstanceIdentifier.create(parentNode.getIdentifier()), parentNode);
                 }
                 super.merge(store, path, data);
             }
