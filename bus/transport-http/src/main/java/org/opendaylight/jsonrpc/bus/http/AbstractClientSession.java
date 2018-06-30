@@ -8,10 +8,9 @@
 package org.opendaylight.jsonrpc.bus.http;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.socket.SocketChannel;
 
 import org.opendaylight.jsonrpc.bus.api.SessionType;
+import org.opendaylight.jsonrpc.bus.spi.AbstractChannelInitializer;
 import org.opendaylight.jsonrpc.bus.spi.AbstractReconnectingClient;
 
 /**
@@ -24,7 +23,7 @@ abstract class AbstractClientSession extends AbstractReconnectingClient {
     protected final boolean isWebsocket;
 
     AbstractClientSession(String uri, int defaultPort, Bootstrap clientBootstrap,
-            ChannelInitializer<SocketChannel> channelInitializer, boolean isWebsocket, SessionType sessionType) {
+            AbstractChannelInitializer channelInitializer, boolean isWebsocket, SessionType sessionType) {
         super(uri, defaultPort, clientBootstrap, channelInitializer, sessionType);
         this.isWebsocket = isWebsocket;
         connectInternal();

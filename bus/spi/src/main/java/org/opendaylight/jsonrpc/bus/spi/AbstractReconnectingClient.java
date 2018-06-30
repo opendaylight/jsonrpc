@@ -16,8 +16,6 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.ScheduledFuture;
 
@@ -42,11 +40,11 @@ public abstract class AbstractReconnectingClient extends AbstractSession impleme
     protected ConnectionState state = ConnectionState.INITIAL;
     private final ChannelFutureListener connectListener = new ConnectListener();
     private final ChannelFutureListener closeListener = new CloseListener();
-    private final ChannelInitializer<SocketChannel> channelInitializer;
+    protected final AbstractChannelInitializer channelInitializer;
     private ReconnectStrategy reconnectStrategy;
 
     public AbstractReconnectingClient(String uri, int defaultPort, Bootstrap clientBootstrap,
-            ChannelInitializer<SocketChannel> channelInitializer, SessionType sessionType) {
+            AbstractChannelInitializer channelInitializer, SessionType sessionType) {
         super(uri, defaultPort, sessionType);
         reconnectStrategy = ReconnectStrategies.fixedStartegy(1000);
         this.channelInitializer = Objects.requireNonNull(channelInitializer);

@@ -32,6 +32,7 @@ import org.opendaylight.jsonrpc.bus.api.Responder;
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 import org.opendaylight.jsonrpc.bus.api.Subscriber;
 import org.opendaylight.jsonrpc.bus.spi.AbstractBusSessionFactory;
+import org.opendaylight.jsonrpc.bus.spi.AbstractChannelInitializer;
 import org.opendaylight.jsonrpc.bus.spi.DiscardingMessageListener;
 
 /**
@@ -91,7 +92,7 @@ abstract class AbstractWebBusSessionFactory extends AbstractBusSessionFactory {
     @Override
     public Requester requester(String uri, MessageListener listener) {
         final Requester session = new RequesterImpl(uri, defaultPort, clientBootstrap,
-                createClientInitializer(SessionType.REQ, handlerExecutor, uri, listener), isWebsocket, useSsl);
+                createClientInitializer(SessionType.REQ, handlerExecutor, uri, listener), isWebsocket);
         addSession(session);
         return session;
     }
@@ -117,7 +118,7 @@ abstract class AbstractWebBusSessionFactory extends AbstractBusSessionFactory {
                 !Strings.isNullOrEmpty(uri.getQuery()) ? QUERY_SPLITER.split(uri.getQuery()) : Collections.emptyMap());
     }
 
-    private ChannelInitializer<SocketChannel> createClientInitializer(SessionType socketType,
+    private AbstractChannelInitializer createClientInitializer(SessionType socketType,
             EventExecutorGroup handlerExecutor, String uri, MessageListener listener) {
         return new ClientInitializer(socketType, handlerExecutor, useSsl, isWebsocket, createUriUnchecked(uri),
                 getOptions(uri), listener);

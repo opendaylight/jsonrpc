@@ -45,4 +45,8 @@ public abstract class AbstractChannelInitializer extends ChannelInitializer<Sock
             channel.pipeline().addLast(CommonConstants.HANDLER_LOGGING, CommonConstants.LOG_HANDLER);
         }
     }
+
+    public EventExecutorGroup eventExecutor() {
+        return handlerExecutor;
+    }
 }

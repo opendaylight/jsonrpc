@@ -9,6 +9,8 @@ package org.opendaylight.jsonrpc.bus.api;
 
 import io.netty.util.concurrent.Future;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Requester session type allow to send requests to remote {@link Responder}
  * peer.
@@ -23,9 +25,11 @@ public interface Requester extends ClientSession {
      * handshake is performed. Blocking behavior comes from original API design.
      *
      * @param message message to send.
+     * @param connectionTimeout connection timeout
+     * @param timeUnit time unit for connection timeout
      * @return {@link Future} containing the result of send. The Future blocks
      *         until the response is received or timeout expires, whichever
      *         comes first.
      */
-    Future<String> send(String message);
+    Future<String> send(String message, long connectionTimeout, TimeUnit timeUnit);
 }

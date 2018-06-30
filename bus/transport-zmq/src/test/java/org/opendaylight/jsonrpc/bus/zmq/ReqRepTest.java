@@ -12,7 +12,9 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.base.Strings;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
@@ -48,7 +50,7 @@ public class ReqRepTest extends AbstractSessionTest {
                 }
             }
         });
-        requester.send("Hi");
+        requester.send("Hi", 30, TimeUnit.SECONDS);
         assertTrue(latch.await(10, TimeUnit.SECONDS));
         responder.close();
         requester.close();
@@ -75,10 +77,18 @@ public class ReqRepTest extends AbstractSessionTest {
                 }
             }
         });
-        requester.send(msg);
+        requester.send(msg, 30, TimeUnit.SECONDS);
         assertTrue(latch.await(10, TimeUnit.SECONDS));
         responder.close();
         requester.close();
+    }
+
+    @Test(expected = TimeoutException.class)
+    public void testConnectionFailed() throws InterruptedException, ExecutionException, TimeoutException {
+        final int port = getFreeTcpPort();
+        final Requester requester = factory.requester(getConnectUri(port),
+            (peerContext, message) -> LOG.info("Received response {}", message));
+        requester.send("", 0, null).get(1, TimeUnit.SECONDS);
     }
 
     @Override

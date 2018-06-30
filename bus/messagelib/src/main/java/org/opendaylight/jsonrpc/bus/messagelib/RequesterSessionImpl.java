@@ -78,16 +78,17 @@ public class RequesterSessionImpl extends AbstractSession implements MessageList
      */
     private void send(final String message) {
         synchronized (lock) {
-            requester.send(message).addListener(new GenericFutureListener<Future<String>>() {
-                @Override
-                public void operationComplete(final Future<String> future) throws Exception {
-                    if (future.isSuccess()) {
-                        responseQueue.put(future.get());
-                    } else {
-                        LOG.warn("Send failed", future.cause());
-                    }
-                }
-            });
+            requester.send(message, timeout, TimeUnit.MILLISECONDS)
+                    .addListener(new GenericFutureListener<Future<String>>() {
+                        @Override
+                        public void operationComplete(final Future<String> future) throws Exception {
+                            if (future.isSuccess()) {
+                                responseQueue.put(future.get());
+                            } else {
+                                LOG.warn("Send failed", future.cause());
+                            }
+                        }
+                    });
         }
     }
 

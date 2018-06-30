@@ -8,11 +8,10 @@
 package org.opendaylight.jsonrpc.bus.http;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.socket.SocketChannel;
 
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 import org.opendaylight.jsonrpc.bus.api.Subscriber;
+import org.opendaylight.jsonrpc.bus.spi.AbstractChannelInitializer;
 import org.opendaylight.jsonrpc.bus.spi.AbstractReconnectingClient;
 
 /**
@@ -23,7 +22,7 @@ import org.opendaylight.jsonrpc.bus.spi.AbstractReconnectingClient;
  */
 class SubscriberImpl extends AbstractReconnectingClient implements Subscriber {
     SubscriberImpl(String uri, int defaultPort, Bootstrap clientBootstrap,
-            ChannelInitializer<SocketChannel> channelInitializer) {
+            AbstractChannelInitializer channelInitializer) {
         super(uri, defaultPort, clientBootstrap, channelInitializer, SessionType.SUB);
         connectInternal();
     }

@@ -12,10 +12,13 @@ import io.netty.util.concurrent.DefaultProgressivePromise;
 import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.concurrent.Future;
 
+import java.util.concurrent.TimeUnit;
+
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
 import org.opendaylight.jsonrpc.bus.api.Requester;
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 import org.opendaylight.jsonrpc.bus.spi.AbstractReconnectingClient;
+import org.opendaylight.jsonrpc.bus.spi.CombinedFuture;
 import org.opendaylight.jsonrpc.bus.spi.CommonConstants;
 
 /**
@@ -33,23 +36,21 @@ class RequesterImpl extends AbstractReconnectingClient implements Requester {
     }
 
     @Override
-    public void close() {
-        closeChannel();
-        super.close();
-    }
-
-    @Override
-    public Future<String> send(String message) {
-        blockUntilConnected();
+    public Future<String> send(String message, long connectionTimeout, TimeUnit timeUnit) {
         final DefaultProgressivePromise<String> promise = new DefaultProgressivePromise<>(
-                channelFuture.channel().eventLoop());
-        promise.addListener(future -> {
+                channelInitializer.eventExecutor().next());
+        final Future<?> connectionFuture = channelInitializer.eventExecutor()
+                .submit((Runnable) this::blockUntilConnected);
+        final CombinedFuture<String> combined = new CombinedFuture<>(connectionFuture, promise);
+        connectionFuture.addListener(future -> {
+            if (future.isSuccess()) {
+                channelFuture.channel().attr(CommonConstants.ATTR_RESPONSE_QUEUE).get().set(promise);
+                channelFuture.channel().writeAndFlush(Util.serializeMessage(message));
+            }
             if (future == channelFuture.channel().attr(CommonConstants.ATTR_RESPONSE_QUEUE).get().get()) {
                 channelFuture.channel().attr(CommonConstants.ATTR_RESPONSE_QUEUE).get().set(null);
             }
         });
-        channelFuture.channel().attr(CommonConstants.ATTR_RESPONSE_QUEUE).get().set(promise);
-        channelFuture.channel().writeAndFlush(Util.serializeMessage(message));
-        return promise;
+        return combined;
     }
 }

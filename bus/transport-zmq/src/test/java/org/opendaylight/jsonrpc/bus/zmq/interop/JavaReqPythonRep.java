@@ -56,7 +56,7 @@ public class JavaReqPythonRep extends AbstractInteropTest {
             }
         });
         req.awaitConnection();
-        req.send(in);
+        req.send(in, 30, TimeUnit.SECONDS);
         req.close();
         assertTrue(latch.await(10, TimeUnit.SECONDS));
     }
