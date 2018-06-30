@@ -8,20 +8,20 @@
 package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.JsonParser;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
 import junit.framework.AssertionFailedError;
+
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.md.sal.binding.test.DataBrokerTestCustomizer;
+import org.opendaylight.controller.md.sal.binding.test.ConcurrentDataBrokerTestCustomizer;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMMountPointService;
 import org.opendaylight.controller.md.sal.dom.broker.impl.mount.DOMMountPointServiceImpl;
@@ -36,6 +36,8 @@ import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
+
 /**
  * Common test infrastructure for {@link SchemaContext} aware tests.
  *
@@ -43,7 +45,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractJsonRpcTest extends AbstractSchemaAwareTest {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractJsonRpcTest.class);
-    private DataBrokerTestCustomizer testCustomizer;
+    private ConcurrentDataBrokerTestCustomizer testCustomizer;
     private final DOMMountPointService domMountPointService = new DOMMountPointServiceImpl();
     private DataBroker dataBroker;
     private DOMDataBroker domBroker;
@@ -52,7 +54,7 @@ public abstract class AbstractJsonRpcTest extends AbstractSchemaAwareTest {
 
     @Override
     protected void setupWithSchema(SchemaContext context) {
-        this.testCustomizer = createDataBrokerTestCustomizer();
+        this.testCustomizer = new ConcurrentDataBrokerTestCustomizer(true);
         this.dataBroker = this.testCustomizer.createDataBroker();
         this.domBroker = this.testCustomizer.createDOMDataBroker();
         this.testCustomizer.updateSchema(context);
@@ -74,15 +76,6 @@ public abstract class AbstractJsonRpcTest extends AbstractSchemaAwareTest {
     }
 
     protected void setupWithDataBroker(DataBroker broker) {
-    }
-
-    protected DataBrokerTestCustomizer createDataBrokerTestCustomizer() {
-        return new DataBrokerTestCustomizer() {
-            @Override
-            public ListeningExecutorService getDataTreeChangeListenerExecutor() {
-                return MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
-            }
-        };
     }
 
     public DataBroker getDataBroker() {
