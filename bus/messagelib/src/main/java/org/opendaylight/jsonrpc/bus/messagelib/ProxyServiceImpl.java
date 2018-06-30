@@ -50,7 +50,7 @@ public class ProxyServiceImpl implements ProxyService {
     }
 
     @Override
-    public <T extends AutoCloseable> T createRequesterProxy(String uri, Class<T> cls, int timeout) {
+    public <T extends AutoCloseable> T createRequesterProxy(String uri, Class<T> cls, long timeout) {
         final T proxy = createRequesterProxy(uri, cls);
         setTimeout(proxy, timeout);
         return proxy;
@@ -65,7 +65,7 @@ public class ProxyServiceImpl implements ProxyService {
     }
 
     @Override
-    public <T extends AutoCloseable> T createPublisherProxy(String uri, Class<T> cls, int timeout) {
+    public <T extends AutoCloseable> T createPublisherProxy(String uri, Class<T> cls, long timeout) {
         T proxy = createPublisherProxy(uri, cls);
         setTimeout(proxy, timeout);
         return proxy;
@@ -78,7 +78,7 @@ public class ProxyServiceImpl implements ProxyService {
         }
     }
 
-    private void setTimeout(Object obj, int time) {
+    private void setTimeout(Object obj, long time) {
         final BaseSession session = proxyMap.get(obj);
         if (session != null) {
             session.setTimeout(time);
