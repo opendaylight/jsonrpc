@@ -38,7 +38,7 @@ public interface ProxyService extends InvocationHandler {
      * @param <T> type of API
      * @return proxied instance of T
      */
-    <T extends AutoCloseable> T createRequesterProxy(String uri, Class<T> cls, int timeout);
+    <T extends AutoCloseable> T createRequesterProxy(String uri, Class<T> cls, long timeout);
 
     /**
      * Create {@link PublisherSession} proxy instance.
@@ -59,5 +59,5 @@ public interface ProxyService extends InvocationHandler {
      * @param <T> type of API
      * @return proxied instance of T
      */
-    <T extends AutoCloseable> T createPublisherProxy(String uri, Class<T> cls, int timeout);
+    <T extends AutoCloseable> T createPublisherProxy(String uri, Class<T> cls, long timeout);
 }

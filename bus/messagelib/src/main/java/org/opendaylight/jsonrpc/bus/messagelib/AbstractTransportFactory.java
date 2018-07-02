@@ -23,8 +23,6 @@ import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
  * @author Thomas Pantelis
  */
 public abstract class AbstractTransportFactory implements TransportFactory {
-    private static final int DEFAULT_TIMEOUT = 30000;
-
     private final LoadingCache<String, MessageLibrary> messageLibraryCache;
 
     // Cache also proxy instances so they can be reused
@@ -49,19 +47,21 @@ public abstract class AbstractTransportFactory implements TransportFactory {
     }
 
     @Override
-    public <T extends AutoCloseable> T createPublisherProxy(Class<T> clazz, String rawUri) throws URISyntaxException {
+    public <T extends AutoCloseable> T createPublisherProxy(Class<T> clazz, String rawUri, long timeout)
+            throws URISyntaxException {
         final URI uri = new URI(rawUri);
         final MessageLibrary messageLibrary = getMessageLibrary(uri);
         final ProxyService proxy = proxyCache.getUnchecked(messageLibrary);
-        return proxy.createPublisherProxy(Util.prepareUri(uri), clazz, DEFAULT_TIMEOUT);
+        return proxy.createPublisherProxy(Util.prepareUri(uri), clazz, timeout);
     }
 
     @Override
-    public <T extends AutoCloseable> T createRequesterProxy(Class<T> clazz, String rawUri) throws URISyntaxException {
+    public <T extends AutoCloseable> T createRequesterProxy(Class<T> clazz, String rawUri, long timeout)
+            throws URISyntaxException {
         final URI uri = new URI(rawUri);
         final MessageLibrary messageLibrary = getMessageLibrary(uri);
         final ProxyService proxy = proxyCache.getUnchecked(messageLibrary);
-        return proxy.createRequesterProxy(uri.toString(), clazz, DEFAULT_TIMEOUT);
+        return proxy.createRequesterProxy(uri.toString(), clazz, timeout);
     }
 
     @Override
