@@ -15,16 +15,17 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.concurrent.GuardedBy;
 import org.opendaylight.controller.md.sal.binding.api.ClusteredDataTreeChangeListener;
@@ -41,6 +42,7 @@ import org.opendaylight.jsonrpc.model.SchemaContextProvider;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ConfigBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshOutput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshOutputBuilder;
@@ -95,14 +97,10 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     }
 
     private Map<String, Peer> generateCache(List<? extends Peer> arg) {
-        if (arg != null) {
-            final Map<String, Peer> result = new HashMap<>();
-            for (Peer peer : arg) {
-                result.put(peer.getName(), peer);
-            }
-            return result;
-        }
-        return Collections.emptyMap();
+        return Optional.ofNullable(arg)
+                .orElse(Collections.emptyList())
+                .stream()
+                .collect(Collectors.toMap(Peer::getName, Function.identity()));
     }
 
     /**
@@ -132,6 +130,9 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         final Config peersConfState = getConfig();
         if (peersConfState == null) {
             LOG.info("{} configuration absent", ME);
+            // in case entire config was wiped, we still need to unconfigure
+            // existing peers, hence supply empty list
+            unmountPeers(new ConfigBuilder().setConfiguredEndpoints(Collections.emptyList()).build());
             return false;
         }
 
