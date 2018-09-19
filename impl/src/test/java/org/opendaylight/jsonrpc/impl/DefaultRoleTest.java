@@ -9,6 +9,7 @@ package org.opendaylight.jsonrpc.impl;
 
 import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -59,7 +60,7 @@ public class DefaultRoleTest {
             final String endpoint = (String) invocation.getArguments()[1];
             assertNotEquals(-1, endpoint.indexOf("role=REQ"));
             return mock(RemoteOmShard.class);
-        }).when(transportFactory).createRequesterProxy(any(), any());
+        }).when(transportFactory).createRequesterProxy(any(), any(), anyLong());
         pm.put(new JsonObject(), DataType.CONFIGURATION_DATA, "zmq://localhost:12345");
         JSONRPCArg arg = new JSONRPCArg(new JsonObject(), new JsonObject());
         doReturn(arg).when(jsonConverter).toBus(any(YangInstanceIdentifier.class), any());
