@@ -35,7 +35,8 @@ abstract class RemoteShardAware extends AbstractJsonRPCComponent implements Auto
                 @Override
                 public RemoteOmShard load(String uri) throws Exception {
                     final String fixedEndpoint = Util.ensureRole(uri, SessionType.REQ);
-                    return transportFactory.createRequesterProxy(RemoteOmShard.class, fixedEndpoint);
+                    return transportFactory.createRequesterProxy(RemoteOmShard.class, fixedEndpoint,
+                            TransportFactory.DEFAULT_TIMEOUT);
                 }
             });
 

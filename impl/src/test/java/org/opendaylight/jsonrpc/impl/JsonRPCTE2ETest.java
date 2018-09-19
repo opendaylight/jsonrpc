@@ -9,6 +9,7 @@ package org.opendaylight.jsonrpc.impl;
 
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -73,7 +74,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         peer = new MutablePeer();
         peer.name("test");
         governance = mock(RemoteGovernance.class);
-        doReturn(shard).when(transportFactory).createRequesterProxy(any(), anyString());
+        doReturn(shard).when(transportFactory).createRequesterProxy(any(), anyString(), anyLong());
         pathMap.put(jsonParser.parse("{\"network-topology:network-topology\":{}}"),
                 DataType.OPERATIONAL_DATA, "zmq://localhost");
 

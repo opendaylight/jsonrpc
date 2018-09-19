@@ -238,7 +238,8 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
             if (rootOm != null) {
                 // Need to re-create proxy, because root-om can point to URI
                 // with different transport then before
-                governance = transportFactory.createRequesterProxy(RemoteGovernance.class, rootOm().getValue());
+                governance = transportFactory.createRequesterProxy(RemoteGovernance.class, rootOm().getValue(),
+                        TransportFactory.DEFAULT_TIMEOUT);
             } else {
                 governance = null;
             }

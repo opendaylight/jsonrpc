@@ -54,8 +54,8 @@ public class DataChangeListenerRegistry implements AutoCloseable {
             throws IOException {
         final ListenerKey response = new ListenerKey(allocateUri(transport), UUID.randomUUID().toString());
         try {
-            final DataChangeNotificationPublisher publisher = transportFactory
-                    .createPublisherProxy(DataChangeNotificationPublisher.class, response.getUri());
+            final DataChangeNotificationPublisher publisher = transportFactory.createPublisherProxy(
+                    DataChangeNotificationPublisher.class, response.getUri(), TransportFactory.DEFAULT_TIMEOUT);
             listenerMap.put(response, new DataChangeListenerRegistration(path, listenerMap::remove, domDataBroker,
                     jsonConverter, store, publisher, response));
             return response;
