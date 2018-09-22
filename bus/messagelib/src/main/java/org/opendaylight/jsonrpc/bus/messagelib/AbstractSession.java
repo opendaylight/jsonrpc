@@ -9,14 +9,15 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 public abstract class AbstractSession implements BaseSession {
     private final AtomicInteger id = new AtomicInteger();
     private AutoCloseable closeable;
-    private final CloseCallback closeCallback;
+    private final Consumer<AutoCloseable> closeCallback;
     protected long timeout;
 
-    AbstractSession(CloseCallback closeCallback) {
+    AbstractSession(Consumer<AutoCloseable> closeCallback) {
         this.closeCallback = Objects.requireNonNull(closeCallback);
         this.timeout = 30_000L;
     }
@@ -36,8 +37,8 @@ public abstract class AbstractSession implements BaseSession {
 
     @Override
     public void close() {
-        closeCallback.onClose(closeable);
         Util.closeQuietly(closeable);
+        closeCallback.accept(this);
     }
 
     @Override

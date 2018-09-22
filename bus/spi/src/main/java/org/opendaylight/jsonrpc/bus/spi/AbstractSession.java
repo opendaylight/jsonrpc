@@ -26,7 +26,7 @@ import org.opendaylight.jsonrpc.bus.api.SessionType;
  * @since Mar 7, 2018
  */
 public abstract class AbstractSession implements AutoCloseable, BusSession {
-    protected ChannelFuture channelFuture;
+    protected volatile ChannelFuture channelFuture;
     protected final InetSocketAddress address;
     protected final URI uri;
     protected final SessionType sessionType;

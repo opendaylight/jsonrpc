@@ -7,6 +7,8 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import java.util.function.Consumer;
+
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.Subscriber;
 
@@ -19,7 +21,7 @@ import org.opendaylight.jsonrpc.bus.api.Subscriber;
 public class SubscriberSessionImpl extends AbstractSession implements SubscriberSession {
     private final Subscriber subscriber;
 
-    public SubscriberSessionImpl(CloseCallback closeCallback, BusSessionFactory factory,
+    public SubscriberSessionImpl(Consumer<AutoCloseable> closeCallback, BusSessionFactory factory,
             NotificationMessageHandler handler, String topic, String uri) {
         super(closeCallback);
         subscriber = factory.subscriber(uri, topic, new NotificationHandlerAdapter(handler));

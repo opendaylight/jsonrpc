@@ -82,14 +82,15 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         NormalizedNodesHelper.init(schemaContext);
         exec = Executors.newScheduledThreadPool(1);
         transportFactory = new DefaultTransportFactory();
-        ctrl = new RemoteControl(getDomBroker(), schemaContext, 500,
-                exec, transportFactory);
+        ctrl = new RemoteControl(getDomBroker(), schemaContext, 500, exec, transportFactory);
         parser = new JsonParser();
         conv = new JsonConverter(schemaContext);
+        logTestName("START");
     }
 
     @After
     public void tearDown() throws Exception {
+        logTestName("END");
         ctrl.close();
         exec.shutdown();
     }

@@ -7,14 +7,15 @@
  */
 package org.opendaylight.jsonrpc.bus.spi;
 
+import com.google.common.util.concurrent.Uninterruptibles;
+
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.internal.SystemPropertyUtil;
 
 import java.util.concurrent.TimeUnit;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Holder for shared instance of {@link EventLoopGroup}, normally used in
@@ -24,24 +25,12 @@ import org.slf4j.LoggerFactory;
  * @since Mar 22, 2018
  */
 public final class EventLoopGroupProvider {
-    private static final Logger LOG = LoggerFactory.getLogger(EventLoopGroupProvider.class);
-    private static EventLoopGroup instance;
+    private static final EventLoopGroup SHARED_GROUP;
+    private static final EventExecutorGroup HANDLER_GROUP;
 
-    /**
-     * Get shared {@link EventLoopGroup}.
-     *
-     * @return shared {@link EventLoopGroup}
-     */
-    public static EventLoopGroup getSharedGroup() {
-        // Lazy initialize
-        synchronized (EventLoopGroupProvider.class) {
-            if (instance == null) {
-                final int size = SystemPropertyUtil.getInt("jsonrpc.eventloop.size", 8);
-                instance = new NioEventLoopGroup(size);
-                LOG.debug("Created shared eventloop group of size {}", size);
-            }
-            return instance;
-        }
+    static {
+        SHARED_GROUP = new NioEventLoopGroup(SystemPropertyUtil.getInt("jsonrpc.eventloop.size", 12));
+        HANDLER_GROUP = new DefaultEventExecutorGroup(SystemPropertyUtil.getInt("jsonrpc.eventloop.size", 12));
     }
 
     private EventLoopGroupProvider() {
@@ -49,9 +38,38 @@ public final class EventLoopGroupProvider {
     }
 
     /**
+     * Get shared {@link EventLoopGroup}.
+     *
+     * @return shared {@link EventLoopGroup}
+     */
+    public static EventLoopGroup getSharedGroup() {
+        return SHARED_GROUP;
+    }
+
+    /**
+     * Get {@link EventExecutorGroup} used by handlers at tail of Netty's
+     * pipeline.
+     *
+     * @return handlers' {@link EventLoopGroup}
+     */
+    public static EventExecutorGroup getHandlerGroup() {
+        return HANDLER_GROUP;
+    }
+
+    /**
      * Shutdown everything.
      */
     public static void shutdown() {
-        getSharedGroup().shutdownGracefully(0, 10, TimeUnit.MILLISECONDS);
+        final long awaitTermination = SystemPropertyUtil.getLong("jsonrpc.eventloop.await.termination", 500);
+        SHARED_GROUP.shutdownGracefully(awaitTermination, awaitTermination, TimeUnit.MILLISECONDS);
+        HANDLER_GROUP.shutdownGracefully(awaitTermination, awaitTermination, TimeUnit.MILLISECONDS);
+        // block until graceful shutdown completes
+        for (;;) {
+            if (SHARED_GROUP.isShutdown() && HANDLER_GROUP.isShutdown()) {
+                return;
+            }
+            Thread.yield();
+            Uninterruptibles.sleepUninterruptibly(100L, TimeUnit.MILLISECONDS);
+        }
     }
 }

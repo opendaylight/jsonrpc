@@ -13,22 +13,23 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
 import com.google.gson.stream.JsonReader;
+
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestName;
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcResult;
+import org.opendaylight.jsonrpc.bus.messagelib.AbstractTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.MessageLibrary;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
@@ -88,28 +89,29 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     private HierarchicalEnumMap<JsonElement, DataType, String> pathMap;
     private static final String TRANSPORT = "zmq";
     private ScheduledExecutorService exec;
-    @Rule
-    public TestName nameRule = new TestName();
 
     @Before
     public void setUp() throws Exception {
-        exec = Executors.newScheduledThreadPool(1);
+        exec = Executors.newScheduledThreadPool(4);
         pathMap = HierarchicalEnumHashMap.create(DataType.class, JsonPathCodec.create());
         rpcResponderPort = getFreeTcpPort();
+        transportFactory = new DefaultTransportFactory();
         startTransport();
         NormalizedNodesHelper.init(schemaContext);
         bi2baCodec = NormalizedNodesHelper.getBindingToNormalizedNodeCodec();
-        transportFactory = new DefaultTransportFactory();
         bridge = new JsonRPCtoRPCBridge(getPeer(), schemaContext, pathMap, mock(RemoteGovernance.class),
                 transportFactory, exec, new JsonConverter(schemaContext));
         mod = schemaContext.findModule("test-model", Revision.of("2016-11-17")).get();
+        logTestName("START");
     }
 
     @After
     public void tearDown() throws Exception {
+        logTestName("END");
         bridge.close();
         stopTransport();
         transportFactory.close();
+        exec.awaitTermination(250L, TimeUnit.MILLISECONDS);
         exec.shutdownNow();
     }
 
@@ -119,7 +121,6 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      */
     @Test(expected = ExecutionException.class, timeout = 15_000)
     public void testRpcUnknownMethod() throws InterruptedException, ExecutionException {
-        logTestName();
         NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "unknown-method"));
         SchemaPath path = rpcPath(mod, "unknown-method");
         bridge.invokeRpc(path, rpcDef).get();
@@ -131,7 +132,6 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      */
     @Test(timeout = 15_000)
     public void testRpcSimpleMethod() throws Exception {
-        logTestName();
         NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "simple-method"));
         SchemaPath path = rpcPath(mod, "simple-method");
         DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
@@ -148,9 +148,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      */
     @Test(timeout = 15_000)
     public void testRpcMultiplyLeafList() throws Exception {
-        logTestName();
         final SchemaPath path = rpcPath(mod, "multiply-ll");
-
         // BA => BI
         final ContainerNode rpcDef = prepareRpcInput(
                 new MultiplyLlInputBuilder().setMultiplier((short) 3).setNumbers(Lists.newArrayList(2, 5, 7)).build());
@@ -169,7 +167,6 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
 
     @Test(timeout = 15_000)
     public void testRpcFactorial() throws Exception {
-        logTestName();
         final SchemaPath path = rpcPath(mod, "factorial");
 
         // BA => BI
@@ -192,7 +189,6 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      */
     @Test(timeout = 15_000)
     public void testRpcMultiplyList() throws Exception {
-        logTestName();
         final SchemaPath path = rpcPath(mod, "multiply-list");
 
         // BA => BI
@@ -216,7 +212,6 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
 
     @Test(timeout = 15_000)
     public void testMethodWithAnyXmlNoData() throws Exception {
-        logTestName();
         final SchemaPath path = rpcPath(mod, "method-with-anyxml");
         final NormalizedNodeResult resultHolder = new NormalizedNodeResult();
         final NormalizedNodeStreamWriter writer = ImmutableNormalizedNodeStreamWriter.from(resultHolder);
@@ -237,7 +232,6 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
 
     @Test(timeout = 15_000)
     public void testRpcComplexResponse() throws Exception {
-        logTestName();
         final SchemaPath path = rpcPath(mod, "get-all-numbers");
         final DOMRpcResult result = bridge.invokeRpc(path, prepareRpcInput(new GetAllNumbersInputBuilder().build()))
                 .get();
@@ -251,14 +245,12 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      */
     @Test(expected = ExecutionException.class, timeout = 15_000)
     public void testRpcError() throws Exception {
-        logTestName();
         NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "error-method"));
         bridge.invokeRpc(rpcPath(mod, "error-method"), rpcDef).get();
     }
 
     @Test(timeout = 15_000)
     public void test_2LeafNodesInRpc() throws Exception {
-        logTestName();
         final SchemaPath path = rpcPath(mod, "removeCoffeePot");
         final NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "removeCoffeePot"));
         DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
@@ -273,12 +265,6 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     private void logResult(DOMRpcResult result) {
         LOG.info("Result : {}", result.getResult());
         LOG.info("Errors : {}", result.getErrors());
-    }
-
-    private void logTestName() {
-        LOG.info("{}", Strings.repeat("=", 140));
-        LOG.info("{}", nameRule.getMethodName());
-        LOG.info("{}", Strings.repeat("=", 140));
     }
 
     private <T extends DataContainer> ContainerNode prepareRpcInput(T dataObject) {
@@ -303,12 +289,14 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     }
 
     private void startTransport() {
-        messaging = new MessageLibrary(TRANSPORT);
+        messaging = ((AbstractTransportFactory)transportFactory).messageLibraryForTransport(TRANSPORT);
         rpcResponder = messaging.responder(String.format(TRANSPORT + "://0.0.0.0:%d", rpcResponderPort),
                 new MockRpcHandler());
+        LOG.info("Started responder on port {}", rpcResponderPort);
     }
 
     private void stopTransport() {
+        LOG.info("Stopping responder on port {}", rpcResponderPort);
         rpcResponder.close();
         messaging.close();
     }

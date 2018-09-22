@@ -22,8 +22,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.jsonrpc.bus.api.SessionType;
-import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
@@ -126,25 +124,6 @@ public final class Util {
     public static void closeNullable(@Nullable AutoCloseable closeable) throws Exception {
         if (closeable != null) {
             closeable.close();
-        }
-    }
-
-    /**
-     * Ensures that given URI will contain proper 'role' query parameter as
-     * required by {@link TransportFactory}'s method.
-     *
-     * @param inUri URI to check(and eventually fix) for presence of 'role'
-     *            parameter
-     * @param role {@link SessionType} to use
-     * @return URI which will contain 'role' query parameter as requested
-     */
-    public static String ensureRole(String inUri, SessionType role) {
-        int idx = inUri.indexOf('?');
-        if (idx == -1) {
-            return inUri + "?" + "role=" + role.name();
-        } else {
-            return inUri.substring(0, idx + 1) + org.opendaylight.jsonrpc.bus.messagelib.Util
-                    .replaceParam(inUri.substring(idx + 1), "role", role.name());
         }
     }
 

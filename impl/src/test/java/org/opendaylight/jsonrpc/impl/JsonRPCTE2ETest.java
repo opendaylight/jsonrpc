@@ -15,8 +15,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
+
 import java.net.URISyntaxException;
 import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
@@ -41,8 +41,6 @@ import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * End-to-end test connecting {@link JsonRPCDataBroker}, {@link JsonRPCTx} and {@link RemoteOmShard}.
@@ -54,7 +52,6 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
-    private static final Logger LOG = LoggerFactory.getLogger(JsonRPCTE2ETest.class);
     private JsonRPCDataBroker jrbroker;
     private MutablePeer peer;
     private RemoteGovernance governance;
@@ -80,11 +77,12 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
 
         jrbroker = new JsonRPCDataBroker(peer, schemaContext, pathMap, transportFactory, governance,
                 new JsonConverter(schemaContext));
+        logTestName("START");
     }
 
     @After
     public void tearDown() throws TransactionCommitFailedException, InterruptedException, ExecutionException {
-        LOG.info(Strings.repeat("-", 120));
+        logTestName("END");
         final DOMDataWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
         wtx.delete(LogicalDatastoreType.OPERATIONAL, yiiFromJson("{ \"network-topology:network-topology\": {}}"));
         wtx.commit().get();

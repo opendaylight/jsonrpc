@@ -10,6 +10,7 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
@@ -22,7 +23,7 @@ import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
  * @author Shaleen Saxena
  *
  */
-public class MessageLibrary implements AutoCloseable, CloseCallback {
+public class MessageLibrary implements AutoCloseable, Consumer<AutoCloseable> {
     private final BusSessionFactory factory;
     private final Collection<AbstractSession> sessions = ConcurrentHashMap.newKeySet();
 
@@ -102,7 +103,7 @@ public class MessageLibrary implements AutoCloseable, CloseCallback {
     }
 
     @Override
-    public void onClose(AutoCloseable closeable) {
+    public void accept(AutoCloseable closeable) {
         sessions.remove(closeable);
     }
 }

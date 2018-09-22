@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
-public class OmRootMessageHandler implements RequestMessageHandler, AutoCloseable {
+public class OmRootMessageHandler implements RequestMessageHandler {
     private static final Logger LOG = LoggerFactory.getLogger(OmRootMessageHandler.class);
     private final int governancePort;
 
@@ -61,10 +61,5 @@ public class OmRootMessageHandler implements RequestMessageHandler, AutoCloseabl
         String str = Resources.toString(Resources.getResource(getClass(), "/" + moduleName + ".yang"),
                 StandardCharsets.US_ASCII);
         return str;
-    }
-
-    @Override
-    public void close() throws Exception {
-        // no-op
     }
 }

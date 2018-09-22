@@ -171,7 +171,7 @@ public class HandshakeHandler extends SimpleChannelInboundHandler<ByteBuf> {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 if (!future.isSuccess()) {
-                    LOG.warn("Unable to perform handshake, closing channel", future.cause());
+                    LOG.warn("Unable to perform handshake, closing {}", future.channel(), future.cause());
                     future.channel().close();
                 }
             }
@@ -181,7 +181,7 @@ public class HandshakeHandler extends SimpleChannelInboundHandler<ByteBuf> {
     private void processMajorVersion(ChannelHandlerContext ctx, ByteBuf msg, final SessionType socketType) {
         int peerMajorVersion;
         peerMajorVersion = msg.readByte();
-        LOG.debug("Peer {} advertised major version {}", ctx.channel().remoteAddress(), peerMajorVersion);
+        LOG.debug("Peer {} advertised major version {}", ctx.channel(), peerMajorVersion);
         if (peerMajorVersion >= 3) {
             // If the peer version number is 3 or higher, the peer is
             // using ZMTP 3.0, so

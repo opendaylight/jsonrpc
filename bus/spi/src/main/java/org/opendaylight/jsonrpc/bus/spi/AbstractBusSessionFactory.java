@@ -40,7 +40,8 @@ public abstract class AbstractBusSessionFactory implements BusSessionFactory {
     protected final Set<WeakReference<BusSession>> sessions = ConcurrentHashMap.newKeySet();
 
     public AbstractBusSessionFactory(final String name) {
-        this(name, EventLoopGroupProvider.getSharedGroup());
+        this(name, EventLoopGroupProvider.getSharedGroup(), EventLoopGroupProvider.getSharedGroup(),
+                EventLoopGroupProvider.getHandlerGroup());
     }
 
     public AbstractBusSessionFactory(final String name, final EventLoopGroup sharedGroup) {

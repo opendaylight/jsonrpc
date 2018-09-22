@@ -9,6 +9,7 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
@@ -30,8 +31,8 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcSerializer;
 public class ResponderSessionImpl extends AbstractSession implements MessageListener, ResponderSession {
     private final RequestMessageHandler handler;
 
-    public ResponderSessionImpl(CloseCallback closeCallback, BusSessionFactory factory, RequestMessageHandler handler,
-            String uri) {
+    public ResponderSessionImpl(Consumer<AutoCloseable> closeCallback, BusSessionFactory factory,
+            RequestMessageHandler handler, String uri) {
         super(closeCallback);
         setAutocloseable(factory.responder(uri, this));
         this.handler = Objects.requireNonNull(handler);

@@ -43,7 +43,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                     <artifactId>maven-surefire-plugin</artifactId>
                     <configuration>
                         <rerunFailingTestsCount>3</rerunFailingTestsCount>
-                        <forkedProcessTimeoutInSeconds>120</forkedProcessTimeoutInSeconds>
+                        <forkedProcessTimeoutInSeconds>60</forkedProcessTimeoutInSeconds>
+                        <reuseForks>false</reuseForks>
                     </configuration>
                 </plugin>
             </plugins>

@@ -15,7 +15,6 @@ import com.google.gson.JsonElement;
 import java.util.NoSuchElementException;
 
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.jsonrpc.bus.api.SessionType;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
@@ -34,8 +33,7 @@ abstract class RemoteShardAware extends AbstractJsonRPCComponent implements Auto
             .build(new CacheLoader<String, RemoteOmShard>() {
                 @Override
                 public RemoteOmShard load(String uri) throws Exception {
-                    final String fixedEndpoint = Util.ensureRole(uri, SessionType.REQ);
-                    return transportFactory.createRequesterProxy(RemoteOmShard.class, fixedEndpoint,
+                    return transportFactory.createRequesterProxy(RemoteOmShard.class, uri,
                             TransportFactory.DEFAULT_TIMEOUT);
                 }
             });

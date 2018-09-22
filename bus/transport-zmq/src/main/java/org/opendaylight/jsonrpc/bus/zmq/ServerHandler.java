@@ -61,4 +61,10 @@ public class ServerHandler extends AbstractMessageListenerAdapter<Message> {
             first = true;
         }
     }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        LOG.error("Caught exception on {}, closing now", ctx.channel(), cause);
+        ctx.channel().close();
+    }
 }
