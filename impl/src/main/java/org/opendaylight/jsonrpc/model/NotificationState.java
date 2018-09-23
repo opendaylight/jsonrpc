@@ -16,7 +16,7 @@ import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
 
-public class NotificationState {
+public class NotificationState implements AutoCloseable {
     private final NotificationDefinition notification;
     private final SubscriberSession client;
 
@@ -32,5 +32,10 @@ public class NotificationState {
 
     public SubscriberSession client() {
         return this.client;
+    }
+
+    @Override
+    public void close() {
+        client.close();
     }
 }

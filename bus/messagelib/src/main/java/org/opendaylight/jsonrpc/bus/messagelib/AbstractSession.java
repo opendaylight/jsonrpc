@@ -11,10 +11,15 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public abstract class AbstractSession implements BaseSession {
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractSession.class);
     private final AtomicInteger id = new AtomicInteger();
     private AutoCloseable closeable;
     private final Consumer<AutoCloseable> closeCallback;
+    private final AtomicInteger refCount = new AtomicInteger(0);
     protected long timeout;
 
     AbstractSession(Consumer<AutoCloseable> closeCallback) {
@@ -37,8 +42,15 @@ public abstract class AbstractSession implements BaseSession {
 
     @Override
     public void close() {
-        Util.closeQuietly(closeable);
-        closeCallback.accept(this);
+        if (refCount.decrementAndGet() == 0) {
+            LOG.debug("Reference count reached 0, closing and removing {}", closeable);
+            Util.closeQuietly(closeable);
+            closeCallback.accept(this);
+        }
+    }
+
+    public void addReference() {
+        refCount.incrementAndGet();
     }
 
     @Override

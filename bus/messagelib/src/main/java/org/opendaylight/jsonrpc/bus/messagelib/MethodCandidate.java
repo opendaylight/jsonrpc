@@ -78,7 +78,7 @@ public class MethodCandidate {
             result = method.invoke(handler, args);
         } catch (Exception e) {
             postInvokeFailure = e;
-            LOG.debug("Invocation of method candidate '{}' failed", e);
+            LOG.debug("Invocation of method candidate '{}' failed", message.getMethod(), e);
         }
     }
 

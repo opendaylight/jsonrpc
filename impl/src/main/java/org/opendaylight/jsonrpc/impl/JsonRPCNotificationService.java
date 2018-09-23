@@ -102,7 +102,7 @@ public class JsonRPCNotificationService extends AbstractJsonRPCComponent
     @Override
     public void close() {
         // Close all notification listeners
-        mappedNotifications.values().stream().forEach(ns -> ns.client().close());
+        mappedNotifications.values().stream().forEach(NotificationState::close);
         mappedNotifications.clear();
         listeners.clear();
     }

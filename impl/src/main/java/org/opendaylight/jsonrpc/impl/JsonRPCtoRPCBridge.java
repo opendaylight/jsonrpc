@@ -341,6 +341,7 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
     public void close() {
         this.shuttingDown = true;
         processorFuture.cancel(true);
+        mappedRpcs.values().stream().forEach(RpcState::close);
     }
 
     private void requestProcessorThreadLoop() {

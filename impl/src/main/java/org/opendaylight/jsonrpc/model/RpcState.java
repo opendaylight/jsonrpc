@@ -21,7 +21,7 @@ import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 
-public class RpcState {
+public class RpcState implements AutoCloseable {
     private final String name;
     private final RpcDefinition rpc;
     private final RequesterSession client;
@@ -73,5 +73,10 @@ public class RpcState {
             error = reply.getError();
         }
         return result;
+    }
+
+    @Override
+    public void close() {
+        client.close();
     }
 }

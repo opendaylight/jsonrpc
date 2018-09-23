@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
  */
 public class RequesterSessionImpl extends AbstractSession implements MessageListener, RequesterSession {
     private static final Logger LOG = LoggerFactory.getLogger(RequesterSessionImpl.class);
-
     private final Object lock = new Object();
     private final Requester requester;
     private final ReplyMessageHandler handler;
@@ -115,7 +114,6 @@ public class RequesterSessionImpl extends AbstractSession implements MessageList
         final List<JsonRpcBaseMessage> replies = JsonRpcSerializer.fromJson(msg);
         if (replies.size() == 1) {
             if (replies.get(0).getType() != JsonRpcMessageType.REPLY) {
-                //throw new MessageLibraryMismatchException("Unexpected message : " + replies.get(0).getType().name());
                 throw new MessageLibraryMismatchException("Unexpected message : " + replies.get(0));
             } else {
                 return (JsonRpcReplyMessage) replies.get(0);

@@ -76,4 +76,9 @@ public abstract class AbstractSession implements AutoCloseable, BusSession {
             throw new IllegalArgumentException(String.format("Invalid URI : '%s'", uriStr), e);
         }
     }
+
+    @Override
+    public String toString() {
+        return "AbstractSession [" + sessionType + "@" + uri + "@" + hashCode() + "]";
+    }
 }
