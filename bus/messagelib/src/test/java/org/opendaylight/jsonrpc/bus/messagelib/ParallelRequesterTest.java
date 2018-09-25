@@ -23,7 +23,7 @@ public class ParallelRequesterTest {
     private static ProxyServiceImpl proxy;
     private static ThreadedSession server;
     private static String port;
-    private static int goodCount;
+    private static volatile int goodCount;
     private static int timeout = 150;
     private static int echoDelay = 100;
     private static int threadCount = 50;
