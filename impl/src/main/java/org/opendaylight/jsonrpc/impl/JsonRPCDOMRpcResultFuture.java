@@ -9,7 +9,7 @@
 
 package org.opendaylight.jsonrpc.impl;
 
-import com.google.common.util.concurrent.CheckedFuture;
+import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -19,15 +19,14 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
-import org.opendaylight.controller.md.sal.dom.api.DOMRpcException;
-import org.opendaylight.controller.md.sal.dom.api.DOMRpcResult;
-import org.opendaylight.jsonrpc.model.RpcExceptionImpl;
+import org.opendaylight.mdsal.dom.api.DOMRpcResult;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.model.api.SchemaPath;
 
@@ -37,7 +36,7 @@ import org.opendaylight.yangtools.yang.model.api.SchemaPath;
  */
 @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
 @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")
-final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOMRpcException> {
+final class JsonRPCDOMRpcResultFuture extends AbstractFuture<DOMRpcResult> {
     private volatile Exception exception = null;
     private final Consumer<JsonRPCDOMRpcResultFuture> consumer; /* who spawned this future */
     private final SettableFuture<DOMRpcResult> jsonRPCFuture;
@@ -57,7 +56,7 @@ final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOM
         this.pollingForResult = false;
     }
 
-    static CheckedFuture<DOMRpcResult, DOMRpcException> create(SettableFuture<DOMRpcResult> jsonRPCFuture,
+    static Future<DOMRpcResult> create(SettableFuture<DOMRpcResult> jsonRPCFuture,
             SettableFuture<String> uuidFuture, Consumer<JsonRPCDOMRpcResultFuture> consumer, final SchemaPath type,
             final NormalizedNode<?, ?> input) {
         return new JsonRPCDOMRpcResultFuture(jsonRPCFuture, uuidFuture, consumer, type, input);
@@ -109,6 +108,7 @@ final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOM
     }
 
     @SuppressFBWarnings("NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE")
+    @Override
     public boolean set(@Nullable DOMRpcResult value) {
         return jsonRPCFuture.set(value);
     }
@@ -150,24 +150,6 @@ final class JsonRPCDOMRpcResultFuture implements CheckedFuture<DOMRpcResult, DOM
             return result;
         } else {
             throw new ExecutionException(this.exception);
-        }
-    }
-
-    @Override
-    public DOMRpcResult checkedGet() throws DOMRpcException {
-        try {
-            return get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RpcExceptionImpl("Future failed", e);
-        }
-    }
-
-    @Override
-    public DOMRpcResult checkedGet(final long timeout, final TimeUnit unit) throws TimeoutException, DOMRpcException {
-        try {
-            return get(timeout, unit);
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RpcExceptionImpl("Future failed", e);
         }
     }
 

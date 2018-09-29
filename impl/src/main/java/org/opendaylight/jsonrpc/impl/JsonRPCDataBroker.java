@@ -11,34 +11,35 @@ import static org.opendaylight.jsonrpc.impl.Util.store2int;
 import static org.opendaylight.jsonrpc.impl.Util.store2str;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ClassToInstanceMap;
+import com.google.common.collect.ImmutableClassToInstanceMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataBrokerExtension;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataReadOnlyTransaction;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataReadWriteTransaction;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataTreeChangeListener;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataTreeChangeService;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataTreeIdentifier;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
-import org.opendaylight.controller.md.sal.dom.api.DOMTransactionChain;
+import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.ListenerKey;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
+import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.mdsal.common.api.TransactionChainListener;
+import org.opendaylight.mdsal.dom.api.DOMDataBroker;
+import org.opendaylight.mdsal.dom.api.DOMDataBrokerExtension;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeChangeListener;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeChangeService;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeIdentifier;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
+import org.opendaylight.mdsal.dom.api.DOMTransactionChain;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.concepts.AbstractListenerRegistration;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
@@ -49,7 +50,7 @@ import org.slf4j.LoggerFactory;
 public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker, DOMDataTreeChangeService {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCDataBroker.class);
     private static final JsonObject TOP = new JsonObject();
-    private final Map<Class<? extends DOMDataBrokerExtension>, DOMDataBrokerExtension> extensions;
+    private final ClassToInstanceMap<DOMDataBrokerExtension> extensions;
     private final Peer peer;
 
     /**
@@ -70,7 +71,7 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
             @Nonnull TransportFactory transportFactory, @Nullable RemoteGovernance governance,
             @Nonnull JsonConverter jsonConverter) {
         super(schemaContext, transportFactory, pathMap, jsonConverter);
-        extensions = ImmutableMap.<Class<? extends DOMDataBrokerExtension>, DOMDataBrokerExtension>builder()
+        extensions = ImmutableClassToInstanceMap.<DOMDataBrokerExtension>builder()
                 .put(DOMDataTreeChangeService.class, this)
                 .build();
         this.peer = Preconditions.checkNotNull(peer);
@@ -95,27 +96,27 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
     }
 
     @Override
-    public DOMDataReadOnlyTransaction newReadOnlyTransaction() {
+    public DOMDataTreeReadTransaction newReadOnlyTransaction() {
         return new JsonRPCTx(transportFactory, peer.getName(), pathMap, jsonConverter, schemaContext);
     }
 
     @Override
-    public DOMDataWriteTransaction newWriteOnlyTransaction() {
+    public DOMDataTreeWriteTransaction newWriteOnlyTransaction() {
         return new JsonRPCTx(transportFactory, peer.getName(), pathMap, jsonConverter, schemaContext);
     }
 
     @Override
-    public DOMDataReadWriteTransaction newReadWriteTransaction() {
+    public DOMDataTreeReadWriteTransaction newReadWriteTransaction() {
         return new JsonRPCTx(transportFactory, peer.getName(), pathMap, jsonConverter, schemaContext);
     }
 
     @Override
     public DOMTransactionChain createTransactionChain(TransactionChainListener listener) {
-        return new TxChain(this, listener, transportFactory, peer.getName(), pathMap, jsonConverter, schemaContext);
+        return new TxChain(this, listener, transportFactory, pathMap, jsonConverter, schemaContext);
     }
 
     @Override
-    public Map<Class<? extends DOMDataBrokerExtension>, DOMDataBrokerExtension> getSupportedExtensions() {
+    public @NonNull ClassToInstanceMap<DOMDataBrokerExtension> getExtensions() {
         return extensions;
     }
 

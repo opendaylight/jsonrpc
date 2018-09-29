@@ -15,14 +15,14 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataTreeChangeListener;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataTreeChangeService;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataTreeIdentifier;
 import org.opendaylight.jsonrpc.model.DataChangeNotification;
 import org.opendaylight.jsonrpc.model.DataChangeNotificationPublisher;
 import org.opendaylight.jsonrpc.model.ListenerKey;
+import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.mdsal.dom.api.DOMDataBroker;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeChangeListener;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeChangeService;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeIdentifier;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.tree.DataTreeCandidate;
@@ -58,7 +58,7 @@ public class DataChangeListenerRegistration
         this.listenerKey = Objects.requireNonNull(listenerKey);
         Objects.requireNonNull(domDataBroker);
         Objects.requireNonNull(store);
-        final DOMDataTreeChangeService dtcs = (DOMDataTreeChangeService) domDataBroker.getSupportedExtensions()
+        final DOMDataTreeChangeService dtcs = (DOMDataTreeChangeService) domDataBroker.getExtensions()
                 .get(DOMDataTreeChangeService.class);
         delegate = dtcs.registerDataTreeChangeListener(new DOMDataTreeIdentifier(store, path), this);
     }

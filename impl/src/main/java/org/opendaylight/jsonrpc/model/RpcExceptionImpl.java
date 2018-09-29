@@ -7,7 +7,7 @@
  */
 package org.opendaylight.jsonrpc.model;
 
-import org.opendaylight.controller.md.sal.dom.api.DOMRpcException;
+import org.opendaylight.mdsal.dom.api.DOMRpcException;
 
 /**
  * Simplistic implementation of {@link DOMRpcException}.

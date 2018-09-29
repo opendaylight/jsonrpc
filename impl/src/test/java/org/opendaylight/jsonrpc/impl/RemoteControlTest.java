@@ -17,20 +17,21 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
 import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
@@ -39,6 +40,8 @@ import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.ListenerKey;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.mdsal.binding.dom.adapter.BindingToNormalizedNodeCodec;
+import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
@@ -59,7 +62,6 @@ import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SuppressWarnings("deprecation")
 public class RemoteControlTest extends AbstractJsonRpcTest {
     private static final String TOPO_TP_DATA = "{\"network-topology:network-topology\":"
             + "{\"topology\":[{\"topology-id\":\"topology1\",\"node\":[{\"node-id\":\"node1\","
@@ -139,9 +141,9 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     public void testReadTopologyData() throws Exception {
         final BindingToNormalizedNodeCodec codec = NormalizedNodesHelper.getBindingToNormalizedNodeCodec();
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(schemaContext);
-        final DOMDataWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
+        final DOMDataTreeWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
         wtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
-        wtx.submit().checkedGet();
+        wtx.commit().get();
 
         InstanceIdentifier<NetworkTopology> nii = InstanceIdentifier.create(NetworkTopology.class);
 
@@ -224,9 +226,9 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
      * This test doesn't test anything, it is used as reference for other tests (merging related).
      */
     @Test
-    public void testMerge() throws OperationFailedException {
+    public void testMerge() throws OperationFailedException, InterruptedException, ExecutionException {
         final BindingToNormalizedNodeCodec codec = NormalizedNodesHelper.getBindingToNormalizedNodeCodec();
-        DOMDataWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
+        DOMDataTreeWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
         Config c1 = new ConfigBuilder().setWhoAmI(new Uri("urn:bla"))
                 .setConfiguredEndpoints(Lists.<ConfiguredEndpoints>newArrayList()).build();
 
@@ -234,7 +236,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
                 .toNormalizedNode(InstanceIdentifier.create(Config.class), c1);
 
         wtx.put(LogicalDatastoreType.CONFIGURATION, e1.getKey(), e1.getValue());
-        wtx.submit().checkedGet();
+        wtx.commit().get();
         ConfiguredEndpoints c2 = new ConfiguredEndpointsBuilder().setName("name-1")
                 .setModules(Lists.newArrayList(new YangIdentifier("ietf-inet-types"))).build();
 
@@ -245,7 +247,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         wtx = getDomBroker().newWriteOnlyTransaction();
         LOG.info("Merging data {} at path {}", e2.getValue(), e2.getKey());
         wtx.merge(LogicalDatastoreType.CONFIGURATION, e2.getKey(), e2.getValue());
-        wtx.submit().checkedGet();
+        wtx.commit().get();
     }
 
     @Test

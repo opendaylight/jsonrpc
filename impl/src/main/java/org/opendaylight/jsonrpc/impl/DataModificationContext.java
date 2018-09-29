@@ -21,12 +21,12 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 
-import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
 import org.opendaylight.jsonrpc.model.TransactionFactory;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 
 public class DataModificationContext implements AutoCloseable {
     private List<Throwable> errors = Collections.emptyList();
-    private final List<DOMDataWriteTransaction> txs = new ArrayList<>();
+    private final List<DOMDataTreeWriteTransaction> txs = new ArrayList<>();
     private final AtomicLong completed = new AtomicLong(-1);
 
     public DataModificationContext(@Nonnull final TransactionFactory transactionFactory) {
@@ -37,9 +37,9 @@ public class DataModificationContext implements AutoCloseable {
     /**
      * Allocates new transaction.
      *
-     * @return {@link DOMDataWriteTransaction}
+     * @return {@link DOMDataTreeWriteTransaction}
      */
-    public DOMDataWriteTransaction newWriteTransaction() {
+    public DOMDataTreeWriteTransaction newWriteTransaction() {
         return txs.get(0);
     }
 
@@ -53,7 +53,7 @@ public class DataModificationContext implements AutoCloseable {
                 // there is nothing no cancel
                 return true;
             }
-            return txs.stream().allMatch(DOMDataWriteTransaction::cancel);
+            return txs.stream().allMatch(DOMDataTreeWriteTransaction::cancel);
         } finally {
             completed.set(System.currentTimeMillis());
         }
@@ -122,7 +122,7 @@ public class DataModificationContext implements AutoCloseable {
     /*
      * Helper method which perform transaction submission and extract Exception
      */
-    private static Optional<Throwable> extractError(DOMDataWriteTransaction tx) {
+    private static Optional<Throwable> extractError(DOMDataTreeWriteTransaction tx) {
         try {
             tx.commit().get();
             return Optional.empty();

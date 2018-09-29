@@ -11,8 +11,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.CheckedFuture;
-import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -36,21 +35,21 @@ import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.opendaylight.controller.md.sal.dom.api.DOMRpcAvailabilityListener;
-import org.opendaylight.controller.md.sal.dom.api.DOMRpcException;
-import org.opendaylight.controller.md.sal.dom.api.DOMRpcIdentifier;
-import org.opendaylight.controller.md.sal.dom.api.DOMRpcResult;
-import org.opendaylight.controller.md.sal.dom.api.DOMRpcService;
-import org.opendaylight.controller.md.sal.dom.spi.DefaultDOMRpcResult;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.RpcExceptionImpl;
 import org.opendaylight.jsonrpc.model.RpcState;
+import org.opendaylight.mdsal.dom.api.DOMRpcAvailabilityListener;
+import org.opendaylight.mdsal.dom.api.DOMRpcIdentifier;
+import org.opendaylight.mdsal.dom.api.DOMRpcResult;
+import org.opendaylight.mdsal.dom.api.DOMRpcService;
+import org.opendaylight.mdsal.dom.spi.DefaultDOMRpcResult;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.concepts.AbstractListenerRegistration;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
+import org.opendaylight.yangtools.util.concurrent.FluentFutures;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.QNameModule;
 import org.opendaylight.yangtools.yang.common.RpcError.ErrorType;
@@ -170,11 +169,10 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
     /* RPC Bridge functionality */
     @Nonnull
     @Override
-    public CheckedFuture<DOMRpcResult, DOMRpcException> invokeRpc(@Nonnull final SchemaPath type,
+    public FluentFuture<DOMRpcResult> invokeRpc(@Nonnull final SchemaPath type,
             @Nullable final NormalizedNode<?, ?> input) {
-
-        if (this.shuttingDown) {
-            return Futures.immediateFailedCheckedFuture(new RpcExceptionImpl("RPC Bridge shutting down"));
+        if (shuttingDown) {
+            return bridgeNotAvailable();
         }
 
         SettableFuture<DOMRpcResult> futureResult = SettableFuture.create();
@@ -186,9 +184,14 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
                     postponedResult
             );
         } catch (java.lang.InterruptedException e) {
-            return Futures.immediateFailedCheckedFuture(new RpcExceptionImpl(e.getMessage()));
+            return bridgeNotAvailable();
         }
         return postponedResult;
+    }
+
+    private FluentFuture<DOMRpcResult> bridgeNotAvailable() {
+        return FluentFutures.immediateFluentFuture(resultFromException(
+                new IllegalStateException("RPC Bridge shutting down")));
     }
 
     /**

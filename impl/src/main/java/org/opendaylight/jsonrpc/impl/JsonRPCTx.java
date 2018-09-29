@@ -10,40 +10,44 @@ package org.opendaylight.jsonrpc.impl;
 import static org.opendaylight.jsonrpc.impl.Util.store2int;
 import static org.opendaylight.jsonrpc.impl.Util.store2str;
 
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.util.concurrent.CheckedFuture;
 import com.google.common.util.concurrent.FluentFuture;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.annotation.Nonnull;
-import org.opendaylight.controller.md.sal.common.api.MappingCheckedFuture;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
-import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataReadOnlyTransaction;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataReadWriteTransaction;
+
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.JSONRPCArg;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
+import org.opendaylight.jsonrpc.model.TransactionListener;
 import org.opendaylight.mdsal.common.api.CommitInfo;
+import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.mdsal.common.api.TransactionCommitFailedException;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
+import org.opendaylight.yangtools.util.concurrent.FluentFutures;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgument;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStreamWriter;
+import org.opendaylight.yangtools.yang.data.codec.gson.JSONCodecFactorySupplier;
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.data.impl.schema.NormalizedNodeResult;
@@ -55,15 +59,15 @@ import org.opendaylight.yangtools.yang.model.api.SchemaNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@SuppressWarnings("deprecation")
-public class JsonRPCTx extends RemoteShardAware
-        implements DOMDataReadWriteTransaction, DOMDataReadOnlyTransaction {
+public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteTransaction, DOMDataTreeReadTransaction {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCTx.class);
+    private static final JSONCodecFactorySupplier CODEC = JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02;
     private final String deviceName;
 
     /* Transaction ID */
     private final Map<String, RemoteOmShard> endPointMap;
     private final Map<String, String> txIdMap;
+    private final List<TransactionListener> listeners = new CopyOnWriteArrayList<>();
 
     /**
      * Instantiates a new ZMQ Bus Transaction.
@@ -93,10 +97,7 @@ public class JsonRPCTx extends RemoteShardAware
     }
 
     private RemoteOmShard getOmShard(final LogicalDatastoreType store, JsonElement path) {
-        final String endpoint = lookupEndPoint(store, path);
-        return endPointMap.computeIfAbsent(endpoint, shard -> {
-            return getShard(store, path);
-        });
+        return endPointMap.computeIfAbsent(lookupEndPoint(store, path), shard -> getShard(store, path));
     }
 
     private String getTxId(String endpoint) {
@@ -107,7 +108,7 @@ public class JsonRPCTx extends RemoteShardAware
     @SuppressWarnings("checkstyle:IllegalCatch")
     // jsonParser may be null in the finally block below - this is OK but FB flags it.
     @SuppressFBWarnings("NP_LOAD_OF_KNOWN_NULL_VALUE")
-    public CheckedFuture<Optional<NormalizedNode<?, ?>>, ReadFailedException> read(final LogicalDatastoreType store,
+    public FluentFuture<Optional<NormalizedNode<?, ?>>> read(final LogicalDatastoreType store,
             final YangInstanceIdentifier path) {
         final JSONRPCArg arg = jsonConverter.toBus(path, null);
         if (path.getPathArguments().isEmpty()) {
@@ -115,7 +116,7 @@ public class JsonRPCTx extends RemoteShardAware
         }
         final RemoteOmShard omshard = getOmShard(store, arg.getPath());
         /* Read from the bus and adjust for BUS to ODL differences */
-        JsonObject rootJson = null;
+        final JsonObject rootJson;
         try {
             rootJson = jsonConverter.fromBus(path,
                     omshard.read(store2str(store2int(store)), deviceName, arg.getPath()));
@@ -127,7 +128,6 @@ public class JsonRPCTx extends RemoteShardAware
             return readFailure();
         }
         final NormalizedNodeResult result = new NormalizedNodeResult();
-        JsonParserStream jsonParser = null;
         DataNodeContainer tracker = schemaContext;
         try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(result)) {
             final Iterator<PathArgument> pathIterator = path.getPathArguments().iterator();
@@ -153,55 +153,40 @@ public class JsonRPCTx extends RemoteShardAware
                     }
                 }
             }
-
-            jsonParser = JsonParserStream.create(streamWriter, schemaContext, (SchemaNode) tracker);
-            /*
-             * Kludge - we convert to string so that the StringReader can
-             * consume it, we need to replace this with a native translator into
-             * NormalizedNode
-             */
-            try {
+            try (JsonParserStream jsonParser = JsonParserStream.create(streamWriter, CODEC.getShared(schemaContext),
+                    (SchemaNode) tracker)) {
+                /*
+                 * Kludge - we convert to string so that the StringReader can
+                 * consume it, we need to replace this with a native translator into
+                 * NormalizedNode
+                 */
                 jsonParser.parse(new JsonReader(new StringReader(rootJson.toString())));
-            } catch (IllegalArgumentException e) {
-                LOG.error("Failed to parse read data {}", rootJson.toString());
-                return readFailure(e);
-            }
-            final ListenableFuture<Optional<NormalizedNode<?, ?>>> future = Futures
-                    .immediateFuture(Optional.<NormalizedNode<?, ?>>of(result.getResult()));
-            switch (store) {
-                case CONFIGURATION:
-                case OPERATIONAL:
-                    return MappingCheckedFuture.create(future, ReadFailedException.MAPPER);
-                default:
-                    throw new IllegalArgumentException(String.format(
-                        "%s, Cannot read data %s for %s datastore, unknown datastore type", deviceName, path, store));
+                return FluentFutures.immediateFluentFuture(Optional.of(result.getResult()));
+
             }
         } catch (IOException e) {
             throw new IllegalStateException("Failed to close NormalizedNodeStreamWriter", e);
-        } finally {
-            Util.closeNullableWithExceptionCallback(jsonParser, e -> LOG.warn("Failed to close JsonParser", e));
         }
     }
 
-    private CheckedFuture<Optional<NormalizedNode<?, ?>>, ReadFailedException> readFailure(Exception ex) {
-        return MappingCheckedFuture.create(Futures.immediateFailedFuture(ex), ReadFailedException.MAPPER);
+    private FluentFuture<Optional<NormalizedNode<?, ?>>> readFailure(Exception ex) {
+        return FluentFutures.immediateFailedFluentFuture(ex);
     }
 
-    private CheckedFuture<Optional<NormalizedNode<?, ?>>, ReadFailedException> readFailure() {
-        return MappingCheckedFuture.create(Futures.immediateFuture(Optional.<NormalizedNode<?, ?>>absent()),
-                ReadFailedException.MAPPER);
+    private FluentFuture<Optional<NormalizedNode<?, ?>>> readFailure() {
+        return FluentFutures.immediateFluentFuture(Optional.empty());
     }
 
     @Override
     @SuppressWarnings("checkstyle:IllegalCatch")
-    public CheckedFuture<Boolean, ReadFailedException> exists(LogicalDatastoreType store, YangInstanceIdentifier path) {
+    public FluentFuture<Boolean> exists(LogicalDatastoreType store, YangInstanceIdentifier path) {
         final JSONRPCArg arg = jsonConverter.toBus(path, null);
         final RemoteOmShard omshard = getOmShard(store, arg.getPath());
         try {
-            return Futures.immediateCheckedFuture(omshard.exists(store2str(store2int(store)),
-                    deviceName, arg.getPath()));
+            return FluentFutures.immediateBooleanFluentFuture(
+                    omshard.exists(store2str(store2int(store)), deviceName, arg.getPath()));
         } catch (Exception e) {
-            return MappingCheckedFuture.create(Futures.immediateFailedFuture(e), ReadFailedException.MAPPER);
+            return FluentFutures.immediateFailedFluentFuture(e);
         }
     }
 
@@ -210,11 +195,8 @@ public class JsonRPCTx extends RemoteShardAware
             final NormalizedNode<?, ?> data) {
         final JSONRPCArg arg = jsonConverter.toBusWithStripControl(path, data, true);
         if (arg.getData() != null) {
-            /* ODL supplies a null arg to create an entry before setting it */
-            RemoteOmShard omshard = getOmShard(store, arg.getPath());
-            /* this is ugly - extra lookup, needs fixing on another pass */
-            omshard.put(getTxId(lookupEndPoint(store, arg.getPath())), store2str(store2int(store)), deviceName,
-                    arg.getPath(), arg.getData());
+            getOmShard(store, arg.getPath()).put(getTxId(lookupEndPoint(store, arg.getPath())),
+                    store2str(store2int(store)), deviceName, arg.getPath(), arg.getData());
         }
     }
 
@@ -225,15 +207,14 @@ public class JsonRPCTx extends RemoteShardAware
         final RemoteOmShard omshard = getOmShard(store, arg.getPath());
         omshard.merge(getTxId(lookupEndPoint(store, arg.getPath())), store2str(store2int(store)), deviceName,
                 arg.getPath(), arg.getData());
-
     }
 
     @Override
     public void delete(final LogicalDatastoreType store, final YangInstanceIdentifier path) {
         final JSONRPCArg arg = jsonConverter.toBus(path, null);
         final RemoteOmShard omshard = getOmShard(store, arg.getPath());
-        omshard.delete(getTxId(lookupEndPoint(store, arg.getPath())),
-                store2str(store2int(store)), deviceName, arg.getPath());
+        omshard.delete(getTxId(lookupEndPoint(store, arg.getPath())), store2str(store2int(store)), deviceName,
+                arg.getPath());
     }
 
     @Override
@@ -244,8 +225,8 @@ public class JsonRPCTx extends RemoteShardAware
     @Override
     public boolean cancel() {
         boolean result = true;
-        for (Map.Entry<String, RemoteOmShard> entry : this.endPointMap.entrySet()) {
-            RemoteOmShard omshard = this.endPointMap.get(entry.getKey());
+        for (Map.Entry<String, RemoteOmShard> entry : endPointMap.entrySet()) {
+            RemoteOmShard omshard = endPointMap.get(entry.getKey());
             if (getTxId(entry.getKey()) != null) {
                 /*
                  * We never allocated a txid, so no need to send message to om.
@@ -253,21 +234,29 @@ public class JsonRPCTx extends RemoteShardAware
                 result &= omshard.cancel(getTxId(entry.getKey()));
             }
         }
+        listeners.forEach(listener -> listener.onCancel(this));
         return result;
     }
 
     @Override
     public FluentFuture<? extends CommitInfo> commit() {
+        listeners.forEach(txl -> txl.onSubmit(this));
         final AtomicBoolean result = new AtomicBoolean(true);
-        endPointMap.entrySet().forEach(entry -> {
-            result.set(result.get() && entry.getValue().commit(getTxId(entry.getKey())));
-        });
-
+        endPointMap.entrySet()
+                .forEach(entry -> result.set(result.get() && entry.getValue().commit(getTxId(entry.getKey()))));
         if (result.get()) {
+            listeners.forEach(txListener -> txListener.onSuccess(this));
             return CommitInfo.emptyFluentFuture();
+        } else {
+            final Throwable failure = new TransactionCommitFailedException(
+                    "Commit of transaction " + getIdentifier() + " failed");
+            listeners.forEach(txListener -> txListener.onFailure(this, failure));
+            return FluentFutures.immediateFailedFluentFuture(failure);
         }
+    }
 
-        return FluentFuture.from(Futures.immediateFailedFuture(new TransactionCommitFailedException(
-                "Commit of transaction " + getIdentifier() + " failed")));
+    AutoCloseable addCallback(TransactionListener listener) {
+        listeners.add(listener);
+        return () -> listeners.remove(listener);
     }
 }

@@ -7,10 +7,13 @@
  */
 package org.opendaylight.jsonrpc.model;
 
+import java.time.Instant;
 import java.util.Date;
+
 import javax.annotation.Nonnull;
-import org.opendaylight.controller.md.sal.dom.api.DOMEvent;
-import org.opendaylight.controller.md.sal.dom.api.DOMNotification;
+
+import org.opendaylight.mdsal.dom.api.DOMEvent;
+import org.opendaylight.mdsal.dom.api.DOMNotification;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.model.api.SchemaPath;
 
@@ -39,13 +42,13 @@ public class JsonRpcNotification implements DOMNotification, DOMEvent {
     }
 
     @Override
-    public Date getEventTime() {
-        return (Date) eventTime.clone();
-    }
-
-    @Override
     public String toString() {
         return "JsonRpcNotification [eventTime=" + eventTime + ", content=" + content + ", schemaPath=" + schemaPath
                 + "]";
+    }
+
+    @Override
+    public Instant getEventInstant() {
+        return Instant.ofEpochMilli(eventTime.getTime());
     }
 }

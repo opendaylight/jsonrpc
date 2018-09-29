@@ -32,14 +32,14 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.GuardedBy;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataReadOnlyTransaction;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataReadWriteTransaction;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.ListenerKey;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.jsonrpc.model.TransactionFactory;
+import org.opendaylight.mdsal.dom.api.DOMDataBroker;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
@@ -107,10 +107,8 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     public JsonElement read(int store, String entity, JsonElement path) {
         final YangInstanceIdentifier pathAsIId = path2II(path);
         LOG.debug("READ : YII :{}", pathAsIId);
-        final DOMDataReadWriteTransaction rTrx = domDataBroker.newReadWriteTransaction();
-        NormalizedNode<?, ?> result;
-        try {
-            result = rTrx.read(int2store(store), pathAsIId).get().get();
+        try (DOMDataTreeReadWriteTransaction rTrx = domDataBroker.newReadWriteTransaction()) {
+            final NormalizedNode<?, ?> result = rTrx.read(int2store(store), pathAsIId).get().orElse(null);
             LOG.info("Result is {}", result);
             return jsonConverter.toBus(pathAsIId, result).getData();
         } catch (InterruptedException | ExecutionException e) {
@@ -128,7 +126,7 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
         final YangInstanceIdentifier pathAsIId = path2II(path);
         LOG.info("PUT txId : {}, store : {}, entity : {}, path : {}, YII :{}, data : {}", txId, int2store(store),
                 entity, path, pathAsIId, data);
-        final DOMDataWriteTransaction wtx = allocateTrx(txId).getValue().newWriteTransaction();
+        final DOMDataTreeWriteTransaction wtx = allocateTrx(txId).getValue().newWriteTransaction();
         wtx.put(int2store(store), pathAsIId,
                 jsonConverter.jsonElementToNormalizedNode(injectQName(pathAsIId, data), pathAsIId));
     }
@@ -142,7 +140,7 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     public boolean exists(int store, String entity, JsonElement path) {
         final YangInstanceIdentifier pathAsIId = path2II(path);
         LOG.debug("EXISTS store={}, entity={}, path={}, YII={}", int2store(store), entity, path, pathAsIId);
-        try (DOMDataReadOnlyTransaction trx = domDataBroker.newReadOnlyTransaction()) {
+        try (DOMDataTreeReadTransaction trx = domDataBroker.newReadOnlyTransaction()) {
             return trx.exists(int2store(store), pathAsIId).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new IllegalStateException("Read failed", e);
@@ -159,7 +157,7 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
 
     @Override
     public void merge(String txId, int store, String entity, JsonElement path, JsonElement data) {
-        final DOMDataWriteTransaction trx = allocateTrx(txId).getValue().newWriteTransaction();
+        final DOMDataTreeWriteTransaction trx = allocateTrx(txId).getValue().newWriteTransaction();
         final YangInstanceIdentifier pathAsIId = path2II(path);
         LOG.debug("MERGE : tx={}, store={}, entity={}, path={}, YII={}, data={}", txId, int2store(store), entity, path,
                 pathAsIId, data);
@@ -180,7 +178,7 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
         final YangInstanceIdentifier pathAsIId = path2II(path);
         LOG.debug("DELETE : tx={}, store={}, entity={}, path={}, YII={}", txId, int2store(store), entity, path,
                 pathAsIId);
-        final DOMDataWriteTransaction trx = allocateTrx(txId).getValue().newWriteTransaction();
+        final DOMDataTreeWriteTransaction trx = allocateTrx(txId).getValue().newWriteTransaction();
         trx.delete(int2store(store), pathAsIId);
     }
 

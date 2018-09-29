@@ -7,12 +7,12 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
-import org.opendaylight.controller.md.sal.binding.impl.AbstractWriteTransaction;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
-import org.opendaylight.controller.md.sal.dom.spi.ForwardingDOMDataWriteTransaction;
 import org.opendaylight.jsonrpc.model.TransactionFactory;
+import org.opendaylight.mdsal.binding.dom.adapter.AbstractWriteTransaction;
+import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.mdsal.dom.api.DOMDataBroker;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
+import org.opendaylight.mdsal.dom.spi.ForwardingDOMDataWriteTransaction;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNodes;
@@ -35,8 +35,8 @@ class EnsureParentTransactionFactory implements TransactionFactory {
     }
 
     @Override
-    public DOMDataWriteTransaction get() {
-        final DOMDataWriteTransaction delegateTx = domDataBroker.newWriteOnlyTransaction();
+    public DOMDataTreeWriteTransaction get() {
+        final DOMDataTreeWriteTransaction delegateTx = domDataBroker.newWriteOnlyTransaction();
         return new ForwardingDOMDataWriteTransaction() {
             @Override
             public void merge(LogicalDatastoreType store, YangInstanceIdentifier path, NormalizedNode<?, ?> data) {
@@ -49,10 +49,9 @@ class EnsureParentTransactionFactory implements TransactionFactory {
             }
 
             @Override
-            protected DOMDataWriteTransaction delegate() {
+            protected DOMDataTreeWriteTransaction delegate() {
                 return delegateTx;
             }
         };
     }
-
 }

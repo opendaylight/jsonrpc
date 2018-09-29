@@ -8,29 +8,27 @@
 package org.opendaylight.jsonrpc.impl;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
-import com.google.common.base.Optional;
 import com.google.gson.JsonElement;
 
 import java.net.URISyntaxException;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataReadTransaction;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
@@ -39,11 +37,20 @@ import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
 import org.opendaylight.jsonrpc.model.MutablePeer;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
+import org.opendaylight.mdsal.common.api.AsyncTransaction;
+import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.mdsal.common.api.TransactionChain;
+import org.opendaylight.mdsal.common.api.TransactionChainListener;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
+import org.opendaylight.mdsal.dom.api.DOMTransactionChain;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 
 /**
- * End-to-end test connecting {@link JsonRPCDataBroker}, {@link JsonRPCTx} and {@link RemoteOmShard}.
+ * End-to-end test connecting {@link JsonRPCDataBroker}, {@link JsonRPCTx} and
+ * {@link RemoteOmShard}.
  *
  * <p>
  * Goal is to make sure that behavior of {@link JsonRPCDataBroker} is consistent
@@ -81,9 +88,9 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     }
 
     @After
-    public void tearDown() throws TransactionCommitFailedException, InterruptedException, ExecutionException {
+    public void tearDown() throws InterruptedException, ExecutionException {
         logTestName("END");
-        final DOMDataWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
+        final DOMDataTreeWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
         wtx.delete(LogicalDatastoreType.OPERATIONAL, yiiFromJson("{ \"network-topology:network-topology\": {}}"));
         wtx.commit().get();
         exec.shutdown();
@@ -93,12 +100,12 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     public void testRead() throws Exception {
         // Write data to DOM DS
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(schemaContext);
-        final DOMDataWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
+        final DOMDataTreeWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
         wtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
         wtx.commit().get();
 
         // Read using JSON-RPC databroker
-        final DOMDataReadTransaction rtx = jrbroker.newReadOnlyTransaction();
+        final DOMDataTreeReadTransaction rtx = jrbroker.newReadOnlyTransaction();
         final Optional<NormalizedNode<?, ?>> result = rtx.read(LogicalDatastoreType.OPERATIONAL, e.getKey()).get();
         assertNotNull(result.get());
     }
@@ -107,14 +114,70 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     public void testWrite() throws Exception {
         // Write using JSON-RPC databroker
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(schemaContext);
-        final DOMDataWriteTransaction wtx = jrbroker.newWriteOnlyTransaction();
+        final DOMDataTreeWriteTransaction wtx = jrbroker.newWriteOnlyTransaction();
         wtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
         wtx.commit().get();
 
         // Read using DOM databroker
-        final DOMDataReadTransaction rtx = getDomBroker().newReadOnlyTransaction();
+        final DOMDataTreeReadTransaction rtx = getDomBroker().newReadOnlyTransaction();
         final Optional<NormalizedNode<?, ?>> result = rtx.read(LogicalDatastoreType.OPERATIONAL, e.getKey()).get();
         assertNotNull(result.get());
+    }
+
+    @Test
+    public void testReadWriteTransaction() throws Exception {
+        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(schemaContext);
+        final DOMDataTreeReadWriteTransaction rwtx = jrbroker.newReadWriteTransaction();
+        rwtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
+        Optional<NormalizedNode<?,?>> result = rwtx.read(LogicalDatastoreType.OPERATIONAL, e.getKey()).get();
+        rwtx.commit().get();
+        assertNotNull(result.get());
+    }
+
+    /*
+     * Expected error due to first TX is not yet finished
+     */
+    @Test(expected = IllegalStateException.class)
+    public void testUnfinishedTxChain() throws InterruptedException {
+        final DOMTransactionChain chain = jrbroker.createTransactionChain(new TransactionChainListener() {
+            @Override
+            public void onTransactionChainSuccessful(TransactionChain<?, ?> chain) {
+                // NOOP
+            }
+
+            @Override
+            public void onTransactionChainFailed(TransactionChain<?, ?> chain, AsyncTransaction<?, ?> transaction,
+                    Throwable cause) {
+                // NOOP
+            }
+        });
+        chain.newWriteOnlyTransaction();
+        chain.newWriteOnlyTransaction();
+    }
+
+    @Test
+    public void testTxChain() throws InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(schemaContext);
+        final DOMTransactionChain chain = jrbroker.createTransactionChain(new TransactionChainListener() {
+            @Override
+            public void onTransactionChainSuccessful(TransactionChain<?, ?> chain) {
+                latch.countDown();
+            }
+
+            @Override
+            public void onTransactionChainFailed(TransactionChain<?, ?> chain, AsyncTransaction<?, ?> transaction,
+                    Throwable cause) {
+            }
+        });
+        final DOMDataTreeWriteTransaction tx1 = chain.newWriteOnlyTransaction();
+        tx1.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
+        tx1.commit();
+        final DOMDataTreeWriteTransaction tx2 = chain.newWriteOnlyTransaction();
+        tx2.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
+        tx2.commit();
+        chain.close();
+        assertTrue(latch.await(10, TimeUnit.SECONDS));
     }
 
     private YangInstanceIdentifier yiiFromJson(String json) {

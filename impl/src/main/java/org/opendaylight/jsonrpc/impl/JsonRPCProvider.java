@@ -12,6 +12,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,18 +28,21 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
-import org.opendaylight.controller.md.sal.binding.api.ClusteredDataTreeChangeListener;
-import org.opendaylight.controller.md.sal.binding.api.DataBroker;
-import org.opendaylight.controller.md.sal.binding.api.DataTreeIdentifier;
-import org.opendaylight.controller.md.sal.binding.api.ReadOnlyTransaction;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
-import org.opendaylight.controller.md.sal.dom.api.DOMMountPointService;
+
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.SchemaContextProvider;
+import org.opendaylight.mdsal.binding.api.ClusteredDataTreeChangeListener;
+import org.opendaylight.mdsal.binding.api.DataBroker;
+import org.opendaylight.mdsal.binding.api.DataTreeIdentifier;
+import org.opendaylight.mdsal.binding.api.ReadTransaction;
+import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.mdsal.dom.api.DOMDataBroker;
+import org.opendaylight.mdsal.dom.api.DOMMountPointService;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
@@ -61,10 +65,10 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private static final String ME = "JSON RPC Provider";
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCProvider.class);
     private static final InstanceIdentifier<Config> GLOBAL_CFG_II = InstanceIdentifier.create(Config.class);
-    private static final DataTreeIdentifier<Config> OPER_DTI = new DataTreeIdentifier<>(
-            LogicalDatastoreType.OPERATIONAL, GLOBAL_CFG_II);
-    private static final DataTreeIdentifier<Config> CFG_DTI = new DataTreeIdentifier<>(
-            LogicalDatastoreType.CONFIGURATION, GLOBAL_CFG_II);
+    private static final DataTreeIdentifier<Config> OPER_DTI = DataTreeIdentifier
+            .create(LogicalDatastoreType.OPERATIONAL, GLOBAL_CFG_II);
+    private static final DataTreeIdentifier<Config> CFG_DTI = DataTreeIdentifier
+            .create(LogicalDatastoreType.CONFIGURATION, GLOBAL_CFG_II);
     private TransportFactory transportFactory;
     private DataBroker dataBroker;
     private DOMDataBroker domDataBroker;
@@ -84,15 +88,13 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
      * the user via restconf. Operational state will reflect actual result of
      * configuration via restconf and other sources.
      */
+    @Nullable
     private Config getConfig() {
-        final ReadOnlyTransaction roTrx = dataBroker.newReadOnlyTransaction();
-        try {
-            return roTrx.read(LogicalDatastoreType.CONFIGURATION, GLOBAL_CFG_II).get().orNull();
+        try (ReadTransaction roTrx = dataBroker.newReadOnlyTransaction()) {
+            return roTrx.read(LogicalDatastoreType.CONFIGURATION, GLOBAL_CFG_II).get().orElse(null);
         } catch (InterruptedException | ExecutionException e) {
             LOG.error("Failed to read configuration", e);
             return null;
-        } finally {
-            roTrx.close();
         }
     }
 

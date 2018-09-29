@@ -9,20 +9,30 @@
 
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import com.google.gson.JsonElement;
+
+import java.util.Objects;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import javax.annotation.Nonnull;
-import org.opendaylight.controller.md.sal.common.api.data.TransactionChainClosedException;
-import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataReadOnlyTransaction;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataReadWriteTransaction;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
-import org.opendaylight.controller.md.sal.dom.api.DOMTransactionChain;
+import javax.annotation.concurrent.GuardedBy;
+
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
+import org.opendaylight.jsonrpc.model.TransactionListener;
+import org.opendaylight.mdsal.common.api.TransactionChainClosedException;
+import org.opendaylight.mdsal.common.api.TransactionChainListener;
+import org.opendaylight.mdsal.dom.api.DOMDataBroker;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
+import org.opendaylight.mdsal.dom.api.DOMTransactionChain;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,60 +40,61 @@ import org.slf4j.LoggerFactory;
 /**
  * {@link DOMTransactionChain} implementation for Netconf connector.
  */
-public class TxChain implements DOMTransactionChain {
-
+public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionChain, TransactionListener {
     private static final Logger LOG = LoggerFactory.getLogger(TxChain.class);
-
     private final DOMDataBroker dataBroker;
     private final TransactionChainListener listener;
+    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     /**
-     * Transaction created by this chain that hasn't been submitted or cancelled yet.
+     * Transaction created by this chain that hasn't been submitted or cancelled
+     * yet.
      */
     private JsonRPCTx currentTransaction = null;
     private volatile boolean closed = false;
     private volatile boolean successful = true;
-    private final SchemaContext schemaContext;
-    private final String deviceName;
-    private final JsonConverter jsonConverter;
-    private final HierarchicalEnumMap<JsonElement, DataType, String> pathMap;
-    private final TransportFactory transportFactory;
+    @GuardedBy("rwLock")
+    private final ConcurrentMap<DOMDataTreeWriteTransaction, AutoCloseable> pendingTransactions =
+        Maps.newConcurrentMap();
 
-
-    public TxChain(final DOMDataBroker dataBroker, final TransactionChainListener listener,
-            @Nonnull TransportFactory transportFactory, @Nonnull String deviceName,
+    public TxChain(@Nonnull final DOMDataBroker dataBroker, @Nonnull final TransactionChainListener listener,
+            @Nonnull TransportFactory transportFactory,
             @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull JsonConverter jsonConverter,
             @Nonnull SchemaContext schemaContext) {
-        this.dataBroker = dataBroker;
-        this.listener = listener;
-        this.transportFactory = Preconditions.checkNotNull(transportFactory);
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(deviceName), "Peer name is missing");
-        this.deviceName = deviceName;
-        this.pathMap = Preconditions.checkNotNull(pathMap);
-        this.schemaContext = Preconditions.checkNotNull(schemaContext);
-        this.jsonConverter = Preconditions.checkNotNull(jsonConverter);
-
+        super(schemaContext, transportFactory, pathMap, jsonConverter);
+        this.dataBroker = Objects.requireNonNull(dataBroker);
+        this.listener = Objects.requireNonNull(listener);
     }
 
     @Override
-    public synchronized DOMDataReadOnlyTransaction newReadOnlyTransaction() {
+    public synchronized DOMDataTreeReadTransaction newReadOnlyTransaction() {
         checkOperationPermitted();
         return dataBroker.newReadOnlyTransaction();
     }
 
-    @Override
-    public synchronized JsonRPCTx newWriteOnlyTransaction() {
+    private JsonRPCTx getWriteTransaction() {
         checkOperationPermitted();
-        final DOMDataWriteTransaction writeTransaction = dataBroker.newWriteOnlyTransaction();
-        Preconditions.checkState(writeTransaction instanceof JsonRPCTx);
-        final JsonRPCTx pendingWriteTx = (JsonRPCTx) writeTransaction;
-        currentTransaction = pendingWriteTx;
-        return pendingWriteTx;
+        final Lock lock = rwLock.writeLock();
+        try {
+            lock.lock();
+            final DOMDataTreeWriteTransaction writeTransaction = dataBroker.newWriteOnlyTransaction();
+            Preconditions.checkState(writeTransaction instanceof JsonRPCTx);
+            final JsonRPCTx pendingWriteTx = (JsonRPCTx) writeTransaction;
+            pendingTransactions.put(pendingWriteTx, pendingWriteTx.addCallback(this));
+            currentTransaction = pendingWriteTx;
+            return pendingWriteTx;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public JsonRPCTx newWriteOnlyTransaction() {
+        return getWriteTransaction();
     }
 
     @Override
-    public synchronized DOMDataReadWriteTransaction newReadWriteTransaction() {
-        return new JsonRPCTx(transportFactory, deviceName, pathMap, jsonConverter, schemaContext);
+    public JsonRPCTx newReadWriteTransaction() {
+        return getWriteTransaction();
     }
 
     @Override
@@ -95,19 +106,63 @@ public class TxChain implements DOMTransactionChain {
     }
 
     /**
-     * Checks, if chain isn't closed and if there is no not submitted write transaction waiting.
+     * Checks, if chain isn't closed and if there is no not submitted write
+     * transaction waiting.
      */
     private void checkOperationPermitted() {
         if (closed) {
             throw new TransactionChainClosedException("Transaction chain was closed");
         }
-        Preconditions.checkState(currentTransaction == null, "Last write transaction has not finished yet");
+        Preconditions.checkState(Objects.isNull(currentTransaction), "Last write transaction has not finished yet");
     }
 
     private void notifyChainListenerSuccess() {
-        if (closed && successful) {
+        if (closed && successful && pendingTransactions.isEmpty()) {
             listener.onTransactionChainSuccessful(this);
         }
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
+    private void removeTx(final JsonRPCTx tx) {
+        final Lock lock = rwLock.writeLock();
+        // we need to make sure that returned value
+        // from List#remove does not cause NPE
+        try {
+            lock.lock();
+            Optional.fromNullable(pendingTransactions.remove(tx)).or(() -> {
+                // NOOP
+            }).close();
+        } catch (Exception e) {
+            LOG.error("Failed to remove pending transaction {}", tx, e);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public void onCancel(final JsonRPCTx jsonRPCTx) {
+        removeTx(jsonRPCTx);
+        currentTransaction = null;
+    }
+
+    @Override
+    public void onSuccess(JsonRPCTx tx) {
+        removeTx(tx);
+        notifyChainListenerSuccess();
+    }
+
+    @Override
+    public void onFailure(JsonRPCTx tx, Throwable failure) {
+        removeTx(tx);
+        successful = false;
+        if (currentTransaction != null) {
+            currentTransaction.cancel();
+        }
+        listener.onTransactionChainFailed(this, tx, failure);
+    }
+
+    @Override
+    public void onSubmit(JsonRPCTx jsonRPCTx) {
+        currentTransaction = null;
+    }
 }

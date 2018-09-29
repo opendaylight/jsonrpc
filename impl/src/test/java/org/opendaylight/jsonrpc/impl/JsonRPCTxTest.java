@@ -21,26 +21,29 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.google.common.base.Optional;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
 import java.net.URISyntaxException;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
+import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.mdsal.common.api.TransactionCommitFailedException;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
@@ -87,7 +90,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         final JsonElement elem = new JsonObject();
         doReturn(elem).when(om).read(eq(Util.store2str(Util.store2int(LogicalDatastoreType.OPERATIONAL))),
                 eq(DEVICE_NAME), any(JsonElement.class));
-        final ListenableFuture<Optional<NormalizedNode<?, ?>>> fopt = trx
+        final FluentFuture<Optional<NormalizedNode<?, ?>>> fopt = trx
                 .read(LogicalDatastoreType.OPERATIONAL, YangInstanceIdentifier.of(NetworkTopology.QNAME));
 
         final NormalizedNode<?, ?> nn = fopt.get(5, TimeUnit.SECONDS).get();
@@ -167,18 +170,16 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
 
     @SuppressWarnings("checkstyle:AvoidHidingCauseException")
     @Test(expected = TransactionCommitFailedException.class)
-    public void testSubmitFailure() throws InterruptedException, TimeoutException, ExecutionException,
-            TransactionCommitFailedException {
+    public void testSubmitFailure()
+            throws InterruptedException, TimeoutException, ExecutionException, TransactionCommitFailedException {
         doReturn(false).when(om).commit(anyString());
         trx.delete(LogicalDatastoreType.CONFIGURATION, YangInstanceIdentifier.of(NetworkTopology.QNAME));
-
         try {
             trx.commit().get(5, TimeUnit.SECONDS);
         } catch (ExecutionException e) {
             if (e.getCause() instanceof TransactionCommitFailedException) {
-                throw (TransactionCommitFailedException)e.getCause();
+                throw (TransactionCommitFailedException) e.getCause();
             }
-
             throw e;
         }
     }

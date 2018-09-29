@@ -21,9 +21,9 @@ import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
+import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Endpoint;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpoints;
@@ -151,12 +151,10 @@ public final class Util {
     @SuppressWarnings("checkstyle:IllegalCatch")
     public static void closeNullableWithExceptionCallback(@Nullable AutoCloseable closeable,
             @Nonnull Consumer<Exception> callback) {
-        if (closeable != null) {
-            try {
-                closeable.close();
-            } catch (Exception e) {
-                callback.accept(e);
-            }
+        try {
+            closeNullable(closeable);
+        } catch (Exception e) {
+            callback.accept(e);
         }
     }
 

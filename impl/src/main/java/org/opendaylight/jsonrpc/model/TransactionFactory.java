@@ -8,13 +8,14 @@
 package org.opendaylight.jsonrpc.model;
 
 import java.util.function.Supplier;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
+
+import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 
 /**
- * Factory abstraction to provide {@link DOMDataWriteTransaction} instances.
+ * Factory abstraction to provide {@link DOMDataTreeWriteTransaction} instances.
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  *
  */
-public interface TransactionFactory extends Supplier<DOMDataWriteTransaction> {
+public interface TransactionFactory extends Supplier<DOMDataTreeWriteTransaction> {
 }

@@ -28,13 +28,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
-import org.opendaylight.controller.md.sal.dom.api.DOMNotification;
+import javax.annotation.Nullable;
+
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;
 import org.opendaylight.jsonrpc.model.JSONRPCArg;
 import org.opendaylight.jsonrpc.model.JsonRpcNotification;
 import org.opendaylight.jsonrpc.model.NotificationContainerProxy;
 import org.opendaylight.jsonrpc.model.NotificationState;
+import org.opendaylight.mdsal.dom.api.DOMNotification;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.QNameModule;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
@@ -300,7 +302,8 @@ public class JsonConverter {
      * @return an object containing a converted path and data
      *
      */
-    public JSONRPCArg toBusWithStripControl(YangInstanceIdentifier path, NormalizedNode<?, ?> data, boolean strip) {
+    public JSONRPCArg toBusWithStripControl(YangInstanceIdentifier path, @Nullable NormalizedNode<?, ?> data,
+            boolean strip) {
         Iterator<PathArgument> pathIterator = path.getPathArguments().iterator();
         List<QName> qnames = new ArrayList<>();
         boolean topLevel = true;

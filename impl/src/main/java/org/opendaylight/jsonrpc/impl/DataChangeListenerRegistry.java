@@ -19,13 +19,13 @@ import java.util.UUID;
 
 import javax.annotation.Nonnull;
 
-import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.jsonrpc.bus.api.PeerContext;
 import org.opendaylight.jsonrpc.bus.messagelib.PeerContextHolder;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.DataChangeNotificationPublisher;
 import org.opendaylight.jsonrpc.model.ListenerKey;
+import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 
 /**
