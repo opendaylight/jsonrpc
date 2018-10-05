@@ -7,9 +7,7 @@ terms of the Eclipse Public License v1.0 which accompanies this distribution,
 and is available at http://www.eclipse.org/legal/epl-v10.html
 -->
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0">
-    <reference id="bossGroup" interface="io.netty.channel.EventLoopGroup" filter="(&amp;(type=boss)(name=jsonrpc))" />
-    <reference id="workerGroup" interface="io.netty.channel.EventLoopGroup" filter="(&amp;(type=worker)(name=jsonrpc))" />
-    <reference id="handlerExecutor" interface="io.netty.util.concurrent.EventExecutorGroup" filter="(&amp;(name=jsonrpc))" />
+    <reference id="config" interface="org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration" filter="(name=jsonrpc)" />
 
     <service ref="httpFactory" interface="org.opendaylight.jsonrpc.bus.api.BusSessionFactory">
         <service-properties>
@@ -36,26 +34,18 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     </service>
 
     <bean id="httpFactory" class="org.opendaylight.jsonrpc.bus.http.HttpBusSessionFactory" destroy-method="close">
-        <argument ref="bossGroup" />
-        <argument ref="workerGroup" />
-        <argument ref="handlerExecutor" />
+        <argument ref="config" />
     </bean>
 
     <bean id="httpsFactory" class="org.opendaylight.jsonrpc.bus.http.HttpsBusSessionFactory" destroy-method="close">
-        <argument ref="bossGroup" />
-        <argument ref="workerGroup" />
-        <argument ref="handlerExecutor" />
+        <argument ref="config" />
     </bean>
 
     <bean id="wsFactory" class="org.opendaylight.jsonrpc.bus.http.WsBusSessionFactory" destroy-method="close">
-        <argument ref="bossGroup" />
-        <argument ref="workerGroup" />
-        <argument ref="handlerExecutor" />
+        <argument ref="config" />
     </bean>
 
     <bean id="wssFactory" class="org.opendaylight.jsonrpc.bus.http.WssBusSessionFactory" destroy-method="close">
-        <argument ref="bossGroup" />
-        <argument ref="workerGroup" />
-        <argument ref="handlerExecutor" />
+        <argument ref="config" />
     </bean>
 </blueprint>

@@ -18,8 +18,6 @@ import org.opendaylight.jsonrpc.bus.api.Publisher;
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public interface TransportFactory extends AutoCloseable {
-    int DEFAULT_TIMEOUT = 30000;
-
     /**
      * Create {@link PublisherSession} T proxy instance using given URI.
      *
@@ -29,36 +27,7 @@ public interface TransportFactory extends AutoCloseable {
      * @return T proxy instance
      * @throws URISyntaxException when URI denoted by rawUri has invalid syntax
      */
-    default <T extends AutoCloseable> T createPublisherProxy(Class<T> clazz, String rawUri) throws URISyntaxException {
-        return createPublisherProxy(clazz, rawUri, DEFAULT_TIMEOUT);
-    }
-
-    /**
-     * Create {@link PublisherSession} T proxy instance using given URI with
-     * specific connection timeout.
-     *
-     * @param clazz Type of class to proxy
-     * @param rawUri URI pointing to responder
-     * @param <T> proxy class
-     * @param timeout connection timeout in milliseconds
-     * @return T proxy instance
-     * @throws URISyntaxException when URI denoted by rawUri has invalid syntax
-     */
-    <T extends AutoCloseable> T createPublisherProxy(Class<T> clazz, String rawUri, long timeout)
-            throws URISyntaxException;
-
-    /**
-     * Create {@link RequesterSession} T proxy instance using given URI.
-     *
-     * @param clazz Type of class to proxy
-     * @param rawUri URI pointing to responder
-     * @param <T> proxy class
-     * @return T proxy instance
-     * @throws URISyntaxException when URI denoted by rawUri has invalid syntax
-     */
-    default <T extends AutoCloseable> T createRequesterProxy(Class<T> clazz, String rawUri) throws URISyntaxException {
-        return createRequesterProxy(clazz, rawUri, DEFAULT_TIMEOUT);
-    }
+    <T extends AutoCloseable> T createPublisherProxy(Class<T> clazz, String rawUri) throws URISyntaxException;
 
     /**
      * Create {@link RequesterSession} T proxy instance using given URI with
@@ -67,11 +36,10 @@ public interface TransportFactory extends AutoCloseable {
      * @param clazz Type of class to proxy
      * @param rawUri URI pointing to responder
      * @param <T> proxy class
-     * @param timeout connection timeout
      * @return T proxy instance
      * @throws URISyntaxException when URI denoted by rawUri has invalid syntax
      */
-    <T extends AutoCloseable> T createRequesterProxy(Class<T> clazz, String rawUri, long timeout)
+    <T extends AutoCloseable> T createRequesterProxy(Class<T> clazz, String rawUri)
             throws URISyntaxException;
 
     /**

@@ -12,7 +12,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Joiner.MapJoiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Maps;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -43,29 +42,9 @@ public final class Util {
     public static final int DEFAULT_TIMEOUT = 30000;
     private static final Logger LOG = LoggerFactory.getLogger(Util.class);
     private static final MapJoiner QUERY_JOINER = Joiner.on('&').withKeyValueSeparator("=");
-    private static final String ROLE = "role";
 
     private Util() {
         // noop
-    }
-
-    /**
-     * Trim schema (protocol) and use "tcp" in URI, remove any recognized
-     * parameters and pass result to underlying transport library.
-     *
-     * @param inUri inbound URI
-     * @return prepared URI
-     */
-    public static String prepareUri(URI inUri) {
-        try {
-            return trimTrailingQuestionMark(new URI("tcp", null, inUri.getHost(), inUri.getPort(), inUri.getPath(),
-                    removeParams(inUri.getQuery() == null ? "" : inUri.getQuery(), ROLE), inUri.getFragment())
-                            .toString());
-        } catch (URISyntaxException e) {
-            // Impossible, outbound URI is constructed from inbound with no
-            // violation with regards to RFC2396
-            throw new IllegalStateException("This should never happen", e);
-        }
     }
 
     /**
@@ -93,34 +72,6 @@ public final class Util {
     }
 
     /**
-     * Takes URI's query parameters part and replaces given query parameter with
-     * new value. If no such parameter exists, it is added.
-     *
-     * @param rawQuery raw URI
-     * @param paramName name of parameter to replace
-     * @param paramValue value of replaced parameter
-     * @return modified URI
-     */
-    public static String replaceParam(String rawQuery, String paramName, String paramValue) {
-        final Map<String, String> params = Maps.newLinkedHashMap(tokenizeQuery(rawQuery));
-        params.put(paramName, paramValue);
-        Map<String, String> map = params.entrySet()
-                .stream()
-                .filter(e -> e.getValue() != null)
-                // collect into LinkedHashMap, which preserves insertion order
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (first, second) -> first,
-                        LinkedHashMap::new));
-        return QUERY_JOINER.join(map);
-    }
-
-    /*
-     * ZMQ does not like ending '?', which is permitted by URI specification.
-     */
-    private static String trimTrailingQuestionMark(String uri) {
-        return uri.endsWith("?") ? uri.substring(0, uri.length() - 1) : uri;
-    }
-
-    /**
      * Originally I used Guava's {@link Splitter} and {@link Joiner} to
      * manipulate URI, but they don't like fact, that URI query parameter does
      * not require value, which is perfectly fine with RFC-2396.
@@ -133,16 +84,22 @@ public final class Util {
             // no instantiation here
         }
 
-        public static Map<String, String> tokenize(String uri) {
+        /**
+         * Parse query parameters into key-value mapping.
+         *
+         * @param queryParams query parameters from URI
+         * @return key-value mapping of query parameters
+         */
+        public static Map<String, String> tokenize(String queryParams) {
             final Map<String, String> ret = new LinkedHashMap<>();
-            final Iterable<String> paramTokens = PARAM_SPLITTER.split(uri);
+            final Iterable<String> paramTokens = PARAM_SPLITTER.split(queryParams != null ? queryParams : "");
             for (final String tok : paramTokens) {
                 String[] parts = tok.split("=");
                 if (!"".equals(parts[0])) {
                     ret.put(parts[0], parts.length == 2 ? parts[1] : null);
                 }
             }
-            LOG.trace("Tokenized : {} into {}", uri, ret);
+            LOG.trace("Tokenized : {} into {}", queryParams, ret);
             return ret;
         }
     }
@@ -221,5 +178,21 @@ public final class Util {
                 .compare(left, right, argsSorter())
                 .compare(left, right, nameSorter())
                 .result();
+    }
+
+    /**
+     * Parse timeout value from URI's query parameters or provide default.
+     *
+     * @param uri endpoint URI
+     * @return timeout value
+     */
+    public static long timeoutFromUri(String uri) {
+        try {
+            final URI parsed = new URI(uri);
+            return Long.parseLong(
+                    tokenizeQuery(parsed.getQuery()).computeIfAbsent("timeout", t -> String.valueOf(DEFAULT_TIMEOUT)));
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 }

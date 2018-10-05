@@ -7,10 +7,8 @@
  */
 package org.opendaylight.jsonrpc.bus.http;
 
-import io.netty.channel.EventLoopGroup;
-import io.netty.util.concurrent.EventExecutorGroup;
-
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
+import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
 
 /**
  * {@link BusSessionFactory} implemented using plain websocket channel.
@@ -23,8 +21,7 @@ public class WsBusSessionFactory extends AbstractWebBusSessionFactory {
         super("ws", false, true, 80);
     }
 
-    public WsBusSessionFactory(EventLoopGroup bossGroup, EventLoopGroup workerGroup,
-            EventExecutorGroup handlerExecutor) {
-        super("ws", false, true, 80, bossGroup, workerGroup, handlerExecutor);
+    public WsBusSessionFactory(EventLoopConfiguration config) {
+        super("ws", false, true, 80, config);
     }
 }

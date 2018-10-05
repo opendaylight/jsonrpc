@@ -50,13 +50,6 @@ public class ProxyServiceImpl implements ProxyService {
     }
 
     @Override
-    public <T extends AutoCloseable> T createRequesterProxy(String uri, Class<T> cls, long timeout) {
-        final T proxy = createRequesterProxy(uri, cls);
-        setTimeout(proxy, timeout);
-        return proxy;
-    }
-
-    @Override
     public <T extends AutoCloseable> T createPublisherProxy(String uri, Class<T> cls) {
         final PublisherSession session = messaging.publisher(uri);
         final T obj = getProxySafe(cls);
@@ -64,24 +57,10 @@ public class ProxyServiceImpl implements ProxyService {
         return obj;
     }
 
-    @Override
-    public <T extends AutoCloseable> T createPublisherProxy(String uri, Class<T> cls, long timeout) {
-        T proxy = createPublisherProxy(uri, cls);
-        setTimeout(proxy, timeout);
-        return proxy;
-    }
-
     private void deleteProxy(Object obj) {
         final BaseSession session = proxyMap.remove(obj);
         if (session != null) {
             session.close();
-        }
-    }
-
-    private void setTimeout(Object obj, long time) {
-        final BaseSession session = proxyMap.get(obj);
-        if (session != null) {
-            session.setTimeout(time);
         }
     }
 
@@ -105,7 +84,7 @@ public class ProxyServiceImpl implements ProxyService {
          * structures.
          */
         if (CLOSE_METHOD_NAME.equals(methodName) && method.getParameterTypes().length == 0) {
-            LOG.debug("Cleaning up proxy instance {}", obj);
+            LOG.debug("Cleaning up proxy instance {}", proxyMap.get(obj));
             deleteProxy(obj);
             return null;
         }

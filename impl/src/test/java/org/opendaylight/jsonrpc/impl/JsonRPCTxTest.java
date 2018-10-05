@@ -12,7 +12,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -74,7 +73,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         transportFactory = mock(TransportFactory.class);
         NormalizedNodesHelper.init(schemaContext);
         om = mock(RemoteOmShard.class);
-        doReturn(om).when(transportFactory).createRequesterProxy(any(), anyString(), anyLong());
+        doReturn(om).when(transportFactory).createRequesterProxy(any(), anyString());
         conv = new JsonConverter(schemaContext);
         trx = new JsonRPCTx(transportFactory, DEVICE_NAME, pathMap, conv, schemaContext);
     }

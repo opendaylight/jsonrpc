@@ -13,7 +13,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 
 import io.netty.channel.ChannelInitializer;
-import io.netty.channel.EventLoopGroup;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.socket.SocketChannel;
@@ -34,6 +33,7 @@ import org.opendaylight.jsonrpc.bus.api.Subscriber;
 import org.opendaylight.jsonrpc.bus.spi.AbstractBusSessionFactory;
 import org.opendaylight.jsonrpc.bus.spi.AbstractChannelInitializer;
 import org.opendaylight.jsonrpc.bus.spi.DiscardingMessageListener;
+import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
 
 /**
  * Base class of web-based {@link BusSessionFactory} implementations.
@@ -55,8 +55,8 @@ abstract class AbstractWebBusSessionFactory extends AbstractBusSessionFactory {
     }
 
     AbstractWebBusSessionFactory(String name, final boolean useSsl, final boolean isWebsocket, int defaultPort,
-            EventLoopGroup bossGroup, EventLoopGroup workerGroup, EventExecutorGroup handlerExecutor) {
-        super(name, bossGroup, workerGroup, handlerExecutor);
+            EventLoopConfiguration config) {
+        super(name, config);
         this.isWebsocket = isWebsocket;
         this.useSsl = useSsl;
         this.defaultPort = defaultPort;

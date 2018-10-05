@@ -46,7 +46,7 @@ public class RequesterSessionImpl extends AbstractSession implements MessageList
 
     public RequesterSessionImpl(Consumer<AutoCloseable> closeCallback, BusSessionFactory factory, String uri,
             ReplyMessageHandler handler) {
-        super(closeCallback);
+        super(closeCallback, uri);
         requester = factory.requester(uri, this);
         this.handler = Objects.requireNonNull(handler);
         setAutocloseable(requester);
@@ -54,7 +54,7 @@ public class RequesterSessionImpl extends AbstractSession implements MessageList
 
     @Override
     public void onMessage(PeerContext peerContext, String message) {
-        LOG.info("Response : {}", message);
+        LOG.debug("Response : {}", message);
         final List<JsonRpcBaseMessage> messages = JsonRpcSerializer.fromJson(message);
         try {
             PeerContextHolder.set(peerContext);
@@ -77,6 +77,7 @@ public class RequesterSessionImpl extends AbstractSession implements MessageList
      * @param msg A single message (i.e. request or reply)
      */
     private void send(final String message) {
+        LOG.debug("Sending request : {}", message);
         synchronized (lock) {
             requester.send(message, timeout, TimeUnit.MILLISECONDS)
                     .addListener(new GenericFutureListener<Future<String>>() {
@@ -99,7 +100,8 @@ public class RequesterSessionImpl extends AbstractSession implements MessageList
                 final String resp = responseQueue.poll(timeout, TimeUnit.MILLISECONDS);
                 if (resp == null) {
                     throw new MessageLibraryTimeoutException(
-                            String.format("Message was not received within %d milliseconds", timeout));
+                            String.format("Message was not received within %d milliseconds from %s", timeout,
+                                    PeerContextHolder.get()));
                 } else {
                     return resp;
                 }

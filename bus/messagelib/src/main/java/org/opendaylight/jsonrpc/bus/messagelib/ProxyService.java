@@ -20,7 +20,8 @@ import java.lang.reflect.InvocationHandler;
  */
 public interface ProxyService extends InvocationHandler {
     /**
-     * Create {@link RequesterSession} proxy instance.
+     * Create {@link RequesterSession} proxy instance with specific timeout supplied (optionally) as query parameter
+     * 'timeout'.
      *
      * @param uri address of remote responder instance to connect to
      * @param cls known API implemented by remote {@link ResponderSession}.
@@ -30,18 +31,8 @@ public interface ProxyService extends InvocationHandler {
     <T extends AutoCloseable> T createRequesterProxy(String uri, Class<T> cls);
 
     /**
-     * Create {@link RequesterSession} proxy instance with specific timeout.
-     *
-     * @param uri address of remote responder instance to connect to
-     * @param cls known API implemented by remote {@link ResponderSession}.
-     * @param timeout connection timeout
-     * @param <T> type of API
-     * @return proxied instance of T
-     */
-    <T extends AutoCloseable> T createRequesterProxy(String uri, Class<T> cls, long timeout);
-
-    /**
-     * Create {@link PublisherSession} proxy instance.
+     * Create {@link PublisherSession} proxy instance with specific timeout supplied (optionally) as query parameter
+     * 'timeout'.
      *
      * @param uri address of remote publisher instance to connect to
      * @param cls known API
@@ -49,15 +40,4 @@ public interface ProxyService extends InvocationHandler {
      * @return proxied instance of T
      */
     <T extends AutoCloseable> T createPublisherProxy(String uri, Class<T> cls);
-
-    /**
-     * Create {@link PublisherSession} proxy instance.
-     *
-     * @param uri address of remote publisher instance to connect to
-     * @param cls known API
-     * @param timeout connection timeout
-     * @param <T> type of API
-     * @return proxied instance of T
-     */
-    <T extends AutoCloseable> T createPublisherProxy(String uri, Class<T> cls, long timeout);
 }

@@ -18,8 +18,7 @@ import io.netty.util.internal.SystemPropertyUtil;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Holder for shared instance of {@link EventLoopGroup}, normally used in
- * embedded applications.
+ * Holder for shared instance of {@link EventLoopGroup}, normally used in embedded applications.
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Mar 22, 2018
@@ -27,10 +26,12 @@ import java.util.concurrent.TimeUnit;
 public final class EventLoopGroupProvider {
     private static final EventLoopGroup SHARED_GROUP;
     private static final EventExecutorGroup HANDLER_GROUP;
+    private static final EventLoopConfiguration CONFIG;
 
     static {
         SHARED_GROUP = new NioEventLoopGroup(SystemPropertyUtil.getInt("jsonrpc.eventloop.size", 12));
         HANDLER_GROUP = new DefaultEventExecutorGroup(SystemPropertyUtil.getInt("jsonrpc.eventloop.size", 12));
+        CONFIG = new DefaultEventLoopConfiguration(SHARED_GROUP, SHARED_GROUP, HANDLER_GROUP);
     }
 
     private EventLoopGroupProvider() {
@@ -47,13 +48,21 @@ public final class EventLoopGroupProvider {
     }
 
     /**
-     * Get {@link EventExecutorGroup} used by handlers at tail of Netty's
-     * pipeline.
+     * Get {@link EventExecutorGroup} used by handlers at tail of Netty's pipeline.
      *
      * @return handlers' {@link EventLoopGroup}
      */
     public static EventExecutorGroup getHandlerGroup() {
         return HANDLER_GROUP;
+    }
+
+    /**
+     * Get configuration.
+     *
+     * @return {@link EventLoopConfiguration}
+     */
+    public static EventLoopConfiguration config() {
+        return CONFIG;
     }
 
     /**

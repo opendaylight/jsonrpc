@@ -8,13 +8,11 @@
 package org.opendaylight.jsonrpc.bus.messagelib;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
-import java.net.URI;
 import java.util.Map;
+
 import org.junit.Test;
-import org.opendaylight.jsonrpc.bus.api.SessionType;
 
 /**
  * Tests for {@link Util} class.
@@ -33,14 +31,8 @@ public class UtilTest {
     }
 
     @Test
-    public void testReplaceUri() {
-        assertEquals("role=REQ", Util.replaceParam("role=REP", "role", SessionType.REQ.name()));
-        assertEquals("role=REP", Util.replaceParam("", "role", SessionType.REP.name()));
-    }
-
-    @Test
-    public void testPrepareUri() throws Exception {
-        String uri = Util.prepareUri(new URI("zmq://localhost:5432/?param1=value1&param2=value2&role=REP"));
-        assertFalse(Util.UriTokenizer.tokenize(uri).containsKey("role"));
+    public void testTimeoutInUri() {
+        assertEquals(Util.DEFAULT_TIMEOUT, Util.timeoutFromUri("xyz://localhost"));
+        assertEquals(15_000, Util.timeoutFromUri("xyz://localhost?timeout=15000"));
     }
 }

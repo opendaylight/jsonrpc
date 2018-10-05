@@ -17,11 +17,4 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 public interface BaseSession extends AutoCloseable {
     @Override
     void close();
-
-    /**
-     * Set communication timeout for this session.
-     *
-     * @param timeoutMilliseconds timeout in milliseconds
-     */
-    void setTimeout(long timeoutMilliseconds);
 }

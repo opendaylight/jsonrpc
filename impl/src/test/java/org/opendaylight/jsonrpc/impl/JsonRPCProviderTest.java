@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.impl;
 
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -73,7 +72,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         tf = mock(TransportFactory.class);
 
         when(tf.createSubscriber(anyString(), any())).thenReturn(mock(SubscriberSession.class));
-        when(tf.createRequesterProxy(eq(RemoteGovernance.class), anyString(), anyLong())).thenReturn(GOVERNANCE_MOCK);
+        when(tf.createRequesterProxy(eq(RemoteGovernance.class), anyString())).thenReturn(GOVERNANCE_MOCK);
 
         governancePort = getFreeTcpPort();
         dummyPort = getFreeTcpPort();

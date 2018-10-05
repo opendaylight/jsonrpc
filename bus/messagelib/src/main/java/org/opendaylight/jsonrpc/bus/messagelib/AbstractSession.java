@@ -20,11 +20,11 @@ public abstract class AbstractSession implements BaseSession {
     private AutoCloseable closeable;
     private final Consumer<AutoCloseable> closeCallback;
     private final AtomicInteger refCount = new AtomicInteger(0);
-    protected long timeout;
+    protected final long timeout;
 
-    AbstractSession(Consumer<AutoCloseable> closeCallback) {
+    AbstractSession(Consumer<AutoCloseable> closeCallback, String uri) {
         this.closeCallback = Objects.requireNonNull(closeCallback);
-        this.timeout = 30_000L;
+        this.timeout = Util.timeoutFromUri(uri);
     }
 
     protected void setAutocloseable(AutoCloseable autoCloseable) {
@@ -33,11 +33,6 @@ public abstract class AbstractSession implements BaseSession {
 
     protected int nextId() {
         return id.incrementAndGet();
-    }
-
-    @Override
-    public void setTimeout(long timeoutMilliseconds) {
-        this.timeout = timeoutMilliseconds;
     }
 
     @Override

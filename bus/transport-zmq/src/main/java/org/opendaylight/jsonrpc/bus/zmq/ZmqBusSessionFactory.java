@@ -7,10 +7,8 @@
  */
 package org.opendaylight.jsonrpc.bus.zmq;
 
-import io.netty.channel.EventLoopGroup;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
-import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
@@ -20,6 +18,7 @@ import org.opendaylight.jsonrpc.bus.api.Requester;
 import org.opendaylight.jsonrpc.bus.api.Responder;
 import org.opendaylight.jsonrpc.bus.api.Subscriber;
 import org.opendaylight.jsonrpc.bus.spi.AbstractBusSessionFactory;
+import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
 
 /**
  * {@link BusSessionFactory} implemented using ZeroMQ 3.0 protocol.
@@ -33,9 +32,8 @@ public class ZmqBusSessionFactory extends AbstractBusSessionFactory {
         super(Constants.TRANSPORT_NAME);
     }
 
-    public ZmqBusSessionFactory(EventLoopGroup bossGroup, EventLoopGroup workerGroup,
-            EventExecutorGroup handlerExecutor) {
-        super(Constants.TRANSPORT_NAME, bossGroup, workerGroup, handlerExecutor);
+    public ZmqBusSessionFactory(EventLoopConfiguration config) {
+        super(Constants.TRANSPORT_NAME, config);
     }
 
     @Override

@@ -93,6 +93,6 @@ public class ReqRepTest extends AbstractSessionTest {
 
     @Override
     protected BusSessionFactory createFactory() {
-        return new ZmqBusSessionFactory(group, group, group);
+        return new ZmqBusSessionFactory(config);
     }
 }

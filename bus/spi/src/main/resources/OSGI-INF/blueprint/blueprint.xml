@@ -19,16 +19,37 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         </cm:default-properties>
     </cm:property-placeholder>
 
+    <bean id="bossFactory" class="org.opendaylight.jsonrpc.bus.spi.ThreadFactoryProvider" factory-method="create">
+        <argument value="boss" />
+    </bean>
+
+    <bean id="workerFactory" class="org.opendaylight.jsonrpc.bus.spi.ThreadFactoryProvider" factory-method="create">
+        <argument value="worker" />
+    </bean>
+
+    <bean id="handlerFactory" class="org.opendaylight.jsonrpc.bus.spi.ThreadFactoryProvider" factory-method="create">
+        <argument value="handler" />
+    </bean>
+
     <bean id="bossGroup" class="io.netty.channel.nio.NioEventLoopGroup" destroy-method="shutdown">
         <argument value="${boss.group.size}" />
+        <argument ref="bossFactory" />
     </bean>
 
     <bean id="workerGroup" class="io.netty.channel.nio.NioEventLoopGroup" destroy-method="shutdown">
         <argument value="${worker.group.size}" />
+        <argument ref="workerFactory" />
     </bean>
 
     <bean id="handlerExecutor" class="io.netty.util.concurrent.DefaultEventExecutorGroup" destroy-method="shutdown">
         <argument value="${handler.group.size}" />
+        <argument ref="handlerFactory" />
+    </bean>
+
+    <bean id="eventLoopConfiguration" class="org.opendaylight.jsonrpc.bus.spi.DefaultEventLoopConfiguration">
+        <argument ref="bossGroup" />
+        <argument ref="workerGroup" />
+        <argument ref="handlerExecutor" />
     </bean>
 
     <service interface="io.netty.channel.EventLoopGroup" ref="bossGroup">
@@ -52,6 +73,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     </service>
 
     <service interface="java.util.concurrent.ScheduledExecutorService" ref="handlerExecutor">
+        <service-properties>
+            <entry key="name" value="jsonrpc" />
+        </service-properties>
+    </service>
+
+    <service interface="org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration" ref="eventLoopConfiguration">
         <service-properties>
             <entry key="name" value="jsonrpc" />
         </service-properties>

@@ -44,6 +44,6 @@ public class HttpReqRepTest extends AbstractReqRepTest {
 
     @Override
     protected BusSessionFactory createFactory() {
-        return new HttpBusSessionFactory(group, group, group);
+        return new HttpBusSessionFactory(config);
     }
 }

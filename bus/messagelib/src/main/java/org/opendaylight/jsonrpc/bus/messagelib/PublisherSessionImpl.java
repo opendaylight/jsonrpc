@@ -27,7 +27,7 @@ public class PublisherSessionImpl extends AbstractSession implements PublisherSe
     private Publisher publisher;
 
     public PublisherSessionImpl(Consumer<AutoCloseable> closeCallback, BusSessionFactory factory, String uri) {
-        super(closeCallback);
+        super(closeCallback, uri);
         publisher = factory.publisher(uri);
         setAutocloseable(publisher);
     }

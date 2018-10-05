@@ -23,7 +23,7 @@ public class SubscriberSessionImpl extends AbstractSession implements Subscriber
 
     public SubscriberSessionImpl(Consumer<AutoCloseable> closeCallback, BusSessionFactory factory,
             NotificationMessageHandler handler, String topic, String uri) {
-        super(closeCallback);
+        super(closeCallback, uri);
         subscriber = factory.subscriber(uri, topic, new NotificationHandlerAdapter(handler));
         setAutocloseable(subscriber);
     }

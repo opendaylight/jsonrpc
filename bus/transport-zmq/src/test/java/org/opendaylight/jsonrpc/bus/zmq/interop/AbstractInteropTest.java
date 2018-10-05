@@ -14,6 +14,6 @@ import org.opendaylight.jsonrpc.bus.zmq.ZmqBusSessionFactory;
 abstract class AbstractInteropTest extends AbstractSessionTest {
     @Override
     protected BusSessionFactory createFactory() {
-        return new ZmqBusSessionFactory(group, group, group);
+        return new ZmqBusSessionFactory(config);
     }
 }

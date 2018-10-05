@@ -74,6 +74,6 @@ public class PubSubTest extends AbstractSessionTest {
 
     @Override
     protected BusSessionFactory createFactory() {
-        return new WsBusSessionFactory(group, group, group);
+        return new WsBusSessionFactory(config);
     }
 }

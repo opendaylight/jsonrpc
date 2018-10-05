@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.impl;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -41,6 +40,7 @@ import org.opendaylight.mdsal.common.api.AsyncTransaction;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.common.api.TransactionChain;
 import org.opendaylight.mdsal.common.api.TransactionChainListener;
+import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
@@ -78,7 +78,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         peer = new MutablePeer();
         peer.name("test");
         governance = mock(RemoteGovernance.class);
-        doReturn(shard).when(transportFactory).createRequesterProxy(any(), anyString(), anyLong());
+        doReturn(shard).when(transportFactory).createRequesterProxy(any(), anyString());
         pathMap.put(jsonParser.parse("{\"network-topology:network-topology\":{}}"),
                 DataType.OPERATIONAL_DATA, "zmq://localhost");
 

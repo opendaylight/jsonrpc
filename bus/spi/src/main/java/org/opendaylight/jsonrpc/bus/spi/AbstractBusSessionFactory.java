@@ -11,7 +11,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.EventExecutorGroup;
@@ -40,20 +39,15 @@ public abstract class AbstractBusSessionFactory implements BusSessionFactory {
     protected final Set<WeakReference<BusSession>> sessions = ConcurrentHashMap.newKeySet();
 
     public AbstractBusSessionFactory(final String name) {
-        this(name, EventLoopGroupProvider.getSharedGroup(), EventLoopGroupProvider.getSharedGroup(),
-                EventLoopGroupProvider.getHandlerGroup());
+        this(name, EventLoopGroupProvider.config());
     }
 
-    public AbstractBusSessionFactory(final String name, final EventLoopGroup sharedGroup) {
-        this(name, sharedGroup, sharedGroup, sharedGroup);
-    }
-
-    public AbstractBusSessionFactory(final String name, final EventLoopGroup bossGroup,
-            final EventLoopGroup workerGroup, final EventExecutorGroup handlerExecutor) {
+    public AbstractBusSessionFactory(final String name, final EventLoopConfiguration config) {
         this.name = name;
-        serverBootstrap = new ServerBootstrap().channel(NioServerSocketChannel.class).group(bossGroup);
-        clientBootstrap = new Bootstrap().channel(NioSocketChannel.class).group(workerGroup);
-        this.handlerExecutor = handlerExecutor;
+        serverBootstrap = new ServerBootstrap().channel(NioServerSocketChannel.class).group(config.bossGroup(),
+                config.workerGroup());
+        clientBootstrap = new Bootstrap().channel(NioSocketChannel.class).group(config.workerGroup());
+        this.handlerExecutor = config.handlerGroup();
     }
 
     @Override

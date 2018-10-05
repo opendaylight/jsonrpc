@@ -16,6 +16,8 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseMessage.JsonRpcMessageType;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Adapter for {@link NotificationMessageHandler}.
@@ -24,6 +26,7 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcSerializer;
  * @since Mar 27, 2018
  */
 public class NotificationHandlerAdapter implements MessageListener {
+    private static final Logger LOG = LoggerFactory.getLogger(NotificationHandlerAdapter.class);
     private final NotificationMessageHandler handler;
 
     public NotificationHandlerAdapter(final NotificationMessageHandler handler) {
@@ -32,6 +35,7 @@ public class NotificationHandlerAdapter implements MessageListener {
 
     @Override
     public void onMessage(final PeerContext peerContext, final String message) {
+        LOG.debug("Notification : {}", message);
         final List<JsonRpcBaseMessage> incoming = JsonRpcSerializer.fromJson(message);
         for (final JsonRpcBaseMessage notification : incoming) {
             if (notification.getType() != JsonRpcMessageType.NOTIFICATION) {

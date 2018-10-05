@@ -30,6 +30,6 @@ public class WsReqRepTest extends AbstractReqRepTest {
 
     @Override
     protected BusSessionFactory createFactory() {
-        return new WsBusSessionFactory(group, group, group);
+        return new WsBusSessionFactory(config);
     }
 }

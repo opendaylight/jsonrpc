@@ -7,10 +7,8 @@
  */
 package org.opendaylight.jsonrpc.bus.http;
 
-import io.netty.channel.EventLoopGroup;
-import io.netty.util.concurrent.EventExecutorGroup;
-
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
+import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
 
 /**
  * {@link BusSessionFactory} implemented using plain HTTP/1.1 channel.
@@ -23,8 +21,7 @@ public class HttpBusSessionFactory extends AbstractWebBusSessionFactory {
         super("http", false, false, 80);
     }
 
-    public HttpBusSessionFactory(EventLoopGroup bossGroup, EventLoopGroup workerGroup,
-            EventExecutorGroup handlerExecutor) {
-        super("http", false, false, 80, bossGroup, workerGroup, handlerExecutor);
+    public HttpBusSessionFactory(EventLoopConfiguration config) {
+        super("http", false, false, 80, config);
     }
 }

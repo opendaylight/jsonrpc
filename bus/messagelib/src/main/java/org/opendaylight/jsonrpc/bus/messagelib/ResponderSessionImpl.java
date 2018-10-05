@@ -21,6 +21,8 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage.Builder;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of {@link ResponderSession}.
@@ -29,17 +31,19 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcSerializer;
  * @since Mar 24, 2018
  */
 public class ResponderSessionImpl extends AbstractSession implements MessageListener, ResponderSession {
+    private static final Logger LOG = LoggerFactory.getLogger(ResponderSessionImpl.class);
     private final RequestMessageHandler handler;
 
     public ResponderSessionImpl(Consumer<AutoCloseable> closeCallback, BusSessionFactory factory,
             RequestMessageHandler handler, String uri) {
-        super(closeCallback);
+        super(closeCallback, uri);
         setAutocloseable(factory.responder(uri, this));
         this.handler = Objects.requireNonNull(handler);
     }
 
     @Override
     public void onMessage(PeerContext peerContext, String message) {
+        LOG.info("Request : {}", message);
         final List<JsonRpcBaseMessage> incomming = JsonRpcSerializer.fromJson(message);
         try {
             PeerContextHolder.set(peerContext);

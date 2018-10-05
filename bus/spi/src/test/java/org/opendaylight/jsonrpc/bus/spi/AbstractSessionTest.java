@@ -38,12 +38,14 @@ import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
  */
 public abstract class AbstractSessionTest {
     protected EventLoopGroup group;
+    protected EventLoopConfiguration config;
     protected BusSessionFactory factory;
     private final Collection<Path> toDelete = new HashSet<>();
 
     @Before
     public void setUp() {
         group = new NioEventLoopGroup(10);
+        config = new DefaultEventLoopConfiguration(group, group, group);
         factory = createFactory();
     }
 
