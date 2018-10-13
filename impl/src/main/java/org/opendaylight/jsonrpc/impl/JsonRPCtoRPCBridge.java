@@ -12,6 +12,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -114,9 +115,11 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
 
         if (mappedRpcs.isEmpty()) {
             LOG.warn("No RPCs to map for " + peer.getName());
+            processorFuture = Futures.immediateFuture(null);
+        } else {
+            processorFuture = executorService.submit(this::requestProcessorThreadLoop);
         }
-        processorFuture = executorService.submit(this::requestProcessorThreadLoop);
-        LOG.info("RPC bridge instantiated for {}", peer.getName());
+        LOG.info("RPC bridge instantiated for '{}' with {} methods", peer.getName(), mappedRpcs.size());
     }
 
     private void addRpcDefinition(Peer peer, RemoteGovernance governance, RpcDefinition def,
