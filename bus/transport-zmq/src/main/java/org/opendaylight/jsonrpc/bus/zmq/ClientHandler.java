@@ -61,4 +61,9 @@ class ClientHandler extends SimpleChannelInboundHandler<ProtocolObject> {
             first = true;
         }
     }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        LOG.error("Caught exception on {}, closing now", ctx.channel(), cause);
+    }
 }

@@ -10,17 +10,16 @@ package org.opendaylight.jsonrpc.impl;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
-import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TestName;
 import org.opendaylight.controller.md.sal.dom.api.DOMRpcResult;
 import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.MessageLibrary;
@@ -65,8 +64,6 @@ public class JsonRPCtoRPCBridgeAsyncTest extends AbstractJsonRpcTest {
     private HierarchicalEnumMap<JsonElement, DataType, String> pathMap;
     private static final String TRANSPORT = "zmq";
     private ScheduledExecutorService exec;
-    @Rule
-    public TestName nameRule = new TestName();
 
     @Before
     public void setUp() throws Exception {
@@ -90,9 +87,8 @@ public class JsonRPCtoRPCBridgeAsyncTest extends AbstractJsonRpcTest {
         exec.shutdownNow();
     }
 
-    @Test//(timeout = 15_000)
+    @Test(timeout = 15_000)
     public void test() throws Exception {
-        logTestName();
         final SchemaPath path = rpcPath(mod, "factorial");
 
         // BA => BI
@@ -114,12 +110,6 @@ public class JsonRPCtoRPCBridgeAsyncTest extends AbstractJsonRpcTest {
     private void logResult(DOMRpcResult result) {
         LOG.info("Result : {}", result.getResult());
         LOG.info("Errors : {}", result.getErrors());
-    }
-
-    private void logTestName() {
-        LOG.info("{}", Strings.repeat("=", 140));
-        LOG.info("{}", nameRule.getMethodName());
-        LOG.info("{}", Strings.repeat("=", 140));
     }
 
     private <T extends DataContainer> ContainerNode prepareRpcInput(T dataObject) {

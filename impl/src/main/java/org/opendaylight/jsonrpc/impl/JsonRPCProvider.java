@@ -288,6 +288,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
 
     @Override
     public void close() {
+        providerClosed = true;
         peerState.values().forEach(p -> doUnmount(p.getName()));
         peerState.clear();
         stopRemoteControl();
@@ -295,7 +296,6 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         toClose.forEach(
             c -> Util.closeNullableWithExceptionCallback(c, e -> LOG.warn("Failed to close object {}", c, e)));
         LOG.debug("JsonRPCProvider Closed");
-        providerClosed = true;
     }
 
     /*

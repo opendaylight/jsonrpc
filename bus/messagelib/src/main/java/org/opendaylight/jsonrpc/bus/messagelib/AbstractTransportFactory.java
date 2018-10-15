@@ -7,6 +7,7 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -50,7 +51,7 @@ public abstract class AbstractTransportFactory implements TransportFactory {
     public <T extends AutoCloseable> T createPublisherProxy(Class<T> clazz, String rawUri, long timeout)
             throws URISyntaxException {
         final URI uri = new URI(rawUri);
-        final MessageLibrary messageLibrary = getMessageLibrary(uri);
+        final MessageLibrary messageLibrary = messageLibraryForTransport(uri.getScheme());
         final ProxyService proxy = proxyCache.getUnchecked(messageLibrary);
         return proxy.createPublisherProxy(Util.prepareUri(uri), clazz, timeout);
     }
@@ -59,7 +60,7 @@ public abstract class AbstractTransportFactory implements TransportFactory {
     public <T extends AutoCloseable> T createRequesterProxy(Class<T> clazz, String rawUri, long timeout)
             throws URISyntaxException {
         final URI uri = new URI(rawUri);
-        final MessageLibrary messageLibrary = getMessageLibrary(uri);
+        final MessageLibrary messageLibrary = messageLibraryForTransport(uri.getScheme());
         final ProxyService proxy = proxyCache.getUnchecked(messageLibrary);
         return proxy.createRequesterProxy(uri.toString(), clazz, timeout);
     }
@@ -68,20 +69,20 @@ public abstract class AbstractTransportFactory implements TransportFactory {
     public <T extends AutoCloseable> ResponderSession createResponder(String rawUri, T handler)
             throws URISyntaxException {
         final URI uri = new URI(rawUri);
-        return getMessageLibrary(uri).responder(rawUri, new ResponderHandlerAdapter(handler));
+        return messageLibraryForTransport(uri.getScheme()).responder(rawUri, new ResponderHandlerAdapter(handler));
     }
 
     @Override
     public <T extends AutoCloseable> SubscriberSession createSubscriber(String rawUri, T handler)
             throws URISyntaxException {
         final URI uri = new URI(rawUri);
-        return getMessageLibrary(uri).subscriber(rawUri, new SubscriberHandlerAdapter(handler));
+        return messageLibraryForTransport(uri.getScheme()).subscriber(rawUri, new SubscriberHandlerAdapter(handler));
     }
 
     @Override
     public RequesterSession createRequester(String rawUri, ReplyMessageHandler handler) throws URISyntaxException {
         final URI uri = new URI(rawUri);
-        return getMessageLibrary(uri).requester(rawUri, handler);
+        return messageLibraryForTransport(uri.getScheme()).requester(rawUri, handler);
     }
 
     @Override
@@ -91,7 +92,8 @@ public abstract class AbstractTransportFactory implements TransportFactory {
         proxyCache.cleanUp();
     }
 
-    private MessageLibrary getMessageLibrary(URI uri) {
-        return messageLibraryCache.getUnchecked(uri.getScheme());
+    @VisibleForTesting
+    public MessageLibrary messageLibraryForTransport(String transport) {
+        return messageLibraryCache.getUnchecked(transport);
     }
 }

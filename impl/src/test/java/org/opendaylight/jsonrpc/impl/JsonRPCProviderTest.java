@@ -8,16 +8,21 @@
 package org.opendaylight.jsonrpc.impl;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
+
+import java.net.URISyntaxException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,23 +31,18 @@ import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
-import org.opendaylight.controller.md.sal.dom.api.DOMMountPoint;
-import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
-import org.opendaylight.jsonrpc.bus.messagelib.MessageLibrary;
-import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
+import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ConfigBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ActualEndpoints;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ActualEndpointsKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpoints;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpointsBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.DataConfigEndpoints;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.DataConfigEndpointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.DataConfigEndpointsKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.DataOperationalEndpoints;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.DataOperationalEndpointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.DataOperationalEndpointsKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.NotificationEndpointsBuilder;
@@ -50,7 +50,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.Noti
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpointsKey;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 
 /**
  * Tests for {@link JsonRPCProvider}.
@@ -63,27 +62,25 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     private static final String TOASTER = "toaster";
     private static final InstanceIdentifier<Config> GLOBAL_CFG_II = InstanceIdentifier.create(Config.class);
     private JsonRPCProvider provider;
-    private int omPort;
+    private static final RemoteGovernance GOVERNANCE_MOCK = new MockGovernance();
     private int governancePort;
     private int dummyPort;
-    private MessageLibrary messaging;
-    private ResponderSession omResponder;
-    private ResponderSession governanceResponder;
     private TransportFactory tf;
-    private ResponderSession dummyResponder;
     private ScheduledExecutorService exec;
 
     @Before
-    public void setUp() throws TransactionCommitFailedException {
+    public void setUp() throws TransactionCommitFailedException, URISyntaxException {
         exec = Executors.newScheduledThreadPool(1);
         NormalizedNodesHelper.init(schemaContext);
-        tf = new DefaultTransportFactory();
-        omPort = getFreeTcpPort();
+        tf = mock(TransportFactory.class);
+
+        when(tf.createSubscriber(anyString(), any())).thenReturn(mock(SubscriberSession.class));
+        when(tf.createRequesterProxy(eq(RemoteGovernance.class), anyString(), anyLong())).thenReturn(GOVERNANCE_MOCK);
+
         governancePort = getFreeTcpPort();
         dummyPort = getFreeTcpPort();
-        startZeroMq();
-        updateConfig(
-                new ConfigBuilder().setGovernanceRoot(new Uri(String.format("zmq://localhost:%d", omPort))).build());
+        updateConfig(new ConfigBuilder().setGovernanceRoot(new Uri(String.format("zmq://localhost:%d", governancePort)))
+                .build());
         provider = new JsonRPCProvider();
         provider.setTransportFactory(tf);
         provider.setDataBroker(getDataBroker());
@@ -92,47 +89,18 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         provider.setDomMountPointService(getDOMMountPointService());
         provider.setScheduledExecutorService(exec);
         provider.init();
+        logTestName("START");
     }
 
     @After
     public void tearDown() throws Exception {
-        stopZeroMq();
+        logTestName("END");
         provider.close();
         exec.shutdownNow();
     }
 
-    @Test(timeout = 15_000)
-    public void testMountUnmount() throws InterruptedException, ExecutionException, ReadFailedException {
-        DataConfigEndpointsBuilder dataConfigEndpointsBuilder = new DataConfigEndpointsBuilder();
-        dataConfigEndpointsBuilder.setEndpointUri(new Uri(String.format("zmq://localhost:%d", governancePort)));
-        dataConfigEndpointsBuilder.setPath("{}");
-        List<DataConfigEndpoints> configList = new ArrayList<>();
-        configList.add(dataConfigEndpointsBuilder.build());
-
-        DataOperationalEndpointsBuilder dataOperEndpointsBuilder = new DataOperationalEndpointsBuilder();
-        dataOperEndpointsBuilder.setEndpointUri(new Uri(String.format("zmq://localhost:%d", governancePort)));
-        dataOperEndpointsBuilder.setPath("{}");
-        List<DataOperationalEndpoints> operList = new ArrayList<>();
-        operList.add(dataOperEndpointsBuilder.build());
-        final ConfiguredEndpoints ep = new ConfiguredEndpointsBuilder().setDataConfigEndpoints(configList)
-                .setDataOperationalEndpoints(operList).setModules(Lists.newArrayList(new YangIdentifier(DEMO1_MODEL)))
-                .setName(TOASTER).build();
-        retryAction(TimeUnit.SECONDS, 5, () -> provider.doMountDevice(ep));
-
-        final YangInstanceIdentifier yii = Util.createBiPath(TOASTER);
-        retryAction(TimeUnit.SECONDS, 5, getDOMMountPointService().getMountPoint(yii)::isPresent);
-
-        // Verify that peer appeared
-        retryAction(TimeUnit.SECONDS, 2, () -> TOASTER.equals(getPeerOpState(TOASTER).get().getName()));
-        provider.forceRefresh(null).get();
-        // Verify that peer vanished
-        retryAction(TimeUnit.SECONDS, 2, () -> !getPeerOpState(TOASTER).isPresent());
-        Optional<DOMMountPoint> mp = this.getDOMMountPointService().getMountPoint(yii);
-        assertTrue(!mp.isPresent());
-    }
-
     // Dummy test to check logic and gain coverage
-    @Test
+    @Test(timeout = 15_000)
     public void test_UnmountEmpty() {
         assertFalse(provider.doUnmount(""));
         assertFalse(provider.doUnmount(null));
@@ -147,7 +115,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         retryAction(TimeUnit.SECONDS, 2, () -> !getPeerOpState(DEMO1_MODEL).isPresent());
         //@formatter:off
         updateConfig(new ConfigBuilder()
-                .setGovernanceRoot(new Uri(String.format("zmq://localhost:%d", omPort)))
+                .setGovernanceRoot(new Uri(String.format("zmq://localhost:%d", governancePort)))
                 .setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
                 .setConfiguredEndpoints(Lists.newArrayList(
                         new ConfiguredEndpointsBuilder().setName(DEMO1_MODEL)
@@ -205,10 +173,10 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     }
 
     /**
-     * Test that peer with only operation state can be mounted.
-     * See bug report https://jira.opendaylight.org/browse/JSONRPC-14
+     * Test that peer with only operation state can be mounted. See bug report
+     * https://jira.opendaylight.org/browse/JSONRPC-14
      */
-    @Test
+    @Test(timeout = 15_000)
     public void test_OpStateOnlyModel_NoGovernance() throws Exception {
         // unconfigure all
         updateConfig(new ConfigBuilder().build());
@@ -231,40 +199,21 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         retryAction(TimeUnit.SECONDS, 3, () -> getPeerOpState("test-model-op-only").isPresent());
     }
 
-    @SuppressWarnings("deprecation")
     private Optional<ActualEndpoints> getPeerOpState(String name) throws ReadFailedException {
         final ReadOnlyTransaction rtx = getDataBroker().newReadOnlyTransaction();
         try {
             return rtx.read(LogicalDatastoreType.OPERATIONAL, InstanceIdentifier.builder(Config.class)
-                    .child(ActualEndpoints.class, new ActualEndpointsKey(name)).build()).checkedGet();
+                    .child(ActualEndpoints.class, new ActualEndpointsKey(name))
+                    .build()).checkedGet();
         } finally {
             rtx.close();
         }
     }
 
-    @SuppressWarnings("deprecation")
     private void updateConfig(Config config) throws TransactionCommitFailedException {
         final WriteTransaction wrTrx = getDataBroker().newWriteOnlyTransaction();
         wrTrx.put(LogicalDatastoreType.CONFIGURATION, GLOBAL_CFG_II, config);
         wrTrx.submit().checkedGet();
-    }
-
-    private void startZeroMq() {
-        messaging = new MessageLibrary("zmq");
-        governanceResponder = messaging.responder(String.format("zmq://0.0.0.0:%d", governancePort),
-                new GovernanceMessageHandler());
-        omResponder = messaging.responder(String.format("zmq://0.0.0.0:%d", omPort),
-                new OmRootMessageHandler(governancePort));
-        dummyResponder = messaging.responder(String.format("zmq://0.0.0.0:%d", dummyPort), (request, replyBuilder) -> {
-            // NOOP
-        });
-    }
-
-    private void stopZeroMq() {
-        omResponder.close();
-        governanceResponder.close();
-        dummyResponder.close();
-        messaging.close();
     }
 
     private String dummyUri() {

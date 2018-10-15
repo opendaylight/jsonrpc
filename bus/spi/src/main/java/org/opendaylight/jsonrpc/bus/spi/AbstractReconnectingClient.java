@@ -37,7 +37,7 @@ public abstract class AbstractReconnectingClient extends AbstractSession impleme
     private static final Logger LOG = LoggerFactory.getLogger(AbstractReconnectingClient.class);
     private final Bootstrap clientBootstrap;
     private ScheduledFuture<?> reconnectFuture;
-    protected ConnectionState state = ConnectionState.INITIAL;
+    protected volatile ConnectionState state = ConnectionState.INITIAL;
     private final ChannelFutureListener connectListener = new ConnectListener();
     private final ChannelFutureListener closeListener = new CloseListener();
     protected final AbstractChannelInitializer channelInitializer;
@@ -86,6 +86,7 @@ public abstract class AbstractReconnectingClient extends AbstractSession impleme
         @Override
         public void operationComplete(ChannelFuture future) throws Exception {
             if (state != ConnectionState.DONE) {
+                LOG.info("Scheduling reconnect because state is {}@{}", state, hashCode());
                 changeConnectionState(ConnectionState.INITIAL);
                 scheduleReconnect();
             }
@@ -107,9 +108,9 @@ public abstract class AbstractReconnectingClient extends AbstractSession impleme
         public void operationComplete(ChannelFuture future) throws Exception {
             if (future.isSuccess()) {
                 // Connection established
+                channelFuture = future;
                 changeConnectionState(ConnectionState.CONNECTED);
                 reconnectStrategy.reset();
-                channelFuture = future;
                 future.channel().closeFuture().addListener(closeListener);
             } else {
                 LOG.warn("Connection attempt to '{}' failed", address, future.cause());
@@ -120,7 +121,8 @@ public abstract class AbstractReconnectingClient extends AbstractSession impleme
 
     private void changeConnectionState(ConnectionState newState) {
         if (state != newState) {
-            LOG.debug("Changing connection state from {} to {}", state, newState);
+            LOG.debug("Changing connection state from {} to {} [{}]@{}", state, newState,
+                    channelFuture != null ? channelFuture.channel() : "N/A", hashCode());
             state = newState;
         }
     }
@@ -188,5 +190,11 @@ public abstract class AbstractReconnectingClient extends AbstractSession impleme
     @Override
     public void awaitConnection() {
         blockUntilConnected();
+    }
+
+    @Override
+    public String toString() {
+        return "AbstractReconnectingClient [state=" + state + ", uri=" + uri + ", sessionType=" + sessionType
+                + ", hashCode=" + hashCode() + "]";
     }
 }

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
@@ -44,7 +45,7 @@ public class RequesterSessionImpl extends AbstractSession implements MessageList
     private final ReplyMessageHandler handler;
     private final BlockingQueue<String> responseQueue = Queues.newLinkedBlockingDeque();
 
-    public RequesterSessionImpl(CloseCallback closeCallback, BusSessionFactory factory, String uri,
+    public RequesterSessionImpl(Consumer<AutoCloseable> closeCallback, BusSessionFactory factory, String uri,
             ReplyMessageHandler handler) {
         super(closeCallback);
         requester = factory.requester(uri, this);
@@ -114,7 +115,8 @@ public class RequesterSessionImpl extends AbstractSession implements MessageList
         final List<JsonRpcBaseMessage> replies = JsonRpcSerializer.fromJson(msg);
         if (replies.size() == 1) {
             if (replies.get(0).getType() != JsonRpcMessageType.REPLY) {
-                throw new MessageLibraryMismatchException("Unexpected message : " + replies.get(0).getType().name());
+                //throw new MessageLibraryMismatchException("Unexpected message : " + replies.get(0).getType().name());
+                throw new MessageLibraryMismatchException("Unexpected message : " + replies.get(0));
             } else {
                 return (JsonRpcReplyMessage) replies.get(0);
             }

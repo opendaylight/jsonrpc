@@ -10,6 +10,8 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import java.util.function.Consumer;
+
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.Publisher;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;
@@ -24,7 +26,7 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcSerializer;
 public class PublisherSessionImpl extends AbstractSession implements PublisherSession {
     private Publisher publisher;
 
-    public PublisherSessionImpl(CloseCallback closeCallback, BusSessionFactory factory, String uri) {
+    public PublisherSessionImpl(Consumer<AutoCloseable> closeCallback, BusSessionFactory factory, String uri) {
         super(closeCallback);
         publisher = factory.publisher(uri);
         setAutocloseable(publisher);

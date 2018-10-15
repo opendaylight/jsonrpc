@@ -7,16 +7,19 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
-import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.base.Strings;
 import com.google.gson.JsonParser;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+
 import junit.framework.AssertionFailedError;
+
+import org.junit.Rule;
+import org.junit.rules.TestName;
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.test.ConcurrentDataBrokerTestCustomizer;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
@@ -39,13 +42,15 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public abstract class AbstractJsonRpcTest extends AbstractSchemaAwareTest {
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractJsonRpcTest.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(AbstractJsonRpcTest.class);
     private ConcurrentDataBrokerTestCustomizer testCustomizer;
     private final DOMMountPointService domMountPointService = new DOMMountPointServiceImpl();
     private DataBroker dataBroker;
     private DOMDataBroker domBroker;
     protected SchemaContext schemaContext;
     protected final JsonParser jsonParser = new JsonParser();
+    @Rule
+    public TestName nameRule = new TestName();
 
     @Override
     protected void setupWithSchema(SchemaContext context) {
@@ -85,13 +90,10 @@ public abstract class AbstractJsonRpcTest extends AbstractSchemaAwareTest {
         return this.domMountPointService;
     }
 
-    protected static final void assertCommit(ListenableFuture<Void> commit)
-            throws ExecutionException, TimeoutException {
-        try {
-            commit.get(500L, TimeUnit.MILLISECONDS);
-        } catch (java.lang.InterruptedException e) {
-            throw new IllegalStateException(e);
-        }
+    protected void logTestName(String stage) {
+        LOG.info("{}", Strings.repeat("=", 80));
+        LOG.info("[{}]{}", stage, nameRule.getMethodName());
+        LOG.info("{}", Strings.repeat("=", 80));
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
@@ -105,12 +107,12 @@ public abstract class AbstractJsonRpcTest extends AbstractSchemaAwareTest {
                 if (action.call()) {
                     return;
                 }
-                TimeUnit.MILLISECONDS.sleep(300);
             } catch (InterruptedException e) {
                 throw e;
             } catch (Exception e) {
-                LOG.error("Action failed, ignore and retry : {}", e.getMessage());
+                LOG.error("Action failed, ignore and retry", e);
             }
+            TimeUnit.MILLISECONDS.sleep(300);
         }
         throw new AssertionFailedError("Action didnt suceed within specified time range");
     }
