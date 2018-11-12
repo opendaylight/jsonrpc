@@ -36,15 +36,14 @@ import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
 import org.opendaylight.jsonrpc.model.MutablePeer;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
-import org.opendaylight.mdsal.common.api.AsyncTransaction;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
-import org.opendaylight.mdsal.common.api.TransactionChain;
-import org.opendaylight.mdsal.common.api.TransactionChainListener;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChain;
+import org.opendaylight.mdsal.dom.api.DOMTransactionChainListener;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 
@@ -139,14 +138,14 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
      */
     @Test(expected = IllegalStateException.class)
     public void testUnfinishedTxChain() throws InterruptedException {
-        final DOMTransactionChain chain = jrbroker.createTransactionChain(new TransactionChainListener() {
+        final DOMTransactionChain chain = jrbroker.createTransactionChain(new DOMTransactionChainListener() {
             @Override
-            public void onTransactionChainSuccessful(TransactionChain<?, ?> chain) {
+            public void onTransactionChainSuccessful(DOMTransactionChain chain) {
                 // NOOP
             }
 
             @Override
-            public void onTransactionChainFailed(TransactionChain<?, ?> chain, AsyncTransaction<?, ?> transaction,
+            public void onTransactionChainFailed(DOMTransactionChain chain, DOMDataTreeTransaction transaction,
                     Throwable cause) {
                 // NOOP
             }
@@ -159,14 +158,14 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     public void testTxChain() throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(schemaContext);
-        final DOMTransactionChain chain = jrbroker.createTransactionChain(new TransactionChainListener() {
+        final DOMTransactionChain chain = jrbroker.createTransactionChain(new DOMTransactionChainListener() {
             @Override
-            public void onTransactionChainSuccessful(TransactionChain<?, ?> chain) {
+            public void onTransactionChainSuccessful(DOMTransactionChain chain) {
                 latch.countDown();
             }
 
             @Override
-            public void onTransactionChainFailed(TransactionChain<?, ?> chain, AsyncTransaction<?, ?> transaction,
+            public void onTransactionChainFailed(DOMTransactionChain chain, DOMDataTreeTransaction transaction,
                     Throwable cause) {
             }
         });

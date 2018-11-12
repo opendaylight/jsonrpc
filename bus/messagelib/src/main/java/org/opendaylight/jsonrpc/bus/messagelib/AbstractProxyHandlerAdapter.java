@@ -7,6 +7,8 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,6 +69,7 @@ abstract class AbstractProxyHandlerAdapter {
     }
 
     @SuppressWarnings({ "squid:S1166", "squid:S00112", "checkstyle:IllegalThrows" })
+    @SuppressFBWarnings("SLF4J_FORMAT_SHOULD_BE_CONST")
     protected Object invokeHandler(JsonRpcBaseRequestMessage message) throws Exception {
         final List<MethodCandidate> candidates = new ArrayList<>();
         List<Method> opt = findMethodStrict(message);

@@ -132,18 +132,18 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
     public void testPut() throws InterruptedException, ExecutionException, TimeoutException {
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest.createContainerNodeData();
         trx.put(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
-        doReturn(true).when(om).commit(anyString());
+        doReturn(true).when(om).commit(eq(null));
         trx.commit().get(5, TimeUnit.SECONDS);
-        verify(om, times(1)).put(anyString(), eq("config"), anyString(),
+        verify(om, times(1)).put(eq(null), eq("config"), anyString(),
                 any(JsonElement.class), any(JsonElement.class));
     }
 
     @Test
     public void testDelete() throws InterruptedException, ExecutionException, TimeoutException {
-        doReturn(true).when(om).commit(anyString());
+        doReturn(true).when(om).commit(eq(null));
         trx.delete(LogicalDatastoreType.CONFIGURATION, YangInstanceIdentifier.of(NetworkTopology.QNAME));
         trx.commit().get(5, TimeUnit.SECONDS);
-        verify(om, times(1)).delete(anyString(), eq("config"), anyString(),
+        verify(om, times(1)).delete(eq(null), eq("config"), anyString(),
                 any(JsonElement.class));
         assertNotNull(trx.getIdentifier());
     }
@@ -152,7 +152,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
     public void testCancel() {
         trx.delete(LogicalDatastoreType.CONFIGURATION, YangInstanceIdentifier.of(NetworkTopology.QNAME));
         assertTrue(trx.cancel());
-        verify(om, times(1)).delete(anyString(), eq("config"), anyString(),
+        verify(om, times(1)).delete(eq(null), eq("config"), anyString(),
                 any(JsonElement.class));
         assertNotNull(trx.getIdentifier());
     }
@@ -160,10 +160,10 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
     @Test
     public void testMerge() throws InterruptedException, ExecutionException, TimeoutException {
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest.createContainerNodeData();
-        doReturn(true).when(om).commit(anyString());
+        doReturn(true).when(om).commit(eq(null));
         trx.merge(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
         trx.commit().get(5, TimeUnit.SECONDS);
-        verify(om, times(1)).merge(anyString(), eq("config"), anyString(),
+        verify(om, times(1)).merge(eq(null), eq("config"), anyString(),
                 any(JsonElement.class), any(JsonElement.class));
     }
 

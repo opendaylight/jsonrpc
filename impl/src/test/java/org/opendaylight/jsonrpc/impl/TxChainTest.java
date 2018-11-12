@@ -21,11 +21,11 @@ import org.mockito.MockitoAnnotations;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
-import org.opendaylight.mdsal.common.api.TransactionChainClosedException;
-import org.opendaylight.mdsal.common.api.TransactionChainListener;
 import org.opendaylight.mdsal.common.api.TransactionCommitFailedException;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
+import org.opendaylight.mdsal.dom.api.DOMTransactionChainClosedException;
+import org.opendaylight.mdsal.dom.api.DOMTransactionChainListener;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
 public class TxChainTest {
@@ -40,7 +40,7 @@ public class TxChainTest {
     @Mock
     private DOMDataBroker broker;
     @Mock
-    private TransactionChainListener listener;
+    private DOMTransactionChainListener listener;
     @Mock
     private DOMDataTreeReadTransaction readOnlyTx;
     private TxChain chain;
@@ -98,7 +98,7 @@ public class TxChainTest {
         chain.newWriteOnlyTransaction();
     }
 
-    @Test(expected = TransactionChainClosedException.class)
+    @Test(expected = DOMTransactionChainClosedException.class)
     public void testCloseAfterFinished() throws Exception {
         chain.close();
         verify(listener).onTransactionChainSuccessful(chain);

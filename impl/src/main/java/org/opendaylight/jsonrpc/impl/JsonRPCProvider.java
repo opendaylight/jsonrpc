@@ -335,7 +335,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
                 LOG.debug("Device '{}' unmounted successfully", deviceName);
                 return true;
             } catch (Exception e) {
-                LOG.error("Device '{}'  unmount, raised {} ", deviceName, e);
+                LOG.error("Device '{}'  unmount, failed", deviceName, e);
                 return false;
             }
         }

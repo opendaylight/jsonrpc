@@ -8,11 +8,12 @@
 package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.google.gson.JsonParser;
 
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Arrays;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -63,8 +64,8 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
     }
 
     @Override
-    protected Iterable<YangModuleInfo> getModuleInfos() throws Exception {
-        return Arrays.asList(BindingReflections.getModuleInfo(Config.class),
+    protected Set<YangModuleInfo> getModuleInfos() throws Exception {
+        return Sets.newHashSet(BindingReflections.getModuleInfo(Config.class),
                 BindingReflections.getModuleInfo(NetworkTopology.class),
                 BindingReflections.getModuleInfo(TopElement.class),
                 BindingReflections.getModuleInfo(

@@ -30,7 +30,6 @@ import org.opendaylight.jsonrpc.model.ListenerKey;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
-import org.opendaylight.mdsal.common.api.TransactionChainListener;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataBrokerExtension;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeChangeListener;
@@ -40,6 +39,7 @@ import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChain;
+import org.opendaylight.mdsal.dom.api.DOMTransactionChainListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.concepts.AbstractListenerRegistration;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
@@ -111,7 +111,7 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
     }
 
     @Override
-    public DOMTransactionChain createTransactionChain(TransactionChainListener listener) {
+    public DOMTransactionChain createTransactionChain(DOMTransactionChainListener listener) {
         return new TxChain(this, listener, transportFactory, pathMap, jsonConverter, schemaContext);
     }
 

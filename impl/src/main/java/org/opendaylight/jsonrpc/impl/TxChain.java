@@ -27,12 +27,12 @@ import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.TransactionListener;
-import org.opendaylight.mdsal.common.api.TransactionChainClosedException;
-import org.opendaylight.mdsal.common.api.TransactionChainListener;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChain;
+import org.opendaylight.mdsal.dom.api.DOMTransactionChainClosedException;
+import org.opendaylight.mdsal.dom.api.DOMTransactionChainListener;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionChain, TransactionListener {
     private static final Logger LOG = LoggerFactory.getLogger(TxChain.class);
     private final DOMDataBroker dataBroker;
-    private final TransactionChainListener listener;
+    private final DOMTransactionChainListener listener;
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     /**
@@ -57,7 +57,7 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
     private final ConcurrentMap<DOMDataTreeWriteTransaction, AutoCloseable> pendingTransactions =
         Maps.newConcurrentMap();
 
-    public TxChain(@Nonnull final DOMDataBroker dataBroker, @Nonnull final TransactionChainListener listener,
+    public TxChain(@Nonnull final DOMDataBroker dataBroker, @Nonnull final DOMTransactionChainListener listener,
             @Nonnull TransportFactory transportFactory,
             @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull JsonConverter jsonConverter,
             @Nonnull SchemaContext schemaContext) {
@@ -111,7 +111,7 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
      */
     private void checkOperationPermitted() {
         if (closed) {
-            throw new TransactionChainClosedException("Transaction chain was closed");
+            throw new DOMTransactionChainClosedException("Transaction chain was closed");
         }
         Preconditions.checkState(Objects.isNull(currentTransaction), "Last write transaction has not finished yet");
     }

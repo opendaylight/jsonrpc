@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
@@ -73,7 +74,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
 
         when(tf.createSubscriber(anyString(), any())).thenReturn(mock(SubscriberSession.class));
         when(tf.createRequesterProxy(eq(RemoteGovernance.class), anyString())).thenReturn(GOVERNANCE_MOCK);
-
+        when(tf.createRequester(anyString(), any())).thenReturn(mock(RequesterSession.class));
         governancePort = getFreeTcpPort();
         dummyPort = getFreeTcpPort();
         updateConfig(new ConfigBuilder().setGovernanceRoot(new Uri(String.format("zmq://localhost:%d", governancePort)))

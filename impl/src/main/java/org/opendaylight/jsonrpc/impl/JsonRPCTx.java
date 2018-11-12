@@ -40,7 +40,6 @@ import org.opendaylight.jsonrpc.model.TransactionListener;
 import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.common.api.TransactionCommitFailedException;
-import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
 import org.opendaylight.yangtools.util.concurrent.FluentFutures;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
@@ -59,7 +58,7 @@ import org.opendaylight.yangtools.yang.model.api.SchemaNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteTransaction, DOMDataTreeReadTransaction {
+public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteTransaction {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCTx.class);
     private static final JSONCodecFactorySupplier CODEC = JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02;
     private final String deviceName;

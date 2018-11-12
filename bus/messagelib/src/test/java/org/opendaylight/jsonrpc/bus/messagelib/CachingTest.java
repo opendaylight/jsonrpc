@@ -12,8 +12,8 @@ import static org.junit.Assert.assertEquals;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage.Builder;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage.Builder;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 
 public class CachingTest {

@@ -114,7 +114,7 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
         availableRpcs = availableRpcsBuilder.build();
 
         if (mappedRpcs.isEmpty()) {
-            LOG.warn("No RPCs to map for " + peer.getName());
+            LOG.warn("No RPCs to map for {}", peer.getName());
             processorFuture = Futures.immediateFuture(null);
         } else {
             processorFuture = executorService.submit(this::requestProcessorThreadLoop);
