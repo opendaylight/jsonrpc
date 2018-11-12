@@ -36,4 +36,9 @@ public abstract class AbstractPeerContext implements PeerContext {
     public String transport() {
         return transport;
     }
+
+    @Override
+    public String toString() {
+        return "AbstractPeerContext [transport=" + transport + ", channel=" + channel + "]";
+    }
 }

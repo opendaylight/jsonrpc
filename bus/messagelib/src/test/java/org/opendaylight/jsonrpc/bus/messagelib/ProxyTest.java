@@ -50,7 +50,7 @@ public class ProxyTest {
             assertEquals(null, notification.getId());
             assertEquals("publish", notification.getMethod());
             latch.countDown();
-        });
+        }, true);
         subs.await();
         proxy.publish("ABCD");
         latch.await(5, TimeUnit.SECONDS);
@@ -65,7 +65,7 @@ public class ProxyTest {
                 PublishExtraInterface.class);
 
         final SubscriberSession subs = ml.subscriber(TestHelper.getConnectUri("zmq", port), notification -> {
-        });
+        }, true);
         subs.await();
         try {
             proxy.invalidPublish("ABCD");
@@ -75,30 +75,30 @@ public class ProxyTest {
         }
     }
 
-    private void testRequesterProxy(String transport) {
+    private void testRequesterProxy(String transport) throws InterruptedException {
         final int port = TestHelper.getFreeTcpPort();
-        ResponderSession resp = ml.responder(TestHelper.getBindUri(transport, port),
-                new ResponderHandlerAdapter(new TestMessageServer()));
-
+        final ResponderSession resp = ml.responder(TestHelper.getBindUri(transport, port),
+                new ResponderHandlerAdapter(new TestMessageServer()), true);
         ServerPartialInterface api = svc.createRequesterProxy(TestHelper.getConnectUri(transport, port),
                 ServerPartialInterface.class);
+        TimeUnit.MILLISECONDS.sleep(150);
         assertEquals("ABCXYZ", api.concat("ABC", "XYZ"));
         api.close();
         resp.close();
     }
 
     @Test(timeout = 15_000)
-    public void testRequesterProxyZmq() {
+    public void testRequesterProxyZmq() throws InterruptedException {
         testRequesterProxy("zmq");
     }
 
     @Test(timeout = 15_000)
-    public void testRequesterProxyWs() {
+    public void testRequesterProxyWs() throws InterruptedException {
         testRequesterProxy("ws");
     }
 
     @Test(timeout = 15_000)
-    public void testRequesterProxyHttp() {
+    public void testRequesterProxyHttp() throws InterruptedException {
         testRequesterProxy("http");
     }
 

@@ -7,9 +7,14 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.google.common.util.concurrent.Uninterruptibles;
 
 import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
@@ -28,7 +33,37 @@ public class TransportFactoryTest {
         factory.createResponder("xyz://0.0.0.0:11111", (AutoCloseable) () -> {
             // NOOP
         }).close();
+    }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void testEmptyTransport() throws URISyntaxException {
+        factory.createResponder("", (AutoCloseable) () -> {
+            // NOOP
+        }).close();
+    }
+
+    @Test(timeout = 15_000)
+    public void testIsClientConnected() throws Exception {
+        final int port = TestHelper.getFreeTcpPort();
+        final SomeService proxy = factory.endpointBuilder()
+                .requester()
+                .useCache()
+                .withProxyConfig(10, 150)
+                .withRequestTimeout(10_000)
+                .createProxy(SomeService.class, TestHelper.getConnectUri("ws", port));
+        final ResponderSession responder = factory.endpointBuilder()
+                .responder()
+                .useCache()
+                .create(TestHelper.getBindUri("ws", port), mock(SomeService.class));
+        for (int i = 0; i < 10; i++) {
+            if (factory.isClientConnected(proxy)) {
+                break;
+            }
+            Uninterruptibles.sleepUninterruptibly(200, TimeUnit.MILLISECONDS);
+        }
+        assertTrue(factory.isClientConnected(proxy));
+        responder.close();
+        proxy.close();
     }
 
     @After

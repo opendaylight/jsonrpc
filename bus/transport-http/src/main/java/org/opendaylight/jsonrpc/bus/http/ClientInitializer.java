@@ -18,7 +18,6 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.util.concurrent.EventExecutorGroup;
-import io.netty.util.concurrent.ProgressivePromise;
 
 import java.net.URI;
 import java.util.Map;
@@ -44,7 +43,6 @@ class ClientInitializer extends AbstractChannelInitializer {
     private final boolean isWebsocket;
     private final URI baseUri;
     private final MessageListener listener;
-    private final AtomicReference<ProgressivePromise<String>> currentRequest = new AtomicReference<>(null);
 
     ClientInitializer(SessionType socketType, EventExecutorGroup handlerExecutor, boolean useSsl, boolean isWebsocket,
             URI baseUri, Map<String, String> opts, MessageListener listener) {
@@ -71,7 +69,7 @@ class ClientInitializer extends AbstractChannelInitializer {
     public void initChannel(SocketChannel ch) throws Exception {
         super.initChannel(ch);
         ch.attr(CommonConstants.ATTR_PEER_CONTEXT).set(new PeerContextImpl(ch, isWebsocket, useSsl));
-        ch.attr(CommonConstants.ATTR_RESPONSE_QUEUE).set(currentRequest);
+        ch.attr(CommonConstants.ATTR_RESPONSE_QUEUE).set(new AtomicReference<>(null));
         if (useSsl) {
             ch.pipeline().addLast(Constants.HANDLER_SSL, sslContext.newHandler(ch.alloc()));
         }
@@ -94,7 +92,7 @@ class ClientInitializer extends AbstractChannelInitializer {
     }
 
     private WebSocketClientHandshaker getWsHandshaker() {
-        return WebSocketClientHandshakerFactory.newHandshaker(baseUri, WebSocketVersion.V13, null, true,
-                new DefaultHttpHeaders());
+        return WebSocketClientHandshakerFactory.newHandshaker(HttpUtil.stripPathAndQueryParams(baseUri),
+                WebSocketVersion.V13, null, true, new DefaultHttpHeaders());
     }
 }

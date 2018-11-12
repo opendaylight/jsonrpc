@@ -55,7 +55,7 @@ public class Zmtp20NegotiationTest implements MessageListener {
             protected void initChannel(SocketChannel ch) throws Exception {
                 ch.attr(CommonConstants.ATTR_SOCKET_TYPE).set(SessionType.REP);
                 ch.attr(CommonConstants.ATTR_HANDSHAKE_DONE).set(false);
-                ch.attr(Constants.ATTR_REMOTE_PEER).set(new PeerContextImpl(ch));
+                ch.attr(CommonConstants.ATTR_PEER_CONTEXT).set(new PeerContextImpl(ch));
                 ch.pipeline().addLast(Constants.HANDLER_HANDSHAKE, new HandshakeHandler((byte) 2));
                 ch.pipeline().addLast(Constants.HANDLER_ENCODER, new MessageEncoder());
                 ch.pipeline().addLast(Constants.HANDLER_DECODER, new MessageDecoder());
@@ -69,7 +69,7 @@ public class Zmtp20NegotiationTest implements MessageListener {
                 ch.attr(CommonConstants.ATTR_SOCKET_TYPE).set(SessionType.REQ);
                 ch.attr(CommonConstants.ATTR_HANDSHAKE_DONE).set(false);
                 ch.attr(CommonConstants.ATTR_RESPONSE_QUEUE).set(currentRequest);
-                ch.attr(Constants.ATTR_REMOTE_PEER).set(new PeerContextImpl(ch));
+                ch.attr(CommonConstants.ATTR_PEER_CONTEXT).set(new PeerContextImpl(ch));
                 ch.pipeline().addLast(Constants.HANDLER_HANDSHAKE, new HandshakeHandler((byte) 2));
                 ch.pipeline().addLast(Constants.HANDLER_DECODER, new MessageDecoder());
                 ch.pipeline().addLast(Constants.HANDLER_ENCODER, new MessageEncoder());

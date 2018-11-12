@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 import org.opendaylight.jsonrpc.bus.spi.AbstractMessageListenerAdapter;
+import org.opendaylight.jsonrpc.bus.spi.CommonConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +36,7 @@ public class ServerHandler extends AbstractMessageListenerAdapter<Message> {
 
     @Override
     protected void channelRead0(final ChannelHandlerContext ctx, final Message msg) throws Exception {
-        final PeerContextImpl peer = ctx.channel().attr(Constants.ATTR_REMOTE_PEER).get();
+        final PeerContextImpl peer = (PeerContextImpl) ctx.channel().attr(CommonConstants.ATTR_PEER_CONTEXT).get();
         if (peer.getSocketType() == SessionType.SUB) {
             // Subscription message
             final ByteBuf data = msg.toBuffer();

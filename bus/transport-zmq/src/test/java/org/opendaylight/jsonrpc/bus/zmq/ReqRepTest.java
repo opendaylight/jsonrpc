@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
 import org.opendaylight.jsonrpc.bus.api.PeerContext;
+import org.opendaylight.jsonrpc.bus.api.RecoverableTransportException;
 import org.opendaylight.jsonrpc.bus.api.Requester;
 import org.opendaylight.jsonrpc.bus.api.Responder;
 import org.opendaylight.jsonrpc.bus.spi.AbstractSessionTest;
@@ -50,7 +51,8 @@ public class ReqRepTest extends AbstractSessionTest {
                 }
             }
         });
-        requester.send("Hi", 30, TimeUnit.SECONDS);
+        requester.awaitConnection();
+        requester.send("Hi");
         assertTrue(latch.await(10, TimeUnit.SECONDS));
         responder.close();
         requester.close();
@@ -77,18 +79,19 @@ public class ReqRepTest extends AbstractSessionTest {
                 }
             }
         });
-        requester.send(msg, 30, TimeUnit.SECONDS);
+        requester.awaitConnection();
+        requester.send(msg);
         assertTrue(latch.await(10, TimeUnit.SECONDS));
         responder.close();
         requester.close();
     }
 
-    @Test(expected = TimeoutException.class)
+    @Test(expected = RecoverableTransportException.class)
     public void testConnectionFailed() throws InterruptedException, ExecutionException, TimeoutException {
         final int port = getFreeTcpPort();
         final Requester requester = factory.requester(getConnectUri(port),
             (peerContext, message) -> LOG.info("Received response {}", message));
-        requester.send("", 0, null).get(1, TimeUnit.SECONDS);
+        requester.send("").get(1, TimeUnit.SECONDS);
     }
 
     @Override

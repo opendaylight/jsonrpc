@@ -10,6 +10,7 @@ package org.opendaylight.jsonrpc.bus.zmq.interop;
 import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
@@ -45,7 +46,7 @@ import org.opendaylight.jsonrpc.bus.api.Requester;
  */
 public class JavaReqPythonRep extends AbstractInteropTest {
     @Test
-    public void test() throws InterruptedException {
+    public void test() throws InterruptedException, ExecutionException {
         final String in = "ABCD";
         final CountDownLatch latch = new CountDownLatch(1);
         final Requester req = factory.requester("zmq://0.0.0.0:10000", new MessageListener() {
@@ -56,7 +57,7 @@ public class JavaReqPythonRep extends AbstractInteropTest {
             }
         });
         req.awaitConnection();
-        req.send(in, 30, TimeUnit.SECONDS);
+        req.send(in).get();
         req.close();
         assertTrue(latch.await(10, TimeUnit.SECONDS));
     }

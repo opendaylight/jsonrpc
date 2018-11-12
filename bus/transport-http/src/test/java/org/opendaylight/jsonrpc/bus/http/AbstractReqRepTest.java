@@ -35,7 +35,8 @@ abstract class AbstractReqRepTest extends AbstractSessionTest {
         });
         final Requester requester = factory.requester(reqUri,
             (peerContext, message) -> LOG.info("Received response {}", message));
-        final String response = requester.send(payload, 30, TimeUnit.SECONDS).get(30, TimeUnit.SECONDS);
+        requester.awaitConnection();
+        final String response = requester.send(payload).get(30, TimeUnit.SECONDS);
         LOG.info("Received response {}", response);
         assertEquals(expectedResponse, response);
         assertTrue(latch.await(30, TimeUnit.SECONDS));

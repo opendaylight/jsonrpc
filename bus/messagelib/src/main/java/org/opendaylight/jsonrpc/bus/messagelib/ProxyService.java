@@ -8,6 +8,7 @@
 package org.opendaylight.jsonrpc.bus.messagelib;
 
 import java.lang.reflect.InvocationHandler;
+import java.util.Optional;
 
 /**
  * This service provides clients with an ability to define a proxy interface to
@@ -19,6 +20,18 @@ import java.lang.reflect.InvocationHandler;
  * @author Shaleen Saxena
  */
 public interface ProxyService extends InvocationHandler {
+    /**
+     * Create {@link RequesterSession} proxy instance with specific timeout supplied (optionally) as query parameter
+     * 'timeout'.
+     *
+     * @param uri address of remote responder instance to connect to
+     * @param cls known API implemented by remote {@link ResponderSession}.
+     * @param <T> type of API
+     * @param skipCache flag to indicate that new session will be created regardless of existing session in cache
+     * @return proxied instance of T
+     */
+    <T extends AutoCloseable> T createRequesterProxy(String uri, Class<T> cls, boolean skipCache);
+
     /**
      * Create {@link RequesterSession} proxy instance with specific timeout supplied (optionally) as query parameter
      * 'timeout'.
@@ -40,4 +53,24 @@ public interface ProxyService extends InvocationHandler {
      * @return proxied instance of T
      */
     <T extends AutoCloseable> T createPublisherProxy(String uri, Class<T> cls);
+
+    /**
+     * Create {@link PublisherSession} proxy instance with specific timeout supplied (optionally) as query parameter
+     * 'timeout'.
+     *
+     * @param uri address of remote publisher instance to connect to
+     * @param cls known API
+     * @param <T> type of API
+     * @param skipCache flag to indicate that new session will be created regardless of existing session in cache
+     * @return proxied instance of T
+     */
+    <T extends AutoCloseable> T createPublisherProxy(String uri, Class<T> cls, boolean skipCache);
+
+    /**
+     * Helper method to obtain {@link BaseSession} for proxy object.
+     *
+     * @param proxy object to get session for
+     * @return {@link Optional} of {@link BaseSession}
+     */
+    Optional<BaseSession> getProxySession(Object proxy);
 }

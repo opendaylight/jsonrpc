@@ -7,6 +7,7 @@
  */
 package org.opendaylight.jsonrpc.bus.spi;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.Uninterruptibles;
 
@@ -20,7 +21,9 @@ import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.ScheduledFuture;
 
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.opendaylight.jsonrpc.bus.api.ClientSession;
 import org.opendaylight.jsonrpc.bus.api.SessionType;
@@ -42,6 +45,10 @@ public abstract class AbstractReconnectingClient extends AbstractSession impleme
     private final ChannelFutureListener closeListener = new CloseListener();
     protected final AbstractChannelInitializer channelInitializer;
     private ReconnectStrategy reconnectStrategy;
+    private final AtomicReference<Boolean> isFirstConnectionAttempt = new AtomicReference<>(true);
+    private static final Set<ConnectionState> RECONNECT_STATES = ImmutableSet.<ConnectionState>builder()
+            .add(ConnectionState.DONE)
+            .build();
 
     public AbstractReconnectingClient(String uri, int defaultPort, Bootstrap clientBootstrap,
             AbstractChannelInitializer channelInitializer, SessionType sessionType) {
@@ -85,8 +92,8 @@ public abstract class AbstractReconnectingClient extends AbstractSession impleme
     private class CloseListener implements ChannelFutureListener {
         @Override
         public void operationComplete(ChannelFuture future) throws Exception {
-            if (state != ConnectionState.DONE) {
-                LOG.info("Scheduling reconnect because state is {}@{}", state, hashCode());
+            if (!RECONNECT_STATES.contains(state)) {
+                LOG.debug("Scheduling reconnect because state is {}@{}", state, hashCode());
                 changeConnectionState(ConnectionState.INITIAL);
                 scheduleReconnect();
             }
@@ -113,7 +120,12 @@ public abstract class AbstractReconnectingClient extends AbstractSession impleme
                 reconnectStrategy.reset();
                 future.channel().closeFuture().addListener(closeListener);
             } else {
-                LOG.warn("Connection attempt to '{}' failed", address, future.cause());
+                // log warning only for first connection failure
+                if (isFirstConnectionAttempt.getAndSet(false)) {
+                    LOG.warn("Connection attempt to '{}' failed", address, future.cause());
+                } else {
+                    LOG.trace("Connection attempt to '{}' failed", address, future.cause());
+                }
                 scheduleReconnect();
             }
         }
@@ -150,7 +162,8 @@ public abstract class AbstractReconnectingClient extends AbstractSession impleme
      *
      * @return true if and only if client is ready for communication
      */
-    protected boolean isReady() {
+    @Override
+    public boolean isReady() {
         return state == ConnectionState.CONNECTED && handshakeFinished();
     }
 

@@ -19,4 +19,11 @@ public interface ClientSession extends BusSession {
      * Block until this endpoint is connected.
      */
     void awaitConnection();
+
+    /**
+     * Flag to indicate connection readiness.
+     *
+     * @return true if connection is read, false otherwise
+     */
+    boolean isReady();
 }

@@ -13,6 +13,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
@@ -50,11 +51,12 @@ public class ObjectParameterTest {
     }
 
     @Before
-    public void setup() throws URISyntaxException {
+    public void setup() throws URISyntaxException, InterruptedException {
         final int port = TestHelper.getFreeTcpPort();
         tf = new DefaultTransportFactory();
         responder = tf.createResponder(TestHelper.getBindUri("zmq", port), handler);
         requester = tf.createRequester(TestHelper.getConnectUri("zmq", port), NoopReplyMessageHandler.INSTANCE);
+        TimeUnit.MILLISECONDS.sleep(100);
     }
 
     @After
@@ -77,9 +79,7 @@ public class ObjectParameterTest {
         obj.setPropertyD(no);
         request.paramsFromObject(obj);
         final String expected = obj.toString();
-
         JsonRpcReplyMessage response = requester.sendRequestAndReadReply("translate", obj);
-
         LOG.info("Result : {}", response.getResult().getAsString());
         assertEquals(expected, response.getResult().getAsString());
     }

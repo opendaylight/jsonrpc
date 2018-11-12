@@ -289,9 +289,9 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     }
 
     private void startTransport() {
-        messaging = ((AbstractTransportFactory)transportFactory).messageLibraryForTransport(TRANSPORT);
+        messaging = ((AbstractTransportFactory)transportFactory).getMessageLibraryForTransport(TRANSPORT);
         rpcResponder = messaging.responder(String.format(TRANSPORT + "://0.0.0.0:%d", rpcResponderPort),
-                new MockRpcHandler());
+                new MockRpcHandler(), true);
         LOG.info("Started responder on port {}", rpcResponderPort);
     }
 

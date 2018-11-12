@@ -7,15 +7,21 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.DEFAULT_SKIP_ENDPOINT_CACHE;
+
+import com.google.common.collect.MapMaker;
+import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.JsonElement;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
+import org.opendaylight.jsonrpc.bus.api.RecoverableTransportException;
+import org.opendaylight.jsonrpc.bus.api.UnrecoverableTransportException;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
@@ -30,11 +36,9 @@ import org.slf4j.LoggerFactory;
  */
 public class ProxyServiceImpl implements ProxyService {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyServiceImpl.class);
-
     private static final String TO_STRING_METHOD_NAME = "toString";
     private static final String CLOSE_METHOD_NAME = "close";
-
-    private final Map<Object, BaseSession> proxyMap = Collections.synchronizedMap(new IdentityHashMap<>());
+    private final ConcurrentMap<Object, BaseSession> proxyMap = new MapMaker().weakKeys().makeMap();
     private final MessageLibrary messaging;
 
     public ProxyServiceImpl(MessageLibrary messaging) {
@@ -43,7 +47,12 @@ public class ProxyServiceImpl implements ProxyService {
 
     @Override
     public <T extends AutoCloseable> T createRequesterProxy(String uri, Class<T> cls) {
-        final RequesterSession session = messaging.requester(uri, NoopReplyMessageHandler.INSTANCE);
+        return createRequesterProxy(uri, cls, DEFAULT_SKIP_ENDPOINT_CACHE);
+    }
+
+    @Override
+    public <T extends AutoCloseable> T createRequesterProxy(String uri, Class<T> cls, boolean skipCache) {
+        final RequesterSession session = messaging.requester(uri, NoopReplyMessageHandler.INSTANCE, skipCache);
         final T obj = getProxySafe(cls);
         proxyMap.put(obj, session);
         return obj;
@@ -51,7 +60,12 @@ public class ProxyServiceImpl implements ProxyService {
 
     @Override
     public <T extends AutoCloseable> T createPublisherProxy(String uri, Class<T> cls) {
-        final PublisherSession session = messaging.publisher(uri);
+        return createPublisherProxy(uri, cls, true);
+    }
+
+    @Override
+    public <T extends AutoCloseable> T createPublisherProxy(String uri, Class<T> cls, boolean skipCache) {
+        final PublisherSession session = messaging.publisher(uri, skipCache);
         final T obj = getProxySafe(cls);
         proxyMap.put(obj, session);
         return obj;
@@ -98,9 +112,25 @@ public class ProxyServiceImpl implements ProxyService {
             }
         }
         if (session instanceof RequesterSession) {
-            final JsonRpcReplyMessage reply = ((RequesterSession) session).sendRequestAndReadReply(methodName,
-                    params);
-            return getReturnFromReplyMessage(method, (JsonRpcReplyMessage) reply);
+            final int configuredRetryCount = ((RequesterSession) session).retryCount();
+            final long configuredRetryDelay = ((RequesterSession) session).retryDelay();
+            int retry = configuredRetryCount;
+            for (;;) {
+                try {
+                    final JsonRpcReplyMessage reply = ((RequesterSession) session).sendRequestAndReadReply(methodName,
+                            params);
+                    return getReturnFromReplyMessage(method, (JsonRpcReplyMessage) reply);
+                } catch (RecoverableTransportException e) {
+                    if (retry-- > 0) {
+                        LOG.debug("Request to {} failed, will retry ({}/{})", session, configuredRetryCount - retry,
+                                configuredRetryCount, e);
+                        Uninterruptibles.sleepUninterruptibly(configuredRetryDelay, TimeUnit.MILLISECONDS);
+                    } else {
+                        throw new UnrecoverableTransportException(
+                                "Request failed after " + configuredRetryCount + " tries", e);
+                    }
+                }
+            }
         }
         throw new ProxyServiceGenericException("Logic error");
     }
@@ -127,6 +157,11 @@ public class ProxyServiceImpl implements ProxyService {
             }
             return result;
         }
+    }
+
+    @Override
+    public Optional<BaseSession> getProxySession(Object proxy)  {
+        return Optional.ofNullable(proxyMap.get(proxy));
     }
 
     /*

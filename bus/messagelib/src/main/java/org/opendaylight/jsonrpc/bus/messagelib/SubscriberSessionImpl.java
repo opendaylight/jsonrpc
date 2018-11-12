@@ -32,4 +32,9 @@ public class SubscriberSessionImpl extends AbstractSession implements Subscriber
     public void await() {
         subscriber.awaitConnection();
     }
+
+    @Override
+    public boolean isConnectionReady() {
+        return subscriber.isReady();
+    }
 }

@@ -18,6 +18,8 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -68,5 +70,14 @@ final class HttpUtil {
 
     private static WebSocketFrame createWebsocketFrame(final String message) {
         return new TextWebSocketFrame(message);
+    }
+
+    public static URI stripPathAndQueryParams(URI inUri) {
+        try {
+            return new URI(inUri.getScheme(), null, inUri.getHost(), inUri.getPort(), null, null, null);
+        } catch (URISyntaxException e) {
+            // not possible to land here
+            throw new IllegalStateException(e);
+        }
     }
 }

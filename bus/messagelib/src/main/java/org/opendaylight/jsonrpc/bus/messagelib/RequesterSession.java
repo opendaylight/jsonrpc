@@ -13,7 +13,7 @@ import com.google.gson.JsonObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 
-public interface RequesterSession extends BaseSession {
+public interface RequesterSession extends ClientSession {
 
     /**
      * A low level message to read messages of the bus. The return value would
@@ -48,6 +48,7 @@ public interface RequesterSession extends BaseSession {
      * @param name The method to which this request or notification is directed
      *            at.
      * @param object Optional parameter.
+     * @return {@link JsonRpcReplyMessage}
      */
     JsonRpcReplyMessage sendRequestAndReadReply(String name, Object object);
 
@@ -62,4 +63,17 @@ public interface RequesterSession extends BaseSession {
      */
     JsonRpcReplyMessage sendRequestAndReadReply(String name, Object object, JsonObject metadata);
 
+    /**
+     * Get number of retry attempts after request is considered failed.
+     *
+     * @return number of retry attempts
+     */
+    int retryCount();
+
+    /**
+     * Get configured retry delay between two request invocations.
+     *
+     * @return configured retry delay
+     */
+    long retryDelay();
 }

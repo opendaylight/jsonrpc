@@ -7,7 +7,13 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.DEFAULT_PROXY_RETRY_COUNT;
+import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.DEFAULT_PROXY_RETRY_DELAY;
+import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.PARAM_PROXY_RETRY_COUNT;
+import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.PARAM_PROXY_RETRY_DELAY;
+
 import com.google.common.collect.Queues;
+import com.google.common.primitives.Ints;
 import com.google.gson.JsonObject;
 
 import io.netty.util.concurrent.Future;
@@ -39,22 +45,25 @@ import org.slf4j.LoggerFactory;
  */
 public class RequesterSessionImpl extends AbstractSession implements MessageListener, RequesterSession {
     private static final Logger LOG = LoggerFactory.getLogger(RequesterSessionImpl.class);
-    private final Object lock = new Object();
     private final Requester requester;
     private final ReplyMessageHandler handler;
     private final BlockingQueue<String> responseQueue = Queues.newLinkedBlockingDeque();
+    private final int retryCount;
+    private final long retryDelay;
 
     public RequesterSessionImpl(Consumer<AutoCloseable> closeCallback, BusSessionFactory factory, String uri,
             ReplyMessageHandler handler) {
         super(closeCallback, uri);
         requester = factory.requester(uri, this);
         this.handler = Objects.requireNonNull(handler);
+        retryCount = Ints.saturatedCast(Util.queryParamValue(uri, PARAM_PROXY_RETRY_COUNT, DEFAULT_PROXY_RETRY_COUNT));
+        retryDelay = Util.queryParamValue(uri, PARAM_PROXY_RETRY_DELAY, DEFAULT_PROXY_RETRY_DELAY);
         setAutocloseable(requester);
     }
 
     @Override
     public void onMessage(PeerContext peerContext, String message) {
-        LOG.debug("Response : {}", message);
+        LOG.debug("Response from {} : {}", peerContext.channel(), message);
         final List<JsonRpcBaseMessage> messages = JsonRpcSerializer.fromJson(message);
         try {
             PeerContextHolder.set(peerContext);
@@ -78,38 +87,32 @@ public class RequesterSessionImpl extends AbstractSession implements MessageList
      */
     private void send(final String message) {
         LOG.debug("Sending request : {}", message);
-        synchronized (lock) {
-            requester.send(message, timeout, TimeUnit.MILLISECONDS)
-                    .addListener(new GenericFutureListener<Future<String>>() {
-                        @Override
-                        public void operationComplete(final Future<String> future) throws Exception {
-                            if (future.isSuccess()) {
-                                responseQueue.put(future.get());
-                            } else {
-                                LOG.warn("Send failed", future.cause());
-                            }
-                        }
-                    });
-        }
+        requester.send(message).addListener(new GenericFutureListener<Future<String>>() {
+            @Override
+            public void operationComplete(final Future<String> future) throws Exception {
+                if (future.isSuccess()) {
+                    responseQueue.add(future.get());
+                } else {
+                    LOG.warn("Send failed", future.cause());
+                }
+            }
+        });
     }
 
     @Override
     public String read() {
-        synchronized (lock) {
-            try {
-                final String resp = responseQueue.poll(timeout, TimeUnit.MILLISECONDS);
-                if (resp == null) {
-                    throw new MessageLibraryTimeoutException(
-                            String.format("Message was not received within %d milliseconds from %s", timeout,
-                                    PeerContextHolder.get()));
-                } else {
-                    return resp;
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+        try {
+            final String resp = responseQueue.poll(timeout, TimeUnit.MILLISECONDS);
+            if (resp == null) {
+                throw new MessageLibraryTimeoutException(
+                        String.format("Message was not received within %d milliseconds", timeout));
+            } else {
+                return resp;
             }
-            return null;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
+        return null;
     }
 
     private JsonRpcReplyMessage readReply(String msg) {
@@ -149,5 +152,25 @@ public class RequesterSessionImpl extends AbstractSession implements MessageList
     @Override
     public void sendMessage(JsonRpcBaseMessage msg) {
         send(JsonRpcSerializer.toJson(msg));
+    }
+
+    @Override
+    public void await() {
+        requester.awaitConnection();
+    }
+
+    @Override
+    public int retryCount() {
+        return retryCount;
+    }
+
+    @Override
+    public long retryDelay() {
+        return retryDelay;
+    }
+
+    @Override
+    public boolean isConnectionReady() {
+        return requester.isReady();
     }
 }

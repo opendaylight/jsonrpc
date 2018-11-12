@@ -63,7 +63,7 @@ public class PubSubTest {
         final int port = TestHelper.getFreeTcpPort();
         final CountDownLatch latch = new CountDownLatch(subCount * msgCount);
         final List<SubscriberSession> subscribers = new ArrayList<>(subCount);
-        final PublisherSession pub = ml.publisher(TestHelper.getBindUri(transport, port));
+        final PublisherSession pub = ml.publisher(TestHelper.getBindUri(transport, port), true);
         for (int i = 0; i < subCount; i++) {
             final SubscriberSession sub = ml.subscriber(TestHelper.getConnectUri(transport, port),
                     new NotificationMessageHandler() {
@@ -72,7 +72,7 @@ public class PubSubTest {
                             LOG.info("Notification : {}", notification);
                             latch.countDown();
                         }
-                    });
+                    }, true);
             sub.await();
             subscribers.add(sub);
         }

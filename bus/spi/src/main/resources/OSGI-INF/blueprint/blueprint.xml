@@ -13,9 +13,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <cm:property-placeholder persistent-id="jsonrpc" update-strategy="reload">
         <cm:default-properties>
-            <cm:property name="boss.group.size" value="4" />
-            <cm:property name="worker.group.size" value="16" />
-            <cm:property name="handler.group.size" value="16" />
+            <cm:property name="boss.group.size" value="2" />
+            <cm:property name="worker.group.size" value="4" />
+            <cm:property name="handler.group.size" value="4" />
         </cm:default-properties>
     </cm:property-placeholder>
 
@@ -51,6 +51,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <argument ref="workerGroup" />
         <argument ref="handlerExecutor" />
     </bean>
+
+    <service interface="org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration" ref="eventLoopConfiguration" />
 
     <service interface="io.netty.channel.EventLoopGroup" ref="bossGroup">
         <service-properties>

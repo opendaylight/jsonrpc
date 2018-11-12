@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory;
  *
  */
 public final class Util {
-    public static final int DEFAULT_TIMEOUT = 30000;
     private static final Logger LOG = LoggerFactory.getLogger(Util.class);
     private static final MapJoiner QUERY_JOINER = Joiner.on('&').withKeyValueSeparator("=");
 
@@ -181,16 +180,38 @@ public final class Util {
     }
 
     /**
-     * Parse timeout value from URI's query parameters or provide default.
+     * Parse query parameter value from URI or provide default value if not present.
      *
-     * @param uri endpoint URI
-     * @return timeout value
+     * @param uri endpoint URI to parse value from
+     * @param queryParamName query parameter name
+     * @param defaultValue default value to use if not present
+     * @return query parameter value
      */
-    public static long timeoutFromUri(String uri) {
+    public static long queryParamValue(String uri, String queryParamName, long defaultValue) {
         try {
             final URI parsed = new URI(uri);
-            return Long.parseLong(
-                    tokenizeQuery(parsed.getQuery()).computeIfAbsent("timeout", t -> String.valueOf(DEFAULT_TIMEOUT)));
+            return Long.parseLong(tokenizeQuery(parsed.getQuery()).computeIfAbsent(queryParamName,
+                t -> String.valueOf(defaultValue)));
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    public static String injectQueryParam(String uri, String queryParamName, String queryParamValue) {
+        try {
+            final URI parsed = new URI(uri);
+            final Map<String, String> params = tokenizeQuery(parsed.getQuery());
+            params.put(queryParamName, queryParamValue);
+            final StringBuilder sb = new StringBuilder();
+            sb.append(parsed.getScheme()).append("://").append(parsed.getHost());
+            if (parsed.getPort() != -1) {
+                sb.append(':').append(parsed.getPort());
+            }
+            if (parsed.getPath() != null) {
+                sb.append(parsed.getPath());
+            }
+            sb.append('?').append(QUERY_JOINER.join(params));
+            return sb.toString();
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(e);
         }

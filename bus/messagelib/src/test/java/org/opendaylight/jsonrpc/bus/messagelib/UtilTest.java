@@ -9,6 +9,8 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.DEFAULT_TIMEOUT;
+import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.PARAM_TIMEOUT;
 
 import java.util.Map;
 
@@ -31,8 +33,24 @@ public class UtilTest {
     }
 
     @Test
-    public void testTimeoutInUri() {
-        assertEquals(Util.DEFAULT_TIMEOUT, Util.timeoutFromUri("xyz://localhost"));
-        assertEquals(15_000, Util.timeoutFromUri("xyz://localhost?timeout=15000"));
+    public void testQueryParamValue() {
+        assertEquals(DEFAULT_TIMEOUT, Util.queryParamValue("xyz://localhost", PARAM_TIMEOUT, DEFAULT_TIMEOUT));
+        assertEquals(15_000, Util.queryParamValue("xyz://localhost?timeout=15000", PARAM_TIMEOUT, 30_000));
+    }
+
+    @Test
+    public void testInjectQueryParam() {
+        assertEquals("zmq://127.0.0.1?abc=123", Util.injectQueryParam("zmq://127.0.0.1", "abc", "123"));
+        assertEquals("zmq://127.0.0.1:10000?abc=123", Util.injectQueryParam("zmq://127.0.0.1:10000", "abc", "123"));
+        assertEquals("zmq://127.0.0.1/path?abc=123", Util.injectQueryParam("zmq://127.0.0.1/path", "abc", "123"));
+        assertEquals("zmq://127.0.0.1:10000/path?abc=123",
+                Util.injectQueryParam("zmq://127.0.0.1:10000/path", "abc", "123"));
+        assertEquals("zmq://127.0.0.1:10000/path?query1=1&query2=2&abc=123",
+                Util.injectQueryParam("zmq://127.0.0.1:10000/path?query1=1&query2=2", "abc", "123"));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testInjectQueryParamInvalidUri() {
+        Util.injectQueryParam("%not-a-valid-uri", "", "");
     }
 }

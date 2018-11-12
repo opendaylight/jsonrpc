@@ -36,8 +36,8 @@ class ClientHandler extends SimpleChannelInboundHandler<ProtocolObject> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ProtocolObject msg) throws Exception {
-        LOG.debug("Message : {}", msg);
         final PeerContextImpl peer = (PeerContextImpl) ctx.channel().attr(CommonConstants.ATTR_PEER_CONTEXT).get();
+        LOG.debug("Message : {}@{}", msg, peer);
         final ByteBuf buffer = msg.toBuffer();
         if (first && !buffer.isReadable()) {
             LOG.debug("First empty frame discarded : {}", msg);

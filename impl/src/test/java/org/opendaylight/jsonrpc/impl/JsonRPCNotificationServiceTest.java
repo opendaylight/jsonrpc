@@ -8,9 +8,9 @@
 package org.opendaylight.jsonrpc.impl;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -19,7 +19,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import java.net.URISyntaxException;
-import java.text.ParseException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -70,7 +69,7 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
             .create(DataType.class, JsonPathCodec.create());
 
     @Before
-    public void setUp() throws URISyntaxException, ParseException {
+    public void setUp() throws Exception {
         port = getFreeTcpPort();
         governance = mock(RemoteGovernance.class);
         when(governance.governance(anyInt(), anyString(), any())).thenReturn(getPath());
@@ -81,7 +80,8 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
                 new BuiltinSchemaContextProvider(schemaContext).createSchemaContext(getPeer()), pathMap,
                 new JsonConverter(schemaContext), transportFactory, governance);
         ml = new MessageLibrary("ws");
-        pubSession = ml.publisher(getPath());
+        pubSession = ml.publisher(getPath(), true);
+        TimeUnit.MILLISECONDS.sleep(150);
     }
 
     @After

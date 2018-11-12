@@ -9,27 +9,20 @@ package org.opendaylight.jsonrpc.bus.api;
 
 import io.netty.util.concurrent.Future;
 
-import java.util.concurrent.TimeUnit;
-
 /**
- * Requester session type allow to send requests to remote {@link Responder}
- * peer.
+ * Requester session type allow to send requests to remote {@link Responder} peer.
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Mar 4, 2018
  */
 public interface Requester extends ClientSession {
     /**
-     * Send request to the peer. Despite returning {@link Future}, this method
-     * actually blocks until connection is established and (if required)
-     * handshake is performed. Blocking behavior comes from original API design.
+     * Send request to the peer.
      *
      * @param message message to send.
-     * @param connectionTimeout connection timeout
-     * @param timeUnit time unit for connection timeout
-     * @return {@link Future} containing the result of send. The Future blocks
-     *         until the response is received or timeout expires, whichever
-     *         comes first.
+     * @return {@link Future} containing the result of send. The Future blocks until the response is received or
+     *         timeout expires, whichever comes first.
+     * @throws RecoverableTransportException when underlying transport is not ready
      */
-    Future<String> send(String message, long connectionTimeout, TimeUnit timeUnit);
+    Future<String> send(String message);
 }

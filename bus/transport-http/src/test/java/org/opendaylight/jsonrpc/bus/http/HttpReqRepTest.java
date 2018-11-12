@@ -15,6 +15,7 @@ import java.util.concurrent.TimeoutException;
 
 import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
+import org.opendaylight.jsonrpc.bus.api.RecoverableTransportException;
 import org.opendaylight.jsonrpc.bus.api.Requester;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,12 +35,12 @@ public class HttpReqRepTest extends AbstractReqRepTest {
         testReqRep(getConnectUri(port), getBindUri(port), Strings.repeat("X", 3000), Strings.repeat("Y", 2000));
     }
 
-    @Test(expected = TimeoutException.class)
+    @Test(expected = RecoverableTransportException.class)
     public void testConnectionFailed() throws InterruptedException, ExecutionException, TimeoutException {
         final int port = getFreeTcpPort();
         final Requester requester = factory.requester(getConnectUri(port),
             (peerContext, message) -> LOG.info("Received response {}", message));
-        requester.send("", 0, null).get(1, TimeUnit.SECONDS);
+        requester.send("").get(1, TimeUnit.SECONDS);
     }
 
     @Override

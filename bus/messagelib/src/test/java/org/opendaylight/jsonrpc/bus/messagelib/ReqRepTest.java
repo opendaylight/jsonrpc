@@ -25,8 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Tests for REQ/REP pattern. As of now, all transports (http, ws, zmq) support
- * this.
+ * Tests for REQ/REP pattern. As of now, all transports (http, ws, zmq) support this.
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Mar 27, 2018
@@ -68,7 +67,7 @@ public class ReqRepTest {
                 LOG.info("Response received : {}", reply);
                 replyCounter.countDown();
             }
-        });
+        }, true);
         final ResponderSession rep = ml.responder(TestHelper.getBindUri(transport, port), new RequestMessageHandler() {
             @Override
             public void handleRequest(JsonRpcRequestMessage request, Builder replyBuilder) {
@@ -76,7 +75,8 @@ public class ReqRepTest {
                 replyBuilder.metadata(request.getMetadata()).result(request.getParams());
                 requestCounter.countDown();
             }
-        });
+        }, true);
+        req.await();
         for (int i = 0; i < count; i++) {
             req.sendRequest("test", null, null);
             req.read();

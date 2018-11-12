@@ -27,7 +27,6 @@ import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
  * @since Mar 6, 2018
  */
 public class ZmqBusSessionFactory extends AbstractBusSessionFactory {
-
     public ZmqBusSessionFactory() {
         super(Constants.TRANSPORT_NAME);
     }

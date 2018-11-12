@@ -68,8 +68,8 @@ abstract class AbstractProxyHandlerAdapter {
                 .collect(Collectors.toList());
     }
 
-    @SuppressWarnings({ "squid:S1166", "squid:S00112", "checkstyle:IllegalThrows" })
     @SuppressFBWarnings("SLF4J_FORMAT_SHOULD_BE_CONST")
+    @SuppressWarnings({ "squid:S1166", "squid:S00112", "checkstyle:IllegalThrows" })
     protected Object invokeHandler(JsonRpcBaseRequestMessage message) throws Exception {
         final List<MethodCandidate> candidates = new ArrayList<>();
         List<Method> opt = findMethodStrict(message);

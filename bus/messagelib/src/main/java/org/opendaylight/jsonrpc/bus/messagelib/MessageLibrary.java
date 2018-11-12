@@ -37,32 +37,7 @@ public class MessageLibrary implements AutoCloseable, Consumer<AutoCloseable> {
             .build(new CacheLoader<SessionKey, AbstractSession>() {
                 @Override
                 public AbstractSession load(SessionKey key) throws Exception {
-                    final AbstractSession session;
-                    switch (key.type()) {
-                        case REQ:
-                            session = new RequesterSessionImpl(MessageLibrary.this, factory, key.uri(),
-                                    (ReplyMessageHandler) key.handler());
-                            break;
-
-                        case REP:
-                            session = new ResponderSessionImpl(MessageLibrary.this, factory,
-                                    (RequestMessageHandler) key.handler(), key.uri());
-                            break;
-
-                        case PUB:
-                            session = new PublisherSessionImpl(MessageLibrary.this, factory, key.uri());
-                            break;
-
-                        case SUB:
-                            session = new SubscriberSessionImpl(MessageLibrary.this, factory,
-                                    (NotificationMessageHandler) key.handler(), "", key.uri());
-                            break;
-
-                        default:
-                            throw new IllegalArgumentException("Unsupported session : " + key.type());
-                    }
-                    sessions.add(session);
-                    return session;
+                    return createSession(key);
                 }
             });
 
@@ -103,6 +78,35 @@ public class MessageLibrary implements AutoCloseable, Consumer<AutoCloseable> {
         this.factory = desiredFactory;
     }
 
+    public AbstractSession createSession(SessionKey key) {
+        final AbstractSession session;
+        switch (key.type()) {
+            case REQ:
+                session = new RequesterSessionImpl(MessageLibrary.this, factory, key.uri(),
+                        (ReplyMessageHandler) key.handler());
+                break;
+
+            case REP:
+                session = new ResponderSessionImpl(MessageLibrary.this, factory,
+                        (RequestMessageHandler) key.handler(), key.uri());
+                break;
+
+            case PUB:
+                session = new PublisherSessionImpl(MessageLibrary.this, factory, key.uri());
+                break;
+
+            case SUB:
+                session = new SubscriberSessionImpl(MessageLibrary.this, factory,
+                        (NotificationMessageHandler) key.handler(), "", key.uri());
+                break;
+
+            default:
+                throw new IllegalArgumentException("Unsupported session : " + key.type());
+        }
+        sessions.add(session);
+        return session;
+    }
+
     /**
      * Close all sessions that are still alive and shut down
      * {@link BusSessionFactory} which created all sessions for this instance.
@@ -114,16 +118,21 @@ public class MessageLibrary implements AutoCloseable, Consumer<AutoCloseable> {
     }
 
     /**
-     * Create new {@link SubscriberSession}.
+     * Create new {@link SubscriberSession}.If there was
+     * previous attempt to obtain subscriber on same endpoint, cached instance is
+     * returned instead (unless it was closed already or skipCahce is set to true).
      *
      * @param uri URI of remote endpoint where publisher is listening
      * @param handler instance of {@link NotificationMessageHandler} which will
-     *            be invoked for every published message,
+     *            be invoked for every published message
+     * @param skipCache flag to indicate that new session will be created regardless
+     *            of existing session in cache
      * @return {@link SubscriberSession}
      */
-    public SubscriberSession subscriber(String uri, NotificationMessageHandler handler) {
+    public SubscriberSession subscriber(String uri, NotificationMessageHandler handler, boolean skipCache) {
         final SessionKey key = new SessionKey(SessionType.SUB, uri, handler);
-        final SubscriberSessionImpl session = (SubscriberSessionImpl) sessionCache.getUnchecked(key);
+        final SubscriberSessionImpl session = (SubscriberSessionImpl) (skipCache ? createSession(key)
+                : sessionCache.getUnchecked(key));
         session.addReference();
         return session;
     }
@@ -131,14 +140,17 @@ public class MessageLibrary implements AutoCloseable, Consumer<AutoCloseable> {
     /**
      * Create {@link PublisherSession} bound to given endpoint. If there was
      * previous attempt to obtain publisher on same endpoint, cached instance is
-     * returned instead (unless it was closed already).
+     * returned instead (unless it was closed already or skipCahce is set to true).
      *
      * @param uri endpoint to bound to
+     * @param skipCache flag to indicate that new session will be created regardless
+     *            of existing session in cache
      * @return {@link PublisherSession}.
      */
-    public PublisherSession publisher(String uri) {
+    public PublisherSession publisher(String uri, boolean skipCache) {
         final SessionKey key = new SessionKey(SessionType.PUB, uri, SessionKey.NOOP_HANDLER);
-        final PublisherSessionImpl session = (PublisherSessionImpl) sessionCache.getUnchecked(key);
+        final PublisherSessionImpl session = (PublisherSessionImpl) (skipCache ? createSession(key)
+                : sessionCache.getUnchecked(key));
         session.addReference();
         return session;
     }
@@ -146,15 +158,18 @@ public class MessageLibrary implements AutoCloseable, Consumer<AutoCloseable> {
     /**
      * Create {@link RequesterSession} against remote peer at given URI. If such
      * session already exists in cache (that is against same remote endpoint and
-     * same handler) it is returned instead.
+     * same handler) it is returned instead (unless it was closed already or skipCahce is set to true).
      *
      * @param uri URI of remote responder.
      * @param handler {@link ReplyMessageHandler} to be invoked on response
+     * @param skipCache flag to indicate that new session will be created regardless
+     *            of existing session in cache
      * @return {@link RequesterSession}
      */
-    public RequesterSession requester(String uri, ReplyMessageHandler handler) {
+    public RequesterSession requester(String uri, ReplyMessageHandler handler, boolean skipCache) {
         final SessionKey key = new SessionKey(SessionType.REQ, uri, handler);
-        final RequesterSessionImpl session = (RequesterSessionImpl) sessionCache.getUnchecked(key);
+        final RequesterSessionImpl session = (RequesterSessionImpl) (skipCache ? createSession(key)
+                : sessionCache.getUnchecked(key));
         session.addReference();
         return session;
     }
@@ -162,16 +177,19 @@ public class MessageLibrary implements AutoCloseable, Consumer<AutoCloseable> {
     /**
      * Create {@link ResponderSession} bound to given endpoint. If such session
      * already exists in cache (that is with same endpoint and handler) it is
-     * returned instead.
+     * returned instead (unless it was closed already or skipCahce is set to true).
      *
      * @param uri URI to bound this instance to
      * @param handler instance of {@link RequestMessageHandler} that will handle
      *            incoming requests
+     * @param skipCache flag to indicate that new session will be created regardless
+     *            of existing session in cache
      * @return {@link ResponderSession}
      */
-    public ResponderSession responder(String uri, RequestMessageHandler handler) {
+    public ResponderSession responder(String uri, RequestMessageHandler handler, boolean skipCache) {
         final SessionKey key = new SessionKey(SessionType.REP, uri, handler);
-        final ResponderSessionImpl session = (ResponderSessionImpl) sessionCache.getUnchecked(key);
+        final ResponderSessionImpl session = (ResponderSessionImpl) (skipCache ? createSession(key)
+                : sessionCache.getUnchecked(key));
         session.addReference();
         return session;
     }

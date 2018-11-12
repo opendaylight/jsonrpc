@@ -51,9 +51,9 @@ public class ResponderSessionImpl extends AbstractSession implements MessageList
                 if (msg.getType() == JsonRpcMessageType.REQUEST) {
                     final Builder replyBuilder = JsonRpcReplyMessage.builder().id(msg.getId());
                     handler.handleRequest((JsonRpcRequestMessage) msg, replyBuilder);
-                    peerContext.send(JsonRpcSerializer.toJson(replyBuilder.build()));
+                    reply(peerContext, JsonRpcSerializer.toJson(replyBuilder.build()));
                 } else {
-                    peerContext.send(JsonRpcSerializer.toJson(JsonRpcMessageError.builder()
+                    reply(peerContext, JsonRpcSerializer.toJson(JsonRpcMessageError.builder()
                             .code(-32600)
                             .message("Unexpected message type : " + msg.getType())
                             .build()));
@@ -63,5 +63,10 @@ public class ResponderSessionImpl extends AbstractSession implements MessageList
         } finally {
             PeerContextHolder.remove();
         }
+    }
+
+    private void reply(PeerContext peer, String message) {
+        LOG.info("Response : {}", message);
+        peer.send(message);
     }
 }

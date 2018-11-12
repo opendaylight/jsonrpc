@@ -7,9 +7,5 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
-public interface SubscriberSession extends BaseSession {
-    /**
-     * Block until this subscriber session is connected to publisher.
-     */
-    void await();
+public interface SubscriberSession extends ClientSession {
 }

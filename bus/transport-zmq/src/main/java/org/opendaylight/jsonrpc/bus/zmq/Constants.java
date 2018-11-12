@@ -78,8 +78,6 @@ public final class Constants {
     public static final String METADATA_IDENTITY = "Identity";
     public static final Signature DEFAULT_SINATURE = new DefaultSignature();
     public static final Mechanism NULL_AUTH = new DefaultMechanism("NULL");
-    public static final AttributeKey<PeerContextImpl> ATTR_REMOTE_PEER = AttributeKey.valueOf(Constants.class,
-            "REMOTE_PEER");
     public static final AttributeKey<String> ATTR_PUBSUB_TOPIC = AttributeKey.valueOf(Constants.class, "PUBSUB_TOPIC");
     public static final String HANDLER_HANDSHAKE = "handshake";
     public static final String HANDLER_CLIENT = "client";

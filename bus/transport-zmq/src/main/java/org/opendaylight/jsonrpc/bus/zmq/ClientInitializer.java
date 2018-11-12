@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.bus.zmq;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.EventExecutorGroup;
-import io.netty.util.concurrent.ProgressivePromise;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -27,7 +26,6 @@ import org.opendaylight.jsonrpc.bus.spi.CommonConstants;
  * @since Mar 7, 2018
  */
 class ClientInitializer extends AbstractChannelInitializer {
-    private final AtomicReference<ProgressivePromise<String>> currentRequest = new AtomicReference<>(null);
     private final MessageListener listener;
 
     ClientInitializer(final SessionType socketType, final EventExecutorGroup handlerExecutor,
@@ -39,8 +37,8 @@ class ClientInitializer extends AbstractChannelInitializer {
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
         super.initChannel(ch);
-        ch.attr(CommonConstants.ATTR_RESPONSE_QUEUE).set(currentRequest);
-        ch.attr(Constants.ATTR_REMOTE_PEER).set(new PeerContextImpl(ch));
+        ch.attr(CommonConstants.ATTR_RESPONSE_QUEUE).set(new AtomicReference<>(null));
+        ch.attr(CommonConstants.ATTR_PEER_CONTEXT).set(new PeerContextImpl(ch));
         configureLogging(ch);
         ch.pipeline().addLast(Constants.HANDLER_HANDSHAKE, new HandshakeHandler());
         ch.pipeline().addLast(Constants.HANDLER_DECODER, new MessageDecoder());

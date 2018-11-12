@@ -45,10 +45,10 @@ public class CachingTest {
     @Test
     public void test() {
         int port = TestHelper.getFreeTcpPort();
-        ResponderSession responder = ml.responder(TestHelper.getBindUri("ws", port), MOCK_REQUEST_HANDLER);
-        RequesterSession requester1 = ml.requester(TestHelper.getConnectUri("ws", port), MOCK_REPLY_HANDLER);
-        RequesterSession requester2 = ml.requester(TestHelper.getConnectUri("ws", port), MOCK_REPLY_HANDLER);
-        RequesterSession requester3 = ml.requester(TestHelper.getConnectUri("ws", port), MOCK_REPLY_HANDLER);
+        ResponderSession responder = ml.responder(TestHelper.getBindUri("ws", port), MOCK_REQUEST_HANDLER, false);
+        RequesterSession requester1 = ml.requester(TestHelper.getConnectUri("ws", port), MOCK_REPLY_HANDLER, false);
+        RequesterSession requester2 = ml.requester(TestHelper.getConnectUri("ws", port), MOCK_REPLY_HANDLER, false);
+        RequesterSession requester3 = ml.requester(TestHelper.getConnectUri("ws", port), MOCK_REPLY_HANDLER, false);
         // ensure that cached instance is returned instead
         assertEquals(requester1, requester2);
         assertEquals(requester1, requester3);

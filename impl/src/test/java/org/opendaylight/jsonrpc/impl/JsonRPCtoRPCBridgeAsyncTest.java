@@ -136,7 +136,7 @@ public class JsonRPCtoRPCBridgeAsyncTest extends AbstractJsonRpcTest {
     private void startTransport() {
         messaging = new MessageLibrary(TRANSPORT);
         rpcResponder = messaging.responder(String.format(TRANSPORT + "://0.0.0.0:%d", rpcResponderPort),
-                new AsyncMockRpcHandler());
+                new AsyncMockRpcHandler(), true);
     }
 
     private void stopTransport() {

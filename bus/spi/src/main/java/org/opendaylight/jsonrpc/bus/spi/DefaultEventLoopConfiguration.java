@@ -48,3 +48,4 @@ public class DefaultEventLoopConfiguration implements EventLoopConfiguration {
         return handlerGroup;
     }
 }
+

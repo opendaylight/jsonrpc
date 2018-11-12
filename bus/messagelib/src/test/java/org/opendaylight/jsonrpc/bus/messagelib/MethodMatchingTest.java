@@ -41,6 +41,7 @@ public class MethodMatchingTest {
         final int port = TestHelper.getFreeTcpPort();
         responder = tf.createResponder(TestHelper.getBindUri("ws", port), mockHandler);
         requester = tf.createRequester(TestHelper.getConnectUri("ws", port), NoopReplyMessageHandler.INSTANCE);
+        requester.await();
     }
 
     @After

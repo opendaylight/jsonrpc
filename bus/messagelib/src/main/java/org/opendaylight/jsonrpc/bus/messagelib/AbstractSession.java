@@ -7,6 +7,9 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.DEFAULT_TIMEOUT;
+import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.PARAM_TIMEOUT;
+
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -24,7 +27,7 @@ public abstract class AbstractSession implements BaseSession {
 
     AbstractSession(Consumer<AutoCloseable> closeCallback, String uri) {
         this.closeCallback = Objects.requireNonNull(closeCallback);
-        this.timeout = Util.timeoutFromUri(uri);
+        this.timeout = Util.queryParamValue(uri, PARAM_TIMEOUT, DEFAULT_TIMEOUT);
     }
 
     protected void setAutocloseable(AutoCloseable autoCloseable) {

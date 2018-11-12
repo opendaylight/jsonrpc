@@ -34,7 +34,7 @@ public class ServerInitializer extends AbstractServerChannelInitializer {
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
         super.initChannel(ch);
-        ch.attr(Constants.ATTR_REMOTE_PEER).set(new PeerContextImpl(ch));
+        ch.attr(CommonConstants.ATTR_PEER_CONTEXT).set(new PeerContextImpl(ch));
         configureLogging(ch);
         ch.pipeline().addLast(CommonConstants.HANDLER_CONN_TRACKER, new ChannelGroupHandler(channelGroup));
         ch.pipeline().addLast(Constants.HANDLER_HANDSHAKE, new HandshakeHandler());

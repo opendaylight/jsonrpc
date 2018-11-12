@@ -101,9 +101,9 @@ public class HandshakeHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
     private void processSocketType(ChannelHandlerContext ctx, ByteBuf msg, final SessionType socketType) {
         SessionType remoteSocketType;
-        ctx.channel().attr(Constants.ATTR_REMOTE_PEER).get().setServerSocket(false);
+        ((PeerContextImpl)ctx.channel().attr(CommonConstants.ATTR_PEER_CONTEXT).get()).setServerSocket(false);
         remoteSocketType = Constants.getSessionType(msg.readByte());
-        ctx.channel().attr(Constants.ATTR_REMOTE_PEER).get().setSocketType(remoteSocketType);
+        ((PeerContextImpl)ctx.channel().attr(CommonConstants.ATTR_PEER_CONTEXT).get()).setSocketType(remoteSocketType);
         ensureSocketType(ctx, socketType, remoteSocketType);
         state = HandshakeState.IDENTITY;
     }
@@ -121,7 +121,7 @@ public class HandshakeHandler extends SimpleChannelInboundHandler<ByteBuf> {
         msg.skipBytes(2);
         ctx.channel().attr(CommonConstants.ATTR_HANDSHAKE_DONE).set(true);
         ctx.pipeline().remove(HandshakeHandler.this);
-        LOG.debug("Handshake completed with {}", ctx.channel().attr(Constants.ATTR_REMOTE_PEER).get());
+        LOG.debug("Handshake completed with {}", ctx.channel().attr(CommonConstants.ATTR_PEER_CONTEXT).get());
         ctx.fireUserEventTriggered(Constants.HANDSHAKE_COMPLETED);
         state = HandshakeState.DONE;
         if (msg.isReadable()) {
@@ -138,20 +138,24 @@ public class HandshakeHandler extends SimpleChannelInboundHandler<ByteBuf> {
                     .toString(StandardCharsets.US_ASCII);
             remoteSocketType = SessionType.valueOf(socketTypeStr);
             ensureSocketType(ctx, socketType, remoteSocketType);
-            ctx.channel().attr(Constants.ATTR_REMOTE_PEER).get().setSocketType(remoteSocketType);
+            ((PeerContextImpl) ctx.channel().attr(CommonConstants.ATTR_PEER_CONTEXT).get())
+                    .setSocketType(remoteSocketType);
         }
         if (ready.getMetadata().containsKey(Constants.METADATA_IDENTITY)) {
             final String identityStr = ready.getMetadata()
                     .get(Constants.METADATA_IDENTITY)
                     .toString(StandardCharsets.US_ASCII);
-            ctx.channel().attr(Constants.ATTR_REMOTE_PEER).get().setIdentity(identityStr);
+            ((PeerContextImpl) ctx.channel().attr(CommonConstants.ATTR_PEER_CONTEXT).get()).setIdentity(identityStr);
         }
         LOG.trace("Ready command received : {}", ready);
         state = HandshakeState.DONE;
         ctx.channel().attr(CommonConstants.ATTR_HANDSHAKE_DONE).set(true);
         ctx.pipeline().remove(this);
-        LOG.debug("Handshake completed with {}", ctx.channel().attr(Constants.ATTR_REMOTE_PEER).get());
+        LOG.debug("Handshake completed with {}", ctx.channel().attr(CommonConstants.ATTR_PEER_CONTEXT).get());
         ctx.fireUserEventTriggered(Constants.HANDSHAKE_COMPLETED);
+        if (msg.isReadable()) {
+            ctx.fireChannelRead(msg.retain());
+        }
     }
 
     private void processAuthMechanism(ChannelHandlerContext ctx, ByteBuf msg, final SessionType socketType) {
@@ -163,9 +167,10 @@ public class HandshakeHandler extends SimpleChannelInboundHandler<ByteBuf> {
             ctx.channel().close();
             ctx.fireExceptionCaught(new UnsupportedOperationException());
         }
-        LOG.trace("Authentication mechanism : {}", msg);
+        LOG.trace("Authentication mechanism : {}", mech);
         final ServerIndication serverInfo = new DefaultServerIndication(msg);
-        ctx.channel().attr(Constants.ATTR_REMOTE_PEER).get().setServerSocket(serverInfo.isServer());
+        ((PeerContextImpl) ctx.channel().attr(CommonConstants.ATTR_PEER_CONTEXT).get())
+                .setServerSocket(serverInfo.isServer());
         state = HandshakeState.READY;
         ctx.channel().writeAndFlush(new ReadyCommand(socketType)).addListener(new ChannelFutureListener() {
             @Override
