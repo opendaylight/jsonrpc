@@ -7,10 +7,13 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -23,10 +26,10 @@ public class ParallelRequesterTest {
     private static ProxyServiceImpl proxy;
     private static ThreadedSession server;
     private static String port;
-    private static volatile int goodCount;
     private static int timeout = 150;
     private static int echoDelay = 100;
     private static int threadCount = 50;
+    private CountDownLatch goodCount;
 
     private static void showFunctionName() {
         logger.info(Thread.currentThread().getStackTrace()[2].getMethodName());
@@ -51,7 +54,7 @@ public class ParallelRequesterTest {
                 String rxMsg = serverProxy.delayedEcho(msg, delay);
                 logger.info(rxMsg);
                 if (rxMsg.equals(msg)) {
-                    goodCount++;
+                    goodCount.countDown();
                 } else {
                     logger.error("Receive string mismatch");
                 }
@@ -74,8 +77,8 @@ public class ParallelRequesterTest {
         server = messaging.threadedResponder("tcp://*:" + port, new TestMessageServer());
     }
 
-    private void doTest(Thread[] clients) {
-        goodCount = 0;
+    private void doTest(Thread[] clients) throws InterruptedException {
+        goodCount = new CountDownLatch(clients.length);
 
         for (Thread client : clients) {
             client.start();
@@ -91,11 +94,11 @@ public class ParallelRequesterTest {
         }
 
         // Verify that the message was validated properly in every thread.
-        assertEquals(goodCount, clients.length);
+        assertTrue(goodCount.await(15_000, TimeUnit.MILLISECONDS));
     }
 
     @Test
-    public void testMultiClientSharedProxy() {
+    public void testMultiClientSharedProxy() throws InterruptedException {
         // Create multiple clients with each sharing the server proxy.
         // Since these block on the client side, having a low timeout is fine.
         Thread[] clients = new Thread[threadCount];
@@ -111,7 +114,7 @@ public class ParallelRequesterTest {
     }
 
     @Test
-    public void testMultiClientSeparateProxy() {
+    public void testMultiClientSeparateProxy() throws InterruptedException {
         // Create multiple threads with each having a separate server proxy.
         // Since these do not block on client side, the timeout should be proportional
         // to the number of threads.
