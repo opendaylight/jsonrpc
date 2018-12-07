@@ -28,6 +28,7 @@ import java.util.function.Consumer;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
 import org.opendaylight.jsonrpc.bus.api.PeerContext;
+import org.opendaylight.jsonrpc.bus.api.RecoverableTransportException;
 import org.opendaylight.jsonrpc.bus.api.Requester;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseMessage.JsonRpcMessageType;
@@ -85,7 +86,10 @@ public class RequesterSessionImpl extends AbstractSession implements MessageList
      *
      * @param msg A single message (i.e. request or reply)
      */
-    private void send(final String message) {
+    private synchronized void send(final String message) {
+        if (!responseQueue.isEmpty()) {
+            throw new RecoverableTransportException("There is unfinished request on this channel, try again later");
+        }
         LOG.debug("Sending request : {}", message);
         requester.send(message).addListener(new GenericFutureListener<Future<String>>() {
             @Override

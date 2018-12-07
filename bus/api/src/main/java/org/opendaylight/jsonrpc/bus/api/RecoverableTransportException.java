@@ -17,6 +17,10 @@ package org.opendaylight.jsonrpc.bus.api;
 public class RecoverableTransportException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
+    public RecoverableTransportException(String error) {
+        super(error);
+    }
+
     public RecoverableTransportException(SessionType sessionType, String address) {
         super(String.format("Remote enpodint not ready : %s@%s", sessionType, address));
     }

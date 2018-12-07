@@ -1,0 +1,23 @@
+module bb-example {
+    namespace "urn:opendaylight:jsonrpc:bb:example";
+    prefix "bbe";
+    organization "Lumina Networks, Inc.";
+    description "Example service for binding bridge";
+
+    revision "2018-09-24" {
+        description "Initial revision";
+    }
+
+    rpc method1 {
+        input {
+            leaf in-param {
+               type string;
+            }
+        }
+        output {
+            leaf out-param {
+                type string;
+            }
+        }
+    }
+}

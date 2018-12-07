@@ -20,5 +20,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <name>JSON-RPC :: BUS :: Examples</name>
     <modules>
         <module>inband-models</module>
+        <module>binding-bridge</module>
     </modules>
 </project>
