@@ -10,6 +10,8 @@ package org.opendaylight.jsonrpc.bus.jsonrpc;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import java.lang.reflect.Type;
+
 import javax.annotation.Nullable;
 
 /**
@@ -47,13 +49,13 @@ public final class JsonRpcReplyMessage extends JsonRpcBaseMessage {
      * This returns the result part of the Reply message as the user supplied
      * object. Might throw an exception if the values in the Reply do not match.
      *
-     * @param cls The class of expected result object.
+     * @param type The {@link Type} of expected result object.
      * @return The result as an object of the provided class.
      * @throws JsonRpcException If the result part of message does not match the
      *             class.
      */
-    public <T> T getResultAsObject(Class<T> cls) throws JsonRpcException {
-        return convertJsonElementToClass(getResult(), cls);
+    public <T> T getResultAsObject(Type type) throws JsonRpcException {
+        return convertJsonElementToClass(getResult(), type);
     }
 
     @Nullable

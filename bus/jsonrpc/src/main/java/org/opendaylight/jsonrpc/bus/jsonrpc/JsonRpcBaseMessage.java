@@ -8,13 +8,16 @@
 package org.opendaylight.jsonrpc.bus.jsonrpc;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+
+import java.lang.reflect.Type;
 import java.util.Objects;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,20 +84,11 @@ public abstract class JsonRpcBaseMessage {
      * as the requested object. Perhaps not very efficient, but very convenient
      * though.
      */
-    @SuppressWarnings({ "checkstyle:IllegalCatch", "unchecked" })
+    @SuppressWarnings("checkstyle:IllegalCatch")
     protected static <T> T convertJsonElementToClass(JsonElement elem,
-            Class<T> cls) throws JsonRpcException {
-        if (cls.isInstance(elem)) {
-            return (T) elem;
-        }
-        if (JsonArray.class == cls) {
-            return (T) elem.getAsJsonArray();
-        }
-        if (JsonObject.class == cls) {
-            return (T) elem.getAsJsonObject();
-        }
+            Type type) throws JsonRpcException {
         try {
-            return GSON.fromJson(GSON.toJson(elem), cls);
+            return GSON.fromJson(GSON.toJson(elem), type);
         } catch (RuntimeException e) {
             throw new JsonRpcException(e);
         }

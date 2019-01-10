@@ -149,13 +149,11 @@ public class ProxyServiceImpl implements ProxyService {
             return replyMsg.getResult();
         } else {
             // convert result to expected return type.
-            Object result = null;
             try {
-                result = replyMsg.getResultAsObject(method.getReturnType());
+                return replyMsg.getResultAsObject(method.getGenericReturnType());
             } catch (JsonRpcException e) {
                 throw new ProxyServiceGenericException(e);
             }
-            return result;
         }
     }
 
