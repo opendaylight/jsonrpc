@@ -57,7 +57,7 @@ public class HandshakeHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
     private void readInternal(ChannelHandlerContext ctx, ByteBuf msg) {
         if (CommonConstants.DEBUG_MODE) {
-            LOG.debug("IN {} : {} : {}", ctx.channel().localAddress(), state, ByteBufUtil.hexDump(msg));
+            LOG.debug("IN {} : {} : {}", ctx.channel(), state, ByteBufUtil.hexDump(msg));
         }
         final SessionType socketType = ctx.channel().attr(CommonConstants.ATTR_SOCKET_TYPE).get();
         switch (state) {

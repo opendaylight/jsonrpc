@@ -33,6 +33,7 @@ import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChain;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChainClosedException;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChainListener;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,8 +61,8 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
     public TxChain(@Nonnull final DOMDataBroker dataBroker, @Nonnull final DOMTransactionChainListener listener,
             @Nonnull TransportFactory transportFactory,
             @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull JsonConverter jsonConverter,
-            @Nonnull SchemaContext schemaContext) {
-        super(schemaContext, transportFactory, pathMap, jsonConverter);
+            @Nonnull SchemaContext schemaContext, @Nonnull Peer peer) {
+        super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
         this.dataBroker = Objects.requireNonNull(dataBroker);
         this.listener = Objects.requireNonNull(listener);
     }

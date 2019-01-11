@@ -26,9 +26,13 @@ import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChainClosedException;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChainListener;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpointsBuilder;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
 public class TxChainTest {
+    private static final Peer DEVICE = new ConfiguredEndpointsBuilder().setName("device").build();
+
     @Mock
     private SchemaContext schemaContext;
     @Mock
@@ -52,9 +56,9 @@ public class TxChainTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
-        writeOnlyTx1 = new JsonRPCTx(transportFactory, "test", pathMap, jsonConverter, schemaContext);
-        writeOnlyTx2 = new JsonRPCTx(transportFactory, "test", pathMap, jsonConverter, schemaContext);
-        writeOnlyTx3 = new JsonRPCTx(transportFactory, "test", pathMap, jsonConverter, schemaContext);
+        writeOnlyTx1 = new JsonRPCTx(transportFactory, DEVICE, pathMap, jsonConverter, schemaContext);
+        writeOnlyTx2 = new JsonRPCTx(transportFactory, DEVICE, pathMap, jsonConverter, schemaContext);
+        writeOnlyTx3 = new JsonRPCTx(transportFactory, DEVICE, pathMap, jsonConverter, schemaContext);
 
         when(broker.newReadOnlyTransaction()).thenReturn(readOnlyTx);
         when(broker.newWriteOnlyTransaction()).thenReturn(writeOnlyTx1)
@@ -63,7 +67,7 @@ public class TxChainTest {
         when(broker.newReadWriteTransaction()).thenReturn(writeOnlyTx1)
                 .thenReturn(writeOnlyTx2)
                 .thenReturn(writeOnlyTx3);
-        chain = new TxChain(broker, listener, transportFactory, pathMap, jsonConverter, schemaContext);
+        chain = new TxChain(broker, listener, transportFactory, pathMap, jsonConverter, schemaContext, DEVICE);
     }
 
     @Test()

@@ -14,7 +14,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <reference id="domMountPointService" interface="org.opendaylight.mdsal.dom.api.DOMMountPointService" />
     <reference id="schemaService" interface="org.opendaylight.mdsal.dom.api.DOMSchemaService" />
     <reference id="transportFactory" interface="org.opendaylight.jsonrpc.bus.messagelib.TransportFactory" />
-    <reference id="scheduledExecutorService" interface="java.util.concurrent.ScheduledExecutorService"  filter="(&amp;(name=jsonrpc))"/>
 
     <bean id="jsonRpcProvider" class="org.opendaylight.jsonrpc.impl.JsonRPCProvider" init-method="init" destroy-method="close">
         <property name="dataBroker" ref="dataBroker" />
@@ -22,7 +21,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <property name="transportFactory" ref="transportFactory" />
         <property name="domMountPointService" ref="domMountPointService" />
         <property name="schemaService" ref="schemaService" />
-        <property name="scheduledExecutorService" ref="scheduledExecutorService" />
     </bean>
 
     <odl:rpc-implementation ref="jsonRpcProvider" />

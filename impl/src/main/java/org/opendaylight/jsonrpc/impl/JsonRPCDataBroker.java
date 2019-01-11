@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.impl;
 import static org.opendaylight.jsonrpc.impl.Util.store2int;
 import static org.opendaylight.jsonrpc.impl.Util.store2str;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ClassToInstanceMap;
 import com.google.common.collect.ImmutableClassToInstanceMap;
 import com.google.gson.JsonElement;
@@ -51,7 +50,6 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCDataBroker.class);
     private static final JsonObject TOP = new JsonObject();
     private final ClassToInstanceMap<DOMDataBrokerExtension> extensions;
-    private final Peer peer;
 
     /**
      * Instantiates a new JSON-RPC data broker.
@@ -70,11 +68,10 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
             @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
             @Nonnull TransportFactory transportFactory, @Nullable RemoteGovernance governance,
             @Nonnull JsonConverter jsonConverter) {
-        super(schemaContext, transportFactory, pathMap, jsonConverter);
+        super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
         extensions = ImmutableClassToInstanceMap.<DOMDataBrokerExtension>builder()
                 .put(DOMDataTreeChangeService.class, this)
                 .build();
-        this.peer = Preconditions.checkNotNull(peer);
         if (peer.getDataConfigEndpoints() != null) {
             Util.populateFromEndpointList(pathMap, peer.getDataConfigEndpoints(), DataType.CONFIGURATION_DATA);
         } else {
@@ -97,22 +94,22 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
 
     @Override
     public DOMDataTreeReadTransaction newReadOnlyTransaction() {
-        return new JsonRPCTx(transportFactory, peer.getName(), pathMap, jsonConverter, schemaContext);
+        return new JsonRPCTx(transportFactory, peer, pathMap, jsonConverter, schemaContext);
     }
 
     @Override
     public DOMDataTreeWriteTransaction newWriteOnlyTransaction() {
-        return new JsonRPCTx(transportFactory, peer.getName(), pathMap, jsonConverter, schemaContext);
+        return new JsonRPCTx(transportFactory, peer, pathMap, jsonConverter, schemaContext);
     }
 
     @Override
     public DOMDataTreeReadWriteTransaction newReadWriteTransaction() {
-        return new JsonRPCTx(transportFactory, peer.getName(), pathMap, jsonConverter, schemaContext);
+        return new JsonRPCTx(transportFactory, peer, pathMap, jsonConverter, schemaContext);
     }
 
     @Override
     public DOMTransactionChain createTransactionChain(DOMTransactionChainListener listener) {
-        return new TxChain(this, listener, transportFactory, pathMap, jsonConverter, schemaContext);
+        return new TxChain(this, listener, transportFactory, pathMap, jsonConverter, schemaContext, peer);
     }
 
     @Override

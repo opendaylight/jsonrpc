@@ -41,6 +41,7 @@ import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.common.api.TransactionCommitFailedException;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.util.concurrent.FluentFutures;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgument;
@@ -61,7 +62,6 @@ import org.slf4j.LoggerFactory;
 public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteTransaction {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCTx.class);
     private static final JSONCodecFactorySupplier CODEC = JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02;
-    private final String deviceName;
 
     /* Transaction ID */
     private final Map<String, RemoteOmShard> endPointMap;
@@ -72,17 +72,16 @@ public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteT
      * Instantiates a new ZMQ Bus Transaction.
      *
      * @param transportFactory used to create underlying transport connections
-     * @param deviceName the bus om interface to use
+     * @param peer remote peer
      * @param pathMap shared instance of {@link HierarchicalEnumMap}
      * @param jsonConverter the conversion janitor instance
      * @param schemaContext the schema context
      */
-    public JsonRPCTx(@Nonnull TransportFactory transportFactory, @Nonnull String deviceName,
+    public JsonRPCTx(@Nonnull TransportFactory transportFactory, @Nonnull Peer peer,
             @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull JsonConverter jsonConverter,
             @Nonnull SchemaContext schemaContext) {
-        super(schemaContext, transportFactory, pathMap, jsonConverter);
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(deviceName), "Peer name is missing");
-        this.deviceName = deviceName;
+        super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(peer.getName()), "Peer name is missing");
         this.endPointMap = new HashMap<>();
         this.txIdMap = new HashMap<>();
         /*
@@ -118,7 +117,7 @@ public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteT
         final JsonObject rootJson;
         try {
             rootJson = jsonConverter.fromBus(path,
-                    omshard.read(store2str(store2int(store)), deviceName, arg.getPath()));
+                    omshard.read(store2str(store2int(store)), peer.getName(), arg.getPath()));
         } catch (Exception e) {
             return readFailure(e);
         }
@@ -183,7 +182,7 @@ public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteT
         final RemoteOmShard omshard = getOmShard(store, arg.getPath());
         try {
             return FluentFutures.immediateBooleanFluentFuture(
-                    omshard.exists(store2str(store2int(store)), deviceName, arg.getPath()));
+                    omshard.exists(store2str(store2int(store)), peer.getName(), arg.getPath()));
         } catch (Exception e) {
             return FluentFutures.immediateFailedFluentFuture(e);
         }
@@ -195,7 +194,7 @@ public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteT
         final JSONRPCArg arg = jsonConverter.toBusWithStripControl(path, data, true);
         if (arg.getData() != null) {
             getOmShard(store, arg.getPath()).put(getTxId(lookupEndPoint(store, arg.getPath())),
-                    store2str(store2int(store)), deviceName, arg.getPath(), arg.getData());
+                    store2str(store2int(store)), peer.getName(), arg.getPath(), arg.getData());
         }
     }
 
@@ -204,7 +203,7 @@ public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteT
             final NormalizedNode<?, ?> data) {
         final JSONRPCArg arg = jsonConverter.toBus(path, data);
         final RemoteOmShard omshard = getOmShard(store, arg.getPath());
-        omshard.merge(getTxId(lookupEndPoint(store, arg.getPath())), store2str(store2int(store)), deviceName,
+        omshard.merge(getTxId(lookupEndPoint(store, arg.getPath())), store2str(store2int(store)), peer.getName(),
                 arg.getPath(), arg.getData());
     }
 
@@ -212,7 +211,7 @@ public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteT
     public void delete(final LogicalDatastoreType store, final YangInstanceIdentifier path) {
         final JSONRPCArg arg = jsonConverter.toBus(path, null);
         final RemoteOmShard omshard = getOmShard(store, arg.getPath());
-        omshard.delete(getTxId(lookupEndPoint(store, arg.getPath())), store2str(store2int(store)), deviceName,
+        omshard.delete(getTxId(lookupEndPoint(store, arg.getPath())), store2str(store2int(store)), peer.getName(),
                 arg.getPath());
     }
 

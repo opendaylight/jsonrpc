@@ -7,7 +7,6 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
@@ -54,8 +53,7 @@ public class JsonRPCNotificationService extends AbstractJsonRPCComponent
             @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull JsonConverter jsonConverter,
             @Nonnull TransportFactory transportFactory, @Nullable RemoteGovernance governance)
             throws URISyntaxException {
-        super(schemaContext, transportFactory, pathMap, jsonConverter);
-        Preconditions.checkNotNull(peer);
+        super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
 
         if (peer.getNotificationEndpoints() != null) {
             Util.populateFromEndpointList(pathMap, peer.getNotificationEndpoints(), DataType.NOTIFICATION);

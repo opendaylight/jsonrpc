@@ -29,7 +29,7 @@ public class MessageEncoder extends MessageToByteEncoder<ProtocolObject> {
     protected void encode(ChannelHandlerContext ctx, ProtocolObject msg, ByteBuf out) throws Exception {
         final ByteBuf buffer = msg.toBuffer();
         if (CommonConstants.DEBUG_MODE) {
-            LOG.debug("<<< {} : Encoded {} into {}", ctx.channel().localAddress(), msg, ByteBufUtil.hexDump(buffer));
+            LOG.debug("OUT {} : Encoded {} into {}", ctx.channel(), msg, ByteBufUtil.hexDump(buffer));
         }
         out.writeBytes(buffer);
     }

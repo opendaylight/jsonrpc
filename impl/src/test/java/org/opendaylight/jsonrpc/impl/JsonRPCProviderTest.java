@@ -8,9 +8,9 @@
 package org.opendaylight.jsonrpc.impl;
 
 import static org.junit.Assert.assertFalse;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -19,8 +19,6 @@ import com.google.common.collect.Lists;
 import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -64,11 +62,9 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     private int governancePort;
     private int dummyPort;
     private TransportFactory tf;
-    private ScheduledExecutorService exec;
 
     @Before
     public void setUp() throws URISyntaxException, InterruptedException, ExecutionException {
-        exec = Executors.newScheduledThreadPool(1);
         NormalizedNodesHelper.init(schemaContext);
         tf = mock(TransportFactory.class);
 
@@ -85,7 +81,6 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         provider.setDomDataBroker(getDomBroker());
         provider.setSchemaService(getSchemaService());
         provider.setDomMountPointService(getDOMMountPointService());
-        provider.setScheduledExecutorService(exec);
         provider.init();
         logTestName("START");
     }
@@ -94,7 +89,6 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     public void tearDown() throws Exception {
         logTestName("END");
         provider.close();
-        exec.shutdownNow();
     }
 
     // Dummy test to check logic and gain coverage

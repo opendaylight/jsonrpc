@@ -21,8 +21,6 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -88,11 +86,9 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     private TransportFactory transportFactory;
     private HierarchicalEnumMap<JsonElement, DataType, String> pathMap;
     private static final String TRANSPORT = "zmq";
-    private ScheduledExecutorService exec;
 
     @Before
     public void setUp() throws Exception {
-        exec = Executors.newScheduledThreadPool(4);
         pathMap = HierarchicalEnumHashMap.create(DataType.class, JsonPathCodec.create());
         rpcResponderPort = getFreeTcpPort();
         transportFactory = new DefaultTransportFactory();
@@ -100,9 +96,10 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         NormalizedNodesHelper.init(schemaContext);
         bi2baCodec = NormalizedNodesHelper.getBindingToNormalizedNodeCodec();
         bridge = new JsonRPCtoRPCBridge(getPeer(), schemaContext, pathMap, mock(RemoteGovernance.class),
-                transportFactory, exec, new JsonConverter(schemaContext));
+                transportFactory, new JsonConverter(schemaContext));
         mod = schemaContext.findModule("test-model", Revision.of("2016-11-17")).get();
         logTestName("START");
+        TimeUnit.MILLISECONDS.sleep(250);
     }
 
     @After
@@ -111,8 +108,6 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         bridge.close();
         stopTransport();
         transportFactory.close();
-        exec.awaitTermination(250L, TimeUnit.MILLISECONDS);
-        exec.shutdownNow();
     }
 
     /**

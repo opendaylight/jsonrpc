@@ -11,6 +11,7 @@ import static org.opendaylight.jsonrpc.impl.Util.int2store;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.io.IOException;
@@ -23,6 +24,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -60,21 +62,22 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     private final Future<?> cleanerFuture;
     private final TransactionFactory transactionFactory;
     private final DataChangeListenerRegistry dataChangeRegistry;
+    private final ScheduledExecutorService scheduledExecutorService;
 
     public RemoteControl(@Nonnull final DOMDataBroker domDataBroker, @Nonnull final SchemaContext schemaContext,
-            ScheduledExecutorService scheduledExecutorService, TransportFactory transportFactory) {
-        this(domDataBroker, schemaContext, TRX_CLEANUP_INTERVAL, scheduledExecutorService, transportFactory);
+            TransportFactory transportFactory) {
+        this(domDataBroker, schemaContext, TRX_CLEANUP_INTERVAL, transportFactory);
     }
 
     public RemoteControl(@Nonnull final DOMDataBroker domDataBroker, @Nonnull final SchemaContext schemaContext,
-            long cleanupIntervalMilliseconds, @Nonnull ScheduledExecutorService scheduledExecutorService,
-            @Nonnull TransportFactory transportFactory) {
+            long cleanupIntervalMilliseconds, @Nonnull TransportFactory transportFactory) {
         this.domDataBroker = Objects.requireNonNull(domDataBroker);
         this.schemaContext = Objects.requireNonNull(schemaContext);
         this.jsonConverter = new JsonConverter(schemaContext);
-        cleanerFuture = Objects.requireNonNull(scheduledExecutorService).scheduleAtFixedRate(
-                this::cleanupStaleTransactions, cleanupIntervalMilliseconds, cleanupIntervalMilliseconds,
-                TimeUnit.MILLISECONDS);
+        scheduledExecutorService = Executors.newScheduledThreadPool(1,
+                new ThreadFactoryBuilder().setNameFormat("jsonrpc-tx-cleaner-%d").setDaemon(true).build());
+        cleanerFuture = scheduledExecutorService.scheduleAtFixedRate(this::cleanupStaleTransactions,
+                cleanupIntervalMilliseconds, cleanupIntervalMilliseconds, TimeUnit.MILLISECONDS);
         this.transactionFactory = new EnsureParentTransactionFactory(domDataBroker,
                 Objects.requireNonNull(schemaContext));
         this.dataChangeRegistry = new DataChangeListenerRegistry(domDataBroker, transportFactory, jsonConverter);
@@ -358,6 +361,7 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
 
     @Override
     public void close() {
+        scheduledExecutorService.shutdown();
         cleanerFuture.cancel(true);
         txmap.clear();
         dataChangeRegistry.close();

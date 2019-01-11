@@ -10,6 +10,7 @@ package org.opendaylight.jsonrpc.bus.http;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.util.concurrent.DefaultProgressivePromise;
 import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GlobalEventExecutor;
 
 import org.opendaylight.jsonrpc.bus.api.RecoverableTransportException;
 import org.opendaylight.jsonrpc.bus.api.Requester;
@@ -35,8 +36,7 @@ class RequesterImpl extends AbstractClientSession implements Requester {
         if (!isReady()) {
             throw new RecoverableTransportException(sessionType, uri.toString());
         }
-        final DefaultProgressivePromise<String> promise = new DefaultProgressivePromise<>(
-                channelFuture.channel().eventLoop());
+        final DefaultProgressivePromise<String> promise = new DefaultProgressivePromise<>(GlobalEventExecutor.INSTANCE);
         channelFuture.channel().attr(CommonConstants.ATTR_RESPONSE_QUEUE).get().set(promise);
         channelFuture.channel().writeAndFlush(HttpUtil.createRequestObject(isWebsocket, message));
         return promise;

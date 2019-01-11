@@ -16,6 +16,7 @@ import javax.annotation.Nonnull;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
 /**
@@ -30,12 +31,15 @@ abstract class AbstractJsonRPCComponent {
     protected final JsonConverter jsonConverter;
     protected final TransportFactory transportFactory;
     protected final HierarchicalEnumMap<JsonElement, DataType, String> pathMap;
+    protected final Peer peer;
 
     AbstractJsonRPCComponent(@Nonnull final SchemaContext schemaContext, @Nonnull TransportFactory transportFactory,
-            @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull JsonConverter jsonConverter) {
+            @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull JsonConverter jsonConverter,
+            @Nonnull Peer peer) {
         this.schemaContext = Objects.requireNonNull(schemaContext);
         this.transportFactory = Objects.requireNonNull(transportFactory);
         this.pathMap = Objects.requireNonNull(pathMap);
         this.jsonConverter = Objects.requireNonNull(jsonConverter);
+        this.peer = Objects.requireNonNull(peer);
     }
 }

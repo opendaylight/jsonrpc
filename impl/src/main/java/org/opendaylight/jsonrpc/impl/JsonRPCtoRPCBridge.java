@@ -14,6 +14,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
@@ -25,11 +26,11 @@ import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
@@ -80,6 +81,7 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
     private final Map<String, RpcState> mappedRpcs;
     private final BlockingQueue<JsonRPCDOMRpcResultFuture> requestQueue = new ArrayBlockingQueue<>(MAX_QUEUE_DEPTH);
     private final Future<?> processorFuture;
+    private final ExecutorService executorService;
     private volatile boolean shuttingDown = false;
 
     /**
@@ -94,12 +96,9 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
      */
     public JsonRPCtoRPCBridge(@Nonnull Peer peer, @Nonnull SchemaContext schemaContext,
             @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nullable RemoteGovernance governance,
-            @Nonnull TransportFactory transportFactory, @Nonnull ExecutorService executorService,
-            @Nonnull JsonConverter jsonConverter)
+            @Nonnull TransportFactory transportFactory, @Nonnull JsonConverter jsonConverter)
             throws URISyntaxException {
-        super(schemaContext, transportFactory, pathMap, jsonConverter);
-        Objects.requireNonNull(peer);
-        Objects.requireNonNull(executorService);
+        super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
         /* Endpoints via configuration */
         if (peer.getRpcEndpoints() != null) {
             Util.populateFromEndpointList(pathMap, peer.getRpcEndpoints(), DataType.RPC);
@@ -114,9 +113,13 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
         availableRpcs = availableRpcsBuilder.build();
 
         if (mappedRpcs.isEmpty()) {
-            LOG.warn("No RPCs to map for {}", peer.getName());
+            LOG.info("No RPCs to map for {}", peer.getName());
+            executorService = null;
             processorFuture = Futures.immediateFuture(null);
         } else {
+            executorService = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
+                    .setNameFormat("jsonrpc-async-dispatch-" + peer.getName() + "-%d")
+                    .build());
             processorFuture = executorService.submit(this::requestProcessorThreadLoop);
         }
         LOG.info("RPC bridge instantiated for '{}' with {} methods", peer.getName(), mappedRpcs.size());

@@ -19,6 +19,7 @@ import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
 /**
@@ -38,8 +39,8 @@ abstract class RemoteShardAware extends AbstractJsonRPCComponent implements Auto
             });
 
     RemoteShardAware(SchemaContext schemaContext, TransportFactory transportFactory,
-            HierarchicalEnumMap<JsonElement, DataType, String> pathMap, JsonConverter jsonConverter) {
-        super(schemaContext, transportFactory, pathMap, jsonConverter);
+            HierarchicalEnumMap<JsonElement, DataType, String> pathMap, JsonConverter jsonConverter, Peer peer) {
+        super(schemaContext, transportFactory, pathMap, jsonConverter ,peer);
     }
 
     protected RemoteOmShard getShard(final LogicalDatastoreType store, final JsonElement path) {

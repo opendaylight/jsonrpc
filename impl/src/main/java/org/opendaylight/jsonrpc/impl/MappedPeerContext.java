@@ -14,7 +14,6 @@ import com.google.gson.JsonElement;
 
 import java.net.URISyntaxException;
 import java.util.Objects;
-import java.util.concurrent.ScheduledExecutorService;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -75,8 +74,7 @@ public class MappedPeerContext implements AutoCloseable {
 
     public MappedPeerContext(@Nonnull Peer peer, @Nonnull TransportFactory transportFactory,
             @Nonnull SchemaContextProvider schemaContextProvider, @Nonnull DataBroker dataBroker,
-            @Nonnull DOMMountPointService mountService, @Nullable RemoteGovernance governance,
-            @Nonnull ScheduledExecutorService scheduledExecutorService)
+            @Nonnull DOMMountPointService mountService, @Nullable RemoteGovernance governance)
             throws URISyntaxException {
         this.peer = Objects.requireNonNull(peer);
         this.dataBroker = Objects.requireNonNull(dataBroker);
@@ -113,7 +111,7 @@ public class MappedPeerContext implements AutoCloseable {
          * RPC bridge
          */
         rpcBridge = new JsonRPCtoRPCBridge(peer, schema, pathMap, governance, transportFactory,
-                scheduledExecutorService, jsonConverter);
+                jsonConverter);
         mountBuilder.addService(DOMRpcService.class, rpcBridge);
         pathMap.toMap(DataType.RPC).entrySet().stream().forEach(e -> newPeer.addRpcEndpoint(new RpcEndpointsBuilder()
                 .setPath(e.getKey().getAsJsonObject().toString()).setEndpointUri(new Uri(e.getValue())).build()));

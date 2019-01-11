@@ -9,8 +9,8 @@ package org.opendaylight.jsonrpc.impl;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -21,8 +21,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -63,17 +61,14 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     private RemoteGovernance governance;
     private RemoteOmShard shard;
     private TransportFactory transportFactory;
-    private ScheduledExecutorService exec;
     private final HierarchicalEnumMap<JsonElement, DataType, String> pathMap = HierarchicalEnumHashMap
             .create(DataType.class, JsonPathCodec.create());
 
     @Before
     public void setUp() throws URISyntaxException {
-        exec = Executors.newScheduledThreadPool(1);
         NormalizedNodesHelper.init(schemaContext);
         transportFactory = mock(TransportFactory.class);
-        shard = new RemoteControl(getDomBroker(), schemaContext,
-                exec, transportFactory);
+        shard = new RemoteControl(getDomBroker(), schemaContext, transportFactory);
         peer = new MutablePeer();
         peer.name("test");
         governance = mock(RemoteGovernance.class);
@@ -92,7 +87,6 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         final DOMDataTreeWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
         wtx.delete(LogicalDatastoreType.OPERATIONAL, yiiFromJson("{ \"network-topology:network-topology\": {}}"));
         wtx.commit().get();
-        exec.shutdown();
     }
 
     @Test

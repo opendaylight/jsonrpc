@@ -7,7 +7,6 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
@@ -23,7 +22,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import java.util.function.Function;
@@ -81,7 +79,8 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private volatile boolean sessionInitialized = false;
     private volatile boolean providerClosed = false;
     private DOMMountPointService domMountPointService;
-    private ScheduledExecutorService scheduledExecutorService;
+    private String lastGovernanceUri;
+    private String lastWhoAmIUri;
 
     /**
      * Get current configuration state configuration can be set or deleted by
@@ -105,15 +104,6 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
                 .collect(Collectors.toMap(Peer::getName, Function.identity()));
     }
 
-    /**
-     * Gets the root Om from the datastore.
-     */
-    private Uri rootOm() {
-        final Config result = getConfig();
-        Preconditions.checkNotNull(result, "Configuration not present!");
-        return result.getGovernanceRoot();
-    }
-
     private boolean processNotificationInternal() throws URISyntaxException {
         LOG.debug("Processing notification");
         if (!sessionInitialized) {
@@ -125,9 +115,6 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
             LOG.debug("{} was closed already, ignoring configuration change", ME);
             return false;
         }
-
-        stopGovernance();
-        stopRemoteControl();
 
         final Config peersConfState = getConfig();
         if (peersConfState == null) {
@@ -143,7 +130,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
          * we cannot fetch models which come from the same root om
          *
          */
-        if (!resetGovernance(peersConfState)) {
+        if (!resetGovernance(peersConfState.getGovernanceRoot())) {
             return false;
         }
 
@@ -153,7 +140,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
          * same interface as the peer settings available via restconf but to
          * operational datastore.
          */
-        if (!initRemoteControl(peersConfState)) {
+        if (!initRemoteControl(peersConfState.getWhoAmI())) {
             return false;
         }
 
@@ -214,33 +201,39 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         }
     }
 
-    private boolean initRemoteControl(final Config peersConfState) {
-        if (peersConfState.getWhoAmI() != null) {
-            /* remote control ORB not initialized */
-            LOG.debug("Exposing remote control at {}", peersConfState.getWhoAmI());
-            try {
-                remoteControl = transportFactory.createResponder(peersConfState.getWhoAmI().getValue(),
-                        new RemoteControl(domDataBroker, schemaService.getGlobalContext(), scheduledExecutorService,
-                                transportFactory));
-
-            } catch (URISyntaxException e) {
-                LOG.error("Invalid URI provided, can't continue", e);
-                return false;
+    private boolean initRemoteControl(final Uri whoAmI) {
+        try {
+            if (whoAmI != null) {
+                if (!whoAmI.getValue().equals(lastWhoAmIUri)) {
+                    lastWhoAmIUri = whoAmI.getValue();
+                    stopRemoteControl();
+                    /* remote control ORB not initialized */
+                    LOG.debug("Exposing remote control at {}", whoAmI);
+                    remoteControl = transportFactory.createResponder(whoAmI.getValue(),
+                            new RemoteControl(domDataBroker, schemaService.getGlobalContext(), transportFactory), true);
+                }
+            } else {
+                lastWhoAmIUri = null;
+                LOG.debug("Remote control not configured");
             }
-        } else {
-            LOG.debug("Remote control not configured");
+        } catch (URISyntaxException e) {
+            LOG.error("Invalid URI provided, can't continue", e);
+            return false;
         }
         return true;
     }
 
-    private boolean resetGovernance(Config peersConfState) {
+    private boolean resetGovernance(final Uri rootOm) {
         try {
-            LOG.debug("(Re)setting governance root for JSON RPC to {}", peersConfState.getGovernanceRoot());
-            final Uri rootOm = rootOm();
             if (rootOm != null) {
-                // Need to re-create proxy, because root-om can point to URI
-                // with different transport then before
-                governance = transportFactory.createRequesterProxy(RemoteGovernance.class, rootOm().getValue());
+                if (!rootOm.getValue().equals(lastGovernanceUri)) {
+                    LOG.debug("(Re)setting governance root for JSON RPC to {}", rootOm);
+                    lastGovernanceUri = rootOm.getValue();
+                    stopGovernance();
+                    // Need to re-create proxy, because root-om can point to URI
+                    // with different transport then before
+                    governance = transportFactory.createRequesterProxy(RemoteGovernance.class, rootOm.getValue());
+                }
             } else {
                 governance = null;
             }
@@ -253,6 +246,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
             return false;
         }
     }
+
 
     /**
      * Performs reconciliation between our internal mount state and the
@@ -309,7 +303,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         }
         LOG.debug("Creating mapping context for peer {}", peer.getName());
         final MappedPeerContext ctx = new MappedPeerContext(peer, transportFactory, getSchemaContextProvider(),
-                dataBroker, domMountPointService, governance, scheduledExecutorService);
+                dataBroker, domMountPointService, governance);
         peerState.put(peer.getName(), ctx);
         LOG.info("Peer mounted : {}", ctx);
         return true;
@@ -335,7 +329,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
                 LOG.debug("Device '{}' unmounted successfully", deviceName);
                 return true;
             } catch (Exception e) {
-                LOG.error("Device '{}'  unmount, failed", deviceName, e);
+                LOG.error("Device '{}' unmount, failed", deviceName, e);
                 return false;
             }
         }
@@ -397,9 +391,5 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
 
     public void setSchemaService(DOMSchemaService schemaService) {
         this.schemaService = schemaService;
-    }
-
-    public void setScheduledExecutorService(ScheduledExecutorService scheduledExecutorService) {
-        this.scheduledExecutorService = scheduledExecutorService;
     }
 }

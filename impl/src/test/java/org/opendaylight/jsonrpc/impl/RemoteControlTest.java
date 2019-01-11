@@ -25,8 +25,6 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -76,15 +74,13 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     private RemoteControl ctrl;
     private JsonParser parser;
     private JsonConverter conv;
-    private ScheduledExecutorService exec;
     private TransportFactory transportFactory;
 
     @Before
     public void setUp() {
         NormalizedNodesHelper.init(schemaContext);
-        exec = Executors.newScheduledThreadPool(1);
         transportFactory = new DefaultTransportFactory();
-        ctrl = new RemoteControl(getDomBroker(), schemaContext, 500, exec, transportFactory);
+        ctrl = new RemoteControl(getDomBroker(), schemaContext, 500, transportFactory);
         parser = new JsonParser();
         conv = new JsonConverter(schemaContext);
         logTestName("START");
@@ -94,7 +90,6 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     public void tearDown() throws Exception {
         logTestName("END");
         ctrl.close();
-        exec.shutdown();
     }
 
     @Test

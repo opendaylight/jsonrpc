@@ -11,9 +11,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
@@ -43,6 +43,8 @@ import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.common.api.TransactionCommitFailedException;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
@@ -59,6 +61,8 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCTxTest.class);
     private static final String ENDPOINT = "zmq://localhost:1234";
     private static final String DEVICE_NAME = "dev-1";
+    private static final Peer DEVICE = new ConfiguredEndpointsBuilder().setName(DEVICE_NAME).build();
+
     private JsonRPCTx trx;
     private JsonConverter conv;
     private RemoteOmShard om;
@@ -75,7 +79,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         om = mock(RemoteOmShard.class);
         doReturn(om).when(transportFactory).createRequesterProxy(any(), anyString());
         conv = new JsonConverter(schemaContext);
-        trx = new JsonRPCTx(transportFactory, DEVICE_NAME, pathMap, conv, schemaContext);
+        trx = new JsonRPCTx(transportFactory, DEVICE, pathMap, conv, schemaContext);
     }
 
     @After
