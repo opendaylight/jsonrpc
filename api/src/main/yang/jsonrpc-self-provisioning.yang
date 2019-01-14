@@ -1,0 +1,33 @@
+module jsonrpc-self-provisioning {
+    namespace "urn:opendaylight:jsonrpc:sp";
+    prefix "jsp";
+    import ietf-yang-types { prefix "yt"; revision-date 2013-07-15; }
+
+    organization "Lumina Networks, Inc";
+    description "YANG model of the JSON-RPC 2.0 self provisioning";
+
+    revision "2019-01-12" {
+        description "Initial revision";
+    }
+
+    grouping module {
+        leaf name {
+            description "Module identifier";
+            type yt:yang-identifier;
+        }
+        leaf content {
+            description "YANG module source";
+            type string;
+        }
+    }
+
+    rpc get-modules {
+        description "Get list of all YANG modules required to mount this peer.";
+        output {
+            list modules {
+                uses module;
+                key name;
+            }
+        }
+    }
+}

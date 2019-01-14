@@ -37,7 +37,7 @@ abstract class AbstractProxyHandlerAdapter {
     AbstractProxyHandlerAdapter(final boolean skipOutputMethods, final Object handler) {
         this.handler = Objects.requireNonNull(handler);
         // cache this at construction
-        methods = filterOutputMethods(handler.getClass().getDeclaredMethods(), skipOutputMethods);
+        methods = filterOutputMethods(handler.getClass().getMethods(), skipOutputMethods);
     }
 
     /*

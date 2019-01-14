@@ -34,7 +34,7 @@ public class RpcState implements AutoCloseable {
         this.name = Preconditions.checkNotNull(qname);
         Preconditions.checkNotNull(endpoint);
         this.rpc = Preconditions.checkNotNull(rpc);
-        this.client = transportFactory.createRequester(endpoint, NoopReplyMessageHandler.INSTANCE);
+        this.client = transportFactory.createRequester(endpoint, NoopReplyMessageHandler.INSTANCE, false);
     }
 
     public RpcDefinition rpc() {

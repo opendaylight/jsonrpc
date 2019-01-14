@@ -14,6 +14,7 @@ import com.google.gson.JsonElement;
 
 import java.net.URISyntaxException;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -25,7 +26,6 @@ import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
 import org.opendaylight.jsonrpc.model.MutablePeer;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
-import org.opendaylight.jsonrpc.model.SchemaContextProvider;
 import org.opendaylight.mdsal.binding.api.DataBroker;
 import org.opendaylight.mdsal.binding.api.WriteTransaction;
 import org.opendaylight.mdsal.common.api.CommitInfo;
@@ -35,7 +35,9 @@ import org.opendaylight.mdsal.dom.api.DOMMountPoint;
 import org.opendaylight.mdsal.dom.api.DOMMountPointService;
 import org.opendaylight.mdsal.dom.api.DOMNotificationService;
 import org.opendaylight.mdsal.dom.api.DOMRpcService;
+import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ActualEndpoints;
@@ -73,22 +75,35 @@ public class MappedPeerContext implements AutoCloseable {
     private final YangInstanceIdentifier biPath;
 
     public MappedPeerContext(@Nonnull Peer peer, @Nonnull TransportFactory transportFactory,
-            @Nonnull SchemaContextProvider schemaContextProvider, @Nonnull DataBroker dataBroker,
+            @Nonnull DOMSchemaService schemaService, @Nonnull DataBroker dataBroker,
             @Nonnull DOMMountPointService mountService, @Nullable RemoteGovernance governance)
             throws URISyntaxException {
         this.peer = Objects.requireNonNull(peer);
         this.dataBroker = Objects.requireNonNull(dataBroker);
-        final MutablePeer newPeer = new MutablePeer().name(peer.getName()).addModels(peer.getModules());
+        final MutablePeer newPeer = new MutablePeer().name(peer.getName());
+        final SchemaContext schema;
+
+        //check if peer can supply modules by himself
+        if (isSelfProvisioned(peer)) {
+            schema = SelfProvisionedSchemaContextProvider.create(transportFactory).createSchemaContext(peer);
+            //actual list of modules lies in created SchemaContext
+            newPeer.addModels(schema.getModules()
+                    .stream()
+                    .map(m -> new YangIdentifier(m.getName()))
+                    .collect(Collectors.toList()));
+        } else {
+            /*
+             * We obtain models from the same source as the bus master to ensure
+             * that everyone has a coherent view of the system using the same model
+             * versions
+             */
+            schema = governance != null ? new GovernanceSchemaContextProvider(governance).createSchemaContext(newPeer)
+                    : new BuiltinSchemaContextProvider(schemaService.getGlobalContext()).createSchemaContext(newPeer);
+        }
+
         biPath = Util.createBiPath(peer.getName());
 
         final DOMMountPointService.DOMMountPointBuilder mountBuilder = mountService.createMountPoint(biPath);
-
-        /*
-         * We obtain models from the same source as the bus master to ensure
-         * that everyone has a coherent view of the system using the same model
-         * versions
-         */
-        final SchemaContext schema = schemaContextProvider.createSchemaContext(peer);
         jsonConverter = new JsonConverter(schema);
         mountBuilder.addInitialSchemaContext(schema);
 
@@ -136,6 +151,11 @@ public class MappedPeerContext implements AutoCloseable {
         final WriteTransaction wrTrx = dataBroker.newWriteOnlyTransaction();
         wrTrx.put(LogicalDatastoreType.OPERATIONAL, peerOpId, endpoint);
         commitTransaction(wrTrx, peer.getName(), "Publish operational state");
+    }
+
+    static boolean isSelfProvisioned(Peer peer) {
+        return (peer.getModules() != null && peer.getModules().size() == 1
+                && peer.getModules().get(0).getValue().startsWith("jsonrpc-self-provisioning"));
     }
 
     @Override

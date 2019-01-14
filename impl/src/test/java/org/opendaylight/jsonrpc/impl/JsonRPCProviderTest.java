@@ -9,9 +9,11 @@ package org.opendaylight.jsonrpc.impl;
 
 import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
@@ -28,6 +30,7 @@ import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
+import org.opendaylight.jsonrpc.model.SelfProvisionedService;
 import org.opendaylight.mdsal.binding.api.ReadTransaction;
 import org.opendaylight.mdsal.binding.api.WriteTransaction;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
@@ -70,6 +73,9 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
 
         when(tf.createSubscriber(anyString(), any())).thenReturn(mock(SubscriberSession.class));
         when(tf.createRequesterProxy(eq(RemoteGovernance.class), anyString())).thenReturn(GOVERNANCE_MOCK);
+        when(tf.createRequesterProxy(eq(SelfProvisionedService.class), anyString(), anyBoolean()))
+                .thenReturn(new AbstractSelfProvisionedService() {
+                });
         when(tf.createRequester(anyString(), any())).thenReturn(mock(RequesterSession.class));
         governancePort = getFreeTcpPort();
         dummyPort = getFreeTcpPort();
@@ -89,6 +95,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     public void tearDown() throws Exception {
         logTestName("END");
         provider.close();
+        reset(tf);
     }
 
     // Dummy test to check logic and gain coverage
@@ -162,6 +169,43 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
                         .build());
         //@formatter:on
         retryAction(TimeUnit.SECONDS, 3, () -> getPeerOpState("test-model").isPresent());
+    }
+
+    @Test
+    public void test_SelfProvisionedSchemaContextProvider() throws Exception {
+        // unconfigure all
+        updateConfig(new ConfigBuilder().build());
+        // wait until nothing there
+        retryAction(TimeUnit.SECONDS, 2, () -> !getPeerOpState(DEMO1_MODEL).isPresent());
+        //@formatter:off
+        updateConfig(new ConfigBuilder()
+                .setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
+                .setConfiguredEndpoints(Lists.newArrayList(
+                        new ConfiguredEndpointsBuilder().setName(DEMO1_MODEL)
+                            .setModules(Lists.newArrayList(new YangIdentifier("jsonrpc-self-provisioning")))
+                            .setRpcEndpoints(Lists.newArrayList(
+                                    new RpcEndpointsBuilder()
+                                        .withKey(new RpcEndpointsKey("{}"))
+                                        .setEndpointUri(new Uri(dummyUri()))
+                                    .build()))
+                            .setNotificationEndpoints(Lists.newArrayList(
+                                    new NotificationEndpointsBuilder()
+                                        .withKey(new NotificationEndpointsKey("{}"))
+                                        .setEndpointUri(new Uri(dummyUri()))
+                                    .build()))
+                            .setDataOperationalEndpoints(Lists.newArrayList(
+                                    new DataOperationalEndpointsBuilder()
+                                        .withKey(new DataOperationalEndpointsKey("{}"))
+                                        .setEndpointUri(new Uri(dummyUri()))
+                                     .build()))
+                            .setDataConfigEndpoints(Lists.newArrayList(
+                                    new DataConfigEndpointsBuilder()
+                                        .withKey(new DataConfigEndpointsKey("{}"))
+                                        .setEndpointUri(new Uri(dummyUri())).build()))
+                                    .build()))
+                        .build());
+        //@formatter:on
+        retryAction(TimeUnit.SECONDS, 5, () -> getPeerOpState(DEMO1_MODEL).isPresent());
     }
 
     /**

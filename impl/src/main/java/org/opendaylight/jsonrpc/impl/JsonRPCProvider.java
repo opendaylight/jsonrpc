@@ -33,7 +33,6 @@ import javax.annotation.concurrent.GuardedBy;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
-import org.opendaylight.jsonrpc.model.SchemaContextProvider;
 import org.opendaylight.mdsal.binding.api.ClusteredDataTreeChangeListener;
 import org.opendaylight.mdsal.binding.api.DataBroker;
 import org.opendaylight.mdsal.binding.api.DataTreeIdentifier;
@@ -302,8 +301,8 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
             return false;
         }
         LOG.debug("Creating mapping context for peer {}", peer.getName());
-        final MappedPeerContext ctx = new MappedPeerContext(peer, transportFactory, getSchemaContextProvider(),
-                dataBroker, domMountPointService, governance);
+        final MappedPeerContext ctx = new MappedPeerContext(peer, transportFactory, schemaService, dataBroker,
+                domMountPointService, governance);
         peerState.put(peer.getName(), ctx);
         LOG.info("Peer mounted : {}", ctx);
         return true;
@@ -333,11 +332,6 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
                 return false;
             }
         }
-    }
-
-    private SchemaContextProvider getSchemaContextProvider() {
-        return governance != null ? new GovernanceSchemaContextProvider(governance)
-                : new BuiltinSchemaContextProvider(schemaService.getGlobalContext());
     }
 
     /*
