@@ -15,8 +15,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.model.InbandModelsService;
 import org.opendaylight.jsonrpc.model.SchemaContextProvider;
-import org.opendaylight.jsonrpc.model.SelfProvisionedService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpoints;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
@@ -32,28 +32,28 @@ import org.opendaylight.yangtools.yang.parser.stmt.reactor.CrossSourceStatementR
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jan 13, 2019
  */
-public final class SelfProvisionedSchemaContextProvider implements SchemaContextProvider {
+public final class InbandModelsSchemaContextProvider implements SchemaContextProvider {
     private final TransportFactory transportFactory;
 
-    public static SelfProvisionedSchemaContextProvider create(TransportFactory transportFactory) {
-        return new SelfProvisionedSchemaContextProvider(transportFactory);
+    public static InbandModelsSchemaContextProvider create(TransportFactory transportFactory) {
+        return new InbandModelsSchemaContextProvider(transportFactory);
     }
 
-    private SelfProvisionedSchemaContextProvider(final TransportFactory transportFactory) {
+    private InbandModelsSchemaContextProvider(final TransportFactory transportFactory) {
         this.transportFactory = Objects.requireNonNull(transportFactory);
     }
 
     @Override
     @SuppressWarnings("checkstyle:IllegalCatch")
     public SchemaContext createSchemaContext(Peer peer) {
-        Objects.requireNonNull(peer.getRpcEndpoints(), "RPC endpoints are mandatory for self-provisioning");
+        Objects.requireNonNull(peer.getRpcEndpoints(), "RPC endpoint is mandatory for for inband models");
         RpcEndpoints enpodint = peer.getRpcEndpoints()
                 .stream()
                 .filter(rpc -> rpc.getPath().equals("{}"))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Missing RPC endpoint for root path"));
         Objects.requireNonNull(enpodint.getEndpointUri().getValue(), "RPC endpoint not set");
-        try (SelfProvisionedService requester = transportFactory.createRequesterProxy(SelfProvisionedService.class,
+        try (InbandModelsService requester = transportFactory.createRequesterProxy(InbandModelsService.class,
                 enpodint.getEndpointUri().getValue(), true)) {
             final CrossSourceStatementReactor.BuildAction reactor = RFC7950Reactors.defaultReactor().newBuild();
 

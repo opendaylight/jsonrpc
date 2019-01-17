@@ -14,11 +14,11 @@ import java.util.concurrent.CountDownLatch;
 import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
-import org.opendaylight.jsonrpc.impl.AbstractSelfProvisionedService;
+import org.opendaylight.jsonrpc.impl.AbstractInbandModelsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Main extends AbstractSelfProvisionedService implements DemoService {
+public class Main extends AbstractInbandModelsService implements DemoService {
     private static final Logger LOG = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) throws Exception {

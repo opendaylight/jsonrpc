@@ -15,9 +15,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <version>1.6.0-SNAPSHOT</version>
         <relativePath>../../../parent</relativePath>
     </parent>
-    <artifactId>self-provisioning</artifactId>
+    <artifactId>inband-models</artifactId>
     <packaging>jar</packaging>
-    <name>JSON-RPC :: BUS :: Examples :: Self provisioning</name>
+    <name>JSON-RPC :: BUS :: Examples :: Inband models</name>
     <dependencyManagement>
         <dependencies>
             <dependency>

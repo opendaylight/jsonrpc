@@ -25,5 +25,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <module>jsonrpc</module>
         <module>messagelib</module>
         <module>config</module>
+        <module>examples</module>
     </modules>
 </project>

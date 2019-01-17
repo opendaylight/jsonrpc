@@ -14,8 +14,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ServiceLoader;
 
+import org.opendaylight.jsonrpc.model.InbandModelsService;
 import org.opendaylight.jsonrpc.model.Module;
-import org.opendaylight.jsonrpc.model.SelfProvisionedService;
 import org.opendaylight.yangtools.yang.binding.YangModelBindingProvider;
 
 /**
@@ -24,7 +24,7 @@ import org.opendaylight.yangtools.yang.binding.YangModelBindingProvider;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jan 12, 2019
  */
-public abstract class AbstractSelfProvisionedService implements SelfProvisionedService {
+public abstract class AbstractInbandModelsService implements InbandModelsService {
     private static final List<Module> MODULES;
 
     static {

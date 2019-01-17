@@ -29,8 +29,8 @@ import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.model.InbandModelsService;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
-import org.opendaylight.jsonrpc.model.SelfProvisionedService;
 import org.opendaylight.mdsal.binding.api.ReadTransaction;
 import org.opendaylight.mdsal.binding.api.WriteTransaction;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
@@ -73,8 +73,8 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
 
         when(tf.createSubscriber(anyString(), any())).thenReturn(mock(SubscriberSession.class));
         when(tf.createRequesterProxy(eq(RemoteGovernance.class), anyString())).thenReturn(GOVERNANCE_MOCK);
-        when(tf.createRequesterProxy(eq(SelfProvisionedService.class), anyString(), anyBoolean()))
-                .thenReturn(new AbstractSelfProvisionedService() {
+        when(tf.createRequesterProxy(eq(InbandModelsService.class), anyString(), anyBoolean()))
+                .thenReturn(new AbstractInbandModelsService() {
                 });
         when(tf.createRequester(anyString(), any())).thenReturn(mock(RequesterSession.class));
         governancePort = getFreeTcpPort();
@@ -172,7 +172,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     }
 
     @Test
-    public void test_SelfProvisionedSchemaContextProvider() throws Exception {
+    public void test_InbandModelsSchemaContextProvider() throws Exception {
         // unconfigure all
         updateConfig(new ConfigBuilder().build());
         // wait until nothing there

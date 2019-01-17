@@ -84,8 +84,8 @@ public class MappedPeerContext implements AutoCloseable {
         final SchemaContext schema;
 
         //check if peer can supply modules by himself
-        if (isSelfProvisioned(peer)) {
-            schema = SelfProvisionedSchemaContextProvider.create(transportFactory).createSchemaContext(peer);
+        if (supportInbandModels(peer)) {
+            schema = InbandModelsSchemaContextProvider.create(transportFactory).createSchemaContext(peer);
             //actual list of modules lies in created SchemaContext
             newPeer.addModels(schema.getModules()
                     .stream()
@@ -153,9 +153,9 @@ public class MappedPeerContext implements AutoCloseable {
         commitTransaction(wrTrx, peer.getName(), "Publish operational state");
     }
 
-    static boolean isSelfProvisioned(Peer peer) {
+    static boolean supportInbandModels(Peer peer) {
         return (peer.getModules() != null && peer.getModules().size() == 1
-                && peer.getModules().get(0).getValue().startsWith("jsonrpc-self-provisioning"));
+                && peer.getModules().get(0).getValue().startsWith("jsonrpc-inband-models"));
     }
 
     @Override

@@ -1,10 +1,10 @@
-module jsonrpc-self-provisioning {
-    namespace "urn:opendaylight:jsonrpc:sp";
-    prefix "jsp";
+module jsonrpc-inband-models {
+    namespace "urn:opendaylight:jsonrpc:ibm";
+    prefix "ibm";
     import ietf-yang-types { prefix "yt"; revision-date 2013-07-15; }
 
     organization "Lumina Networks, Inc";
-    description "YANG model of the JSON-RPC 2.0 self provisioning";
+    description "YANG model of the JSON-RPC 2.0 inband models";
 
     revision "2019-01-12" {
         description "Initial revision";

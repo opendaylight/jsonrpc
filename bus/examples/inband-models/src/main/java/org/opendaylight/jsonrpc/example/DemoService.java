@@ -9,8 +9,8 @@ package org.opendaylight.jsonrpc.example;
 
 import com.google.gson.JsonObject;
 
-import org.opendaylight.jsonrpc.model.SelfProvisionedService;
+import org.opendaylight.jsonrpc.model.InbandModelsService;
 
-public interface DemoService extends SelfProvisionedService {
+public interface DemoService extends InbandModelsService {
     JsonObject factorial(JsonObject input);
 }

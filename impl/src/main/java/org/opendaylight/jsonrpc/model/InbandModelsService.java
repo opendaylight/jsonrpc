@@ -10,12 +10,12 @@ package org.opendaylight.jsonrpc.model;
 import java.util.List;
 
 /**
- * API for self provisioning which allows to setup remote endpoint without governance.
+ * API for inband models which allows to setup remote endpoint without governance.
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jan 12, 2019
  */
-public interface SelfProvisionedService extends AutoCloseable {
+public interface InbandModelsService extends AutoCloseable {
     /**
      * Get list of all YANG modules for this service.
      *
