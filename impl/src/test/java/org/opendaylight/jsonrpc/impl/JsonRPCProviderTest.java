@@ -182,7 +182,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
                 .setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
                 .setConfiguredEndpoints(Lists.newArrayList(
                         new ConfiguredEndpointsBuilder().setName(DEMO1_MODEL)
-                            .setModules(Lists.newArrayList(new YangIdentifier("jsonrpc-self-provisioning")))
+                            .setModules(Lists.newArrayList(new YangIdentifier("jsonrpc-inband-models")))
                             .setRpcEndpoints(Lists.newArrayList(
                                     new RpcEndpointsBuilder()
                                         .withKey(new RpcEndpointsKey("{}"))
