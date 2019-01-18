@@ -7,6 +7,8 @@
  */
 package org.opendaylight.jsonrpc.model;
 
+import java.util.List;
+
 /**
  * Governance operations.
  */
@@ -55,4 +57,13 @@ public interface RemoteGovernance extends AutoCloseable {
      * @return YANG source text or null if no such module is found
      */
     String source(String name, String revision);
+
+    /**
+     * Get list of all dependencies for given module.
+     *
+     * @param moduleName name of module
+     * @param revision revision of module
+     * @return list of all module dependencies resolved recursively
+     */
+    List<ModuleInfo> depends(String moduleName, String revision);
 }

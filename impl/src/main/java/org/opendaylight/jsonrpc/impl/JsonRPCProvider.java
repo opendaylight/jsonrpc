@@ -121,6 +121,10 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
             // in case entire config was wiped, we still need to unconfigure
             // existing peers, hence supply empty list
             unmountPeers(new ConfigBuilder().setConfiguredEndpoints(Collections.emptyList()).build());
+            stopGovernance();
+            stopRemoteControl();
+            lastGovernanceUri = null;
+            lastWhoAmIUri = null;
             return false;
         }
 
@@ -212,7 +216,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
                             new RemoteControl(domDataBroker, schemaService.getGlobalContext(), transportFactory));
                 }
             } else {
-                lastWhoAmIUri = null;
+                remoteControl = null;
                 LOG.debug("Remote control not configured");
             }
         } catch (URISyntaxException e) {

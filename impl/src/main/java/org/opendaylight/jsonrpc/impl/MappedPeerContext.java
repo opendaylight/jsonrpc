@@ -97,8 +97,8 @@ public class MappedPeerContext implements AutoCloseable {
              * that everyone has a coherent view of the system using the same model
              * versions
              */
-            schema = governance != null ? new GovernanceSchemaContextProvider(governance).createSchemaContext(newPeer)
-                    : new BuiltinSchemaContextProvider(schemaService.getGlobalContext()).createSchemaContext(newPeer);
+            schema = governance != null ? new GovernanceSchemaContextProvider(governance).createSchemaContext(peer)
+                    : new BuiltinSchemaContextProvider(schemaService.getGlobalContext()).createSchemaContext(peer);
         }
 
         biPath = Util.createBiPath(peer.getName());
