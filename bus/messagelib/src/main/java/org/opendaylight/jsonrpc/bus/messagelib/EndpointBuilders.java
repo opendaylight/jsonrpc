@@ -184,7 +184,7 @@ public final class EndpointBuilders {
          * @return {@link SubscriberSession}
          * @throws URISyntaxException if URI is invalid
          */
-        public <T extends AutoCloseable> SubscriberSession createSubscriber(String uri, T handler)
+        public <T extends AutoCloseable> SubscriberSession create(String uri, T handler)
                 throws URISyntaxException {
             return factory.createSubscriber(uri, handler, !useCache);
         }

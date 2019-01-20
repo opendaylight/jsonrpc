@@ -54,8 +54,9 @@ public class ObjectParameterTest {
     public void setup() throws URISyntaxException, InterruptedException {
         final int port = TestHelper.getFreeTcpPort();
         tf = new DefaultTransportFactory();
-        responder = tf.createResponder(TestHelper.getBindUri("zmq", port), handler);
-        requester = tf.createRequester(TestHelper.getConnectUri("zmq", port), NoopReplyMessageHandler.INSTANCE);
+        responder = tf.endpointBuilder().responder().create(TestHelper.getBindUri("zmq", port), handler);
+        requester = tf.endpointBuilder().requester().create(TestHelper.getConnectUri("zmq", port),
+                NoopReplyMessageHandler.INSTANCE);
         TimeUnit.MILLISECONDS.sleep(100);
     }
 

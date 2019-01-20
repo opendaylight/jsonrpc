@@ -349,15 +349,15 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         final JsonElement path = parser.parse(TEST_MODEL_PATH);
         final int port = TestHelper.getFreeTcpPort();
         // expose RemoteControl
-        final ResponderSession resp = transportFactory.createResponder(TestHelper.getBindUri("zmq", port), ctrl);
+        final ResponderSession resp = transportFactory.createResponder(TestHelper.getBindUri("zmq", port), ctrl, true);
         // create requester proxy
         final RemoteOmShard req = transportFactory.createRequesterProxy(RemoteOmShard.class,
-                TestHelper.getConnectUri("zmq", port));
+                TestHelper.getConnectUri("zmq", port), true);
         final ListenerKey listener = req.addListener("config", ENTITY, path);
         LOG.info("Publisher at {}", listener);
 
         final SubscriberSession toClose = transportFactory.createSubscriber(listener.getUri(),
-                new DcnPublisherImpl(latch));
+                new DcnPublisherImpl(latch), true);
         String txId = ctrl.txid();
         ctrl.put(txId, 0, ENTITY, path,
                 parser.parse("{ \"test-model:top-element\" : { \"level2a\" : { \"abc\" : \"123\"}}}"));

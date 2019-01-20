@@ -10,6 +10,7 @@ package org.opendaylight.jsonrpc.impl;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.opendaylight.jsonrpc.bus.messagelib.MockTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
@@ -72,12 +74,12 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         peer = new MutablePeer();
         peer.name("test");
         governance = mock(RemoteGovernance.class);
-        doReturn(shard).when(transportFactory).createRequesterProxy(any(), anyString());
+        doReturn(shard).when(transportFactory).createRequesterProxy(any(), anyString(), anyBoolean());
         pathMap.put(jsonParser.parse("{\"network-topology:network-topology\":{}}"),
                 DataType.OPERATIONAL_DATA, "zmq://localhost");
 
-        jrbroker = new JsonRPCDataBroker(peer, schemaContext, pathMap, transportFactory, governance,
-                new JsonConverter(schemaContext));
+        jrbroker = new JsonRPCDataBroker(peer, schemaContext, pathMap, new MockTransportFactory(transportFactory),
+                governance, new JsonConverter(schemaContext));
         logTestName("START");
     }
 

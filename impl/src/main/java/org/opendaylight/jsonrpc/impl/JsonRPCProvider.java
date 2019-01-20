@@ -208,8 +208,8 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
                     stopRemoteControl();
                     /* remote control ORB not initialized */
                     LOG.debug("Exposing remote control at {}", whoAmI);
-                    remoteControl = transportFactory.createResponder(whoAmI.getValue(),
-                            new RemoteControl(domDataBroker, schemaService.getGlobalContext(), transportFactory), true);
+                    remoteControl = transportFactory.endpointBuilder().responder().create(whoAmI.getValue(),
+                            new RemoteControl(domDataBroker, schemaService.getGlobalContext(), transportFactory));
                 }
             } else {
                 lastWhoAmIUri = null;
@@ -231,7 +231,8 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
                     stopGovernance();
                     // Need to re-create proxy, because root-om can point to URI
                     // with different transport then before
-                    governance = transportFactory.createRequesterProxy(RemoteGovernance.class, rootOm.getValue());
+                    governance = transportFactory.endpointBuilder().requester().createProxy(RemoteGovernance.class,
+                            rootOm.getValue());
                 }
             } else {
                 governance = null;

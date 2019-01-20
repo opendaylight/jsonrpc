@@ -34,7 +34,8 @@ abstract class RemoteShardAware extends AbstractJsonRPCComponent implements Auto
             .build(new CacheLoader<String, RemoteOmShard>() {
                 @Override
                 public RemoteOmShard load(String uri) throws Exception {
-                    return transportFactory.createRequesterProxy(RemoteOmShard.class, uri);
+                    return transportFactory.endpointBuilder().requester().useCache().createProxy(RemoteOmShard.class,
+                            uri);
                 }
             });
 

@@ -41,7 +41,9 @@ public interface TransportFactory extends AutoCloseable {
      * @param <T> proxy class
      * @return T proxy instance
      * @throws URISyntaxException when URI denoted by rawUri has invalid syntax
+     * @deprecated use {@link #endpointBuilder()}
      */
+    @Deprecated
     <T extends AutoCloseable> T createPublisherProxy(Class<T> clazz, String rawUri) throws URISyntaxException;
 
     /**
@@ -65,7 +67,9 @@ public interface TransportFactory extends AutoCloseable {
      * @param <T> proxy class
      * @return T proxy instance
      * @throws URISyntaxException when URI denoted by rawUri has invalid syntax
+     * @deprecated use {@link #endpointBuilder()}
      */
+    @Deprecated
     <T extends AutoCloseable> T createRequesterProxy(Class<T> clazz, String rawUri) throws URISyntaxException;
 
     /**
@@ -89,7 +93,9 @@ public interface TransportFactory extends AutoCloseable {
      * @param <T> an AutoCloseable implementation of ThreadedSession
      * @return ThreadedSession
      * @throws URISyntaxException when URI denoted by rawUri has invalid syntax
+     * @deprecated use {@link #endpointBuilder()}
      */
+    @Deprecated
     <T extends AutoCloseable> ResponderSession createResponder(String rawUri, T handler) throws URISyntaxException;
 
     /**
@@ -113,7 +119,9 @@ public interface TransportFactory extends AutoCloseable {
      * @param <T> an AutoCloseable implementation of ThreadedSession
      * @return ThreadedSession
      * @throws URISyntaxException when URI denoted by rawUri has invalid syntax
+     * @deprecated use {@link #endpointBuilder()}
      */
+    @Deprecated
     <T extends AutoCloseable> SubscriberSession createSubscriber(String rawUri, T handler) throws URISyntaxException;
 
     /**
@@ -137,7 +145,9 @@ public interface TransportFactory extends AutoCloseable {
      * @return {@link RequesterSession}
      * @throws URISyntaxException when URI denoted by rawUri has invalid syntax
      * @throws IllegalArgumentException when URI is missing role parameter
+     * @deprecated use {@link #endpointBuilder()}
      */
+    @Deprecated
     RequesterSession createRequester(String rawUri, ReplyMessageHandler handler) throws URISyntaxException;
 
     /**

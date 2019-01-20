@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.opendaylight.jsonrpc.bus.messagelib.MockTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
@@ -71,18 +72,19 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         NormalizedNodesHelper.init(schemaContext);
         tf = mock(TransportFactory.class);
 
-        when(tf.createSubscriber(anyString(), any())).thenReturn(mock(SubscriberSession.class));
-        when(tf.createRequesterProxy(eq(RemoteGovernance.class), anyString())).thenReturn(GOVERNANCE_MOCK);
+        when(tf.createRequesterProxy(eq(RemoteGovernance.class), anyString(), anyBoolean()))
+                .thenReturn(GOVERNANCE_MOCK);
         when(tf.createRequesterProxy(eq(InbandModelsService.class), anyString(), anyBoolean()))
                 .thenReturn(new AbstractInbandModelsService() {
                 });
-        when(tf.createRequester(anyString(), any())).thenReturn(mock(RequesterSession.class));
+        when(tf.createRequester(anyString(), any(), anyBoolean())).thenReturn(mock(RequesterSession.class));
+        when(tf.createSubscriber(anyString(), any(), anyBoolean())).thenReturn(mock(SubscriberSession.class));
         governancePort = getFreeTcpPort();
         dummyPort = getFreeTcpPort();
         updateConfig(new ConfigBuilder().setGovernanceRoot(new Uri(String.format("zmq://localhost:%d", governancePort)))
                 .build());
         provider = new JsonRPCProvider();
-        provider.setTransportFactory(tf);
+        provider.setTransportFactory(new MockTransportFactory(tf));
         provider.setDataBroker(getDataBroker());
         provider.setDomDataBroker(getDomBroker());
         provider.setSchemaService(getSchemaService());

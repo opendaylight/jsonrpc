@@ -12,6 +12,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -35,6 +36,7 @@ import java.util.concurrent.TimeoutException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.opendaylight.jsonrpc.bus.messagelib.MockTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
@@ -77,9 +79,9 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         transportFactory = mock(TransportFactory.class);
         NormalizedNodesHelper.init(schemaContext);
         om = mock(RemoteOmShard.class);
-        doReturn(om).when(transportFactory).createRequesterProxy(any(), anyString());
+        doReturn(om).when(transportFactory).createRequesterProxy(any(), anyString(), anyBoolean());
         conv = new JsonConverter(schemaContext);
-        trx = new JsonRPCTx(transportFactory, DEVICE, pathMap, conv, schemaContext);
+        trx = new JsonRPCTx(new MockTransportFactory(transportFactory), DEVICE, pathMap, conv, schemaContext);
     }
 
     @After
