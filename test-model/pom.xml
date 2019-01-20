@@ -10,14 +10,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.opendaylight.mdsal</groupId>
-        <artifactId>binding-parent</artifactId>
-        <version>3.0.4</version>
-        <relativePath />
+        <groupId>org.opendaylight.jsonrpc</groupId>
+        <artifactId>jsonrpc-parent</artifactId>
+        <version>1.6.0-SNAPSHOT</version>
+        <relativePath>../parent</relativePath>
     </parent>
-    <groupId>org.opendaylight.jsonrpc</groupId>
     <artifactId>jsonrpc-test-model</artifactId>
-    <version>1.6.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
     <name>JSON-RPC :: Test model</name>
     <dependencies>
@@ -38,4 +36,20 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <artifactId>rfc6991-ietf-inet-types</artifactId>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

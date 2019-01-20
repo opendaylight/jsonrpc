@@ -64,6 +64,7 @@ import org.opendaylight.yangtools.yang.data.util.DataSchemaContextNode;
 import org.opendaylight.yangtools.yang.data.util.DataSchemaContextTree;
 import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.Module;
+import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.opendaylight.yangtools.yang.model.api.SchemaNode;
 import org.opendaylight.yangtools.yang.model.api.SchemaPath;
@@ -93,10 +94,13 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class JsonConverter {
+    private static final String JSON_IO_ERROR = "I/O problem in JSON codec";
     private static final char COLON = ':';
     private static final Logger LOG = LoggerFactory.getLogger(JsonConverter.class);
     private static final JSONRPCArg EMPTY_RPC_ARG = new JSONRPCArg(null, null);
     private static final JsonParser PARSER = new JsonParser();
+    private static final JSONCodecFactorySupplier CODEC_SUPPLIER =
+            JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02;
     private final SchemaContext schemaContext;
 
     /**
@@ -148,9 +152,10 @@ public class JsonConverter {
             LOG.warn("Invalid JSON in payload will be ignored : {}", parsed);
         }
 
-        final DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> builder = ImmutableContainerNodeBuilder
-                .create().withNodeIdentifier(NodeIdentifier.create(ns.notification().getQName()));
-        final DOMNotification deserialized = extractNotification(ns, digested, builder);
+        final DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> notificationBuilder =
+                ImmutableContainerNodeBuilder.create().withNodeIdentifier(NodeIdentifier.create(
+                        ns.notification().getQName()));
+        final DOMNotification deserialized = extractNotification(ns, digested, notificationBuilder);
         LOG.debug("Deserialized {}", deserialized);
         return deserialized;
     }
@@ -160,13 +165,42 @@ public class JsonConverter {
         final Date eventTime = new Date();
         try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(notificationBuilder);
                 JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
-                        JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext),
+                        CODEC_SUPPLIER.getShared(schemaContext),
                         new NotificationContainerProxy(notificationState.notification()))) {
             jsonParser.parse(new JsonReader(new StringReader(jsonResult.toString())));
             return new JsonRpcNotification(notificationBuilder.build(), eventTime,
                     notificationState.notification().getPath());
-        } catch (IOException e1) {
-            LOG.error("Failed to close JSON parser", e1);
+        } catch (IOException e) {
+            LOG.error(JSON_IO_ERROR, e);
+            return null;
+        }
+    }
+
+    public NormalizedNode<?, ?> rpcInputConvert(RpcDefinition def, JsonObject input) {
+        final DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> builder = ImmutableContainerNodeBuilder
+                .create().withNodeIdentifier(NodeIdentifier.create(def.getQName()));
+        try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(builder);
+                JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
+                        CODEC_SUPPLIER.getShared(schemaContext), def)) {
+            jsonParser.parse(new JsonReader(new StringReader(input.toString())));
+            return builder.build();
+        } catch (IOException e) {
+            LOG.error(JSON_IO_ERROR, e);
+            return null;
+        }
+    }
+
+    public NormalizedNode<?, ?> rpcOutputConvert(RpcDefinition def, JsonObject input) {
+        NormalizedNodeResult result = new NormalizedNodeResult();
+        JSONCodecFactory jsonCodecFactory = JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02
+                .createLazy(schemaContext);
+        try (JsonReader reader = new JsonReader(new StringReader(input.toString()));
+                NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(result);
+                JsonParserStream jsonParser = JsonParserStream.create(streamWriter, jsonCodecFactory, def)) {
+            jsonParser.parse(reader);
+            return result.getResult();
+        } catch (IOException e) {
+            LOG.error(JSON_IO_ERROR, e);
             return null;
         }
     }
@@ -182,9 +216,8 @@ public class JsonConverter {
         LOG.debug("Converting node {} at path {}", data, path);
         final StringWriter writer = new StringWriter();
         final JsonWriter jsonWriter = JsonWriterFactory.createJsonWriter(writer);
-        final NormalizedNodeStreamWriter streamWriter = JSONNormalizedNodeStreamWriter.createNestedWriter(
-                JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.createSimple(schemaContext), path, null,
-                jsonWriter);
+        final NormalizedNodeStreamWriter streamWriter = JSONNormalizedNodeStreamWriter
+                .createNestedWriter(CODEC_SUPPLIER.getShared(schemaContext), path, null, jsonWriter);
         final NormalizedNodeWriter nodeWriter = NormalizedNodeWriter.forStreamWriter(streamWriter);
         try {
             jsonWriter.beginObject();
@@ -193,8 +226,7 @@ public class JsonConverter {
             }
             jsonWriter.endObject();
             jsonWriter.flush();
-            JsonObject dataWithModule = null;
-            dataWithModule = PARSER.parse(writer.toString()).getAsJsonObject();
+            JsonObject dataWithModule = PARSER.parse(writer.toString()).getAsJsonObject();
             JsonObject newData = new JsonObject();
 
             /*
@@ -205,13 +237,14 @@ public class JsonConverter {
                 final String property = element.getKey();
                 final int idx = element.getKey().indexOf(COLON);
                 if (idx != -1) {
-                    newData.add(property.substring(idx + 1),element.getValue());
+                    newData.add(property.substring(idx + 1), element.getValue());
                 } else {
                     newData.add(property, element.getValue());
                 }
             }
             return newData;
-        } catch (java.io.IOException e) {
+        } catch (IOException e) {
+            LOG.error(JSON_IO_ERROR, e);
             return null;
         }
     }
@@ -242,8 +275,7 @@ public class JsonConverter {
     private JsonObject doConvert(SchemaPath schemaPath, NormalizedNode<?, ?> data) {
         final StringWriter writer = new StringWriter();
         final JsonWriter jsonWriter = JsonWriterFactory.createJsonWriter(writer);
-        final JSONCodecFactory codecFactory = JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02
-                .createSimple(schemaContext);
+        final JSONCodecFactory codecFactory = CODEC_SUPPLIER.getShared(schemaContext);
         final NormalizedNodeStreamWriter jsonStream;
         if (data instanceof MapEntryNode) {
             jsonStream = JSONNormalizedNodeStreamWriter.createNestedWriter(
@@ -272,7 +304,8 @@ public class JsonConverter {
                 jsonValue += '}';
             }
             return PARSER.parse(jsonValue).getAsJsonObject();
-        } catch (java.io.IOException e) {
+        } catch (IOException e) {
+            LOG.error(JSON_IO_ERROR, e);
             return null;
         }
     }
@@ -291,6 +324,18 @@ public class JsonConverter {
                 .append(COLON)
                 .append(qname.getLocalName())
                 .toString();
+    }
+
+    /*
+     * Get {@link Module} from from {@link SchemaContext} based on {@link QNameModule}.
+     * If module can't be found exception is thrown.
+     */
+    private Module getModule(QNameModule nameModule) {
+        final Optional<Module> possibleModule = schemaContext.findModule(nameModule.getNamespace(),
+                nameModule.getRevision());
+        Preconditions.checkState(possibleModule.isPresent(), "Could not find module for namespace %s and revision %s",
+                nameModule.getNamespace(), nameModule.getRevision());
+        return possibleModule.get();
     }
 
     /**
@@ -323,25 +368,15 @@ public class JsonConverter {
             if (pathIterator.hasNext()) {
                 qnames.add(nodeType);
             }
-
-
-            QNameModule qmodule = nodeType.getModule();
-
-            Optional<Module> possibleModule = schemaContext.findModule(qmodule.getNamespace(), qmodule.getRevision());
-            Preconditions.checkState(possibleModule.isPresent(),
-                    "Could not find module for namespace %s and revision %s", qmodule.getNamespace(),
-                    qmodule.getRevision());
-
-            activeModule = possibleModule.get().getName();
-            rootKey = makeQualifiedName(possibleModule.get(), root.getNodeType());
+            final Module possibleModule = getModule(nodeType.getModule());
+            activeModule = possibleModule.getName();
+            rootKey = makeQualifiedName(possibleModule, root.getNodeType());
             lastKey = rootKey;
             pathJson.add(rootKey, tracker);
         } else {
             return EMPTY_RPC_ARG;
         }
-
         previous = tracker;
-
         while (pathIterator.hasNext()) {
             PathArgument pathArg = pathIterator.next();
             JsonObject nextLevel = new JsonObject();
@@ -356,7 +391,6 @@ public class JsonConverter {
 
                 JsonArray jsonArray = new JsonArray();
                 jsonArray.add(nextLevel);
-
                 lastKey = pathArg.getNodeType().getLocalName();
                 if (topLevel) {
                     pathJson.remove(rootKey);
@@ -444,23 +478,13 @@ public class JsonConverter {
 
         QName nodeType = pathArg.getNodeType();
 
-        QNameModule qmodule = nodeType.getModule();
-
-        Optional<Module> possibleModule = schemaContext.findModule(
-            qmodule.getNamespace(),
-            qmodule.getRevision());
-        Preconditions.checkState(possibleModule.isPresent(),
-            "Could not find module for namespace %s and revision %s",
-            qmodule.getNamespace(),
-            qmodule.getRevision()
-        );
-
+        Module possibleModule = getModule(nodeType.getModule());
 
         /* use last here */
         while (it.hasNext()) {
             pathArg = it.next();
         }
-        final String rootKey = makeQualifiedName(possibleModule.get(), pathArg.getNodeType());
+        final String rootKey = makeQualifiedName(possibleModule, pathArg.getNodeType());
 
         JsonObject result = new JsonObject();
         if (pathArg instanceof YangInstanceIdentifier.NodeIdentifierWithPredicates) {
@@ -481,13 +505,15 @@ public class JsonConverter {
     }
 
     private SchemaNode findParentSchema(YangInstanceIdentifier yii) {
-        final Optional<DataSchemaContextNode<?>> child = DataSchemaContextTree.from(schemaContext).findChild(yii);
+        final DataSchemaContextNode<?> child = DataSchemaContextTree.from(schemaContext)
+                .findChild(yii)
+                .orElseThrow(() -> new IllegalStateException("No such child : " + yii));
         SchemaNode parentSchema;
-        if (SchemaPath.ROOT.equals(child.get().getDataSchemaNode().getPath().getParent())) {
+        if (SchemaPath.ROOT.equals(child.getDataSchemaNode().getPath().getParent())) {
             parentSchema = schemaContext;
         } else {
             parentSchema = SchemaContextUtil.findDataSchemaNode(schemaContext,
-                    child.get().getDataSchemaNode().getPath().getParent());
+                    child.getDataSchemaNode().getPath().getParent());
         }
         return parentSchema;
     }
@@ -518,8 +544,8 @@ public class JsonConverter {
         final NormalizedNodeResult resultHolder = new NormalizedNodeResult();
         final NormalizedNodeStreamWriter writer = ImmutableNormalizedNodeStreamWriter.from(resultHolder);
         final SchemaNode parentSchema = findParentSchema(path);
-        try (JsonParserStream jsonParser = JsonParserStream.create(writer,
-                JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext), parentSchema)) {
+        try (JsonParserStream jsonParser = JsonParserStream.create(writer, CODEC_SUPPLIER.getShared(schemaContext),
+                parentSchema)) {
             final JsonReader reader = new JsonReader(
                     new StringReader((wrap ? wrapReducedJson(path, data) : data).toString()));
             jsonParser.parse(reader);
