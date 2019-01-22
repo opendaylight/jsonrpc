@@ -39,8 +39,9 @@ public class MethodMatchingTest {
     public void setup() throws URISyntaxException {
         tf = new DefaultTransportFactory();
         final int port = TestHelper.getFreeTcpPort();
-        responder = tf.createResponder(TestHelper.getBindUri("ws", port), mockHandler);
-        requester = tf.createRequester(TestHelper.getConnectUri("ws", port), NoopReplyMessageHandler.INSTANCE);
+        responder = tf.endpointBuilder().responder().create(TestHelper.getBindUri("ws", port), mockHandler);
+        requester = tf.endpointBuilder().requester().create(TestHelper.getConnectUri("ws", port),
+                NoopReplyMessageHandler.INSTANCE);
         requester.await();
     }
 

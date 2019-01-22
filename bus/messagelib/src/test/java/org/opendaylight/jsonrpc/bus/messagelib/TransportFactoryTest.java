@@ -30,14 +30,14 @@ public class TransportFactoryTest {
 
     @Test(expected = UncheckedExecutionException.class)
     public void testUnknownTransport() throws URISyntaxException {
-        factory.createResponder("xyz://0.0.0.0:11111", (AutoCloseable) () -> {
+        factory.endpointBuilder().responder().create("xyz://0.0.0.0:11111", (AutoCloseable) () -> {
             // NOOP
         }).close();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testEmptyTransport() throws URISyntaxException {
-        factory.createResponder("", (AutoCloseable) () -> {
+        factory.endpointBuilder().responder().create("", (AutoCloseable) () -> {
             // NOOP
         }).close();
     }

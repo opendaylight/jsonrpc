@@ -23,7 +23,7 @@ public class NotificationState implements AutoCloseable {
     public NotificationState(NotificationDefinition notification, String endpoint, NotificationMessageHandler handler,
             final TransportFactory transportFactory) throws URISyntaxException {
         this.notification = Preconditions.checkNotNull(notification);
-        this.client = transportFactory.createSubscriber(endpoint, handler);
+        this.client = transportFactory.endpointBuilder().subscriber().useCache().create(endpoint, handler);
     }
 
     public NotificationDefinition notification() {

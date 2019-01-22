@@ -106,19 +106,21 @@ public class ProxyTest {
     public void testPublisherProxy() throws URISyntaxException, InterruptedException {
         CountDownLatch latch = new CountDownLatch(1);
         final int port = TestHelper.getFreeTcpPort();
-        PublishInterface proxy = tf.createPublisherProxy(PublishInterface.class, TestHelper.getBindUri("zmq", port));
-        SubscriberSession session = tf.createSubscriber(TestHelper.getConnectUri("zmq", port), new PublishInterface() {
+        PublishInterface proxy = tf.endpointBuilder().publisher().createProxy(PublishInterface.class,
+                TestHelper.getBindUri("zmq", port));
+        SubscriberSession session = tf.endpointBuilder()
+                .subscriber()
+                .create(TestHelper.getConnectUri("zmq", port), new PublishInterface() {
+                    @Override
+                    public void close() throws Exception {
 
-            @Override
-            public void close() throws Exception {
+                    }
 
-            }
-
-            @Override
-            public void publish(String msg) {
-                latch.countDown();
-            }
-        });
+                    @Override
+                    public void publish(String msg) {
+                        latch.countDown();
+                    }
+                });
         session.await();
         proxy.publish("XYZ");
         assertTrue(latch.await(5, TimeUnit.SECONDS));

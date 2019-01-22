@@ -7,7 +7,6 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.JsonElement;
@@ -15,6 +14,7 @@ import com.google.gson.JsonElement;
 import java.net.URISyntaxException;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -160,9 +160,8 @@ public class MappedPeerContext implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
-        Lists.<AutoCloseable>newArrayList(rpcDataBroker, rpcBridge, notificationService, mountpointRegistration)
-                .stream().forEach(c -> Util.closeNullableWithExceptionCallback(c,
-                    e -> LOG.error("Failed to close provider {}", c, e)));
+        Stream.of(rpcDataBroker, rpcBridge, notificationService, mountpointRegistration).forEach(
+            c -> Util.closeNullableWithExceptionCallback(c, e -> LOG.error("Failed to close provider {}", c, e)));
         removeOperationalState();
     }
 

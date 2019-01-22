@@ -48,7 +48,7 @@ public class DOMDataTreeChangeListenerAdapter implements DataChangeNotificationP
         this.converter = Objects.requireNonNull(converter);
         this.listener = Objects.requireNonNull(delegate);
         this.schemaContext = Objects.requireNonNull(schemaContext);
-        this.session = transportFactory.createSubscriber(uri, this);
+        this.session = transportFactory.endpointBuilder().subscriber().create(uri, this);
     }
 
     /**

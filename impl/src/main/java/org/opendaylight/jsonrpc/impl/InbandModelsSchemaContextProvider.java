@@ -53,8 +53,9 @@ public final class InbandModelsSchemaContextProvider implements SchemaContextPro
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Missing RPC endpoint for root path"));
         Objects.requireNonNull(enpodint.getEndpointUri().getValue(), "RPC endpoint not set");
-        try (InbandModelsService requester = transportFactory.createRequesterProxy(InbandModelsService.class,
-                enpodint.getEndpointUri().getValue(), true)) {
+        try (InbandModelsService requester = transportFactory.endpointBuilder()
+                .requester()
+                .createProxy(InbandModelsService.class, enpodint.getEndpointUri().getValue())) {
             final CrossSourceStatementReactor.BuildAction reactor = RFC7950Reactors.defaultReactor().newBuild();
 
             requester.getModules().forEach(m -> {

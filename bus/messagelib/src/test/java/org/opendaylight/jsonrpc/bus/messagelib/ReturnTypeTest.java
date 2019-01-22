@@ -109,9 +109,12 @@ public class ReturnTypeTest {
     public void setUp() throws URISyntaxException, InterruptedException {
         final int port = TestHelper.getFreeTcpPort();
         tf = new DefaultTransportFactory();
-        responder = tf.createResponder(TestHelper.getBindUri("zmq", port), new GenericServiceImpl());
-        requester = tf.createRequester(TestHelper.getConnectUri("zmq", port), NoopReplyMessageHandler.INSTANCE);
-        proxy = tf.createRequesterProxy(GenericService.class, TestHelper.getConnectUri("zmq", port), true);
+        responder = tf.endpointBuilder().responder().create(TestHelper.getBindUri("zmq", port),
+                new GenericServiceImpl());
+        requester = tf.endpointBuilder().requester().create(TestHelper.getConnectUri("zmq", port),
+                NoopReplyMessageHandler.INSTANCE);
+        proxy = tf.endpointBuilder().requester().useCache().createProxy(GenericService.class,
+                TestHelper.getConnectUri("zmq", port));
         TimeUnit.MILLISECONDS.sleep(100);
 
     }
