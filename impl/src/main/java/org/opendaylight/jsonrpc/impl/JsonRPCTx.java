@@ -21,13 +21,15 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 import javax.annotation.Nonnull;
 
@@ -43,6 +45,9 @@ import org.opendaylight.mdsal.common.api.TransactionCommitFailedException;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.util.concurrent.FluentFutures;
+import org.opendaylight.yangtools.yang.common.RpcError;
+import org.opendaylight.yangtools.yang.common.RpcError.ErrorType;
+import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgument;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
@@ -62,7 +67,8 @@ import org.slf4j.LoggerFactory;
 public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteTransaction {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCTx.class);
     private static final JSONCodecFactorySupplier CODEC = JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02;
-
+    private static final Function<String, RpcError> ERROR_MAPPER = msg -> RpcResultBuilder
+            .newError(ErrorType.APPLICATION, "commit", msg);
     /* Transaction ID */
     private final Map<String, RemoteOmShard> endPointMap;
     private final Map<String, String> txIdMap;
@@ -239,15 +245,23 @@ public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteT
     @Override
     public FluentFuture<? extends CommitInfo> commit() {
         listeners.forEach(txl -> txl.onSubmit(this));
-        final AtomicBoolean result = new AtomicBoolean(true);
-        endPointMap.entrySet()
-                .forEach(entry -> result.set(result.get() && entry.getValue().commit(getTxId(entry.getKey()))));
-        if (result.get()) {
+        boolean result = true;
+        final List<String> errors = new ArrayList<>();
+        for (Entry<String, RemoteOmShard> entry : endPointMap.entrySet()) {
+            final String txid = getTxId(entry.getKey());
+            if (!entry.getValue().commit(txid)) {
+                result = false;
+                LOG.debug("Commit of {} failed, requesting more info", txid);
+                errors.addAll(entry.getValue().error(txid));
+            }
+        }
+        if (result) {
             listeners.forEach(txListener -> txListener.onSuccess(this));
             return CommitInfo.emptyFluentFuture();
         } else {
             final Throwable failure = new TransactionCommitFailedException(
-                    "Commit of transaction " + getIdentifier() + " failed");
+                    "Commit of transaction " + getIdentifier() + " failed",
+                    errors.stream().map(ERROR_MAPPER).toArray(size -> new RpcError[size]));
             listeners.forEach(txListener -> txListener.onFailure(this, failure));
             return FluentFutures.immediateFailedFluentFuture(failure);
         }
