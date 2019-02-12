@@ -11,6 +11,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -21,8 +22,11 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
@@ -33,6 +37,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,6 +48,7 @@ import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
+import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.common.api.TransactionCommitFailedException;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
@@ -161,6 +167,30 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         verify(om, times(1)).delete(eq(null), eq("config"), anyString(),
                 any(JsonElement.class));
         assertNotNull(trx.getIdentifier());
+    }
+
+    @Test
+    public void testCommitFailed() throws InterruptedException, ExecutionException {
+        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest.createContainerNodeData();
+        trx.put(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
+        doReturn(false).when(om).commit(eq(null));
+        doReturn(Lists.newArrayList("err1", "err2")).when(om).error(eq(null));
+        FluentFuture<? extends CommitInfo> result = trx.commit();
+        result.addCallback(new FutureCallback<CommitInfo>() {
+            @Override
+            public void onSuccess(@Nullable CommitInfo result) {
+                fail("This commit should fail");
+            }
+
+            @Override
+            public void onFailure(Throwable err) {
+                assertTrue(err instanceof TransactionCommitFailedException);
+                TransactionCommitFailedException tcfe = (TransactionCommitFailedException) err;
+                assertEquals(2, tcfe.getErrorList().size());
+            }
+        }, MoreExecutors.directExecutor());
+        verify(om, times(1)).commit(eq(null));
+        verify(om, times(1)).error(eq(null));
     }
 
     @Test
