@@ -41,6 +41,7 @@ import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.jsonrpc.model.TransactionListener;
 import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.mdsal.common.api.ReadFailedException;
 import org.opendaylight.mdsal.common.api.TransactionCommitFailedException;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
@@ -69,6 +70,8 @@ public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteT
     private static final JSONCodecFactorySupplier CODEC = JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02;
     private static final Function<String, RpcError> ERROR_MAPPER = msg -> RpcResultBuilder
             .newError(ErrorType.APPLICATION, "commit", msg);
+    private static final FluentFuture<Optional<NormalizedNode<?, ?>>> NO_DATA = FluentFutures
+            .immediateFluentFuture(Optional.empty());
     /* Transaction ID */
     private final Map<String, RemoteOmShard> endPointMap;
     private final Map<String, String> txIdMap;
@@ -116,44 +119,37 @@ public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteT
             final YangInstanceIdentifier path) {
         final JSONRPCArg arg = jsonConverter.toBus(path, null);
         if (path.getPathArguments().isEmpty()) {
-            return readFailure();
-        }
-        final RemoteOmShard omshard = getOmShard(store, arg.getPath());
-        /* Read from the bus and adjust for BUS to ODL differences */
-        final JsonObject rootJson;
-        try {
-            rootJson = jsonConverter.fromBus(path,
-                    omshard.read(store2str(store2int(store)), peer.getName(), arg.getPath()));
-        } catch (Exception e) {
-            return readFailure(e);
-        }
-
-        if (rootJson == null) {
-            return readFailure();
+            return NO_DATA;
         }
         final NormalizedNodeResult result = new NormalizedNodeResult();
         DataNodeContainer tracker = schemaContext;
         try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(result)) {
+            final RemoteOmShard omshard = getOmShard(store, arg.getPath());
+            /* Read from the bus and adjust for BUS to ODL differences */
+            final JsonObject rootJson = jsonConverter.fromBus(path,
+                    omshard.read(store2str(store2int(store)), peer.getName(), arg.getPath()));
+            if (rootJson == null) {
+                return NO_DATA;
+            }
             final Iterator<PathArgument> pathIterator = path.getPathArguments().iterator();
             while (pathIterator.hasNext()) {
                 final PathArgument step = pathIterator.next();
                 if (pathIterator.hasNext()) {
-                    final DataSchemaNode nextNode = tracker.findDataChildByName(step.getNodeType()).get();
-                    if (nextNode == null) {
-                        LOG.error("cannot locate corresponding schema node {}", step.getNodeType().getLocalName());
-                        return readFailure();
+                    final Optional<DataSchemaNode> nextNode = tracker.findDataChildByName(step.getNodeType());
+                    if (!nextNode.isPresent()) {
+                        return readFailure("Cannot locate corresponding schema node "
+                                + step.getNodeType().getLocalName());
                     }
-                    if (!DataNodeContainer.class.isInstance(nextNode)) {
-                        LOG.error("corresponding schema node {} is neither list nor container",
-                                step.getNodeType().getLocalName());
-                        return readFailure();
+                    if (!DataNodeContainer.class.isInstance(nextNode.get())) {
+                        return readFailure("Corresponding schema node " + step.getNodeType().getLocalName()
+                                + " is neither list nor container");
                     }
                     /*
                      * List looks like a two path entry sequentially, so we need
                      * to skip one
                      */
                     if (!ListSchemaNode.class.isInstance(nextNode)) {
-                        tracker = (DataNodeContainer) nextNode;
+                        tracker = (DataNodeContainer) nextNode.get();
                     }
                 }
             }
@@ -169,28 +165,30 @@ public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteT
 
             }
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to close NormalizedNodeStreamWriter", e);
+            return readFailure("I/O error while reading data at path" + path, e);
+        } catch (Exception e) {
+            return readFailure("Unable to read data at path " + path, e);
         }
     }
 
-    private FluentFuture<Optional<NormalizedNode<?, ?>>> readFailure(Exception ex) {
-        return FluentFutures.immediateFailedFluentFuture(ex);
+    private FluentFuture<Optional<NormalizedNode<?, ?>>> readFailure(String message, Exception ex) {
+        return FluentFutures.immediateFailedFluentFuture(new ReadFailedException(message, ex));
     }
 
-    private FluentFuture<Optional<NormalizedNode<?, ?>>> readFailure() {
-        return FluentFutures.immediateFluentFuture(Optional.empty());
+    private FluentFuture<Optional<NormalizedNode<?, ?>>> readFailure(String message) {
+        return readFailure(message, null);
     }
 
     @Override
     @SuppressWarnings("checkstyle:IllegalCatch")
     public FluentFuture<Boolean> exists(LogicalDatastoreType store, YangInstanceIdentifier path) {
-        final JSONRPCArg arg = jsonConverter.toBus(path, null);
-        final RemoteOmShard omshard = getOmShard(store, arg.getPath());
         try {
+            final JSONRPCArg arg = jsonConverter.toBus(path, null);
+            final RemoteOmShard omshard = getOmShard(store, arg.getPath());
             return FluentFutures.immediateBooleanFluentFuture(
                     omshard.exists(store2str(store2int(store)), peer.getName(), arg.getPath()));
         } catch (Exception e) {
-            return FluentFutures.immediateFailedFluentFuture(e);
+            return FluentFutures.immediateFailedFluentFuture(ReadFailedException.MAPPER.apply(e));
         }
     }
 
