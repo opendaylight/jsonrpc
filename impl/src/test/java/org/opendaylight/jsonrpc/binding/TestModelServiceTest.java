@@ -127,19 +127,19 @@ public class TestModelServiceTest {
     @Test
     public void testSendPrimitiveParameter() {
         final JsonRpcReplyMessage response = requester.sendRequestAndReadReply("factorial", 5);
-        assertEquals(120, response.getResult().getAsInt());
+        assertEquals(120, response.getResult().getAsJsonObject().get("out-number").getAsInt());
     }
 
     @Test
     public void testSendSingleArrayParameter() {
         final JsonRpcReplyMessage response = requester.sendRequestAndReadReply("factorial", new Object[] { 5 });
-        assertEquals(120, response.getResult().getAsInt());
+        assertEquals(120, response.getResult().getAsJsonObject().get("out-number").getAsInt());
     }
 
     @Test
     public void testSendMultipleArrayParameters() {
         final JsonRpcReplyMessage response = requester.sendRequestAndReadReply("factorial", new Object[] { 5, 6 });
-        assertEquals(120, response.getResult().getAsInt());
+        assertEquals(120, response.getResult().getAsJsonObject().get("out-number").getAsInt());
     }
 
     @Test

@@ -93,7 +93,7 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
                     final JsonObject reply = adapter.converter()
                             .get()
                             .rpcConvert(rpcDefEntry.getKey().getOutput().getPath(), domData);
-                    replyBuilder.result(unwrapOutput(reply, rpcDefEntry.getKey()));
+                    replyBuilder.result(reply);
                 }
             } else {
                 mapRpcError(replyBuilder, rpcResult);
@@ -170,29 +170,6 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
         }
         wrapper.add(INPUT, prop);
         return wrapper;
-    }
-
-    private JsonElement unwrapOutput(JsonObject reply, RpcDefinition def) {
-        if (reply.entrySet().isEmpty()) {
-            return JsonNull.INSTANCE;
-        }
-        // primitive value
-        if (reply.entrySet().size() == 1) {
-            final JsonElement intermediate = reply.entrySet().iterator().next().getValue();
-            if (intermediate instanceof JsonArray) {
-                final JsonArray ret = new JsonArray();
-                ret.add(intermediate);
-                return ret;
-            } else {
-                return intermediate;
-            }
-        } else {
-            final JsonArray resultArr = new JsonArray();
-            for (DataSchemaNode node : def.getOutput().getChildNodes()) {
-                resultArr.add(reply.get(node.getQName().getLocalName()));
-            }
-            return resultArr;
-        }
     }
 
     private JsonElement mapError(RpcError rpcError) {
