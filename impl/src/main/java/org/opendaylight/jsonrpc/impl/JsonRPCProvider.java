@@ -12,7 +12,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.net.URISyntaxException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -112,7 +112,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         return result.getGovernanceRoot();
     }
 
-    private boolean processNotificationInternal() throws URISyntaxException {
+    private boolean processNotificationInternal() {
         LOG.debug("Processing notification");
         if (!sessionInitialized) {
             LOG.debug("Can't process configuration change at this time, need provider session first");
@@ -181,7 +181,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         return result;
     }
 
-    private boolean mountPeers(final Config peersConfState) throws URISyntaxException {
+    private boolean mountPeers(final Config peersConfState) {
         boolean result = true;
         if (peersConfState.getConfiguredEndpoints() != null) {
             for (final Peer confPeer : peersConfState.getConfiguredEndpoints()) {
@@ -212,6 +212,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         }
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     private boolean initRemoteControl(final Config peersConfState) {
         if (peersConfState.getWhoAmI() != null) {
             /* remote control ORB not initialized */
@@ -221,8 +222,8 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
                         new RemoteControl(domDataBroker, schemaService.getGlobalContext(), scheduledExecutorService,
                                 transportFactory));
 
-            } catch (URISyntaxException e) {
-                LOG.error("Invalid URI provided, can't continue", e);
+            } catch (Exception e) {
+                LOG.error("Unable to initialize remote control, can't continue", e);
                 return false;
             }
         } else {
@@ -231,6 +232,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         return true;
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     private boolean resetGovernance(Config peersConfState) {
         try {
             LOG.debug("(Re)setting governance root for JSON RPC to {}", peersConfState.getGovernanceRoot());
@@ -244,18 +246,15 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
                 governance = null;
             }
             return true;
-        } catch (IllegalStateException e) {
-            LOG.error("Governance root for JSON-RPC not set, cannot fetch models, refusing to continue", e);
-            return false;
-        } catch (URISyntaxException e) {
-            LOG.error("Invalid URI provided, can't continue", e);
+        } catch (Exception e) {
+            LOG.error("Unable to initialize governance, can't continue", e);
             return false;
         }
     }
 
     /**
-     * Performs reconciliation between our internal mount state and the
-     * datastore upon startup and after receiving a DCN.
+     * Performs reconciliation between our internal mount state and the datastore upon startup and after receiving a
+     * DCN. This method ensures serialized access to underlying datastructures via lock.
      */
     @GuardedBy("changeLock")
     private boolean processNotification() {
@@ -263,9 +262,6 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         try {
             wLock.lock();
             return processNotificationInternal();
-        } catch (URISyntaxException e) {
-            LOG.error("Invalid URI was speecified in configuration", e);
-            return false;
         } finally {
             wLock.unlock();
         }
@@ -299,19 +295,24 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     }
 
     /*
-     * Do the heavy lifting required in order to mount Presently - configures
-     * only data
+     * Do the heavy lifting required in order to mount.
      */
-    public boolean doMountDevice(Peer peer) throws URISyntaxException {
+    @SuppressWarnings("checkstyle:IllegalCatch")
+    private boolean doMountDevice(Peer peer) {
         if (!sessionInitialized) {
             return false;
         }
-        LOG.debug("Creating mapping context for peer {}", peer.getName());
-        final MappedPeerContext ctx = new MappedPeerContext(peer, transportFactory, getSchemaContextProvider(),
-                dataBroker, domMountPointService, governance, scheduledExecutorService);
-        peerState.put(peer.getName(), ctx);
-        LOG.info("Peer mounted : {}", ctx);
-        return true;
+        try {
+            LOG.debug("Creating mapping context for peer {}", peer.getName());
+            final MappedPeerContext ctx = new MappedPeerContext(peer, transportFactory, getSchemaContextProvider(),
+                    dataBroker, domMountPointService, governance, scheduledExecutorService);
+            peerState.put(peer.getName(), ctx);
+            LOG.info("Peer mounted : {}", ctx);
+            return true;
+        } catch (Exception e) {
+            LOG.error("Device '{}' can't be mounted", e);
+            return false;
+        }
     }
 
     /*
