@@ -314,10 +314,20 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
     private DOMRpcResult extractResultInternal(RpcState rpcState, JsonElement jsonResult,
             DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> resultBuilder,
             NormalizedNodeStreamWriter streamWriter) {
+        final JsonElement wrapper;
+        if (jsonResult.isJsonPrimitive()) {
+            // wrap primitive type into object
+            final JsonObject obj = new JsonObject();
+            obj.add(rpcState.rpc().getOutput().getChildNodes().iterator().next().getQName().getLocalName(),
+                    jsonResult);
+            wrapper = obj;
+        } else {
+            wrapper = jsonResult;
+        }
         try (JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
                 JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext),
                 rpcState.rpc().getOutput())) {
-            jsonParser.parse(new JsonReader(new StringReader(jsonResult.toString())));
+            jsonParser.parse(new JsonReader(new StringReader(wrapper.toString())));
             return new DefaultDOMRpcResult(resultBuilder.build());
         } catch (IOException e) {
             LOG.error("Failed to process JSON", e);
