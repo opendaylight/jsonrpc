@@ -9,6 +9,7 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 
 import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.DEFAULT_SKIP_ENDPOINT_CACHE;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.MapMaker;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.JsonElement;
@@ -21,6 +22,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 import org.opendaylight.jsonrpc.bus.api.RecoverableTransportException;
+import org.opendaylight.jsonrpc.bus.api.RpcMethod;
 import org.opendaylight.jsonrpc.bus.api.UnrecoverableTransportException;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
@@ -78,9 +80,18 @@ public class ProxyServiceImpl implements ProxyService {
         }
     }
 
+    @VisibleForTesting
+    static String getMethodName(Method method) {
+        if (method.isAnnotationPresent(RpcMethod.class)) {
+            return method.getAnnotation(RpcMethod.class).value();
+        } else {
+            return method.getName();
+        }
+    }
+
     @Override
     public Object invoke(Object obj, Method method, Object[] params) {
-        final String methodName = method.getName();
+        final String methodName = getMethodName(method);
         final BaseSession session = proxyMap.get(obj);
 
         /*
