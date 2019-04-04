@@ -7,6 +7,7 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 
 import java.lang.reflect.Method;
@@ -16,6 +17,7 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import org.opendaylight.jsonrpc.bus.api.RpcMethod;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
@@ -85,9 +87,18 @@ public class ProxyServiceImpl implements ProxyService {
         }
     }
 
+    @VisibleForTesting
+    static String getMethodName(Method method) {
+        if (method.isAnnotationPresent(RpcMethod.class)) {
+            return method.getAnnotation(RpcMethod.class).value();
+        } else {
+            return method.getName();
+        }
+    }
+
     @Override
     public Object invoke(Object obj, Method method, Object[] params) {
-        final String methodName = method.getName();
+        final String methodName = getMethodName(method);
         final BaseSession session = proxyMap.get(obj);
 
         /*
