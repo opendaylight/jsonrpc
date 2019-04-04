@@ -132,6 +132,9 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
             final Method method) {
         final Object[] args;
         if (method.getParameterCount() == 1) {
+            if (wrapper.get(INPUT).isJsonNull()) {
+                wrapper.add(INPUT, new JsonObject());
+            }
             final NormalizedNode<?, ?> nn = adapter.converter().get().rpcOutputConvert(rpcDefEntry.getKey(), wrapper);
             final DataObject dataObject = adapter.codec()
                     .fromNormalizedNodeRpcData(rpcDefEntry.getKey().getInput().getPath(), (ContainerNode) nn);

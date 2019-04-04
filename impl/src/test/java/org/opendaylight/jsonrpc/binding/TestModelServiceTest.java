@@ -115,6 +115,12 @@ public class TestModelServiceTest {
     }
 
     @Test
+    public void testSimpleMethodNull() {
+        JsonRpcReplyMessage reply = requester.sendRequestAndReadReply("simple-method", null);
+        assertEquals(null, reply.getError());
+    }
+
+    @Test
     public void testRemoveCoffeePot() throws Exception {
         RemoveCoffeePotOutput result = proxy.getProxy()
                 .removeCoffeePot(new RemoveCoffeePotInputBuilder().build())
