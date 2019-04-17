@@ -10,8 +10,7 @@ package org.opendaylight.jsonrpc.model;
 import java.time.Instant;
 import java.util.Date;
 
-import javax.annotation.Nonnull;
-
+import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.mdsal.dom.api.DOMEvent;
 import org.opendaylight.mdsal.dom.api.DOMNotification;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
@@ -28,14 +27,14 @@ public class JsonRpcNotification implements DOMNotification, DOMEvent {
         this.schemaPath = schemaPath;
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public SchemaPath getType() {
         return schemaPath;
 
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public ContainerNode getBody() {
         return content;

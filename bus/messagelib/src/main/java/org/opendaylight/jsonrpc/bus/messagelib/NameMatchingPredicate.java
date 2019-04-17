@@ -10,6 +10,7 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -60,9 +61,9 @@ public class NameMatchingPredicate implements Predicate<Method> {
     private String toCamelCaseName(String name) {
         final String ret = Arrays.asList(name.split("_|-|\\.")).stream().map(n -> {
             if (n.length() > 0) {
-                return n.substring(0, 1).toUpperCase() + n.substring(1);
+                return n.substring(0, 1).toUpperCase(Locale.US) + n.substring(1);
             } else {
-                return n.toUpperCase();
+                return n.toUpperCase(Locale.US);
             }
         }).collect(Collectors.joining());
         return Character.toLowerCase(ret.charAt(0)) + ret.substring(1);

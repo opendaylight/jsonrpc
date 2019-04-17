@@ -10,8 +10,8 @@ package org.opendaylight.jsonrpc.model;
 import java.beans.ConstructorProperties;
 import java.util.Objects;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * DTO to hold very basic information about YANG module.
@@ -24,7 +24,7 @@ public final class ModuleInfo {
     private String revision;
 
     @ConstructorProperties({ "module", "revision" })
-    public ModuleInfo(@Nonnull String module, @Nullable String revision) {
+    public ModuleInfo(@NonNull String module, @Nullable String revision) {
         this.module = module;
         this.revision = revision;
     }

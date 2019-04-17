@@ -13,6 +13,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.JsonElement;
@@ -34,9 +35,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
@@ -63,7 +63,7 @@ import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStre
 import org.opendaylight.yangtools.yang.data.codec.gson.JSONCodecFactorySupplier;
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeStreamWriter;
-import org.opendaylight.yangtools.yang.data.impl.schema.builder.api.DataContainerNodeAttrBuilder;
+import org.opendaylight.yangtools.yang.data.impl.schema.builder.api.DataContainerNodeBuilder;
 import org.opendaylight.yangtools.yang.data.impl.schema.builder.impl.ImmutableContainerNodeBuilder;
 import org.opendaylight.yangtools.yang.model.api.ContainerSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.Module;
@@ -94,9 +94,9 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
      * @param transportFactory - JSON RPC 2.0 transport factory
      * @throws URISyntaxException internal error
      */
-    public JsonRPCtoRPCBridge(@Nonnull Peer peer, @Nonnull SchemaContext schemaContext,
-            @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nullable RemoteGovernance governance,
-            @Nonnull TransportFactory transportFactory, @Nonnull JsonConverter jsonConverter)
+    public JsonRPCtoRPCBridge(@NonNull Peer peer, @NonNull SchemaContext schemaContext,
+            @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nullable RemoteGovernance governance,
+            @NonNull TransportFactory transportFactory, @NonNull JsonConverter jsonConverter)
             throws URISyntaxException {
         super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
         /* Endpoints via configuration */
@@ -173,9 +173,9 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
     }
 
     /* RPC Bridge functionality */
-    @Nonnull
+    @NonNull
     @Override
-    public FluentFuture<DOMRpcResult> invokeRpc(@Nonnull final SchemaPath type,
+    public ListenableFuture<DOMRpcResult> invokeRpc(@NonNull final SchemaPath type,
             @Nullable final NormalizedNode<?, ?> input) {
         if (shuttingDown) {
             return bridgeNotAvailable();
@@ -262,7 +262,7 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
 
                 final DOMRpcResult toODL;
                 if (isNotEmpty(rpcState.rpc().getOutput())) {
-                    final DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> resultBuilder =
+                    final DataContainerNodeBuilder<NodeIdentifier, ContainerNode> resultBuilder =
                             ImmutableContainerNodeBuilder.create().withNodeIdentifier(NodeIdentifier.create(
                                     rpcState.rpc().getOutput().getQName()));
                     toODL = extractResult(rpcState, jsonResult, resultBuilder);
@@ -299,7 +299,7 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
 
     @SuppressWarnings("checkstyle:IllegalCatch")
     private DOMRpcResult extractResult(RpcState rpcState, JsonElement jsonResult,
-            DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> resultBuilder) {
+            DataContainerNodeBuilder<NodeIdentifier, ContainerNode> resultBuilder) {
         try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(resultBuilder)) {
             return extractResultInternal(rpcState, jsonResult, resultBuilder, streamWriter);
         } catch (IOException e1) {
@@ -312,7 +312,7 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
     }
 
     private DOMRpcResult extractResultInternal(RpcState rpcState, JsonElement jsonResult,
-            DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> resultBuilder,
+            DataContainerNodeBuilder<NodeIdentifier, ContainerNode> resultBuilder,
             NormalizedNodeStreamWriter streamWriter) {
         final JsonElement wrapper;
         if (jsonResult.isJsonPrimitive()) {
@@ -339,10 +339,10 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
         return new DefaultDOMRpcResult(RpcResultBuilder.newError(ErrorType.RPC, "internal-error", ex.getMessage()));
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public <T extends DOMRpcAvailabilityListener> ListenerRegistration<T> registerRpcListener(
-            @Nonnull final T listener) {
+            @NonNull final T listener) {
         LOG.info("registered RPC implementation for json rpc broker");
         listener.onRpcAvailable(availableRpcs);
         return new AbstractListenerRegistration<T>(listener) {

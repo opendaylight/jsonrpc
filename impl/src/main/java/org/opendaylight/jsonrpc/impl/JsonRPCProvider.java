@@ -26,9 +26,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nullable;
-import javax.annotation.concurrent.GuardedBy;
-
+import org.checkerframework.checker.lock.qual.GuardedBy;
+import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
@@ -308,7 +307,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
             LOG.info("Peer mounted : {}", ctx);
             return true;
         } catch (Exception e) {
-            LOG.error("Device '{}' can't be mounted", e);
+            LOG.error("Device '{}' can't be mounted", peer.getName(), e);
             return false;
         }
     }

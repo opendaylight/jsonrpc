@@ -28,8 +28,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
-import javax.annotation.Nullable;
-
+import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;
 import org.opendaylight.jsonrpc.model.JSONRPCArg;
@@ -45,7 +44,6 @@ import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgum
 /* rpc special casing */
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.DataContainerChild;
-import org.opendaylight.yangtools.yang.data.api.schema.LeafNode;
 import org.opendaylight.yangtools.yang.data.api.schema.MapEntryNode;
 import org.opendaylight.yangtools.yang.data.api.schema.MapNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
@@ -58,7 +56,7 @@ import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonWriterFactory;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.data.impl.schema.NormalizedNodeResult;
-import org.opendaylight.yangtools.yang.data.impl.schema.builder.api.DataContainerNodeAttrBuilder;
+import org.opendaylight.yangtools.yang.data.impl.schema.builder.api.DataContainerNodeBuilder;
 import org.opendaylight.yangtools.yang.data.impl.schema.builder.impl.ImmutableContainerNodeBuilder;
 import org.opendaylight.yangtools.yang.data.util.DataSchemaContextNode;
 import org.opendaylight.yangtools.yang.data.util.DataSchemaContextTree;
@@ -152,7 +150,7 @@ public class JsonConverter {
             LOG.warn("Invalid JSON in payload will be ignored : {}", parsed);
         }
 
-        final DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> notificationBuilder =
+        final DataContainerNodeBuilder<NodeIdentifier, ContainerNode> notificationBuilder =
                 ImmutableContainerNodeBuilder.create().withNodeIdentifier(NodeIdentifier.create(
                         ns.notification().getQName()));
         final DOMNotification deserialized = extractNotification(ns, digested, notificationBuilder);
@@ -161,7 +159,7 @@ public class JsonConverter {
     }
 
     private DOMNotification extractNotification(NotificationState notificationState, JsonElement jsonResult,
-            DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> notificationBuilder) {
+            DataContainerNodeBuilder<NodeIdentifier, ContainerNode> notificationBuilder) {
         final Date eventTime = new Date();
         try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(notificationBuilder);
                 JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
@@ -177,7 +175,7 @@ public class JsonConverter {
     }
 
     public NormalizedNode<?, ?> rpcInputConvert(RpcDefinition def, JsonObject input) {
-        final DataContainerNodeAttrBuilder<NodeIdentifier, ContainerNode> builder = ImmutableContainerNodeBuilder
+        final DataContainerNodeBuilder<NodeIdentifier, ContainerNode> builder = ImmutableContainerNodeBuilder
                 .create().withNodeIdentifier(NodeIdentifier.create(def.getQName()));
         try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(builder);
                 JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
@@ -297,12 +295,6 @@ public class JsonConverter {
             nodeWriter.write(data);
             nodeWriter.flush();
             String jsonValue = writer.toString();
-            if (!jsonValue.startsWith("{")) {
-                jsonValue = "{" + jsonValue + "}";
-            }
-            if (data instanceof LeafNode) {
-                jsonValue += '}';
-            }
             return PARSER.parse(jsonValue).getAsJsonObject();
         } catch (IOException e) {
             LOG.error(JSON_IO_ERROR, e);

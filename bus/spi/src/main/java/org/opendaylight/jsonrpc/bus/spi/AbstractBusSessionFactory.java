@@ -30,7 +30,7 @@ import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Mar 6, 2018
  */
-@SuppressFBWarnings("URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD")
+@SuppressFBWarnings({ "URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD", "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE" })
 public abstract class AbstractBusSessionFactory implements BusSessionFactory {
     protected final String name;
     protected final ServerBootstrap serverBootstrap;

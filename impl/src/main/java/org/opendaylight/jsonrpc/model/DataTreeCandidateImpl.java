@@ -24,7 +24,7 @@ public class DataTreeCandidateImpl implements DataTreeCandidate {
     private YangInstanceIdentifier path;
 
     public DataTreeCandidateImpl(YangInstanceIdentifier path, NormalizedNode<?, ?> data) {
-        node = DataTreeCandidateNodes.fromNormalizedNode(data);
+        node = DataTreeCandidateNodes.written(data);
         this.path = path;
     }
 

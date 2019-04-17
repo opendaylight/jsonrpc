@@ -12,8 +12,7 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
-
+import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.DataChangeNotification;
@@ -41,9 +40,9 @@ public class DOMDataTreeChangeListenerAdapter implements DataChangeNotificationP
     private final JsonConverter converter;
     private final SchemaContext schemaContext;
 
-    public DOMDataTreeChangeListenerAdapter(@Nonnull DOMDataTreeChangeListener delegate,
-            @Nonnull TransportFactory transportFactory, String uri, @Nonnull JsonConverter converter,
-            @Nonnull SchemaContext schemaContext) throws URISyntaxException {
+    public DOMDataTreeChangeListenerAdapter(@NonNull DOMDataTreeChangeListener delegate,
+            @NonNull TransportFactory transportFactory, String uri, @NonNull JsonConverter converter,
+            @NonNull SchemaContext schemaContext) throws URISyntaxException {
         Objects.requireNonNull(transportFactory);
         this.converter = Objects.requireNonNull(converter);
         this.listener = Objects.requireNonNull(delegate);

@@ -14,6 +14,7 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
 import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.Collections;
@@ -32,8 +33,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-import javax.annotation.concurrent.GuardedBy;
+
+import org.checkerframework.checker.lock.qual.GuardedBy;
+import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.ListenerKey;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
@@ -64,13 +66,13 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     private final DataChangeListenerRegistry dataChangeRegistry;
     private final ScheduledExecutorService scheduledExecutorService;
 
-    public RemoteControl(@Nonnull final DOMDataBroker domDataBroker, @Nonnull final SchemaContext schemaContext,
+    public RemoteControl(@NonNull final DOMDataBroker domDataBroker, @NonNull final SchemaContext schemaContext,
             TransportFactory transportFactory) {
         this(domDataBroker, schemaContext, TRX_CLEANUP_INTERVAL, transportFactory);
     }
 
-    public RemoteControl(@Nonnull final DOMDataBroker domDataBroker, @Nonnull final SchemaContext schemaContext,
-            long cleanupIntervalMilliseconds, @Nonnull TransportFactory transportFactory) {
+    public RemoteControl(@NonNull final DOMDataBroker domDataBroker, @NonNull final SchemaContext schemaContext,
+            long cleanupIntervalMilliseconds, @NonNull TransportFactory transportFactory) {
         this.domDataBroker = Objects.requireNonNull(domDataBroker);
         this.schemaContext = Objects.requireNonNull(schemaContext);
         this.jsonConverter = new JsonConverter(schemaContext);
@@ -110,7 +112,8 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     public JsonElement read(int store, String entity, JsonElement path) {
         final YangInstanceIdentifier pathAsIId = path2II(path);
         LOG.debug("READ : YII :{}", pathAsIId);
-        try (DOMDataTreeReadWriteTransaction rTrx = domDataBroker.newReadWriteTransaction()) {
+        try {
+            final DOMDataTreeReadWriteTransaction rTrx = domDataBroker.newReadWriteTransaction();
             final NormalizedNode<?, ?> result = rTrx.read(int2store(store), pathAsIId).get().orElse(null);
             LOG.info("Result is {}", result);
             return jsonConverter.toBus(pathAsIId, result).getData();

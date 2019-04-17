@@ -19,9 +19,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.NotificationMessageHandler;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
@@ -49,9 +48,9 @@ public class JsonRPCNotificationService extends AbstractJsonRPCComponent
     private final Multimap<SchemaPath, DOMNotificationListener> listeners = HashMultimap.create();
     private final Map<String, NotificationState> mappedNotifications = new HashMap<>();
 
-    public JsonRPCNotificationService(@Nonnull Peer peer, @Nonnull SchemaContext schemaContext,
-            @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull JsonConverter jsonConverter,
-            @Nonnull TransportFactory transportFactory, @Nullable RemoteGovernance governance)
+    public JsonRPCNotificationService(@NonNull Peer peer, @NonNull SchemaContext schemaContext,
+            @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @NonNull JsonConverter jsonConverter,
+            @NonNull TransportFactory transportFactory, @Nullable RemoteGovernance governance)
             throws URISyntaxException {
         super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
 
@@ -119,7 +118,7 @@ public class JsonRPCNotificationService extends AbstractJsonRPCComponent
 
     @Override
     public synchronized <T extends DOMNotificationListener> ListenerRegistration<T> registerNotificationListener(
-            @Nonnull final T listener, @Nonnull final Collection<SchemaPath> types) {
+            @NonNull final T listener, @NonNull final Collection<SchemaPath> types) {
         for (final SchemaPath type : types) {
             listeners.put(type, listener);
         }
@@ -135,7 +134,7 @@ public class JsonRPCNotificationService extends AbstractJsonRPCComponent
 
     @Override
     public synchronized <T extends DOMNotificationListener> ListenerRegistration<T> registerNotificationListener(
-            @Nonnull final T listener, final SchemaPath... types) {
+            @NonNull final T listener, final SchemaPath... types) {
         return registerNotificationListener(listener, Lists.newArrayList(types));
     }
 

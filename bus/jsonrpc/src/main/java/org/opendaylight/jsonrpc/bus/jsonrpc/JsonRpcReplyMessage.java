@@ -12,7 +12,7 @@ import com.google.gson.JsonObject;
 
 import java.lang.reflect.Type;
 
-import javax.annotation.Nullable;
+import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * This represents the JSON RPC Reply message. This can be the received message,

@@ -11,8 +11,7 @@ import com.google.gson.JsonElement;
 
 import java.util.Objects;
 
-import javax.annotation.Nonnull;
-
+import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
@@ -33,9 +32,9 @@ abstract class AbstractJsonRPCComponent {
     protected final HierarchicalEnumMap<JsonElement, DataType, String> pathMap;
     protected final Peer peer;
 
-    AbstractJsonRPCComponent(@Nonnull final SchemaContext schemaContext, @Nonnull TransportFactory transportFactory,
-            @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull JsonConverter jsonConverter,
-            @Nonnull Peer peer) {
+    AbstractJsonRPCComponent(@NonNull final SchemaContext schemaContext, @NonNull TransportFactory transportFactory,
+            @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @NonNull JsonConverter jsonConverter,
+            @NonNull Peer peer) {
         this.schemaContext = Objects.requireNonNull(schemaContext);
         this.transportFactory = Objects.requireNonNull(transportFactory);
         this.pathMap = Objects.requireNonNull(pathMap);

@@ -17,8 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-import javax.annotation.Nonnull;
-
+import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.api.PeerContext;
 import org.opendaylight.jsonrpc.bus.messagelib.PeerContextHolder;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
@@ -40,8 +39,8 @@ public class DataChangeListenerRegistry implements AutoCloseable {
     private final TransportFactory transportFactory;
     private final JsonConverter jsonConverter;
 
-    public DataChangeListenerRegistry(@Nonnull final DOMDataBroker domDataBroker,
-            @Nonnull final TransportFactory transportFactory, @Nonnull final JsonConverter jsonConverter) {
+    public DataChangeListenerRegistry(@NonNull final DOMDataBroker domDataBroker,
+            @NonNull final TransportFactory transportFactory, @NonNull final JsonConverter jsonConverter) {
         this.domDataBroker = Objects.requireNonNull(domDataBroker);
         this.transportFactory = Objects.requireNonNull(transportFactory);
         this.jsonConverter = Objects.requireNonNull(jsonConverter);

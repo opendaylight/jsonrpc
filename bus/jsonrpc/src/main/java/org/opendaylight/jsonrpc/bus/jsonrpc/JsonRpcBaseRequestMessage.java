@@ -9,9 +9,11 @@ package org.opendaylight.jsonrpc.bus.jsonrpc;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+
 import java.util.Objects;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * Base for a request message.
@@ -28,7 +30,7 @@ public abstract class JsonRpcBaseRequestMessage extends JsonRpcBaseMessage {
         this.params = builder.params;
     }
 
-    @Nonnull
+    @NonNull
     public String getMethod() {
         return method;
     }

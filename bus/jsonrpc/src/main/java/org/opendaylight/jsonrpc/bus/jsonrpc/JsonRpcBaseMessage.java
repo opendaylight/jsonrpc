@@ -15,9 +15,8 @@ import com.google.gson.JsonPrimitive;
 import java.lang.reflect.Type;
 import java.util.Objects;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +52,7 @@ public abstract class JsonRpcBaseMessage {
         this.metadata = builder.metadata;
     }
 
-    @Nonnull
+    @NonNull
     public String getJsonrpc() {
         return jsonrpc;
     }
@@ -115,7 +114,7 @@ public abstract class JsonRpcBaseMessage {
         return VERSION.equals(version) || VERSION_SHORT.equals(version);
     }
 
-    @Nonnull
+    @NonNull
     public abstract JsonRpcMessageType getType();
 
     protected abstract static class AbstractBuilder<T extends AbstractBuilder<T, M>, M extends JsonRpcBaseMessage> {

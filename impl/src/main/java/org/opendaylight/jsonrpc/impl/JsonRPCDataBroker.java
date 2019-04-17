@@ -18,10 +18,8 @@ import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
@@ -64,10 +62,10 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
      * @param jsonConverter shared {@link JsonConverter}
      * @see DOMDataBroker
      */
-    public JsonRPCDataBroker(@Nonnull Peer peer, @Nonnull SchemaContext schemaContext,
-            @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
-            @Nonnull TransportFactory transportFactory, @Nullable RemoteGovernance governance,
-            @Nonnull JsonConverter jsonConverter) {
+    public JsonRPCDataBroker(@NonNull Peer peer, @NonNull SchemaContext schemaContext,
+            @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
+            @NonNull TransportFactory transportFactory, @Nullable RemoteGovernance governance,
+            @NonNull JsonConverter jsonConverter) {
         super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
         extensions = ImmutableClassToInstanceMap.<DOMDataBrokerExtension>builder()
                 .put(DOMDataTreeChangeService.class, this)
@@ -110,6 +108,11 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
     @Override
     public DOMTransactionChain createTransactionChain(DOMTransactionChainListener listener) {
         return new TxChain(this, listener, transportFactory, pathMap, jsonConverter, schemaContext, peer);
+    }
+
+    @Override
+    public @NonNull DOMTransactionChain createMergingTransactionChain(DOMTransactionChainListener listener) {
+        return createTransactionChain(listener);
     }
 
     @Override

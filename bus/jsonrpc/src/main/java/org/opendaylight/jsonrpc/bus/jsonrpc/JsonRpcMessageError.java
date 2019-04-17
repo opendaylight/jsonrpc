@@ -9,8 +9,9 @@ package org.opendaylight.jsonrpc.bus.jsonrpc;
 
 import com.google.gson.JsonElement;
 import java.util.Objects;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * This class is used when there are errors in parsing an incoming JSON RPC
@@ -32,7 +33,7 @@ public final class JsonRpcMessageError extends JsonRpcBaseMessage {
         this.data = builder.data;
     }
 
-    @Nonnull
+    @NonNull
     public String getMessage() {
         return message;
     }

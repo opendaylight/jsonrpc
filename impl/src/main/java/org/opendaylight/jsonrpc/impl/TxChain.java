@@ -20,9 +20,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javax.annotation.Nonnull;
-import javax.annotation.concurrent.GuardedBy;
-
+import org.checkerframework.checker.lock.qual.GuardedBy;
+import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
@@ -58,10 +57,10 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
     private final ConcurrentMap<DOMDataTreeWriteTransaction, AutoCloseable> pendingTransactions =
         Maps.newConcurrentMap();
 
-    public TxChain(@Nonnull final DOMDataBroker dataBroker, @Nonnull final DOMTransactionChainListener listener,
-            @Nonnull TransportFactory transportFactory,
-            @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull JsonConverter jsonConverter,
-            @Nonnull SchemaContext schemaContext, @Nonnull Peer peer) {
+    public TxChain(@NonNull final DOMDataBroker dataBroker, @NonNull final DOMTransactionChainListener listener,
+            @NonNull TransportFactory transportFactory,
+            @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @NonNull JsonConverter jsonConverter,
+            @NonNull SchemaContext schemaContext, @NonNull Peer peer) {
         super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
         this.dataBroker = Objects.requireNonNull(dataBroker);
         this.listener = Objects.requireNonNull(listener);

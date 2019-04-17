@@ -16,7 +16,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.Data
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.DataOperationalEndpoints;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.NotificationEndpoints;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpoints;
-import org.opendaylight.yangtools.yang.binding.DataContainer;
 
 public class MutablePeer implements Peer {
     private String name;
@@ -58,7 +57,7 @@ public class MutablePeer implements Peer {
     }
 
     @Override
-    public Class<? extends DataContainer> getImplementedInterface() {
+    public Class<? extends Peer> implementedInterface() {
         return MutablePeer.class;
     }
 

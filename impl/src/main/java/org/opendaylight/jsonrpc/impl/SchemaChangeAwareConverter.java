@@ -11,8 +11,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-import javax.annotation.Nonnull;
-
+import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
@@ -29,7 +28,7 @@ public class SchemaChangeAwareConverter implements Supplier<JsonConverter>, Auto
     private final AtomicReference<JsonConverter> converter = new AtomicReference<>(null);
     private ListenerRegistration<SchemaContextListener> registration;
 
-    public SchemaChangeAwareConverter(@Nonnull DOMSchemaService domSchemaService) {
+    public SchemaChangeAwareConverter(@NonNull DOMSchemaService domSchemaService) {
         Objects.requireNonNull(domSchemaService);
         this.registration = domSchemaService.registerSchemaContextListener(this);
         refresh(domSchemaService.getGlobalContext());

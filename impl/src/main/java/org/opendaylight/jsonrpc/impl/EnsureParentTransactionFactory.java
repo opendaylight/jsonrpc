@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.impl;
 
 import org.opendaylight.jsonrpc.model.TransactionFactory;
-import org.opendaylight.mdsal.binding.dom.adapter.AbstractWriteTransaction;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;

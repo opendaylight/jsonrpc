@@ -18,9 +18,8 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
@@ -95,7 +94,7 @@ public final class Util {
      * @param store Logical Data Store
      * @return 0 for config, 1 for operational
      */
-    public static int store2int(@Nonnull final LogicalDatastoreType store) {
+    public static int store2int(@NonNull final LogicalDatastoreType store) {
         Preconditions.checkNotNull(store);
         final Integer ldt = STORE_MAP.inverse().get(store);
         Preconditions.checkNotNull(ldt, ERR_UNRECOGNIZED_STORE, store);
@@ -150,7 +149,7 @@ public final class Util {
      */
     @SuppressWarnings("checkstyle:IllegalCatch")
     public static void closeNullableWithExceptionCallback(@Nullable AutoCloseable closeable,
-            @Nonnull Consumer<Exception> callback) {
+            @NonNull Consumer<Exception> callback) {
         try {
             closeNullable(closeable);
         } catch (Exception e) {

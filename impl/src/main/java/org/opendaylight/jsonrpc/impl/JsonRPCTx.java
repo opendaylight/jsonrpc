@@ -31,8 +31,7 @@ import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 
-import javax.annotation.Nonnull;
-
+import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
@@ -43,6 +42,7 @@ import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.common.api.ReadFailedException;
 import org.opendaylight.mdsal.common.api.TransactionCommitFailedException;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.util.concurrent.FluentFutures;
@@ -65,7 +65,7 @@ import org.opendaylight.yangtools.yang.model.api.SchemaNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteTransaction {
+public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteTransaction, DOMDataTreeReadTransaction {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCTx.class);
     private static final JSONCodecFactorySupplier CODEC = JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02;
     private static final Function<String, RpcError> ERROR_MAPPER = msg -> RpcResultBuilder
@@ -86,9 +86,9 @@ public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteT
      * @param jsonConverter the conversion janitor instance
      * @param schemaContext the schema context
      */
-    public JsonRPCTx(@Nonnull TransportFactory transportFactory, @Nonnull Peer peer,
-            @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull JsonConverter jsonConverter,
-            @Nonnull SchemaContext schemaContext) {
+    public JsonRPCTx(@NonNull TransportFactory transportFactory, @NonNull Peer peer,
+            @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @NonNull JsonConverter jsonConverter,
+            @NonNull SchemaContext schemaContext) {
         super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
         Preconditions.checkArgument(!Strings.isNullOrEmpty(peer.getName()), "Peer name is missing");
         this.endPointMap = new HashMap<>();

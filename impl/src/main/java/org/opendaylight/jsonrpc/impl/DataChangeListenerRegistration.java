@@ -13,8 +13,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.annotation.Nonnull;
-
+import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.model.DataChangeNotification;
 import org.opendaylight.jsonrpc.model.DataChangeNotificationPublisher;
 import org.opendaylight.jsonrpc.model.ListenerKey;
@@ -47,10 +46,10 @@ public class DataChangeListenerRegistration
     private final Consumer<ListenerKey> closeCallback;
     private ListenerKey listenerKey;
 
-    public DataChangeListenerRegistration(@Nonnull YangInstanceIdentifier path,
-            @Nonnull Consumer<ListenerKey> closeCallback, @Nonnull final DOMDataBroker domDataBroker,
-            @Nonnull final JsonConverter converter, @Nonnull LogicalDatastoreType store,
-            @Nonnull DataChangeNotificationPublisher publisher, @Nonnull ListenerKey listenerKey) {
+    public DataChangeListenerRegistration(@NonNull YangInstanceIdentifier path,
+            @NonNull Consumer<ListenerKey> closeCallback, @NonNull final DOMDataBroker domDataBroker,
+            @NonNull final JsonConverter converter, @NonNull LogicalDatastoreType store,
+            @NonNull DataChangeNotificationPublisher publisher, @NonNull ListenerKey listenerKey) {
         this.path = Objects.requireNonNull(path);
         this.closeCallback = Objects.requireNonNull(closeCallback);
         this.converter = Objects.requireNonNull(converter);

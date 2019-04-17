@@ -9,10 +9,12 @@ package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
+
+import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.model.SchemaContextProvider;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
@@ -32,7 +34,7 @@ import org.opendaylight.yangtools.yang.model.util.SimpleSchemaContext;
 public class BuiltinSchemaContextProvider implements SchemaContextProvider {
     private final SchemaContext schemaContext;
 
-    public BuiltinSchemaContextProvider(@Nonnull final SchemaContext schemaContext) {
+    public BuiltinSchemaContextProvider(@NonNull final SchemaContext schemaContext) {
         this.schemaContext = Preconditions.checkNotNull(schemaContext);
     }
 

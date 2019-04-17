@@ -7,7 +7,7 @@
  */
 package org.opendaylight.jsonrpc.model;
 
-import javax.annotation.Nonnull;
+import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
@@ -24,5 +24,5 @@ public interface SchemaContextProvider {
      * @param peer {@link Peer} instance to create {@link SchemaContext} for
      * @return {@link SchemaContext}
      */
-    SchemaContext createSchemaContext(@Nonnull Peer peer);
+    SchemaContext createSchemaContext(@NonNull Peer peer);
 }

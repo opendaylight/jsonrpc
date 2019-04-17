@@ -16,9 +16,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
@@ -74,9 +73,9 @@ public class MappedPeerContext implements AutoCloseable {
     private final DataBroker dataBroker;
     private final YangInstanceIdentifier biPath;
 
-    public MappedPeerContext(@Nonnull Peer peer, @Nonnull TransportFactory transportFactory,
-            @Nonnull DOMSchemaService schemaService, @Nonnull DataBroker dataBroker,
-            @Nonnull DOMMountPointService mountService, @Nullable RemoteGovernance governance)
+    public MappedPeerContext(@NonNull Peer peer, @NonNull TransportFactory transportFactory,
+            @NonNull DOMSchemaService schemaService, @NonNull DataBroker dataBroker,
+            @NonNull DOMMountPointService mountService, @Nullable RemoteGovernance governance)
             throws URISyntaxException {
         this.peer = Objects.requireNonNull(peer);
         this.dataBroker = Objects.requireNonNull(dataBroker);

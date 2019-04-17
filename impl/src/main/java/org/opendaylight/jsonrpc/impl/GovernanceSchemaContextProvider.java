@@ -23,8 +23,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nonnull;
-
+import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.model.ModuleInfo;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.SchemaContextProvider;
@@ -68,7 +67,7 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
                 }
             });
 
-    public GovernanceSchemaContextProvider(@Nonnull final RemoteGovernance governance) {
+    public GovernanceSchemaContextProvider(@NonNull final RemoteGovernance governance) {
         this.governance = Preconditions.checkNotNull(governance);
     }
 
