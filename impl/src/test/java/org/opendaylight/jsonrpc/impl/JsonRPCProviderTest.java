@@ -89,6 +89,8 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         provider.setDomDataBroker(getDomBroker());
         provider.setSchemaService(getSchemaService());
         provider.setDomMountPointService(getDOMMountPointService());
+        provider.setDomNotificationPublishService(getDOMNotificationRouter());
+        provider.setDomRpcService(getDOMRpcRouter().getRpcService());
         provider.init();
         logTestName("START");
     }

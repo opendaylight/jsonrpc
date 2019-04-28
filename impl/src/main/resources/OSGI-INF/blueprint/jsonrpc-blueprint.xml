@@ -14,6 +14,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <reference id="domMountPointService" interface="org.opendaylight.mdsal.dom.api.DOMMountPointService" />
     <reference id="schemaService" interface="org.opendaylight.mdsal.dom.api.DOMSchemaService" />
     <reference id="transportFactory" interface="org.opendaylight.jsonrpc.bus.messagelib.TransportFactory" />
+    <reference id="domRpcService" interface="org.opendaylight.mdsal.dom.api.DOMRpcService" />
+    <reference id="domNotificationPublishService" interface="org.opendaylight.mdsal.dom.api.DOMNotificationPublishService" />
 
     <bean id="jsonRpcProvider" class="org.opendaylight.jsonrpc.impl.JsonRPCProvider" init-method="init" destroy-method="close">
         <property name="dataBroker" ref="dataBroker" />
@@ -21,6 +23,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <property name="transportFactory" ref="transportFactory" />
         <property name="domMountPointService" ref="domMountPointService" />
         <property name="schemaService" ref="schemaService" />
+        <property name="domRpcService" ref="domRpcService" />
+        <property name="domNotificationPublishService" ref="domNotificationPublishService" />
     </bean>
 
     <odl:rpc-implementation ref="jsonRpcProvider" />

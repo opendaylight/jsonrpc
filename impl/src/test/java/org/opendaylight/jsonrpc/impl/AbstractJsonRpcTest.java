@@ -29,6 +29,8 @@ import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMMountPointService;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.mdsal.dom.broker.DOMMountPointServiceImpl;
+import org.opendaylight.mdsal.dom.broker.DOMNotificationRouter;
+import org.opendaylight.mdsal.dom.broker.DOMRpcRouter;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.TopElement;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
@@ -46,8 +48,10 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractJsonRpcTest.class);
     private ConcurrentDataBrokerTestCustomizer testCustomizer;
     private final DOMMountPointService domMountPointService = new DOMMountPointServiceImpl();
+    private DOMNotificationRouter notificationRouter = DOMNotificationRouter.create(4);
     private DataBroker dataBroker;
     private DOMDataBroker domBroker;
+    private DOMRpcRouter rpcRouter;
     protected SchemaContext schemaContext;
     protected final JsonParser jsonParser = new JsonParser();
     @Rule
@@ -61,6 +65,7 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
         this.testCustomizer.updateSchema(context);
         this.schemaContext = context;
         setupWithDataBroker(this.dataBroker);
+        rpcRouter = DOMRpcRouter.newInstance(getSchemaService());
     }
 
     @Override
@@ -89,6 +94,14 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
 
     public DOMMountPointService getDOMMountPointService() {
         return this.domMountPointService;
+    }
+
+    public DOMRpcRouter getDOMRpcRouter() {
+        return rpcRouter;
+    }
+
+    public DOMNotificationRouter getDOMNotificationRouter() {
+        return notificationRouter;
     }
 
     protected void logTestName(String stage) {

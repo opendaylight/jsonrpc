@@ -20,6 +20,7 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -32,7 +33,10 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.Co
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.model.api.Module;
+import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
+import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
+import org.opendaylight.yangtools.yang.model.api.SchemaNode;
 
 /**
  * Utility class.
@@ -207,5 +211,56 @@ public final class Util {
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(e);
         }
+    }
+
+    /**
+     * Find {@link RpcDefinition} in {@link SchemaContext} based on given name. Name can be prefixed by module name.
+     *
+     * @param schemaContext {@link SchemaContext}
+     * @param name name of RPC method
+     * @return {@link Optional} of {@link RpcDefinition}.
+     */
+    public static Optional<RpcDefinition> findRpc(SchemaContext schemaContext, String name) {
+        if (name.indexOf(':') != -1) {
+            final String[] parts = name.split(":");
+            final Optional<Module> modOpt = findModule(schemaContext, parts[0]);
+            if (!modOpt.isPresent()) {
+                return Optional.empty();
+            } else {
+                return findNode(modOpt.get().getRpcs().stream(), parts[1]);
+            }
+        } else {
+            return findNode(schemaContext.getModules().stream().flatMap(m -> m.getRpcs().stream()), name);
+        }
+    }
+
+    /**
+     * Find {@link NotificationDefinition} in {@link SchemaContext} based on given name.Name can be prefixed by module
+     * name.
+     *
+     * @param schemaContext {@link SchemaContext}
+     * @param name name of RPC method
+     * @return {@link Optional} of {@link NotificationDefinition}.
+     */
+    public static Optional<NotificationDefinition> findNotification(SchemaContext schemaContext, String name) {
+        if (name.indexOf(':') != -1) {
+            final String[] parts = name.split(":");
+            final Optional<Module> modOpt = findModule(schemaContext, parts[0]);
+            if (!modOpt.isPresent()) {
+                return Optional.empty();
+            } else {
+                return findNode(modOpt.get().getNotifications().stream(), parts[1]);
+            }
+        } else {
+            return findNode(schemaContext.getModules().stream().flatMap(m -> m.getNotifications().stream()), name);
+        }
+    }
+
+    private static Optional<Module> findModule(SchemaContext schemaContext, String name) {
+        return schemaContext.getModules().stream().filter(m -> m.getName().equals(name)).findFirst();
+    }
+
+    private static <T extends SchemaNode> Optional<T> findNode(Stream<T> stream, String name) {
+        return stream.filter(r -> r.getQName().getLocalName().equals(name)).findFirst();
     }
 }
