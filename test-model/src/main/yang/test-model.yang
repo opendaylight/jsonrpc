@@ -190,8 +190,7 @@ module test-model {
     }
 
     notification too-many-numbers {
-        description "Alert when too many numbers are in deposit. Not used yet (notifications
-                are not yet implemented";
+        description "Alert when too many numbers are in deposit.";
         leaf current-level {
             type watermark-value;
         }

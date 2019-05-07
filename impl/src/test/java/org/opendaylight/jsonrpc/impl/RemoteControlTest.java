@@ -77,10 +77,12 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     private TransportFactory transportFactory;
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         NormalizedNodesHelper.init(schemaContext);
         transportFactory = new DefaultTransportFactory();
-        ctrl = new RemoteControl(getDomBroker(), schemaContext, 500, transportFactory);
+        ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory, getDOMNotificationRouter(),
+                getDOMRpcRouter().getRpcService(), 100);
+
         parser = new JsonParser();
         conv = new JsonConverter(schemaContext);
         logTestName("START");

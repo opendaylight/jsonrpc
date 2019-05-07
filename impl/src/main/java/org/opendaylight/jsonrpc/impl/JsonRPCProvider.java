@@ -38,6 +38,8 @@ import org.opendaylight.mdsal.binding.api.ReadTransaction;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMMountPointService;
+import org.opendaylight.mdsal.dom.api.DOMNotificationPublishService;
+import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
@@ -76,6 +78,8 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private volatile boolean sessionInitialized = false;
     private volatile boolean providerClosed = false;
     private DOMMountPointService domMountPointService;
+    private DOMNotificationPublishService domNotificationPublishService;
+    private DOMRpcService domRpcService;
     private String lastGovernanceUri;
     private String lastWhoAmIUri;
 
@@ -212,8 +216,11 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
                     lastWhoAmIUri = whoAmI.getValue();
                     stopRemoteControl();
                     LOG.debug("Exposing remote control at {}", whoAmI);
-                    remoteControl = transportFactory.endpointBuilder().responder().create(whoAmI.getValue(),
-                            new RemoteControl(domDataBroker, schemaService.getGlobalContext(), transportFactory));
+                    remoteControl = transportFactory.endpointBuilder()
+                            .responder()
+                            .create(whoAmI.getValue(),
+                                    new RemoteControl(domDataBroker, schemaService.getGlobalContext(), transportFactory,
+                                            domNotificationPublishService, domRpcService));
                 }
             } else {
                 remoteControl = null;
@@ -272,6 +279,8 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         Objects.requireNonNull(dataBroker, "DataBroker was not set");
         Objects.requireNonNull(domDataBroker, "DOMDataBroker was not set");
         Objects.requireNonNull(domMountPointService, "DOMMountPointService was not set");
+        Objects.requireNonNull(domRpcService, "DOMRpcService was not set");
+        Objects.requireNonNull(domNotificationPublishService, "DOMNotificationPublishService was not set");
         toClose.add(dataBroker.registerDataTreeChangeListener(OPER_DTI,
                 (ClusteredDataTreeChangeListener<Config>) changes -> processNotification()));
         toClose.add(dataBroker.registerDataTreeChangeListener(CFG_DTI,
@@ -390,5 +399,13 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
 
     public void setSchemaService(DOMSchemaService schemaService) {
         this.schemaService = schemaService;
+    }
+
+    public void setDomNotificationPublishService(DOMNotificationPublishService domNotificationPublishService) {
+        this.domNotificationPublishService = domNotificationPublishService;
+    }
+
+    public void setDomRpcService(DOMRpcService domRpcService) {
+        this.domRpcService = domRpcService;
     }
 }

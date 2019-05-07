@@ -58,10 +58,12 @@ import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeS
 import org.opendaylight.yangtools.yang.data.impl.schema.NormalizedNodeResult;
 import org.opendaylight.yangtools.yang.data.impl.schema.builder.api.DataContainerNodeBuilder;
 import org.opendaylight.yangtools.yang.data.impl.schema.builder.impl.ImmutableContainerNodeBuilder;
+import org.opendaylight.yangtools.yang.data.util.ContainerSchemaNodes;
 import org.opendaylight.yangtools.yang.data.util.DataSchemaContextNode;
 import org.opendaylight.yangtools.yang.data.util.DataSchemaContextTree;
 import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.Module;
+import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.opendaylight.yangtools.yang.model.api.SchemaNode;
@@ -563,5 +565,26 @@ public class JsonConverter {
         arr.add(data);
         wrapper.add(elName, arr);
         return wrapper;
+    }
+
+    /**
+     * Convert notification coming from bus into {@link DOMNotification}.
+     *
+     * @param def {@link NotificationDefinition}
+     * @param data JSON data
+     * @return {@link DOMNotification}
+     */
+    public DOMNotification toNotification(NotificationDefinition def, JsonObject data) {
+        final DataContainerNodeBuilder<NodeIdentifier, ContainerNode> builder = ImmutableContainerNodeBuilder.create()
+                .withNodeIdentifier(NodeIdentifier.create(def.getQName()));
+        try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(builder);
+                JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
+                        CODEC_SUPPLIER.getShared(schemaContext), ContainerSchemaNodes.forNotification(def))) {
+            jsonParser.parse(new JsonReader(new StringReader(data.toString())));
+            return new JsonRpcNotification(builder.build(), new Date(), def.getPath());
+        } catch (IOException e) {
+            LOG.error(JSON_IO_ERROR, e);
+            return null;
+        }
     }
 }

@@ -13,6 +13,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 
 import java.io.IOException;
@@ -38,20 +39,27 @@ import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.ListenerKey;
-import org.opendaylight.jsonrpc.model.RemoteOmShard;
+import org.opendaylight.jsonrpc.model.RemoteControlComposite;
 import org.opendaylight.jsonrpc.model.TransactionFactory;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
+import org.opendaylight.mdsal.dom.api.DOMNotification;
+import org.opendaylight.mdsal.dom.api.DOMNotificationPublishService;
+import org.opendaylight.mdsal.dom.api.DOMRpcResult;
+import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
+import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
+import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
+import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RemoteControl implements RemoteOmShard, AutoCloseable {
+public class RemoteControl implements RemoteControlComposite {
     // Time-to-live for failed transactions
     private static final long TRX_TTL_MILLIS = 900000; // 15 minutes
     private static final long TRX_CLEANUP_INTERVAL = 90000;
@@ -65,24 +73,30 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     private final TransactionFactory transactionFactory;
     private final DataChangeListenerRegistry dataChangeRegistry;
     private final ScheduledExecutorService scheduledExecutorService;
+    private final DOMNotificationPublishService publishService;
+    private final DOMRpcService rpcService;
 
     public RemoteControl(@NonNull final DOMDataBroker domDataBroker, @NonNull final SchemaContext schemaContext,
-            TransportFactory transportFactory) {
-        this(domDataBroker, schemaContext, TRX_CLEANUP_INTERVAL, transportFactory);
+            @NonNull TransportFactory transportFactory, @NonNull final DOMNotificationPublishService publishService,
+            @NonNull final DOMRpcService rpcService) {
+        this(domDataBroker, schemaContext, transportFactory, publishService, rpcService, TRX_CLEANUP_INTERVAL);
     }
 
     public RemoteControl(@NonNull final DOMDataBroker domDataBroker, @NonNull final SchemaContext schemaContext,
-            long cleanupIntervalMilliseconds, @NonNull TransportFactory transportFactory) {
+            @NonNull TransportFactory transportFactory, @NonNull final DOMNotificationPublishService publishService,
+            @NonNull final DOMRpcService rpcService, long trxTtlMillis) {
         this.domDataBroker = Objects.requireNonNull(domDataBroker);
         this.schemaContext = Objects.requireNonNull(schemaContext);
         this.jsonConverter = new JsonConverter(schemaContext);
         scheduledExecutorService = Executors.newScheduledThreadPool(1,
                 new ThreadFactoryBuilder().setNameFormat("jsonrpc-tx-cleaner-%d").setDaemon(true).build());
         cleanerFuture = scheduledExecutorService.scheduleAtFixedRate(this::cleanupStaleTransactions,
-                cleanupIntervalMilliseconds, cleanupIntervalMilliseconds, TimeUnit.MILLISECONDS);
+                trxTtlMillis, trxTtlMillis, TimeUnit.MILLISECONDS);
         this.transactionFactory = new EnsureParentTransactionFactory(domDataBroker,
                 Objects.requireNonNull(schemaContext));
         this.dataChangeRegistry = new DataChangeListenerRegistry(domDataBroker, transportFactory, jsonConverter);
+        this.publishService = Objects.requireNonNull(publishService);
+        this.rpcService = Objects.requireNonNull(rpcService);
     }
 
     /**
@@ -393,5 +407,36 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     @Override
     public boolean deleteListener(String uri, String name) {
         return dataChangeRegistry.removeListener(uri, name);
+    }
+
+    @Override
+    public JsonElement invokeRpc(String name, JsonObject rpcInput) {
+        final RpcDefinition def = Util.findRpc(schemaContext, name)
+                .orElseThrow(() -> new IllegalArgumentException("No such method " + name));
+        final JsonObject wrapper = new JsonObject();
+        wrapper.add("input", rpcInput);
+        final NormalizedNode<?, ?> nn = jsonConverter.rpcInputConvert(def, wrapper);
+        try {
+            final DOMRpcResult out = rpcService.invokeRpc(def.getPath(), nn).get();
+            if (!out.getErrors().isEmpty()) {
+                throw new IllegalStateException("RPC invocation failed : " + out.getErrors());
+            }
+            return out.getResult() == null ? JsonNull.INSTANCE
+                    : jsonConverter.rpcConvert(def.getOutput().getPath(), (ContainerNode) out.getResult());
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IllegalStateException("RPC invocation failed", e);
+        }
+    }
+
+    @Override
+    public void publishNotification(String name, JsonObject data) {
+        final NotificationDefinition notification = Util.findNotification(schemaContext, name)
+                .orElseThrow(() -> new IllegalArgumentException("No such notification : " + name));
+        final DOMNotification dom = jsonConverter.toNotification(notification, data);
+        try {
+            publishService.offerNotification(dom).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IllegalStateException("Notification delivery failed", e);
+        }
     }
 }

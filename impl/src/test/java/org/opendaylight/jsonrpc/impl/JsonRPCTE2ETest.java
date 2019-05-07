@@ -42,6 +42,8 @@ import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
+import org.opendaylight.mdsal.dom.api.DOMNotificationPublishService;
+import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChain;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChainListener;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
@@ -70,7 +72,8 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     public void setUp() throws URISyntaxException {
         NormalizedNodesHelper.init(schemaContext);
         transportFactory = mock(TransportFactory.class);
-        shard = new RemoteControl(getDomBroker(), schemaContext, transportFactory);
+        shard = new RemoteControl(getDomBroker(), schemaContext, transportFactory,
+                mock(DOMNotificationPublishService.class), mock(DOMRpcService.class));
         peer = new MutablePeer();
         peer.name("test");
         governance = mock(RemoteGovernance.class);
