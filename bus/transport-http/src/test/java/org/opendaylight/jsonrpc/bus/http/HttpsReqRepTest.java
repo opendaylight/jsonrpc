@@ -29,7 +29,7 @@ public class HttpsReqRepTest extends AbstractReqRepTest {
     public void testSmallMessageSize() throws InterruptedException, ExecutionException, TimeoutException, IOException {
         final int port = getFreeTcpPort();
         final String certFile = copyResource("/cert.p12");
-        final String uri = new UriBuilder(getBindUri(port))
+        final String uri = new UriBuilder(getConnectUri(port))
                 .add(SecurityConstants.OPT_KEYSTORE_TYPE, SecurityConstants.KEYSTORE_TYPE_PKCS12)
                 .add(SecurityConstants.OPT_KEYSTORE_FILE, certFile)
                 .add(SecurityConstants.OPT_KEYSTORE_PASSWORD, "123456")
@@ -43,7 +43,7 @@ public class HttpsReqRepTest extends AbstractReqRepTest {
     public void testBigMessageSize() throws InterruptedException, ExecutionException, TimeoutException, IOException {
         final int port = getFreeTcpPort();
         final String certFile = copyResource("/cert.p12");
-        final String uri = new UriBuilder(getBindUri(port))
+        final String uri = new UriBuilder(getConnectUri(port))
                 .add(SecurityConstants.OPT_KEYSTORE_TYPE, SecurityConstants.KEYSTORE_TYPE_PKCS12)
                 .add(SecurityConstants.OPT_KEYSTORE_FILE, certFile)
                 .add(SecurityConstants.OPT_KEYSTORE_PASSWORD, "123456")
@@ -57,7 +57,7 @@ public class HttpsReqRepTest extends AbstractReqRepTest {
     @Test(expected = IllegalStateException.class)
     public void testFailureNoCertificate() {
         final int port = getFreeTcpPort();
-        final String uri = new UriBuilder(getBindUri(port))
+        final String uri = new UriBuilder(getConnectUri(port))
                 .add(SecurityConstants.OPT_KEYSTORE_TYPE, SecurityConstants.KEYSTORE_TYPE_PKCS12)
                 .add(SecurityConstants.OPT_KEYSTORE_FILE, UUID.randomUUID().toString())
                 .add(SecurityConstants.OPT_KEYSTORE_PASSWORD, UUID.randomUUID().toString())
