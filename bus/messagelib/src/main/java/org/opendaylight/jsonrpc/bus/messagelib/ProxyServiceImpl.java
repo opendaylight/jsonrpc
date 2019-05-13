@@ -96,11 +96,39 @@ public class ProxyServiceImpl implements ProxyService {
         }
     }
 
+    /**
+     * Unwrap parameter out of array if method has only one argument and only one element exists in array. Reason for
+     * this operation is that when array is passed down to serialization, object will be wrapped in json array. This is
+     * not necessary problem if both ends uses same logic, but will break when not.
+     *
+     * <p>Example (when unwrap is not applied):
+     *
+     * <code>
+     *    {"jsonrpc":"2.0","id":1,"method":"methodX","params":[{"property":"value"}]}
+     * </code>
+     *
+     * <p> this should be
+     * <code>
+     *    {"jsonrpc":"2.0","id":1,"method":"methodX","params":{"property":"value"}}
+     * </code>
+     * or
+     * <code>
+     *    {"jsonrpc":"2.0","id":1,"method":"methodX","params":"value"}
+     * </code>
+     *
+     * @param method {@link Method} used for invocation
+     * @param params array of input arguments
+     * @return unwrapped object or original array if conditions are not met
+     */
+    static Object unwrapIfNecessary(Method method, Object[] params) {
+        return (method.getParameterCount() == 1 && params != null && params.length == 1) ? params[0] : params;
+    }
+
     @Override
     public Object invoke(Object obj, Method method, Object[] params) {
         final String methodName = getMethodName(method);
         final BaseSession session = proxyMap.get(obj);
-
+        final Object unwrappedArgs = unwrapIfNecessary(method, params);
         /*
          * Special case to handle #toString() method invocation. It is
          * undesirable to dispatch such method call via JSON-RPC, so we are
@@ -131,7 +159,7 @@ public class ProxyServiceImpl implements ProxyService {
         }
         if (session instanceof RequesterSession) {
             final JsonRpcReplyMessage reply = ((RequesterSession) session).sendRequestAndReadReply(methodName,
-                    params);
+                    unwrappedArgs);
             return getReturnFromReplyMessage(method, (JsonRpcReplyMessage) reply);
         }
         throw new ProxyServiceGenericException("Logic error");
