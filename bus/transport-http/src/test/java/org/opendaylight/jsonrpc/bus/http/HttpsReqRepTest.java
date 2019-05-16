@@ -26,7 +26,8 @@ public class HttpsReqRepTest extends AbstractReqRepTest {
     public void testSmallMessageSize() throws InterruptedException, ExecutionException, TimeoutException, IOException {
         final int port = getFreeTcpPort();
         final String certFile = copyResource("/cert.p12");
-        final String uri = new UriBuilder(getBindUri(port)).add(Constants.OPT_CERT_FILE, certFile)
+        final String uri = new UriBuilder(getConnectUri(port))
+                .add(Constants.OPT_CERT_FILE, certFile)
                 .add(Constants.OPT_PRIVATE_KEY_PASSWORD, "123456")
                 .add(Constants.OPT_CERT_TRUST, Constants.DEFAULT_CERT_POLICY)
                 .build();
@@ -38,7 +39,8 @@ public class HttpsReqRepTest extends AbstractReqRepTest {
     public void testBigMessageSize() throws InterruptedException, ExecutionException, TimeoutException, IOException {
         final int port = getFreeTcpPort();
         final String certFile = copyResource("/cert.p12");
-        final String uri = new UriBuilder(getBindUri(port)).add(Constants.OPT_CERT_FILE, certFile)
+        final String uri = new UriBuilder(getConnectUri(port))
+                .add(Constants.OPT_CERT_FILE, certFile)
                 .add(Constants.OPT_PRIVATE_KEY_PASSWORD, "123456")
                 .add(Constants.OPT_CERT_TRUST, Constants.DEFAULT_CERT_POLICY)
                 .build();
@@ -50,7 +52,8 @@ public class HttpsReqRepTest extends AbstractReqRepTest {
     @Test(expected = IllegalStateException.class)
     public void testFailureNoCertificate() {
         final int port = getFreeTcpPort();
-        final String uri = new UriBuilder(getBindUri(port)).add(Constants.OPT_CERT_FILE, UUID.randomUUID().toString())
+        final String uri = new UriBuilder(getConnectUri(port))
+                .add(Constants.OPT_CERT_FILE, UUID.randomUUID().toString())
                 .add(Constants.OPT_PRIVATE_KEY_PASSWORD, UUID.randomUUID().toString())
                 .build();
         factory.responder(uri, (peerContext, message) -> LOG.info("Received message {}", message));
