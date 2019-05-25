@@ -9,12 +9,11 @@ package org.opendaylight.jsonrpc.bus.zmq;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.util.concurrent.ProgressivePromise;
 
 import java.nio.charset.StandardCharsets;
 
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
+import org.opendaylight.jsonrpc.bus.spi.AbstractMessageListenerAdapter;
 import org.opendaylight.jsonrpc.bus.spi.CommonConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,33 +24,25 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Mar 25, 2018
  */
-class ClientHandler extends SimpleChannelInboundHandler<ProtocolObject> {
+class ClientHandler extends AbstractMessageListenerAdapter<ProtocolObject> {
     private static final Logger LOG = LoggerFactory.getLogger(ClientHandler.class);
-    private final MessageListener listener;
     private boolean first = true;
 
     ClientHandler(MessageListener listener) {
-        this.listener = listener;
+        super(listener);
     }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ProtocolObject msg) throws Exception {
         final PeerContextImpl peer = (PeerContextImpl) ctx.channel().attr(CommonConstants.ATTR_PEER_CONTEXT).get();
-        LOG.debug("Message : {}@{}", msg, peer);
+        LOG.trace("Message : {}@{}", msg, peer);
         final ByteBuf buffer = msg.toBuffer();
         if (first && !buffer.isReadable()) {
-            LOG.debug("First empty frame discarded : {}", msg);
+            LOG.trace("First empty frame discarded : {}", msg);
         } else {
             checkLast((Message) msg);
             final String bufferContent = buffer.toString(StandardCharsets.UTF_8);
-            final ProgressivePromise<String> promise = ctx.channel()
-                    .attr(CommonConstants.ATTR_RESPONSE_QUEUE)
-                    .get()
-                    .getAndSet(null);
-            if (promise != null) {
-                promise.trySuccess(bufferContent);
-            }
-            listener.onMessage(peer, bufferContent);
+            processResponse(ctx, bufferContent);
         }
         buffer.release();
     }
@@ -60,10 +51,5 @@ class ClientHandler extends SimpleChannelInboundHandler<ProtocolObject> {
         if (msg.last()) {
             first = true;
         }
-    }
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        LOG.error("Caught exception on {}, closing now", ctx.channel(), cause);
     }
 }

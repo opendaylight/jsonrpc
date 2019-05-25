@@ -9,12 +9,10 @@ package org.opendaylight.jsonrpc.bus.http;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import io.netty.util.concurrent.ProgressivePromise;
 
 import java.nio.charset.StandardCharsets;
 
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
-import org.opendaylight.jsonrpc.bus.api.PeerContext;
 import org.opendaylight.jsonrpc.bus.spi.AbstractMessageListenerAdapter;
 import org.opendaylight.jsonrpc.bus.spi.CommonConstants;
 import org.slf4j.Logger;
@@ -38,16 +36,8 @@ class WebSocketClientHandler extends AbstractMessageListenerAdapter<TextWebSocke
     protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame msg) throws Exception {
         final String bufferContent = msg.content().toString(StandardCharsets.UTF_8);
         if (CommonConstants.DEBUG_MODE) {
-            LOG.debug("Received weboscket frame with content '{}'", bufferContent);
+            LOG.debug("Received websocket frame with content '{}'", bufferContent);
         }
-        final ProgressivePromise<String> promise = ctx.channel()
-                .attr(CommonConstants.ATTR_RESPONSE_QUEUE)
-                .get()
-                .getAndSet(null);
-        if (promise != null) {
-            promise.trySuccess(bufferContent);
-        }
-        final PeerContext peer = ctx.channel().attr(CommonConstants.ATTR_PEER_CONTEXT).get();
-        messageListener.onMessage(peer, bufferContent);
+        processResponse(ctx, bufferContent);
     }
 }

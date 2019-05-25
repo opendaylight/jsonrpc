@@ -9,12 +9,10 @@ package org.opendaylight.jsonrpc.bus.http;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.util.concurrent.ProgressivePromise;
 
 import java.nio.charset.StandardCharsets;
 
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
-import org.opendaylight.jsonrpc.bus.api.PeerContext;
 import org.opendaylight.jsonrpc.bus.spi.AbstractMessageListenerAdapter;
 import org.opendaylight.jsonrpc.bus.spi.CommonConstants;
 import org.slf4j.Logger;
@@ -39,14 +37,6 @@ public class HttpClientHandler extends AbstractMessageListenerAdapter<FullHttpRe
         if (CommonConstants.DEBUG_MODE) {
             LOG.debug("Received HTTP response {} with content {}", msg.status().code(), bufferContent);
         }
-        final ProgressivePromise<String> promise = ctx.channel()
-                .attr(CommonConstants.ATTR_RESPONSE_QUEUE)
-                .get()
-                .getAndSet(null);
-        if (promise != null) {
-            promise.trySuccess(bufferContent);
-        }
-        final PeerContext peer = ctx.channel().attr(CommonConstants.ATTR_PEER_CONTEXT).get();
-        messageListener.onMessage(peer, bufferContent);
+        processResponse(ctx, bufferContent);
     }
 }
