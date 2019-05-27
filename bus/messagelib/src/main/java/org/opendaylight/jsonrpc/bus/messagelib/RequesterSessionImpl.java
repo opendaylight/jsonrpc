@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
@@ -49,6 +50,7 @@ public class RequesterSessionImpl extends AbstractSession implements MessageList
     private final Requester requester;
     private final ReplyMessageHandler handler;
     private final BlockingQueue<String> responseQueue = Queues.newLinkedBlockingDeque();
+    private final AtomicReference<Future<?>> lastRequest = new AtomicReference<>(null);
     private final int retryCount;
     private final long retryDelay;
 
@@ -91,7 +93,7 @@ public class RequesterSessionImpl extends AbstractSession implements MessageList
             throw new RecoverableTransportException("There is unfinished request on this channel, try again later");
         }
         LOG.debug("Sending request : {}", message);
-        requester.send(message).addListener(new GenericFutureListener<Future<String>>() {
+        lastRequest.set(requester.send(message).addListener(new GenericFutureListener<Future<String>>() {
             @Override
             public void operationComplete(final Future<String> future) throws Exception {
                 if (future.isSuccess()) {
@@ -100,7 +102,7 @@ public class RequesterSessionImpl extends AbstractSession implements MessageList
                     LOG.warn("Send failed", future.cause());
                 }
             }
-        });
+        }));
     }
 
     @Override
@@ -108,6 +110,7 @@ public class RequesterSessionImpl extends AbstractSession implements MessageList
         try {
             final String resp = responseQueue.poll(timeout, TimeUnit.MILLISECONDS);
             if (resp == null) {
+                lastRequest.getAndSet(null).cancel(true);
                 throw new MessageLibraryTimeoutException(
                         String.format("Message was not received within %d milliseconds", timeout));
             } else {
