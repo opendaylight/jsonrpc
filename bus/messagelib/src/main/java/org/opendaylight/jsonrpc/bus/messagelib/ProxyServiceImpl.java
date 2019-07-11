@@ -152,7 +152,7 @@ public class ProxyServiceImpl implements ProxyService {
             if (!method.getReturnType().equals(void.class)) {
                 throw new ProxyServiceGenericException("Method expects return value for publisher.");
             } else {
-                ((PublisherSession) session).publish(methodName, params);
+                ((PublisherSession) session).publish(methodName, unwrappedArgs);
                 // no return value for notifications
                 return null;
             }
