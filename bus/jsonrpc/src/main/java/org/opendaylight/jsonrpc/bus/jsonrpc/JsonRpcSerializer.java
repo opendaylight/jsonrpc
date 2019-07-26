@@ -26,6 +26,13 @@ import org.slf4j.LoggerFactory;
  */
 public final class JsonRpcSerializer {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRpcSerializer.class);
+    private static final Gson GSON = new GsonBuilder()
+            .registerTypeAdapter(JsonRpcMessageError.class, new JsonRpcMessageErrorSerializer())
+            .registerTypeAdapter(JsonRpcReplyMessage.class, new JsonRpcReplyMessageSerializer())
+            .registerTypeAdapter(JsonRpcRequestMessage.class, new JsonRpcRequestMessageSerializer())
+            .registerTypeAdapter(JsonRpcNotificationMessage.class, new JsonRpcNotificationMessageSerializer())
+            .serializeNulls()
+            .create();
 
     private JsonRpcSerializer() {
         // empty constructor
@@ -130,11 +137,10 @@ public final class JsonRpcSerializer {
      */
     public static List<JsonRpcBaseMessage> fromJson(String strJson) {
         JsonElement parsedJson;
-        Gson gson = new Gson();
         List<JsonRpcBaseMessage> list = new ArrayList<>();
 
         try {
-            parsedJson = gson.fromJson(strJson, JsonElement.class);
+            parsedJson = GSON.fromJson(strJson, JsonElement.class);
         } catch (JsonSyntaxException e) {
             LOG.debug("Unable to parse JSON message", e);
             parsedJson = null;
@@ -163,13 +169,7 @@ public final class JsonRpcSerializer {
     }
 
     private static String toJson(Object obj) {
-        Gson gson = new GsonBuilder()
-                .registerTypeAdapter(JsonRpcMessageError.class, new JsonRpcMessageErrorSerializer())
-                .registerTypeAdapter(JsonRpcReplyMessage.class, new JsonRpcReplyMessageSerializer())
-                .registerTypeAdapter(JsonRpcRequestMessage.class, new JsonRpcRequestMessageSerializer())
-                .registerTypeAdapter(JsonRpcNotificationMessage.class, new JsonRpcNotificationMessageSerializer())
-                .serializeNulls().create();
-        return gson.toJson(obj);
+        return GSON.toJson(obj);
     }
 
     public static String toJson(JsonRpcBaseMessage msg) {
