@@ -24,6 +24,7 @@ import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.mdsal.common.api.TransactionCommitFailedException;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChainClosedException;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChainListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
@@ -111,7 +112,7 @@ public class TxChainTest {
 
     @Test
     public void testChainFail() throws Exception {
-        final JsonRPCTx writeTx = chain.newWriteOnlyTransaction();
+        final DOMDataTreeWriteTransaction writeTx = chain.newWriteOnlyTransaction();
         writeTx.commit().get();
         final TransactionCommitFailedException cause = new TransactionCommitFailedException("fail");
         chain.onFailure(writeOnlyTx1, cause);
@@ -120,7 +121,7 @@ public class TxChainTest {
 
     @Test
     public void testChainSuccess() throws Exception {
-        final JsonRPCTx writeTx = chain.newWriteOnlyTransaction();
+        final DOMDataTreeWriteTransaction writeTx = chain.newWriteOnlyTransaction();
         chain.close();
         writeTx.commit().get();
         verify(listener).onTransactionChainSuccessful(chain);
@@ -128,7 +129,7 @@ public class TxChainTest {
 
     @Test
     public void testCancel() throws Exception {
-        final JsonRPCTx writeTx = chain.newWriteOnlyTransaction();
+        final DOMDataTreeWriteTransaction writeTx = chain.newWriteOnlyTransaction();
         writeTx.cancel();
         chain.newWriteOnlyTransaction();
     }
@@ -136,19 +137,19 @@ public class TxChainTest {
     @Test
     public void testMultiplePendingTransactions() throws Exception {
         // create 1st tx
-        final JsonRPCTx writeTx1 = chain.newWriteOnlyTransaction();
+        final DOMDataTreeWriteTransaction writeTx1 = chain.newWriteOnlyTransaction();
         // submit 1st tx
         writeTx1.commit().get();
         chain.onSubmit(writeOnlyTx1);
 
         // create 2nd tx
-        final JsonRPCTx writeTx2 = chain.newWriteOnlyTransaction();
+        final DOMDataTreeWriteTransaction writeTx2 = chain.newWriteOnlyTransaction();
         // submit 2nd tx
         writeTx2.commit().get();
         chain.onSubmit(writeOnlyTx2);
 
         // create 3rd tx
-        final JsonRPCTx writeTx3 = chain.newWriteOnlyTransaction();
+        final DOMDataTreeWriteTransaction writeTx3 = chain.newWriteOnlyTransaction();
         // cancel 3rd tx
         writeTx3.cancel();
         chain.onCancel(writeOnlyTx3);
@@ -166,19 +167,19 @@ public class TxChainTest {
     @Test
     public void testMultiplePendingTransactionsFail() throws Exception {
         // create 1st tx
-        final JsonRPCTx writeTx1 = chain.newWriteOnlyTransaction();
+        final DOMDataTreeWriteTransaction writeTx1 = chain.newWriteOnlyTransaction();
         // submit 1st tx
         writeTx1.commit().get();
         chain.onSubmit(writeOnlyTx1);
 
         // create 2nd tx
-        final JsonRPCTx writeTx2 = chain.newWriteOnlyTransaction();
+        final DOMDataTreeWriteTransaction writeTx2 = chain.newWriteOnlyTransaction();
         // submit 2nd tx
         writeTx2.commit().get();
         chain.onSubmit(writeOnlyTx2);
 
         // create 3rd tx
-        final JsonRPCTx writeTx3 = chain.newWriteOnlyTransaction();
+        final DOMDataTreeWriteTransaction writeTx3 = chain.newWriteOnlyTransaction();
 
         chain.close();
 

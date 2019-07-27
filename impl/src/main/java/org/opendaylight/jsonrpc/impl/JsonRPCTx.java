@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
@@ -37,13 +38,13 @@ import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.JSONRPCArg;
+import org.opendaylight.jsonrpc.model.JsonRpcTransactionFacade;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.jsonrpc.model.TransactionListener;
 import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.common.api.ReadFailedException;
 import org.opendaylight.mdsal.common.api.TransactionCommitFailedException;
-import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.util.concurrent.FluentFutures;
 import org.opendaylight.yangtools.yang.common.RpcError;
@@ -65,7 +66,7 @@ import org.opendaylight.yangtools.yang.model.api.SchemaNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteTransaction {
+public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFacade {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCTx.class);
     private static final JSONCodecFactorySupplier CODEC = JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02;
     private static final Function<String, RpcError> ERROR_MAPPER = msg -> RpcResultBuilder
@@ -221,23 +222,29 @@ public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteT
 
     @Override
     public Object getIdentifier() {
-        return this;
+        return super.hashCode();
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     @Override
     public boolean cancel() {
-        boolean result = true;
-        for (Map.Entry<String, RemoteOmShard> entry : endPointMap.entrySet()) {
-            RemoteOmShard omshard = endPointMap.get(entry.getKey());
-            if (getTxId(entry.getKey()) != null) {
-                /*
-                 * We never allocated a txid, so no need to send message to om.
-                 */
-                result &= omshard.cancel(getTxId(entry.getKey()));
+        try {
+            boolean result = true;
+            for (Map.Entry<String, RemoteOmShard> entry : endPointMap.entrySet()) {
+                RemoteOmShard omshard = endPointMap.get(entry.getKey());
+                if (getTxId(entry.getKey()) != null) {
+                    /*
+                     * We never allocated a txid, so no need to send message to om.
+                     */
+                    result &= omshard.cancel(getTxId(entry.getKey()));
+                }
             }
+            listeners.forEach(listener -> listener.onCancel(this));
+            return result;
+        } catch (Exception e) {
+            LOG.error("Unable to cancel transaction", e);
+            return false;
         }
-        listeners.forEach(listener -> listener.onCancel(this));
-        return result;
     }
 
     @Override
@@ -265,8 +272,29 @@ public class JsonRPCTx extends RemoteShardAware implements DOMDataTreeReadWriteT
         }
     }
 
-    AutoCloseable addCallback(TransactionListener listener) {
+    @Override
+    public AutoCloseable addCallback(TransactionListener listener) {
         listeners.add(listener);
         return () -> listeners.remove(listener);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getIdentifier());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof JsonRpcTransactionFacade)) {
+            return false;
+        }
+        JsonRpcTransactionFacade other = (JsonRpcTransactionFacade) obj;
+        return getIdentifier().equals(other.getIdentifier());
     }
 }

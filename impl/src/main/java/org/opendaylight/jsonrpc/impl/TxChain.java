@@ -20,19 +20,21 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javax.annotation.Nonnull;
 import javax.annotation.concurrent.GuardedBy;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
+import org.opendaylight.jsonrpc.model.JsonRpcTransactionFacade;
 import org.opendaylight.jsonrpc.model.TransactionListener;
-import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChain;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChainClosedException;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChainListener;
+import org.opendaylight.mdsal.dom.api.DOMTransactionFactory;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
@@ -43,7 +45,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionChain, TransactionListener {
     private static final Logger LOG = LoggerFactory.getLogger(TxChain.class);
-    private final DOMDataBroker dataBroker;
+    private final DOMTransactionFactory dataBroker;
     private final DOMTransactionChainListener listener;
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
@@ -51,17 +53,17 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
      * Transaction created by this chain that hasn't been submitted or cancelled
      * yet.
      */
-    private JsonRPCTx currentTransaction = null;
+    private DOMDataTreeWriteTransaction currentTransaction = null;
     private volatile boolean closed = false;
     private volatile boolean successful = true;
     @GuardedBy("rwLock")
     private final ConcurrentMap<DOMDataTreeWriteTransaction, AutoCloseable> pendingTransactions =
         Maps.newConcurrentMap();
 
-    public TxChain(@Nonnull final DOMDataBroker dataBroker, @Nonnull final DOMTransactionChainListener listener,
-            @Nonnull TransportFactory transportFactory,
-            @Nonnull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nonnull JsonConverter jsonConverter,
-            @Nonnull SchemaContext schemaContext, @Nonnull Peer peer) {
+    public TxChain(@NonNull final DOMTransactionFactory dataBroker, @NonNull final DOMTransactionChainListener listener,
+            @NonNull TransportFactory transportFactory,
+            @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @NonNull JsonConverter jsonConverter,
+            @NonNull SchemaContext schemaContext, @NonNull Peer peer) {
         super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
         this.dataBroker = Objects.requireNonNull(dataBroker);
         this.listener = Objects.requireNonNull(listener);
@@ -73,15 +75,15 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
         return dataBroker.newReadOnlyTransaction();
     }
 
-    private JsonRPCTx getWriteTransaction() {
+    private DOMDataTreeReadWriteTransaction getWriteTransaction() {
         checkOperationPermitted();
         final Lock lock = rwLock.writeLock();
         try {
             lock.lock();
-            final DOMDataTreeWriteTransaction writeTransaction = dataBroker.newWriteOnlyTransaction();
-            Preconditions.checkState(writeTransaction instanceof JsonRPCTx);
-            final JsonRPCTx pendingWriteTx = (JsonRPCTx) writeTransaction;
-            pendingTransactions.put(pendingWriteTx, pendingWriteTx.addCallback(this));
+            final DOMDataTreeReadWriteTransaction writeTransaction = dataBroker.newReadWriteTransaction();
+            Preconditions.checkState(writeTransaction instanceof JsonRpcTransactionFacade);
+            final DOMDataTreeReadWriteTransaction pendingWriteTx = writeTransaction;
+            pendingTransactions.put(pendingWriteTx, ((JsonRpcTransactionFacade) pendingWriteTx).addCallback(this));
             currentTransaction = pendingWriteTx;
             return pendingWriteTx;
         } finally {
@@ -89,12 +91,12 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
         }
     }
 
-    public JsonRPCTx newWriteOnlyTransaction() {
+    public DOMDataTreeWriteTransaction newWriteOnlyTransaction() {
         return getWriteTransaction();
     }
 
     @Override
-    public JsonRPCTx newReadWriteTransaction() {
+    public DOMDataTreeReadWriteTransaction newReadWriteTransaction() {
         return getWriteTransaction();
     }
 
@@ -124,7 +126,7 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
-    private void removeTx(final JsonRPCTx tx) {
+    private void removeTx(final DOMDataTreeWriteTransaction tx) {
         final Lock lock = rwLock.writeLock();
         // we need to make sure that returned value
         // from List#remove does not cause NPE
@@ -141,19 +143,19 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
     }
 
     @Override
-    public void onCancel(final JsonRPCTx jsonRPCTx) {
+    public void onCancel(final DOMDataTreeWriteTransaction jsonRPCTx) {
         removeTx(jsonRPCTx);
         currentTransaction = null;
     }
 
     @Override
-    public void onSuccess(JsonRPCTx tx) {
+    public void onSuccess(DOMDataTreeWriteTransaction tx) {
         removeTx(tx);
         notifyChainListenerSuccess();
     }
 
     @Override
-    public void onFailure(JsonRPCTx tx, Throwable failure) {
+    public void onFailure(DOMDataTreeWriteTransaction tx, Throwable failure) {
         removeTx(tx);
         successful = false;
         if (currentTransaction != null) {
@@ -163,7 +165,7 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
     }
 
     @Override
-    public void onSubmit(JsonRPCTx jsonRPCTx) {
+    public void onSubmit(DOMDataTreeWriteTransaction jsonRPCTx) {
         currentTransaction = null;
     }
 }
