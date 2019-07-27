@@ -7,7 +7,7 @@
  */
 package org.opendaylight.jsonrpc.model;
 
-import org.opendaylight.jsonrpc.impl.JsonRPCTx;
+import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 
 /**
  * Transaction lifecycle change listener.
@@ -21,14 +21,14 @@ public interface TransactionListener {
      *
      * @param jsonRPCTx transaction being cancelled
      */
-    void onCancel(JsonRPCTx jsonRPCTx);
+    void onCancel(DOMDataTreeWriteTransaction jsonRPCTx);
 
     /**
      * Called upon successful commit.
      *
      * @param jsonRPCTx transaction being successfully committed.
      */
-    void onSuccess(JsonRPCTx jsonRPCTx);
+    void onSuccess(DOMDataTreeWriteTransaction jsonRPCTx);
 
     /**
      * Called when commit failed.
@@ -36,12 +36,12 @@ public interface TransactionListener {
      * @param jsonRPCTx transaction in which failure occur
      * @param failure cause of problem
      */
-    void onFailure(JsonRPCTx jsonRPCTx, Throwable failure);
+    void onFailure(DOMDataTreeWriteTransaction jsonRPCTx, Throwable failure);
 
     /**
      * Called just before transaction is being committed.
      *
      * @param jsonRPCTx transaction being committed
      */
-    void onSubmit(JsonRPCTx jsonRPCTx);
+    void onSubmit(DOMDataTreeWriteTransaction jsonRPCTx);
 }
