@@ -12,7 +12,9 @@ package org.opendaylight.jsonrpc.impl;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
+
 import javax.annotation.Nonnull;
+
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChainClosedException;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
@@ -23,6 +25,7 @@ import org.opendaylight.controller.md.sal.dom.api.DOMTransactionChain;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
+import org.opendaylight.jsonrpc.model.JsonRpcTransactionFacade;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +43,7 @@ public class TxChain implements DOMTransactionChain {
     /**
      * Transaction created by this chain that hasn't been submitted or cancelled yet.
      */
-    private JsonRPCTx currentTransaction = null;
+    private DOMDataWriteTransaction currentTransaction = null;
     private volatile boolean closed = false;
     private volatile boolean successful = true;
     private final SchemaContext schemaContext;
@@ -72,18 +75,18 @@ public class TxChain implements DOMTransactionChain {
     }
 
     @Override
-    public synchronized JsonRPCTx newWriteOnlyTransaction() {
+    public synchronized DOMDataWriteTransaction newWriteOnlyTransaction() {
         checkOperationPermitted();
         final DOMDataWriteTransaction writeTransaction = dataBroker.newWriteOnlyTransaction();
-        Preconditions.checkState(writeTransaction instanceof JsonRPCTx);
-        final JsonRPCTx pendingWriteTx = (JsonRPCTx) writeTransaction;
+        Preconditions.checkState(writeTransaction instanceof JsonRpcTransactionFacade);
+        final DOMDataWriteTransaction pendingWriteTx = writeTransaction;
         currentTransaction = pendingWriteTx;
         return pendingWriteTx;
     }
 
     @Override
     public synchronized DOMDataReadWriteTransaction newReadWriteTransaction() {
-        return new JsonRPCTx(transportFactory, deviceName, pathMap, jsonConverter, schemaContext);
+        return dataBroker.newReadWriteTransaction();
     }
 
     @Override

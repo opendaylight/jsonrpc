@@ -20,24 +20,27 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import javax.annotation.Nonnull;
+
 import org.opendaylight.controller.md.sal.common.api.MappingCheckedFuture;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionCommitFailedException;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataReadOnlyTransaction;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataReadWriteTransaction;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.JSONRPCArg;
+import org.opendaylight.jsonrpc.model.JsonRpcTransactionFacade;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
@@ -56,8 +59,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("deprecation")
-public class JsonRPCTx extends RemoteShardAware
-        implements DOMDataReadWriteTransaction, DOMDataReadOnlyTransaction {
+public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFacade {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCTx.class);
     private final String deviceName;
 
@@ -241,19 +243,25 @@ public class JsonRPCTx extends RemoteShardAware
         return this;
     }
 
+    @SuppressWarnings("checkstyle:IllegalCatch")
     @Override
     public boolean cancel() {
-        boolean result = true;
-        for (Map.Entry<String, RemoteOmShard> entry : this.endPointMap.entrySet()) {
-            RemoteOmShard omshard = this.endPointMap.get(entry.getKey());
-            if (getTxId(entry.getKey()) != null) {
-                /*
-                 * We never allocated a txid, so no need to send message to om.
-                 */
-                result &= omshard.cancel(getTxId(entry.getKey()));
+        try {
+            boolean result = true;
+            for (Map.Entry<String, RemoteOmShard> entry : this.endPointMap.entrySet()) {
+                final RemoteOmShard omshard = this.endPointMap.get(entry.getKey());
+                if (getTxId(entry.getKey()) != null) {
+                    /*
+                     * We never allocated a txid, so no need to send message to om.
+                     */
+                    result &= omshard.cancel(getTxId(entry.getKey()));
+                }
             }
+            return result;
+        } catch (Exception e) {
+            LOG.error("Unable to cancel transaction", e);
+            return false;
         }
-        return result;
     }
 
     @Override

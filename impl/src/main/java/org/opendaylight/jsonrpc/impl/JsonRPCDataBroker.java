@@ -26,16 +26,14 @@ import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.md.sal.common.api.data.TransactionChainListener;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBroker;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataBrokerExtension;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataReadOnlyTransaction;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataReadWriteTransaction;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataTreeChangeListener;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataTreeChangeService;
 import org.opendaylight.controller.md.sal.dom.api.DOMDataTreeIdentifier;
-import org.opendaylight.controller.md.sal.dom.api.DOMDataWriteTransaction;
 import org.opendaylight.controller.md.sal.dom.api.DOMTransactionChain;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
+import org.opendaylight.jsonrpc.model.JsonRpcTransactionFacade;
 import org.opendaylight.jsonrpc.model.ListenerKey;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
@@ -95,18 +93,21 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
     }
 
     @Override
-    public DOMDataReadOnlyTransaction newReadOnlyTransaction() {
-        return new JsonRPCTx(transportFactory, peer.getName(), pathMap, jsonConverter, schemaContext);
+    public JsonRpcTransactionFacade newReadOnlyTransaction() {
+        return TransactionProxy
+                .create(new JsonRPCTx(transportFactory, peer.getName(), pathMap, jsonConverter, schemaContext));
     }
 
     @Override
-    public DOMDataWriteTransaction newWriteOnlyTransaction() {
-        return new JsonRPCTx(transportFactory, peer.getName(), pathMap, jsonConverter, schemaContext);
+    public JsonRpcTransactionFacade newWriteOnlyTransaction() {
+        return TransactionProxy
+                .create(new JsonRPCTx(transportFactory, peer.getName(), pathMap, jsonConverter, schemaContext));
     }
 
     @Override
-    public DOMDataReadWriteTransaction newReadWriteTransaction() {
-        return new JsonRPCTx(transportFactory, peer.getName(), pathMap, jsonConverter, schemaContext);
+    public JsonRpcTransactionFacade newReadWriteTransaction() {
+        return TransactionProxy
+                .create(new JsonRPCTx(transportFactory, peer.getName(), pathMap, jsonConverter, schemaContext));
     }
 
     @Override
