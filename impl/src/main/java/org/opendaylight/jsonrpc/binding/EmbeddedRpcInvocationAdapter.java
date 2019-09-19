@@ -49,7 +49,8 @@ public final class EmbeddedRpcInvocationAdapter implements RpcInvocationAdapter 
 
         final ModuleInfoBackedContext moduleContext = ModuleInfoBackedContext.create();
         moduleContext.addModuleInfos(BindingReflections.loadModuleInfos());
-        final SchemaContext schemaContext = moduleContext.tryToCreateSchemaContext().get();
+        final SchemaContext schemaContext = moduleContext.tryToCreateSchemaContext()
+                .orElseThrow(() -> new IllegalStateException("Failed to create SchemaContext"));
         schemaService = new EmbeddedSchemaService(schemaContext);
         converter = new SchemaChangeAwareConverter(schemaService);
         schemaService.registerSchemaContextListener(codec);

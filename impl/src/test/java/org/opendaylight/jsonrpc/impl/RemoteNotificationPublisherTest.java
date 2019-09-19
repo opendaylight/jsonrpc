@@ -7,6 +7,8 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import static org.opendaylight.jsonrpc.impl.Util.findNode;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
@@ -22,6 +24,7 @@ import org.opendaylight.jsonrpc.model.RemoteNotificationPublisher;
 import org.opendaylight.mdsal.dom.api.DOMNotification;
 import org.opendaylight.mdsal.dom.api.DOMNotificationListener;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
+import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +47,8 @@ public class RemoteNotificationPublisherTest extends AbstractJsonRpcTest {
         transportFactory = new DefaultTransportFactory();
         ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory, getDOMNotificationRouter(),
                 getDOMRpcRouter().getRpcService());
-        NotificationDefinition path = Util.findNotification(schemaContext, "test-model:too-many-numbers").get();
+        NotificationDefinition path = findNode(schemaContext, "test-model:too-many-numbers", Module::getNotifications)
+                .get();
         latch = new CountDownLatch(1);
         reg = getDOMNotificationRouter().registerNotificationListener(new DOMNotificationListener() {
             @Override

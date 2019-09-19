@@ -77,7 +77,6 @@ public final class YangInstanceIdentifierDeserializer {
             for (final JsonElement je : arr) {
                 if (je instanceof JsonObject) {
                     processObject(je);
-                    continue;
                 } else {
                     throwJsonPathError(je);
                 }

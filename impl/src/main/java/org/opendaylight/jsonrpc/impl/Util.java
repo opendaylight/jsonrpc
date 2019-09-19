@@ -19,7 +19,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -214,53 +216,34 @@ public final class Util {
     }
 
     /**
-     * Find {@link RpcDefinition} in {@link SchemaContext} based on given name. Name can be prefixed by module name.
+     * Find subtype of {@link SchemaNode} such as {@link NotificationDefinition} or {@link RpcDefinition} in
+     * {@link SchemaContext} based on given name and {@link Function}.Name can be prefixed by module name.
      *
      * @param schemaContext {@link SchemaContext}
      * @param name name of RPC method
-     * @return {@link Optional} of {@link RpcDefinition}.
-     */
-    public static Optional<RpcDefinition> findRpc(SchemaContext schemaContext, String name) {
-        if (name.indexOf(':') != -1) {
-            final String[] parts = name.split(":");
-            final Optional<Module> modOpt = findModule(schemaContext, parts[0]);
-            if (!modOpt.isPresent()) {
-                return Optional.empty();
-            } else {
-                return findNode(modOpt.get().getRpcs().stream(), parts[1]);
-            }
-        } else {
-            return findNode(schemaContext.getModules().stream().flatMap(m -> m.getRpcs().stream()), name);
-        }
-    }
-
-    /**
-     * Find {@link NotificationDefinition} in {@link SchemaContext} based on given name.Name can be prefixed by module
-     * name.
-     *
-     * @param schemaContext {@link SchemaContext}
-     * @param name name of RPC method
+     * @param mapper {@link Function} that "extracts" {@link SchemaNode} subtype from {@link Module}
      * @return {@link Optional} of {@link NotificationDefinition}.
      */
-    public static Optional<NotificationDefinition> findNotification(SchemaContext schemaContext, String name) {
+    public static <T extends SchemaNode> Optional<T> findNode(SchemaContext schemaContext, String name,
+            Function<Module, Set<T>> mapper) {
         if (name.indexOf(':') != -1) {
             final String[] parts = name.split(":");
             final Optional<Module> modOpt = findModule(schemaContext, parts[0]);
             if (!modOpt.isPresent()) {
                 return Optional.empty();
             } else {
-                return findNode(modOpt.get().getNotifications().stream(), parts[1]);
+                return findNode(mapper.apply(modOpt.get()).stream(), parts[1]);
             }
         } else {
-            return findNode(schemaContext.getModules().stream().flatMap(m -> m.getNotifications().stream()), name);
+            return findNode(schemaContext.getModules().stream().flatMap(m -> mapper.apply(m).stream()), name);
         }
-    }
-
-    private static Optional<Module> findModule(SchemaContext schemaContext, String name) {
-        return schemaContext.getModules().stream().filter(m -> m.getName().equals(name)).findFirst();
     }
 
     private static <T extends SchemaNode> Optional<T> findNode(Stream<T> stream, String name) {
         return stream.filter(r -> r.getQName().getLocalName().equals(name)).findFirst();
+    }
+
+    private static Optional<Module> findModule(SchemaContext schemaContext, String name) {
+        return schemaContext.getModules().stream().filter(m -> m.getName().equals(name)).findFirst();
     }
 }

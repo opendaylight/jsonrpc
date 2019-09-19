@@ -375,14 +375,10 @@ public class JsonConverter {
             PathArgument pathArg = pathIterator.next();
             JsonObject nextLevel = new JsonObject();
             if (pathArg instanceof YangInstanceIdentifier.NodeIdentifierWithPredicates) {
-
-                Map<QName, Object> keyValues = ((YangInstanceIdentifier.NodeIdentifierWithPredicates) pathArg)
-                        .getKeyValues();
-
-                for (Entry<QName, Object> entry : keyValues.entrySet()) {
-                    nextLevel.add(entry.getKey().getLocalName(), new JsonPrimitive(entry.getValue().toString()));
-                }
-
+                ((YangInstanceIdentifier.NodeIdentifierWithPredicates) pathArg).entrySet()
+                        .stream()
+                        .forEach(e -> nextLevel.add(e.getKey().getLocalName(),
+                                new JsonPrimitive(e.getValue().toString())));
                 JsonArray jsonArray = new JsonArray();
                 jsonArray.add(nextLevel);
                 lastKey = pathArg.getNodeType().getLocalName();

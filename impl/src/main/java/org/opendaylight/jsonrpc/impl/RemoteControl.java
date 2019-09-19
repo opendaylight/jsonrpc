@@ -7,6 +7,7 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import static org.opendaylight.jsonrpc.impl.Util.findNode;
 import static org.opendaylight.jsonrpc.impl.Util.int2store;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -53,6 +54,7 @@ import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
+import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
@@ -411,7 +413,7 @@ public class RemoteControl implements RemoteControlComposite {
 
     @Override
     public JsonElement invokeRpc(String name, JsonObject rpcInput) {
-        final RpcDefinition def = Util.findRpc(schemaContext, name)
+        final RpcDefinition def = findNode(schemaContext, name, Module::getRpcs)
                 .orElseThrow(() -> new IllegalArgumentException("No such method " + name));
         final JsonObject wrapper = new JsonObject();
         wrapper.add("input", rpcInput);
@@ -430,7 +432,7 @@ public class RemoteControl implements RemoteControlComposite {
 
     @Override
     public void publishNotification(String name, JsonObject data) {
-        final NotificationDefinition notification = Util.findNotification(schemaContext, name)
+        final NotificationDefinition notification = findNode(schemaContext, name, Module::getNotifications)
                 .orElseThrow(() -> new IllegalArgumentException("No such notification : " + name));
         final DOMNotification dom = jsonConverter.toNotification(notification, data);
         try {
