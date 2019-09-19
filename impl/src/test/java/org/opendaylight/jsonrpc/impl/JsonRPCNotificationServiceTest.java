@@ -118,7 +118,7 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
             LOG.info("Received notification : {}", notification);
             cl.countDown();
         }, notificationPath(mod, "too-many-numbers"));
-        TimeUnit.MILLISECONDS.sleep(500L);
+        TimeUnit.MILLISECONDS.sleep(1500L);
         // send primitive value - this is against specification, but we can
         // handle it easily
         pubSession.publish("too-many-numbers", 1);

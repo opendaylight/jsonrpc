@@ -11,12 +11,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <parent>
         <groupId>org.opendaylight.odlparent</groupId>
         <artifactId>odlparent-lite</artifactId>
-        <version>5.0.1</version>
+        <version>5.0.2</version>
         <relativePath/>
     </parent>
     <groupId>org.opendaylight.jsonrpc</groupId>
     <artifactId>jsonrpc-artifacts</artifactId>
-    <version>1.7.0-SNAPSHOT</version>
+    <version>1.7.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>JSON-RPC :: Artifacts</name>
     <properties>
@@ -27,21 +27,21 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <dependency>
                 <groupId>org.opendaylight.mdsal</groupId>
                 <artifactId>mdsal-artifacts</artifactId>
-                <version>4.0.4</version>
+                <version>4.0.6</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>org.opendaylight.netconf</groupId>
                 <artifactId>restconf-artifacts</artifactId>
-                <version>1.10.0-SNAPSHOT</version>
+                <version>1.10.1-SNAPSHOT</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>org.opendaylight.aaa</groupId>
                 <artifactId>aaa-artifacts</artifactId>
-                <version>0.10.0-SNAPSHOT</version>
+                <version>0.10.1-SNAPSHOT</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
