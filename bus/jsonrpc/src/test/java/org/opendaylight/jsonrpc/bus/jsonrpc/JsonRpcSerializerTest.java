@@ -11,7 +11,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.google.gson.JsonNull;
+import com.google.gson.JsonParser;
+
 import java.util.List;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -98,6 +102,27 @@ public class JsonRpcSerializerTest {
         };
 
         testMessagesHelper(msgs, 8, JsonRpcRequestMessage.class);
+    }
+
+    /*
+     * Test for https://jira.opendaylight.org/browse/JSONRPC-36
+     */
+    @Test
+    public void testBug36() {
+        String msg = "{\"accept\":{\"array-element\":null}}";
+        JsonRpcRequestMessage request = JsonRpcRequestMessage.builder()
+                .idFromIntValue(1)
+                .method("test")
+                .paramsFromObject(new TestDto(new JsonParser().parse(msg)))
+                .build();
+        logger.info("Request : {}", request);
+        assertTrue(request.getParams()
+                .getAsJsonObject()
+                .get("data")
+                .getAsJsonObject()
+                .get("accept")
+                .getAsJsonObject()
+                .get("array-element") instanceof JsonNull);
     }
 
     @Test
