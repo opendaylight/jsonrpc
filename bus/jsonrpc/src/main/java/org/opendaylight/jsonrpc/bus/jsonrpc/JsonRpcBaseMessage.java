@@ -8,6 +8,7 @@
 package org.opendaylight.jsonrpc.bus.jsonrpc;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -38,7 +39,7 @@ public abstract class JsonRpcBaseMessage {
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(JsonRpcBaseMessage.class);
-    private static final Gson GSON = new Gson();
+    private static final Gson GSON = new GsonBuilder().serializeNulls().create();
     protected static final String VERSION = "2.0";
     protected static final String VERSION_SHORT = "2";
 
