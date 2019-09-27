@@ -8,7 +8,7 @@
 
 /**
  * <p>
- * HTTP transports session types support matrix
+ * HTTP transports session types support matrix.
  * </p>
  * <table summary="Support matrix" border="1">
  * <tr>
