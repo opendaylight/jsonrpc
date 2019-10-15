@@ -35,6 +35,7 @@
  * }
  * </pre>
  *
+ * <p>
  * step 1 (remote peer)
  *
  * <pre>
@@ -44,6 +45,7 @@
  *
  * </pre>
  *
+ * <p>
  * step 2 (local peer)
  *
  * <pre>
@@ -53,6 +55,7 @@
  *
  * </pre>
  *
+ * <p>
  * step 3 (local peer)
  *
  * <pre>
@@ -60,6 +63,7 @@
  *                                // implementation above)
  * </pre>
  *
+ * <p>
  * This will result in following communication on bus:
  *
  * <pre>
@@ -77,6 +81,7 @@
  * <li>invoke notification method on publisher proxy (provided interface)</li>
  * </ol>
  *
+ * <p>
  * Example of API:
  *
  * <pre>
@@ -92,6 +97,7 @@
  * }
  * </pre>
  *
+ * <p>
  * step 1 - local peer
  *
  * <pre>
@@ -100,6 +106,7 @@
  * SomeAPI proxy = tf.createPublisherProxy(SomeAPI.class, "ws://192.168.1.12:12345");
  * </pre>
  *
+ * <p>
  * step 2 - (multiple) remote peers
  *
  * <pre>
@@ -107,12 +114,14 @@
  * SomeSubscriber session = tf.createSubscriber("ws://192.168.1.12:12345", new SomeSubscriber());
  * </pre>
  *
+ * <p>
  * step 3 - local peer
  *
  * <pre>
  * proxy.notification_method1("ABC")
  * </pre>
  *
+ * <p>
  * This will send notification to all connected subscribers:
  * <pre>
  * { "jsonrpc" : "2.0", "method" : "notification_method1", params: ["ABC"] }

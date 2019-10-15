@@ -7,8 +7,7 @@
  */
 
 /**
- * This transport implementation was developed according to following
- * specifications:
+ * This transport implementation was developed according to following specifications.
  * <ul>
  * <li><a href="https://rfc.zeromq.org/spec:23/ZMTP/">ZeroMQ Message Transport
  * Protocol</a></li>
