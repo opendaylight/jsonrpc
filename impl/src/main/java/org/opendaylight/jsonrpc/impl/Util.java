@@ -263,4 +263,12 @@ public final class Util {
     private static <T extends SchemaNode> Optional<T> findNode(Stream<T> stream, String name) {
         return stream.filter(r -> r.getQName().getLocalName().equals(name)).findFirst();
     }
+
+    public static LogicalDatastoreType storeFromString(String str) {
+        try {
+            return int2store(Integer.parseInt(str));
+        } catch (NumberFormatException e) {
+            return int2store(STORE_STR_MAP.get(str));
+        }
+    }
 }

@@ -115,8 +115,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         /* Special case - null read (allowed by RPC spec) should result in an empty container
          * and no barfs on the ODL side */
         final JsonElement elem = null;
-        doReturn(elem).when(om).read(eq(Util.store2str(Util.store2int(LogicalDatastoreType.OPERATIONAL))),
-                eq(DEVICE_NAME), any(JsonElement.class));
+        doReturn(elem).when(om).read(any());
         final ListenableFuture<Optional<NormalizedNode<?, ?>>> fopt = trx
                 .read(LogicalDatastoreType.OPERATIONAL, YangInstanceIdentifier.of(NetworkTopology.QNAME));
 
@@ -126,25 +125,23 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
 
     @Test
     public void testReadEmpty() throws InterruptedException, ExecutionException {
-        doReturn(null).when(om).read(eq(Util.store2str(Util.store2int(LogicalDatastoreType.OPERATIONAL))),
-                eq(DEVICE_NAME), any(JsonElement.class));
+        doReturn(null).when(om).read(any());
         assertFalse(trx.read(LogicalDatastoreType.OPERATIONAL, YangInstanceIdentifier.EMPTY).get().isPresent());
     }
 
     @Test
     public void testExists() throws Exception {
-        doReturn(true).when(om).exists(anyString(), anyString(), any(JsonElement.class));
+        doReturn(true).when(om).exists(anyString(), any(), any());
         assertTrue(trx.exists(LogicalDatastoreType.CONFIGURATION, YangInstanceIdentifier.of(NetworkTopology.QNAME))
                 .get());
-        verify(om, times(1)).exists(eq("config"), anyString(),
-                any(JsonElement.class));
+        verify(om, times(1)).exists(anyString(), any(), any());
     }
 
     @Test
     public void testPut() throws InterruptedException, ExecutionException, TimeoutException {
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest.createContainerNodeData();
         trx.put(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
-        doReturn(true).when(om).commit(eq(null));
+        doReturn(true).when(om).commit((String)eq(null));
         trx.commit().get(5, TimeUnit.SECONDS);
         verify(om, times(1)).put(eq(null), eq("config"), anyString(),
                 any(JsonElement.class), any(JsonElement.class));
@@ -152,7 +149,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
 
     @Test
     public void testDelete() throws InterruptedException, ExecutionException, TimeoutException {
-        doReturn(true).when(om).commit(eq(null));
+        doReturn(true).when(om).commit((String)eq(null));
         trx.delete(LogicalDatastoreType.CONFIGURATION, YangInstanceIdentifier.of(NetworkTopology.QNAME));
         trx.commit().get(5, TimeUnit.SECONDS);
         verify(om, times(1)).delete(eq(null), eq("config"), anyString(),
@@ -172,9 +169,9 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
     @Test
     public void testCommitFailed() throws InterruptedException, ExecutionException {
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest.createContainerNodeData();
+        doReturn(false).when(om).commit((String)eq(null));
+        doReturn(Lists.newArrayList("err1", "err2")).when(om).error((String)eq(null));
         trx.put(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
-        doReturn(false).when(om).commit(eq(null));
-        doReturn(Lists.newArrayList("err1", "err2")).when(om).error(eq(null));
         FluentFuture<? extends CommitInfo> result = trx.commit();
         result.addCallback(new FutureCallback<CommitInfo>() {
             @Override
@@ -186,17 +183,18 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
             public void onFailure(Throwable err) {
                 assertTrue(err instanceof TransactionCommitFailedException);
                 TransactionCommitFailedException tcfe = (TransactionCommitFailedException) err;
+                LOG.info("Errors {}", tcfe.getErrorList());
                 assertEquals(2, tcfe.getErrorList().size());
             }
         }, MoreExecutors.directExecutor());
-        verify(om, times(1)).commit(eq(null));
-        verify(om, times(1)).error(eq(null));
+        verify(om, times(1)).commit((String)eq(null));
+        verify(om, times(1)).error((String)eq(null));
     }
 
     @Test
     public void testMerge() throws InterruptedException, ExecutionException, TimeoutException {
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest.createContainerNodeData();
-        doReturn(true).when(om).commit(eq(null));
+        doReturn(true).when(om).commit((String)eq(null));
         trx.merge(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
         trx.commit().get(5, TimeUnit.SECONDS);
         verify(om, times(1)).merge(eq(null), eq("config"), anyString(),

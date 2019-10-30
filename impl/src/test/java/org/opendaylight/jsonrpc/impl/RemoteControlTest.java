@@ -12,6 +12,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.opendaylight.jsonrpc.impl.Util.store2int;
+import static org.opendaylight.jsonrpc.impl.Util.store2str;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -35,8 +37,13 @@ import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TestHelper;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.model.DataOperationArgument;
+import org.opendaylight.jsonrpc.model.DeleteListenerArgument;
 import org.opendaylight.jsonrpc.model.ListenerKey;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
+import org.opendaylight.jsonrpc.model.StoreOperationArgument;
+import org.opendaylight.jsonrpc.model.TxArgument;
+import org.opendaylight.jsonrpc.model.TxOperationArgument;
 import org.opendaylight.mdsal.binding.dom.adapter.BindingToNormalizedNodeCodec;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
@@ -98,34 +105,35 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     public void testCRUD() throws Exception {
         JsonElement path = parser.parse(TEST_MODEL_PATH);
         String txId = ctrl.txid();
-        ctrl.put(txId, 1, ENTITY, path, parser.parse("{ \"test-model:top-element\" : { \"level2a\" : {}}}"));
-        assertTrue(ctrl.commit(txId));
-        assertTrue(ctrl.exists(1, ENTITY, path));
+        ctrl.put(new DataOperationArgument(txId, "1", ENTITY, path,
+                parser.parse("{ \"test-model:top-element\" : { \"level2a\" : {}}}")));
+        assertTrue(ctrl.commit(new TxArgument(txId)));
+        assertTrue(ctrl.exists(new StoreOperationArgument("1", ENTITY, path)));
         txId = ctrl.txid();
-        ctrl.delete(txId, 1, ENTITY, path);
-        assertTrue(ctrl.commit(txId));
-        assertFalse(ctrl.exists(1, ENTITY, path));
+        ctrl.delete(new TxOperationArgument(txId, "1", ENTITY, path));
+        assertTrue(ctrl.commit(new TxArgument(txId)));
+        assertFalse(ctrl.exists(new StoreOperationArgument("1", ENTITY, path)));
     }
 
     @Test
     public void testCRUD2() throws Exception {
         JsonElement path = parser.parse(TEST_MODEL_PATH);
         String txId = ctrl.txid();
-        ctrl.put(txId, 1, ENTITY, path,
-                parser.parse("{ \"test-model:top-element\" : { \"level2a\" : { \"abc\" : \"123\"}}}"));
-        assertFalse(ctrl.exists(1, ENTITY, path));
-        assertTrue(ctrl.commit(txId));
-        assertTrue(ctrl.exists(1, ENTITY, path));
+        ctrl.put(new DataOperationArgument(txId, "1", ENTITY, path,
+                parser.parse("{ \"test-model:top-element\" : { \"level2a\" : { \"abc\" : \"123\"}}}")));
+        assertFalse(ctrl.exists(new StoreOperationArgument("1", ENTITY, path)));
+        assertTrue(ctrl.commit(new TxArgument(txId)));
+        assertTrue(ctrl.exists(new StoreOperationArgument("1", ENTITY, path)));
     }
 
     @Test
     public void testCommitNonExistentTX() throws Exception {
-        assertFalse(ctrl.commit(UUID.randomUUID().toString()));
+        assertFalse(ctrl.commit(new TxArgument(UUID.randomUUID().toString())));
     }
 
     @Test
     public void testCancelNonExistentTX() throws Exception {
-        assertFalse(ctrl.cancel(UUID.randomUUID().toString()));
+        assertFalse(ctrl.cancel(new TxArgument(UUID.randomUUID().toString())));
     }
 
     /**
@@ -154,7 +162,8 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         LOG.info("JSON path : {}", path);
         LOG.info("path from codec : {}", yii);
 
-        assertNotNull(ctrl.read(Util.store2int(LogicalDatastoreType.OPERATIONAL), "test-model", path));
+        assertNotNull(ctrl.read(new StoreOperationArgument(store2str(store2int(LogicalDatastoreType.OPERATIONAL)),
+                "test-model", path)));
     }
 
     /**
@@ -215,8 +224,8 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     @Test
     public void testTxCancel() {
         UUID uuid = UUID.fromString(ctrl.txid());
-        assertTrue(ctrl.cancel(uuid.toString()));
-        assertFalse(ctrl.cancel(uuid.toString()));
+        assertTrue(ctrl.cancel(new TxArgument(uuid.toString())));
+        assertFalse(ctrl.cancel(new TxArgument(uuid.toString())));
     }
 
     /**
@@ -261,18 +270,19 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     @Test
     public void testMergeListItemNonExistentList() throws InterruptedException {
         String txId = ctrl.txid();
-        ctrl.merge(txId, Util.store2int(LogicalDatastoreType.CONFIGURATION), "",
+        ctrl.merge(new DataOperationArgument(txId, store2str(store2int(LogicalDatastoreType.CONFIGURATION)), "",
                 parser.parse(MLX_JSON_PATH),
-                parser.parse(MLX_CONFIG_DATA));
-        assertTrue(ctrl.commit(txId));
+                parser.parse(MLX_CONFIG_DATA)));
+        assertTrue(ctrl.commit(new TxArgument(txId)));
     }
 
     @Test
     public void testFailedTransactionsVanished() throws InterruptedException {
         String txId = ctrl.txid();
-        ctrl.delete(txId, Util.store2int(LogicalDatastoreType.CONFIGURATION), "test-model", parser.parse("{}"));
-        assertFalse(ctrl.commit(txId));
-        List<String> err = ctrl.error(txId);
+        ctrl.delete(new TxOperationArgument(txId, store2str(store2int(LogicalDatastoreType.CONFIGURATION)),
+                "test-model", parser.parse("{}")));
+        assertFalse(ctrl.commit(new TxArgument(txId)));
+        List<String> err = ctrl.error(new TxArgument(txId));
         assertFalse(err.isEmpty());
         LOG.info("Collected errors : {}", err);
         retryAction(TimeUnit.SECONDS, 5, () -> ctrl.isTxMapEmpty());
@@ -283,65 +293,64 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         //@formatter:off
         UUID uuid = UUID.fromString(ctrl.txid());
 
-        ctrl.put(uuid.toString(),
-                Util.store2int(LogicalDatastoreType.OPERATIONAL),
+        ctrl.put(new DataOperationArgument(uuid.toString(),
+                store2str(store2int(LogicalDatastoreType.OPERATIONAL)),
                 "test-model", // entity
                 parser.parse(TEST_MODEL_PATH), // path
-                parser.parse("{\"test-model:top-element\":{\"level2a\":{}}}")); // data
+                parser.parse("{\"test-model:top-element\":{\"level2a\":{}}}"))); // data
 
-        ctrl.commit(uuid.toString());
+        ctrl.commit(new TxArgument(uuid.toString()));
 
         uuid = UUID.randomUUID();
-        ctrl.put(uuid.toString(),
-                Util.store2int(LogicalDatastoreType.CONFIGURATION),
+        ctrl.put(new DataOperationArgument(uuid.toString(),
+                store2str(store2int(LogicalDatastoreType.CONFIGURATION)),
                 "something",
                 parser.parse("{\"jsonrpc:config\":{}}"),
-                parser.parse("{\"jsonrpc:config\":{\"configured-endpoints\":[]}}"));
-        ctrl.commit(uuid.toString());
+                parser.parse("{\"jsonrpc:config\":{\"configured-endpoints\":[]}}")));
+        ctrl.commit(new TxArgument(uuid.toString()));
 
         uuid = UUID.randomUUID();
-        ctrl.merge(uuid.toString(),
-                Util.store2str(Util.store2int(LogicalDatastoreType.CONFIGURATION)),
+        ctrl.merge(new DataOperationArgument(uuid.toString(),
+                store2str(store2int(LogicalDatastoreType.CONFIGURATION)),
                 "something",
                 parser.parse(MLX_JSON_PATH),
-                parser.parse(MLX_CONFIG_DATA));
-        ctrl.commit(uuid.toString());
+                parser.parse(MLX_CONFIG_DATA)));
+        ctrl.commit(new TxArgument(uuid.toString()));
 
-        assertTrue(ctrl.exists(Util.store2int(LogicalDatastoreType.OPERATIONAL),
+        assertTrue(ctrl.exists(new StoreOperationArgument(store2str(store2int(LogicalDatastoreType.OPERATIONAL)),
+                "test-model", // entity
+                parser.parse(TEST_MODEL_PATH)))); // path
+
+        uuid = UUID.randomUUID();
+        ctrl.delete(new TxOperationArgument(uuid.toString(),
+                store2str(store2int(LogicalDatastoreType.OPERATIONAL)),
                 "test-model", // entity
                 parser.parse(TEST_MODEL_PATH))); // path
 
-        uuid = UUID.randomUUID();
-        ctrl.delete(uuid.toString(),
-                Util.store2int(LogicalDatastoreType.OPERATIONAL),
-                "test-model", // entity
-                parser.parse(TEST_MODEL_PATH)); // path
+        ctrl.commit(new TxArgument(uuid.toString()));
 
-        ctrl.commit(uuid.toString());
+        assertTrue(ctrl.error(new TxArgument(uuid.toString())).isEmpty());
 
-        assertTrue(ctrl.error(uuid.toString()).isEmpty());
-
-        assertFalse(ctrl.exists(Util.store2int(LogicalDatastoreType.OPERATIONAL),
+        assertFalse(ctrl.exists(new StoreOperationArgument(store2str(store2int(LogicalDatastoreType.OPERATIONAL)),
                 "test-model", // entity
                 parser.parse(TEST_MODEL_PATH) // path
-                ));
+                )));
         //@formatter:on
     }
 
     @Test
     public void testPutWithoutTx() {
-        ctrl.put(UUID.randomUUID().toString(), Util.store2int(LogicalDatastoreType.OPERATIONAL), // entity
-                "test-model", parser.parse(TEST_MODEL_PATH), // path
-                parser.parse("{ \"test-model:top-element\" : { \"level2a\" : {}}}") // data
-        );
+        ctrl.put(new DataOperationArgument(UUID.randomUUID().toString(),
+                store2str(store2int(LogicalDatastoreType.OPERATIONAL)), "test-model", parser.parse(TEST_MODEL_PATH),
+                parser.parse("{ \"test-model:top-element\" : { \"level2a\" : {}}}")));
     }
 
     @Test
     public void testPutReducedDataForm() {
         final String uuid = UUID.randomUUID().toString();
-        ctrl.put(uuid, Util.store2int(LogicalDatastoreType.CONFIGURATION), "test-model",
-                parser.parse("{\"test-model:grillconf\":{}}"), parser.parse("{\"gasKnob\":10}"));
-        assertTrue(ctrl.commit(uuid));
+        ctrl.put(new DataOperationArgument(uuid, store2str(store2int(LogicalDatastoreType.CONFIGURATION)), "test-model",
+                parser.parse("{\"test-model:grillconf\":{}}"), parser.parse("{\"gasKnob\":10}")));
+        assertTrue(ctrl.commit(new TxArgument(uuid)));
     }
 
     @Test(timeout = 30_000)
@@ -361,15 +370,15 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         final SubscriberSession toClose = transportFactory.createSubscriber(listener.getUri(),
                 new DcnPublisherImpl(latch), true);
         String txId = ctrl.txid();
-        ctrl.put(txId, 0, ENTITY, path,
-                parser.parse("{ \"test-model:top-element\" : { \"level2a\" : { \"abc\" : \"123\"}}}"));
-        ctrl.commit(txId);
+        ctrl.put(new DataOperationArgument(txId, "0", ENTITY, path,
+                parser.parse("{ \"test-model:top-element\" : { \"level2a\" : { \"abc\" : \"123\"}}}")));
+        ctrl.commit(new TxArgument(txId));
         txId = ctrl.txid();
-        ctrl.delete(txId, 0, ENTITY, path);
-        ctrl.commit(txId);
+        ctrl.delete(new TxOperationArgument(txId, "0", ENTITY, path));
+        ctrl.commit(new TxArgument(txId));
 
         latch.await(15, TimeUnit.SECONDS);
-        assertTrue(req.deleteListener(listener.getUri(), listener.getName()));
+        assertTrue(req.deleteListener(new DeleteListenerArgument(listener.getUri(), listener.getName())));
         req.close();
         toClose.close();
         resp.close();
@@ -377,7 +386,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
 
     @Test
     public void testRemoveNonExistentDcn() {
-        assertFalse(ctrl.deleteListener("",""));
+        assertFalse(ctrl.deleteListener(new DeleteListenerArgument("","")));
     }
 
     /*
