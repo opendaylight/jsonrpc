@@ -176,4 +176,12 @@ public final class Util {
         // findModules is guaranteed to return latest revision first
         return schemaContext.findModules(name).stream().findFirst();
     }
+
+    public static LogicalDatastoreType storeFromString(String str) {
+        try {
+            return int2store(Integer.parseInt(str));
+        } catch (NumberFormatException e) {
+            return int2store(STORE_STR_MAP.get(str));
+        }
+    }
 }

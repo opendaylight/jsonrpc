@@ -14,6 +14,8 @@ import com.google.common.collect.MapMaker;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.JsonElement;
 
+import java.lang.invoke.MethodHandles.Lookup;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Objects;
@@ -118,6 +120,7 @@ public class ProxyServiceImpl implements ProxyService {
     }
 
     @Override
+    @SuppressWarnings("checkstyle:IllegalCatch")
     public Object invoke(Object obj, Method method, Object[] params) {
         final String methodName = getMethodName(method);
         final BaseSession session = proxyMap.get(obj);
@@ -129,7 +132,7 @@ public class ProxyServiceImpl implements ProxyService {
          */
         if (TO_STRING_METHOD_NAME.equals(methodName) && method.getParameterTypes().length == 0) {
             LOG.debug("Proxy for session {}", proxyMap.get(obj));
-            return null;
+            return String.format("Proxy => %s", proxyMap.get(obj));
         }
         /*
          * Special case to handle AutoCloseable#close(). Instead of forwarding
@@ -140,6 +143,22 @@ public class ProxyServiceImpl implements ProxyService {
             LOG.debug("Cleaning up proxy instance {}", proxyMap.get(obj));
             deleteProxy(obj);
             return null;
+        }
+        /*
+         * Special case to delegate invocation to default method.
+         */
+        if (method.isDefault()) {
+            try {
+                //TODO : in java 9+ switch to Lookup#findSpecial()
+                final Constructor<Lookup> constructor = Lookup.class.getDeclaredConstructor(Class.class);
+                constructor.setAccessible(true);
+                return constructor.newInstance(method.getDeclaringClass())
+                        .unreflectSpecial(method, method.getDeclaringClass())
+                        .bindTo(obj)
+                        .invokeWithArguments(params);
+            } catch (Throwable e) {
+                throw new IllegalStateException("Fail to delegate invocation to default method", e);
+            }
         }
         if (session instanceof PublisherSession) {
             if (!method.getReturnType().equals(void.class)) {

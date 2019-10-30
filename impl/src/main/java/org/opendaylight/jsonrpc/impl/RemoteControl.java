@@ -7,13 +7,12 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
-import static org.opendaylight.jsonrpc.impl.Util.int2store;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
 import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.Collections;
@@ -32,12 +31,20 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.GuardedBy;
+
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.model.AddListenerArgument;
+import org.opendaylight.jsonrpc.model.DataOperationArgument;
+import org.opendaylight.jsonrpc.model.DeleteListenerArgument;
 import org.opendaylight.jsonrpc.model.ListenerKey;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
+import org.opendaylight.jsonrpc.model.StoreOperationArgument;
 import org.opendaylight.jsonrpc.model.TransactionFactory;
+import org.opendaylight.jsonrpc.model.TxArgument;
+import org.opendaylight.jsonrpc.model.TxOperationArgument;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
@@ -107,11 +114,13 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     }
 
     @Override
-    public JsonElement read(int store, String entity, JsonElement path) {
-        final YangInstanceIdentifier pathAsIId = path2II(path);
+    public JsonElement read(StoreOperationArgument arg) {
+        final YangInstanceIdentifier pathAsIId = path2II(arg.getPath());
         LOG.debug("READ : YII :{}", pathAsIId);
         try (DOMDataTreeReadWriteTransaction rTrx = domDataBroker.newReadWriteTransaction()) {
-            final NormalizedNode<?, ?> result = rTrx.read(int2store(store), pathAsIId).get().orElse(null);
+            final NormalizedNode<?, ?> result = rTrx.read(Util.storeFromString(arg.getStore()), pathAsIId)
+                    .get()
+                    .orElse(null);
             LOG.info("Result is {}", result);
             return jsonConverter.toBus(pathAsIId, result).getData();
         } catch (InterruptedException | ExecutionException e) {
@@ -120,104 +129,42 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     }
 
     @Override
-    public JsonElement read(String store, String entity, JsonElement path) {
-        return read(Util.store2int(store), entity, path);
+    public void put(DataOperationArgument arg) {
+        final YangInstanceIdentifier pathAsIId = path2II(arg.getPath());
+        LOG.info("PUT txId : {}, store : {}, entity : {}, path : {}, YII :{}, data : {}", arg.getTxid(),
+                Util.storeFromString(arg.getStore()), arg.getEntity(), arg.getPath(), pathAsIId, arg.getData());
+        final DOMDataTreeWriteTransaction wtx = allocateTrx(arg.getTxid()).getValue().newWriteTransaction();
+        wtx.put(Util.storeFromString(arg.getStore()), pathAsIId,
+                jsonConverter.jsonElementToNormalizedNode(injectQName(pathAsIId, arg.getData()), pathAsIId));
     }
 
-    @Override
-    public void put(String txId, int store, String entity, JsonElement path, JsonElement data) {
-        final YangInstanceIdentifier pathAsIId = path2II(path);
-        LOG.info("PUT txId : {}, store : {}, entity : {}, path : {}, YII :{}, data : {}", txId, int2store(store),
-                entity, path, pathAsIId, data);
-        final DOMDataTreeWriteTransaction wtx = allocateTrx(txId).getValue().newWriteTransaction();
-        wtx.put(int2store(store), pathAsIId,
-                jsonConverter.jsonElementToNormalizedNode(injectQName(pathAsIId, data), pathAsIId));
-    }
-
-    @Override
-    public void put(String txId, String store, String entity, JsonElement path, JsonElement data) {
-        put(txId, Util.store2int(store), entity, path, data);
-    }
-
-    @Override
-    public boolean exists(int store, String entity, JsonElement path) {
-        final YangInstanceIdentifier pathAsIId = path2II(path);
-        LOG.debug("EXISTS store={}, entity={}, path={}, YII={}", int2store(store), entity, path, pathAsIId);
+    public boolean exists(StoreOperationArgument arg) {
+        final YangInstanceIdentifier pathAsIId = path2II(arg.getPath());
+        LOG.debug("EXISTS store={}, entity={}, path={}, YII={}", Util.storeFromString(arg.getStore()), arg.getEntity(),
+                arg.getPath(), pathAsIId);
         try (DOMDataTreeReadTransaction trx = domDataBroker.newReadOnlyTransaction()) {
-            return trx.exists(int2store(store), pathAsIId).get();
+            return trx.exists(Util.storeFromString(arg.getStore()), pathAsIId).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new IllegalStateException("Read failed", e);
         }
     }
 
-    /**
-     * Overloaded version of {@link #exists(int, String, JsonElement)}.
-     */
     @Override
-    public boolean exists(String store, String entity, JsonElement path) {
-        return exists(Util.store2int(store), entity, path);
+    public void merge(DataOperationArgument arg) {
+        final DOMDataTreeWriteTransaction trx = allocateTrx(arg.getTxid()).getValue().newWriteTransaction();
+        final YangInstanceIdentifier pathAsIId = path2II(arg.getPath());
+        LOG.debug("MERGE : tx={}, store={}, entity={}, path={}, YII={}, data={}", arg.getTxid(),
+                Util.storeFromString(arg.getStore()), arg.getEntity(), arg.getPath(), pathAsIId, arg.getData());
+        trx.merge(Util.storeFromString(arg.getStore()), pathAsIId,
+                jsonConverter.jsonElementToNormalizedNode(arg.getData(), pathAsIId, true));
     }
 
-    @Override
-    public void merge(String txId, int store, String entity, JsonElement path, JsonElement data) {
-        final DOMDataTreeWriteTransaction trx = allocateTrx(txId).getValue().newWriteTransaction();
-        final YangInstanceIdentifier pathAsIId = path2II(path);
-        LOG.debug("MERGE : tx={}, store={}, entity={}, path={}, YII={}, data={}", txId, int2store(store), entity, path,
-                pathAsIId, data);
-        trx.merge(int2store(store), pathAsIId, jsonConverter.jsonElementToNormalizedNode(data, pathAsIId, true));
-    }
-
-    /**
-     * Overloaded version of
-     * {@link #merge(String, int, String, JsonElement, JsonElement)}.
-     */
-    @Override
-    public void merge(String txId, String store, String entity, JsonElement path, JsonElement data) {
-        merge(txId, Util.store2int(store), entity, path, data);
-    }
-
-    @Override
-    public void delete(String txId, int store, String entity, JsonElement path) {
-        final YangInstanceIdentifier pathAsIId = path2II(path);
-        LOG.debug("DELETE : tx={}, store={}, entity={}, path={}, YII={}", txId, int2store(store), entity, path,
-                pathAsIId);
-        final DOMDataTreeWriteTransaction trx = allocateTrx(txId).getValue().newWriteTransaction();
-        trx.delete(int2store(store), pathAsIId);
-    }
-
-    /**
-     * Overloaded version of {@link #delete(String, int, String, JsonElement)}.
-     */
-    @Override
-    public void delete(String txId, String store, String entity, JsonElement path) {
-        delete(txId, Util.store2int(store), entity, path);
-    }
-
-    @GuardedBy("trxGuard")
-    @Override
-    public boolean commit(String txId) {
-        LOG.debug("COMMIT : {}", txId);
-        final Lock lock = trxGuard.writeLock();
-        try {
-            lock.lock();
-            if (!txmap.containsKey(txId)) {
-                return false;
-            }
-            boolean succeed = txmap.get(txId).submit();
-            if (succeed) {
-                txmap.remove(txId);
-            }
-            return succeed;
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
-    public boolean cancel(String txId) {
-        LOG.debug("CANCEL : {}", txId);
-        final DataModificationContext rwTx = txmap.remove(txId);
-        return rwTx != null ? rwTx.cancel() : false;
+    public void delete(TxOperationArgument arg) {
+        final YangInstanceIdentifier pathAsIId = path2II(arg.getPath());
+        LOG.debug("DELETE : tx={}, store={}, entity={}, path={}, YII={}", arg.getTxid(),
+                Util.storeFromString(arg.getStore()), arg.getEntity(), arg.getPath(), pathAsIId);
+        final DOMDataTreeWriteTransaction trx = allocateTrx(arg.getTxid()).getValue().newWriteTransaction();
+        trx.delete(Util.storeFromString(arg.getStore()), pathAsIId);
     }
 
     @Override
@@ -225,15 +172,6 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
         final String ret = allocateTrx(null).getKey();
         LOG.debug("TXID : {}", ret);
         return ret;
-    }
-
-    @Override
-    public List<String> error(String txId) {
-        LOG.debug("ERROR : {}", txId);
-        if (txmap.containsKey(txId) && !txmap.get(txId).isSuccess()) {
-            return txmap.get(txId).getErrors().stream().map(RemoteControl::serializeError).collect(Collectors.toList());
-        }
-        return Collections.emptyList();
     }
 
     /**
@@ -360,35 +298,60 @@ public class RemoteControl implements RemoteOmShard, AutoCloseable {
     }
 
     @Override
+    public boolean commit(TxArgument arg) {
+        LOG.debug("COMMIT : {}", arg.getTxid());
+        final Lock lock = trxGuard.writeLock();
+        try {
+            lock.lock();
+            if (!txmap.containsKey(arg.getTxid())) {
+                return false;
+            }
+            boolean succeed = txmap.get(arg.getTxid()).submit();
+            if (succeed) {
+                txmap.remove(arg.getTxid());
+            }
+            return succeed;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
+    public boolean cancel(TxArgument arg) {
+        LOG.debug("CANCEL : {}", arg.getTxid());
+        final DataModificationContext rwTx = txmap.remove(arg.getTxid());
+        return rwTx != null ? rwTx.cancel() : false;
+    }
+
+    @Override
+    public List<String> error(TxArgument arg) {
+        LOG.debug("ERROR : {}", arg.getTxid());
+        if (txmap.containsKey(arg.getTxid()) && !txmap.get(arg.getTxid()).isSuccess()) {
+            return txmap.get(arg.getTxid())
+                    .getErrors()
+                    .stream()
+                    .map(RemoteControl::serializeError)
+                    .collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
+
+    @Override
+    public ListenerKey addListener(AddListenerArgument arg) throws IOException {
+        return dataChangeRegistry.createListener(path2II(arg.getPath()), Util.storeFromString(arg.getStore()),
+                arg.getTransport());
+    }
+
+    @Override
+    public boolean deleteListener(DeleteListenerArgument arg) {
+        return dataChangeRegistry.removeListener(arg.getUri(), arg.getName());
+    }
+
+    @Override
     public void close() {
         scheduledExecutorService.shutdown();
         cleanerFuture.cancel(true);
         txmap.clear();
         dataChangeRegistry.close();
-    }
-
-    @Override
-    public ListenerKey addListener(int store, String entity, JsonElement path) throws IOException {
-        return addListener(store, entity, path, null);
-    }
-
-    @Override
-    public ListenerKey addListener(String store, String entity, JsonElement path) throws IOException {
-        return addListener(Util.store2int(store), entity, path);
-    }
-
-    @Override
-    public ListenerKey addListener(String store, String entity, JsonElement path, String transport) throws IOException {
-        return addListener(Util.store2int(store), entity, path, transport);
-    }
-
-    @Override
-    public ListenerKey addListener(int store, String entity, JsonElement path, String transport) throws IOException {
-        return dataChangeRegistry.createListener(path2II(path), Util.int2store(store), transport);
-    }
-
-    @Override
-    public boolean deleteListener(String uri, String name) {
-        return dataChangeRegistry.removeListener(uri, name);
     }
 }

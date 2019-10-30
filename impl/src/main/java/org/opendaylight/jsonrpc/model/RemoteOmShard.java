@@ -13,179 +13,219 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * DOM Broker operations.
+ * DOM data broker operations.
  *
  * <p>
- * Documented at <a href=
- * "https://wiki.opendaylight.org/view/JSON-RPC2.0::ExtendingTheDataStore">wiki</a>
+ * Documented at <a href= "https://wiki.opendaylight.org/view/JSON-RPC2.0::ExtendingTheDataStore">wiki</a>
  */
 public interface RemoteOmShard extends AutoCloseable {
     /**
      * Read all data at path in the given data store for an entity.
      *
-     * @param store data store that is the subject of this procedure (0 for
-     *            config, 1 for operational)
-     * @param entity name of the managed entity that is the subject of this
-     *            procedure
-     * @param path path specifying the model subtree that is the subject of this
-     *            procedure
+     * @param arg read operation argument
      * @return all data at path in the given data store for an entity
+     * @see #read(String, String, JsonElement)
      */
-    JsonElement read(int store, String entity, JsonElement path);
+    JsonElement read(StoreOperationArgument arg);
 
     /**
      * Read all data at path in the given data store for an entity.
      *
-     * @param store data store that is the subject of this procedure
-     *            ("operational" or "config")
-     * @param entity name of the managed entity that is the subject of this
-     *            procedure
-     * @param path path specifying the model subtree that is the subject of this
-     *            procedure
+     * @param store data store that is the subject of this procedure ("operational" or "config")
+     * @param entity name of the managed entity that is the subject of this procedure
+     * @param path path specifying the model subtree that is the subject of this procedure
      * @return all data at path in the given data store for an entity
      */
-    JsonElement read(String store, String entity, JsonElement path);
+    default JsonElement read(String store, String entity, JsonElement path) {
+        return read(new StoreOperationArgument(store, entity, path));
+    }
 
     /**
-     * Store data at path in the given data store for an entity. This procedure
-     * will overwrite any and all existing data at path, when the transaction to
-     * which it belongs is committed.
+     * Read all data at path in the given data store for an entity.
+     *
+     * @param store data store that is the subject of this procedure (0 for config, 1 for operational)
+     * @param entity name of the managed entity that is the subject of this procedure
+     * @param path path specifying the model subtree that is the subject of this procedure
+     * @return all data at path in the given data store for an entity
+     */
+    default JsonElement read(int store, String entity, JsonElement path) {
+        return read(String.valueOf(store), entity, path);
+    }
+
+    /**
+     * Store data at path in the given data store for an entity. This procedure will overwrite any and all existing
+     * data at path, when the transaction to which it belongs is committed.
+     *
+     * @param arg put operation argument
+     */
+    void put(DataOperationArgument arg);
+
+    /**
+     * Store data at path in the given data store for an entity. This procedure will overwrite any and all existing
+     * data at path, when the transaction to which it belongs is committed.
      *
      * @param txId handle for a transaction
-     * @param store data store that is the subject of this procedure (0 for
-     *            config, 1 for operational)
-     * @param entity name of the managed entity that is the subject of this
-     *            procedure
-     * @param path path specifying the model subtree that is the subject of this
-     *            procedure
+     * @param store data store that is the subject of this procedure ("operational" or "config")
+     * @param entity name of the managed entity that is the subject of this procedure
+     * @param path path specifying the model subtree that is the subject of this procedure
      * @param data data to write
      */
-    void put(String txId, int store, String entity, JsonElement path, JsonElement data);
+    default void put(String txId, String store, String entity, JsonElement path, JsonElement data) {
+        put(new DataOperationArgument(txId, store, entity, path, data));
+    }
 
     /**
-     * Store data at path in the given data store for an entity. This procedure
-     * will overwrite any and all existing data at path, when the transaction to
-     * which it belongs is committed.
+     * Store data at path in the given data store for an entity. This procedure will overwrite any and all existing
+     * data at path, when the transaction to which it belongs is committed.
      *
      * @param txId handle for a transaction
-     * @param store data store that is the subject of this procedure
-     *            ("operational" or "config")
-     * @param entity name of the managed entity that is the subject of this
-     *            procedure
-     * @param path path specifying the model subtree that is the subject of this
-     *            procedure
+     * @param store data store that is the subject of this procedure (0 for config, 1 for operational)
+     * @param entity name of the managed entity that is the subject of this procedure
+     * @param path path specifying the model subtree that is the subject of this procedure
      * @param data data to write
      */
-    void put(String txId, String store, String entity, JsonElement path, JsonElement data);
+    default void put(String txId, int store, String entity, JsonElement path, JsonElement data) {
+        put(txId, String.valueOf(store), entity, path, data);
+    }
 
     /**
-     * Check whether any data is available at path in the given data store for
-     * an entity.
+     * Check whether any data is available at path in the given data store for an entity.
      *
-     * @param store data store that is the subject of this procedure (0 for
-     *            config, 1 for operational)
-     * @param entity name of the managed entity that is the subject of this
-     *            procedure
-     * @param path path specifying the model subtree that is the subject of this
-     *            procedure
+     * @param arg 'exists' operation argument
+     * @return true if data exists, false otherwise
+     * @see #exists(String, String, JsonElement)
+     */
+    boolean exists(StoreOperationArgument arg);
+
+    /**
+     * Check whether any data is available at path in the given data store for an entity.
+     *
+     * @param store data store that is the subject of this procedure ("operational" or "config")
+     * @param entity name of the managed entity that is the subject of this procedure
+     * @param path path specifying the model subtree that is the subject of this procedure
      * @return true if data exists, false otherwise
      */
-    boolean exists(int store, String entity, JsonElement path);
+    default boolean exists(String store, String entity, JsonElement path) {
+        return exists(new StoreOperationArgument(store, entity, path));
+    }
 
     /**
-     * Check whether any data is available at path in the given data store for
-     * an entity.
+     * Check whether any data is available at path in the given data store for an entity.
      *
-     * @param store data store that is the subject of this procedure
-     *            ("operational" or "config")
-     * @param entity name of the managed entity that is the subject of this
-     *            procedure
-     * @param path path specifying the model subtree that is the subject of this
-     *            procedure
+     * @param store data store that is the subject of this procedure (0 for config, 1 for operational)
+     * @param entity name of the managed entity that is the subject of this procedure
+     * @param path path specifying the model subtree that is the subject of this procedure
      * @return true if data exists, false otherwise
      */
-    boolean exists(String store, String entity, JsonElement path);
+    default boolean exists(int store, String entity, JsonElement path) {
+        return exists(String.valueOf(store), entity, path);
+    }
 
     /**
-     * Store data at path in the given data store for an entity. This procedure
-     * merges this new data with any existing data at path, with the new data
-     * overriding, when the transaction to which it belongs is committed.
+     * Store data at path in the given data store for an entity. This procedure merges this new data with any existing
+     * data at path, with the new data overriding, when the transaction to which it belongs is committed.
+     *
+     * @param arg merge operation argument
+     */
+    void merge(DataOperationArgument arg);
+
+    /**
+     * Store data at path in the given data store for an entity. This procedure merges this new data with any existing
+     * data at path, with the new data overriding, when the transaction to which it belongs is committed.
      *
      * @param txId handle for a transaction
-     * @param store data store that is the subject of this procedure (0 for
-     *            config, 1 for operational)
-     * @param entity name of the managed entity that is the subject of this
-     *            procedure
-     * @param path path specifying the model subtree that is the subject of this
-     *            procedure
+     * @param store data store that is the subject of this procedure ("operational" or "config")
+     * @param entity name of the managed entity that is the subject of this procedure
+     * @param path path specifying the model subtree that is the subject of this procedure
      * @param data data to merge
      */
-    void merge(String txId, int store, String entity, JsonElement path, JsonElement data);
+    default void merge(String txId, String store, String entity, JsonElement path, JsonElement data) {
+        merge(new DataOperationArgument(txId, store, entity, path, data));
+    }
 
     /**
-     * Store data at path in the given data store for an entity. This procedure
-     * merges this new data with any existing data at path, with the new data
-     * overriding, when the transaction to which it belongs is committed.
+     * Store data at path in the given data store for an entity. This procedure merges this new data with any existing
+     * data at path, with the new data overriding, when the transaction to which it belongs is committed.
      *
      * @param txId handle for a transaction
-     * @param store data store that is the subject of this procedure
-     *            ("operational" or "config")
-     * @param entity name of the managed entity that is the subject of this
-     *            procedure
-     * @param path path specifying the model subtree that is the subject of this
-     *            procedure
+     * @param store data store that is the subject of this procedure (0 for config, 1 for operational)
+     * @param entity name of the managed entity that is the subject of this procedure
+     * @param path path specifying the model subtree that is the subject of this procedure
      * @param data data to merge
      */
-    void merge(String txId, String store, String entity, JsonElement path, JsonElement data);
+    default void merge(String txId, int store, String entity, JsonElement path, JsonElement data) {
+        merge(txId, String.valueOf(store), entity, path, data);
+    }
 
     /**
-     * Delete all data at path in the given data store for an entity. This
-     * procedure deletes all data at path when the transaction to which it
-     * belongs is committed.
+     * Delete all data at path in the given data store for an entity. This procedure deletes all data at path when the
+     * transaction to which it belongs is committed.
+     *
+     * @param arg delete operation argument
+     */
+    void delete(TxOperationArgument arg);
+
+    /**
+     * Delete all data at path in the given data store for an entity. This procedure deletes all data at path when the
+     * transaction to which it belongs is committed.
      *
      * @param txId handle for a transaction
-     * @param store data store that is the subject of this procedure (0 for
-     *            config, 1 for operational)
-     * @param entity name of the managed entity that is the subject of this
-     *            procedure
-     * @param path path specifying the model subtree that is the subject of this
-     *            procedure
+     * @param store data store that is the subject of this procedure ("config" or "operational")
+     * @param entity name of the managed entity that is the subject of this procedure
+     * @param path path specifying the model subtree that is the subject of this procedure
      */
-    void delete(String txId, int store, String entity, JsonElement path);
+    default void delete(String txId, String store, String entity, JsonElement path) {
+        delete(new TxOperationArgument(txId, store, entity, path));
+    }
 
     /**
-     * Delete all data at path in the given data store for an entity. This
-     * procedure deletes all data at path when the transaction to which it
-     * belongs is committed.
+     * Delete all data at path in the given data store for an entity. This procedure deletes all data at path when the
+     * transaction to which it belongs is committed.
      *
      * @param txId handle for a transaction
-     * @param store data store that is the subject of this procedure
-     *            ("operational" or "config")
-     * @param entity name of the managed entity that is the subject of this
-     *            procedure
-     * @param path path specifying the model subtree that is the subject of this
-     *            procedure
+     * @param store data store that is the subject of this procedure (0 for config, 1 for operational)
+     * @param entity name of the managed entity that is the subject of this procedure
+     * @param path path specifying the model subtree that is the subject of this procedure
      */
-    void delete(String txId, String store, String entity, JsonElement path);
+    default void delete(String txId, int store, String entity, JsonElement path) {
+        delete(txId, String.valueOf(store), entity, path);
+    }
 
     /**
-     * Make permanent all data changes made in the identified transaction, then
-     * end that transaction.
+     * Make permanent all data changes made in the identified transaction, then end that transaction.
+     *
+     * @param arg commit operation argument
+     * @return true if all changes were committed and that the transaction has ended, false otherwise
+     */
+    boolean commit(TxArgument arg);
+
+    /**
+     * Make permanent all data changes made in the identified transaction, then end that transaction.
      *
      * @param txId handle for a transaction
-     * @return true if all changes were committed and that the transaction has
-     *         ended, false otherwise
+     * @return true if all changes were committed and that the transaction has ended, false otherwise
      */
-    boolean commit(String txId);
+    default boolean commit(String txId) {
+        return commit(new TxArgument(txId));
+    }
 
     /**
-     * Discard all data changes made in the identified transaction, then end
-     * that transaction.
+     * Discard all data changes made in the identified transaction, then end that transaction.
+     *
+     * @param arg cancel operation argument
+     * @return true if transaction has ended, false otherwise.
+     */
+    boolean cancel(TxArgument arg);
+
+    /**
+     * Discard all data changes made in the identified transaction, then end that transaction.
      *
      * @param txId handle for a transaction
      * @return true if transaction has ended, false otherwise.
      */
-    boolean cancel(String txId);
+    default boolean cancel(String txId) {
+        return cancel(new TxArgument(txId));
+    }
 
     /**
      * Allocate locally unique transaction handle.
@@ -197,79 +237,107 @@ public interface RemoteOmShard extends AutoCloseable {
     /**
      * List of failures that might happened during commit operation.
      *
+     * @param arg error operation argument
+     * @return list of error messages, never NULL.
+     */
+    List<String> error(TxArgument arg);
+
+    /**
+     * List of failures that might happened during commit operation.
+     *
      * @param txId handle for transaction
      * @return list of error messages, never NULL.
      */
-    List<String> error(String txId);
+    default List<String> error(String txId) {
+        return error(new TxArgument(txId));
+    }
 
     /**
      * Add a data change listener for a path.
      *
-     * @param store data store that is the subject of this procedure (0 for
-     *            config, 1 for operational)
-     * @param entity name of the managed entity that is the subject of this
-     *            procedure
-     * @param path data tree path at which to add listener for data changes
+     * @param arg add-listener operation argument
      * @return instance of {@link ListenerKey}.
      * @throws IOException when publisher socket can't be created
      */
-    ListenerKey addListener(int store, String entity, JsonElement path) throws IOException;
+    ListenerKey addListener(AddListenerArgument arg) throws IOException;
 
     /**
      * Add a data change listener for a path.
      *
-     * @param store data store that is the subject of this procedure (0 for
-     *            config, 1 for operational)
-     * @param entity name of the managed entity that is the subject of this
-     *            procedure
+     * @param store data store that is the subject of this procedure ("operational" or "config")
+     * @param entity name of the managed entity that is the subject of this procedure
      * @param path data tree path at which to add listener for data changes
      * @param transport (protocol) to use to communicate changes
      * @return instance of {@link ListenerKey}.
      * @throws IOException when publisher socket can't be created
      */
-    ListenerKey addListener(int store, String entity, JsonElement path, String transport) throws IOException;
+    default ListenerKey addListener(String store, String entity, JsonElement path, String transport)
+            throws IOException {
+        return addListener(new AddListenerArgument(store, entity, path, transport));
+    }
 
     /**
      * Add a data change listener for a path.
      *
-     * @param store data store that is the subject of this procedure
-     *            ("operational" or "config")
-     * @param entity name of the managed entity that is the subject of this
-     *            procedure
+     * @param store data store that is the subject of this procedure ("operational" or "config")
+     * @param entity name of the managed entity that is the subject of this procedure
      * @param path data tree path at which to add listener for data changes
      * @return instance of {@link ListenerKey}.
      * @throws IOException when publisher socket can't be created
      */
-    ListenerKey addListener(String store, String entity, JsonElement path) throws IOException;
+    default ListenerKey addListener(String store, String entity, JsonElement path) throws IOException {
+        return addListener(new AddListenerArgument(store, entity, path, null));
+    }
 
     /**
      * Add a data change listener for a path.
      *
-     * @param store data store that is the subject of this procedure
-     *            ("operational" or "config")
-     * @param entity name of the managed entity that is the subject of this
-     *            procedure
+     * @param store data store that is the subject of this procedure (0 for config, 1 for operational)
+     * @param entity name of the managed entity that is the subject of this procedure
      * @param path data tree path at which to add listener for data changes
      * @param transport (protocol) to use to communicate changes
      * @return instance of {@link ListenerKey}.
      * @throws IOException when publisher socket can't be created
      */
-    ListenerKey addListener(String store, String entity, JsonElement path, String transport) throws IOException;
+    default ListenerKey addListener(int store, String entity, JsonElement path, String transport) throws IOException {
+        return addListener(String.valueOf(store), entity, path, transport);
+    }
+
+    /**
+     * Add a data change listener for a path.
+     *
+     * @param store data store that is the subject of this procedure (0 for config, 1 for operational)
+     * @param entity name of the managed entity that is the subject of this procedure
+     * @param path data tree path at which to add listener for data changes
+     * @return instance of {@link ListenerKey}.
+     * @throws IOException when publisher socket can't be created
+     */
+    default ListenerKey addListener(int store, String entity, JsonElement path) throws IOException {
+        return addListener(String.valueOf(store), entity, path, null);
+    }
 
     /**
      * Delete data change listener.
      *
-     * @param uri URI obtained from
-     *            {@link #addListener(int, String, JsonElement)} call
-     * @param dcName name obtained from
-     *            {@link #addListener(int, String, JsonElement)} call
+     * @param arg delete-listener operation argument
      * @return true if removal was successful, false otherwise
      */
-    boolean deleteListener(String uri, String dcName);
+    boolean deleteListener(DeleteListenerArgument arg);
 
     /**
-     * Overridden to deal with throw declaration which is unfriendly with java 8
-     * streams. This method is called when remote shard is no longer needed.
+     * Delete data change listener.
+     *
+     * @param uri URI obtained from {@link #addListener(AddListenerArgument)} call
+     * @param dcName name obtained from {@link #addListener(AddListenerArgument)} call
+     * @return true if removal was successful, false otherwise
+     */
+    default boolean deleteListener(String uri, String dcName) {
+        return deleteListener(new DeleteListenerArgument(uri, dcName));
+    }
+
+    /**
+     * Overridden to deal with throw declaration which is unfriendly with java 8 streams. This method is called when
+     * remote shard is no longer needed.
      */
     @Override
     void close();

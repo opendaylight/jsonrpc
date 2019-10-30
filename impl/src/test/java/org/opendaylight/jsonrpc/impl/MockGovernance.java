@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.opendaylight.jsonrpc.model.ModuleInfo;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
+import org.opendaylight.jsonrpc.model.StoreOperationArgument;
 
 /**
  * Mock implementation of {@link RemoteGovernance}.
@@ -34,20 +35,14 @@ public class MockGovernance implements RemoteGovernance {
     }
 
     @Override
-    public String governance(int store, String entity, Object path) {
+    public String governance(StoreOperationArgument arg) {
         // NOOP
         return null;
     }
 
     @Override
-    public String governance(String store, String entity, Object path) {
-        // NOOP
-        return null;
-    }
-
-    @Override
-    public String source(String name) {
-        try (InputStream is = Resources.getResource(getClass(), "/" + name + ".yang").openStream()) {
+    public String source(ModuleInfo arg) {
+        try (InputStream is = Resources.getResource(getClass(), "/" + arg.getModule() + ".yang").openStream()) {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             ByteStreams.copy(is, os);
             return new String(os.toByteArray(), StandardCharsets.UTF_8);
@@ -57,12 +52,7 @@ public class MockGovernance implements RemoteGovernance {
     }
 
     @Override
-    public String source(String name, String revision) {
-        return source(name);
-    }
-
-    @Override
-    public List<ModuleInfo> depends(String moduleName, String revision) {
-        return Lists.newArrayList(new ModuleInfo(moduleName, revision));
+    public List<ModuleInfo> depends(ModuleInfo arg) {
+        return Lists.newArrayList(new ModuleInfo(arg.getModule(), arg.getRevision()));
     }
 }

@@ -25,6 +25,8 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
+import org.opendaylight.jsonrpc.model.AddListenerArgument;
+import org.opendaylight.jsonrpc.model.DeleteListenerArgument;
 import org.opendaylight.jsonrpc.model.JsonRpcTransactionFacade;
 import org.opendaylight.jsonrpc.model.ListenerKey;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
@@ -123,7 +125,8 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
         final DOMDataTreeChangeListenerAdapter adapter;
         final ListenerKey listenerKey;
         try {
-            listenerKey = shard.addListener(Util.store2int(treeId.getDatastoreType()), "", busPath);
+            listenerKey = shard.addListener(new AddListenerArgument(
+                    String.valueOf(Util.store2int(treeId.getDatastoreType())), "", busPath, null));
             adapter = new DOMDataTreeChangeListenerAdapter(listener, transportFactory, listenerKey.getUri(),
                     jsonConverter, schemaContext);
         } catch (URISyntaxException e) {
@@ -136,7 +139,7 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
         return new AbstractListenerRegistration<L>(listener) {
             @Override
             protected void removeRegistration() {
-                shard.deleteListener(listenerKey.getUri(), listenerKey.getName());
+                shard.deleteListener(new DeleteListenerArgument(listenerKey.getUri(), listenerKey.getName()));
                 adapter.close();
             }
         };
