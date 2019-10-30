@@ -246,4 +246,12 @@ public final class Util {
     private static Optional<Module> findModule(SchemaContext schemaContext, String name) {
         return schemaContext.getModules().stream().filter(m -> m.getName().equals(name)).findFirst();
     }
+
+    public static LogicalDatastoreType storeFromString(String str) {
+        try {
+            return int2store(Integer.parseInt(str));
+        } catch (NumberFormatException e) {
+            return int2store(STORE_STR_MAP.get(str));
+        }
+    }
 }
