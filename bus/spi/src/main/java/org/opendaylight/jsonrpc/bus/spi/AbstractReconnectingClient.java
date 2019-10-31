@@ -55,7 +55,7 @@ public abstract class AbstractReconnectingClient extends AbstractSession impleme
         super(uri, defaultPort, sessionType);
         reconnectStrategy = ReconnectStrategies.fixedStartegy(1000);
         this.channelInitializer = Objects.requireNonNull(channelInitializer);
-        this.clientBootstrap = Objects.requireNonNull(clientBootstrap);
+        this.clientBootstrap = Objects.requireNonNull(clientBootstrap).clone().handler(channelInitializer);
     }
 
     /*
