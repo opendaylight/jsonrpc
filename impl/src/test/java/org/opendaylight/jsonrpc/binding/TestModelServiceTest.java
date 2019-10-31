@@ -42,6 +42,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.numb
 import org.opendaylight.yangtools.yang.common.RpcError;
 import org.opendaylight.yangtools.yang.common.RpcError.ErrorSeverity;
 import org.opendaylight.yangtools.yang.common.RpcResult;
+import org.opendaylight.yangtools.yang.common.Uint16;
 
 /**
  * Test various methods implemented by {@link TestModelServiceImpl}.
@@ -79,8 +80,8 @@ public class TestModelServiceTest {
     @Test
     public void testFactorial() throws Exception {
         final Future<RpcResult<FactorialOutput>> result = proxy.getProxy()
-                .factorial(new FactorialInputBuilder().setInNumber(6).build());
-        assertEquals(720L, (long) result.get().getResult().getOutNumber());
+                .factorial(new FactorialInputBuilder().setInNumber(Uint16.valueOf(6)).build());
+        assertEquals(720L, (long) result.get().getResult().getOutNumber().longValue());
     }
 
     @Test
@@ -126,7 +127,7 @@ public class TestModelServiceTest {
                 .removeCoffeePot(new RemoveCoffeePotInputBuilder().build())
                 .get()
                 .getResult();
-        assertEquals((long) result.getCupsBrewed(), (long) 6);
+        assertEquals(result.getCupsBrewed().longValue(), (long) 6);
         assertEquals(result.getDrink(), Coffee.class);
     }
 

@@ -61,6 +61,7 @@ public abstract class AbstractReconnectingClient extends AbstractSession impleme
     /*
      * If we are not yet done, then schedule reconnect
      */
+    @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD", justification = "False positive, this method is called")
     private void scheduleReconnect() {
         if (ConnectionState.DONE != state) {
             changeConnectionState(ConnectionState.INITIAL);

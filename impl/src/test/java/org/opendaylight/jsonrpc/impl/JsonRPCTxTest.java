@@ -128,7 +128,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
     public void testReadEmpty() throws InterruptedException, ExecutionException {
         doReturn(null).when(om).read(eq(Util.store2str(Util.store2int(LogicalDatastoreType.OPERATIONAL))),
                 eq(DEVICE_NAME), any(JsonElement.class));
-        assertFalse(trx.read(LogicalDatastoreType.OPERATIONAL, YangInstanceIdentifier.EMPTY).get().isPresent());
+        assertFalse(trx.read(LogicalDatastoreType.OPERATIONAL, YangInstanceIdentifier.empty()).get().isPresent());
     }
 
     @Test

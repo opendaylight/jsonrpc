@@ -12,6 +12,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.util.Iterator;
 import java.util.Map.Entry;
 import org.opendaylight.yangtools.yang.common.QName;
@@ -64,6 +67,8 @@ public final class YangInstanceIdentifierDeserializer {
                 .map(module -> QName.create(module.getQNameModule(), localName)).orElse(null);
         }
 
+        @SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD",
+                justification = "False positive, this method is called")
         private YangInstanceIdentifier parse(JsonElement path) {
             Preconditions.checkArgument(path instanceof JsonObject,
                     "Root element must be instance of JsonObject, actual type is %s", path.getClass().getSimpleName());

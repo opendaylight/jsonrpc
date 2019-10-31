@@ -118,7 +118,7 @@ public class JsonConverterTest extends AbstractJsonRpcTest {
 
     @Test
     public void testConvertEmptyPath() throws IOException {
-        JSONRPCArg arg = conv.toBus(YangInstanceIdentifier.EMPTY,
+        JSONRPCArg arg = conv.toBus(YangInstanceIdentifier.empty(),
                 Builders.containerBuilder().withNodeIdentifier(new NodeIdentifier(NetworkTopology.QNAME)).build());
         LOG.info("Path : '{}' Data : '{}'", arg.getPath(), arg.getData());
         assertNull(arg.getData());

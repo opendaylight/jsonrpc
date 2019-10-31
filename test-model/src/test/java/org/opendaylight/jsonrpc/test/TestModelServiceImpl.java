@@ -7,7 +7,9 @@
  */
 package org.opendaylight.jsonrpc.test;
 
-import com.google.common.util.concurrent.Futures;
+import static com.google.common.util.concurrent.Futures.immediateFuture;
+import static org.opendaylight.yangtools.yang.common.RpcResultBuilder.success;
+
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.ArrayList;
@@ -41,6 +43,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.numb
 import org.opendaylight.yangtools.yang.common.RpcError.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
+import org.opendaylight.yangtools.yang.common.Uint32;
 
 public class TestModelServiceImpl implements TestModelService {
 
@@ -51,18 +54,16 @@ public class TestModelServiceImpl implements TestModelService {
         for (Numbers i : input.getNumbers()) {
             ret.add(new NumbersBuilder().setNum(multiplier * i.getNum()).build());
         }
-        return Futures.immediateFuture(RpcResultBuilder
-                .<MultiplyListOutput>success(new MultiplyListOutputBuilder().setNumbers(ret).build()).build());
+        return immediateFuture(success(new MultiplyListOutputBuilder().setNumbers(ret).build()).build());
     }
 
     @Override
     public ListenableFuture<RpcResult<FactorialOutput>> factorial(FactorialInput input) {
         int ret = 2;
-        for (int i = 3; i <= input.getInNumber(); i++) {
+        for (int i = 3; i <= input.getInNumber().intValue(); i++) {
             ret *= i;
         }
-        return Futures.immediateFuture(RpcResultBuilder
-                .<FactorialOutput>success(new FactorialOutputBuilder().setOutNumber((long) ret).build()).build());
+        return immediateFuture(success(new FactorialOutputBuilder().setOutNumber(Uint32.valueOf(ret)).build()).build());
     }
 
     @Override
@@ -85,16 +86,14 @@ public class TestModelServiceImpl implements TestModelService {
 
     @Override
     public ListenableFuture<RpcResult<RemoveCoffeePotOutput>> removeCoffeePot(RemoveCoffeePotInput input) {
-        return Futures.immediateFuture(RpcResultBuilder
-                .<RemoveCoffeePotOutput>success(
-                        new RemoveCoffeePotOutputBuilder().setCupsBrewed((long) 6).setDrink(Coffee.class).build())
-                .build());
+        return immediateFuture(success(
+                new RemoveCoffeePotOutputBuilder().setCupsBrewed(Uint32.valueOf(6)).setDrink(Coffee.class).build())
+                        .build());
     }
 
     @Override
     public ListenableFuture<RpcResult<ErrorMethodOutput>> errorMethod(ErrorMethodInput input) {
-        return Futures.immediateFuture(RpcResultBuilder.<ErrorMethodOutput>failed()
-                .withError(ErrorType.RPC, "Ha!").build());
+        return immediateFuture(RpcResultBuilder.<ErrorMethodOutput>failed().withError(ErrorType.RPC, "Ha!").build());
     }
 
     @Override
@@ -105,6 +104,6 @@ public class TestModelServiceImpl implements TestModelService {
 
     @Override
     public ListenableFuture<RpcResult<SimpleMethodOutput>> simpleMethod(SimpleMethodInput input) {
-        return  Futures.immediateFuture(RpcResultBuilder.<SimpleMethodOutput>success().build());
+        return immediateFuture(RpcResultBuilder.<SimpleMethodOutput>success().build());
     }
 }

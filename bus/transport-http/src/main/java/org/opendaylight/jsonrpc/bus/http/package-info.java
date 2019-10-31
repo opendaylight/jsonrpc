@@ -10,7 +10,8 @@
  * <p>
  * HTTP transports session types support matrix.
  * </p>
- * <table summary="Support matrix" border="1">
+ * <table border="1">
+ * <caption>Support matrix</caption>
  * <tr>
  * <td>Transport</td>
  * <td>Requester</td>

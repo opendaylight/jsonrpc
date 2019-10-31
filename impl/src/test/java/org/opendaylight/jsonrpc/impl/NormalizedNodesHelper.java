@@ -7,14 +7,10 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
-import javassist.ClassPool;
 import org.opendaylight.mdsal.binding.dom.adapter.BindingToNormalizedNodeCodec;
-import org.opendaylight.mdsal.binding.dom.codec.gen.impl.DataObjectSerializerGenerator;
-import org.opendaylight.mdsal.binding.dom.codec.gen.impl.StreamWriterGenerator;
 import org.opendaylight.mdsal.binding.dom.codec.impl.BindingNormalizedNodeCodecRegistry;
 import org.opendaylight.mdsal.binding.generator.impl.GeneratedClassLoadingStrategy;
 import org.opendaylight.mdsal.binding.generator.util.BindingRuntimeContext;
-import org.opendaylight.mdsal.binding.generator.util.JavassistUtils;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
 /**
@@ -28,9 +24,7 @@ public final class NormalizedNodesHelper {
     private final BindingToNormalizedNodeCodec bnnc;
 
     private NormalizedNodesHelper(SchemaContext schemaContext) {
-        DataObjectSerializerGenerator generator = StreamWriterGenerator
-                .create(JavassistUtils.forClassPool(ClassPool.getDefault()));
-        BindingNormalizedNodeCodecRegistry codecRegistry = new BindingNormalizedNodeCodecRegistry(generator);
+        BindingNormalizedNodeCodecRegistry codecRegistry = new BindingNormalizedNodeCodecRegistry();
         BindingRuntimeContext context = BindingRuntimeContext
                 .create(GeneratedClassLoadingStrategy.getTCCLClassLoadingStrategy(), schemaContext);
         codecRegistry.onBindingRuntimeContextUpdated(context);

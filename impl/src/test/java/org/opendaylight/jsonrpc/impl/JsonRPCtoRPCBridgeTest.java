@@ -56,6 +56,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.numb
 import org.opendaylight.yangtools.yang.binding.DataContainer;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.Revision;
+import org.opendaylight.yangtools.yang.common.Uint16;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStreamWriter;
@@ -165,7 +166,8 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         final SchemaPath path = rpcPath(mod, "factorial");
 
         // BA => BI
-        final ContainerNode rpcDef = prepareRpcInput(new FactorialInputBuilder().setInNumber(8).build());
+        final ContainerNode rpcDef = prepareRpcInput(new FactorialInputBuilder().setInNumber(Uint16.valueOf(8))
+                .build());
 
         final DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
         logResult(result);
@@ -173,7 +175,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         // BI => BA
         final FactorialOutput out = extractRpcOutput(result, FactorialOutput.class, "factorial", mod);
         LOG.info("DataObject : {}", out);
-        assertEquals(40320L, (long) out.getOutNumber());
+        assertEquals(40320L, out.getOutNumber().longValue());
     }
 
     /**
