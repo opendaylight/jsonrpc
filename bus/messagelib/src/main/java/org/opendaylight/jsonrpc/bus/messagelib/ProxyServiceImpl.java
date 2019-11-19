@@ -14,8 +14,8 @@ import com.google.common.collect.MapMaker;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.JsonElement;
 
-import java.lang.invoke.MethodHandles.Lookup;
-import java.lang.reflect.Constructor;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Objects;
@@ -149,11 +149,10 @@ public class ProxyServiceImpl implements ProxyService {
          */
         if (method.isDefault()) {
             try {
-                //TODO : in java 9+ switch to Lookup#findSpecial()
-                final Constructor<Lookup> constructor = Lookup.class.getDeclaredConstructor(Class.class);
-                constructor.setAccessible(true);
-                return constructor.newInstance(method.getDeclaringClass())
-                        .unreflectSpecial(method, method.getDeclaringClass())
+                return MethodHandles.lookup()
+                        .findSpecial(method.getDeclaringClass(), method.getName(),
+                                MethodType.methodType(method.getReturnType(), method.getParameterTypes()),
+                                method.getDeclaringClass())
                         .bindTo(obj)
                         .invokeWithArguments(params);
             } catch (Throwable e) {

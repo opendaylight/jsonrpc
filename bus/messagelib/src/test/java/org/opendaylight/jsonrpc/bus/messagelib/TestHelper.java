@@ -7,8 +7,11 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import com.google.common.util.concurrent.Uninterruptibles;
+
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.TimeUnit;
 
 public final class TestHelper {
     private TestHelper() {
@@ -37,5 +40,15 @@ public final class TestHelper {
 
     private static String getUri(String transport, String ip, int port) {
         return String.format("%s://%s:%d", transport, ip, port);
+    }
+
+    public static void awaitForProxy(TransportFactory factory, AutoCloseable proxy, long milliseconds) {
+        final long future = System.currentTimeMillis() + milliseconds;
+        while (System.currentTimeMillis() < future) {
+            if (factory.isClientConnected(proxy)) {
+                return;
+            }
+            Uninterruptibles.sleepUninterruptibly(100L, TimeUnit.MILLISECONDS);
+        }
     }
 }

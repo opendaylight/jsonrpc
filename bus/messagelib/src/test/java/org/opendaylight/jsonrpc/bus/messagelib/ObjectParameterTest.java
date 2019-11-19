@@ -13,7 +13,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 import java.net.URISyntaxException;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
@@ -57,7 +56,7 @@ public class ObjectParameterTest {
         responder = tf.endpointBuilder().responder().create(TestHelper.getBindUri("zmq", port), handler);
         requester = tf.endpointBuilder().requester().create(TestHelper.getConnectUri("zmq", port),
                 NoopReplyMessageHandler.INSTANCE);
-        TimeUnit.MILLISECONDS.sleep(100);
+        TestHelper.awaitForProxy(tf, requester, 30_000);
     }
 
     @After
