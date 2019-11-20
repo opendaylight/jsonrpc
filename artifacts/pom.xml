@@ -57,7 +57,28 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>jsonrpc-features</artifactId>
+                <artifactId>features-jsonrpc</artifactId>
+                <version>${project.version}</version>
+                <classifier>features</classifier>
+                <type>xml</type>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>odl-jsonrpc-all</artifactId>
+                <version>${project.version}</version>
+                <classifier>features</classifier>
+                <type>xml</type>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>odl-jsonrpc-provider</artifactId>
+                <version>${project.version}</version>
+                <classifier>features</classifier>
+                <type>xml</type>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
+                <artifactId>odl-jsonrpc-bus</artifactId>
                 <version>${project.version}</version>
                 <classifier>features</classifier>
                 <type>xml</type>
