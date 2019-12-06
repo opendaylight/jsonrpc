@@ -12,7 +12,9 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Joiner.MapJoiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
@@ -25,6 +27,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseRequestMessage;
@@ -41,6 +44,9 @@ import org.slf4j.LoggerFactory;
 public final class Util {
     private static final Logger LOG = LoggerFactory.getLogger(Util.class);
     private static final MapJoiner QUERY_JOINER = Joiner.on('&').withKeyValueSeparator("=");
+    private static final Set<Class<?>> PRIMITIVE_TYPES_AND_STRING = ImmutableSet.<Class<?>>of(int.class, long.class,
+            short.class, float.class, double.class, byte.class, boolean.class, char.class, Integer.class, Long.class,
+            Short.class, Float.class, Double.class, Byte.class, Boolean.class, Character.class, String.class);
 
     private Util() {
         // noop
@@ -215,5 +221,38 @@ public final class Util {
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(e);
         }
+    }
+
+    private static boolean canRepresentJsonPrimitive(Class<?> clazz) {
+        return PRIMITIVE_TYPES_AND_STRING.contains(clazz);
+    }
+
+    /**
+     * Comparator that sorts {@link Method} according to payload type. It considers parameter type and {@link Method}
+     * argument type. It is assumed that comparison is done on filtered method already (where method name and number of
+     * arguments matched parameter count in payload).
+     *
+     * @param params message payload parameter
+     * @return {@link Comparator}
+     */
+    public static Comparator<Method> payloadAwareSorter(JsonElement params) {
+        return (left, right) -> {
+            if (params == null || params.isJsonNull() || left.getParameterCount() == 0) {
+                return 0;
+            }
+            if (params.isJsonPrimitive() && canRepresentJsonPrimitive(right.getParameterTypes()[0])) {
+                return 1;
+            }
+            if (params.isJsonPrimitive() && canRepresentJsonPrimitive(left.getParameterTypes()[0])) {
+                return -1;
+            }
+            if (params.isJsonObject() && !canRepresentJsonPrimitive(right.getParameterTypes()[0])) {
+                return 1;
+            }
+            if (params.isJsonObject() && !canRepresentJsonPrimitive(left.getParameterTypes()[0])) {
+                return -1;
+            }
+            return 0;
+        };
     }
 }
