@@ -273,31 +273,17 @@ public class JsonConverter {
      * @return data converted as a JsonObject
      */
     private JsonObject doConvert(SchemaPath schemaPath, NormalizedNode<?, ?> data) {
-        final StringWriter writer = new StringWriter();
-        final JsonWriter jsonWriter = JsonWriterFactory.createJsonWriter(writer);
-        final JSONCodecFactory codecFactory = CODEC_SUPPLIER.getShared(schemaContext);
-        final NormalizedNodeStreamWriter jsonStream;
-        if (data instanceof MapEntryNode) {
-            jsonStream = JSONNormalizedNodeStreamWriter.createNestedWriter(
-                    codecFactory,
-                    schemaPath,
-                    null,
-                    jsonWriter
-                );
-        } else {
-            jsonStream = JSONNormalizedNodeStreamWriter.createExclusiveWriter(
-                    codecFactory,
-                   schemaPath,
-                    null,
-                    jsonWriter
-                );
-        }
-        final NormalizedNodeWriter nodeWriter = NormalizedNodeWriter.forStreamWriter(jsonStream);
-        try {
-            nodeWriter.write(data);
-            nodeWriter.flush();
-            String jsonValue = writer.toString();
-            return PARSER.parse(jsonValue).getAsJsonObject();
+        try (StringWriter writer = new StringWriter();
+                JsonWriter jsonWriter = JsonWriterFactory.createJsonWriter(writer)) {
+            final JSONCodecFactory codecFactory = CODEC_SUPPLIER.getShared(schemaContext);
+            final NormalizedNodeStreamWriter jsonStream = (data instanceof MapEntryNode)
+                    ? JSONNormalizedNodeStreamWriter.createNestedWriter(codecFactory, schemaPath, null, jsonWriter)
+                    : JSONNormalizedNodeStreamWriter.createExclusiveWriter(codecFactory, schemaPath, null, jsonWriter);
+            try (NormalizedNodeWriter nodeWriter = NormalizedNodeWriter.forStreamWriter(jsonStream)) {
+                nodeWriter.write(data);
+                nodeWriter.flush();
+            }
+            return PARSER.parse(writer.toString()).getAsJsonObject();
         } catch (IOException e) {
             LOG.error(JSON_IO_ERROR, e);
             return null;
