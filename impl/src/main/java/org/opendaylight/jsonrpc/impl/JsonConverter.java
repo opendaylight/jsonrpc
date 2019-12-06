@@ -45,7 +45,6 @@ import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgum
 /* rpc special casing */
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.DataContainerChild;
-import org.opendaylight.yangtools.yang.data.api.schema.LeafNode;
 import org.opendaylight.yangtools.yang.data.api.schema.MapEntryNode;
 import org.opendaylight.yangtools.yang.data.api.schema.MapNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
@@ -273,37 +272,17 @@ public class JsonConverter {
      * @return data converted as a JsonObject
      */
     private JsonObject doConvert(SchemaPath schemaPath, NormalizedNode<?, ?> data) {
-        final StringWriter writer = new StringWriter();
-        final JsonWriter jsonWriter = JsonWriterFactory.createJsonWriter(writer);
-        final JSONCodecFactory codecFactory = CODEC_SUPPLIER.getShared(schemaContext);
-        final NormalizedNodeStreamWriter jsonStream;
-        if (data instanceof MapEntryNode) {
-            jsonStream = JSONNormalizedNodeStreamWriter.createNestedWriter(
-                    codecFactory,
-                    schemaPath,
-                    null,
-                    jsonWriter
-                );
-        } else {
-            jsonStream = JSONNormalizedNodeStreamWriter.createExclusiveWriter(
-                    codecFactory,
-                   schemaPath,
-                    null,
-                    jsonWriter
-                );
-        }
-        final NormalizedNodeWriter nodeWriter = NormalizedNodeWriter.forStreamWriter(jsonStream);
-        try {
-            nodeWriter.write(data);
-            nodeWriter.flush();
-            String jsonValue = writer.toString();
-            if (!jsonValue.startsWith("{")) {
-                jsonValue = "{" + jsonValue + "}";
+        try (StringWriter writer = new StringWriter();
+                JsonWriter jsonWriter = JsonWriterFactory.createJsonWriter(writer)) {
+            final JSONCodecFactory codecFactory = CODEC_SUPPLIER.getShared(schemaContext);
+            final NormalizedNodeStreamWriter jsonStream = (data instanceof MapEntryNode)
+                    ? JSONNormalizedNodeStreamWriter.createNestedWriter(codecFactory, schemaPath, null, jsonWriter)
+                    : JSONNormalizedNodeStreamWriter.createExclusiveWriter(codecFactory, schemaPath, null, jsonWriter);
+            try (NormalizedNodeWriter nodeWriter = NormalizedNodeWriter.forStreamWriter(jsonStream)) {
+                nodeWriter.write(data);
+                nodeWriter.flush();
             }
-            if (data instanceof LeafNode) {
-                jsonValue += '}';
-            }
-            return PARSER.parse(jsonValue).getAsJsonObject();
+            return PARSER.parse(writer.toString()).getAsJsonObject();
         } catch (IOException e) {
             LOG.error(JSON_IO_ERROR, e);
             return null;
