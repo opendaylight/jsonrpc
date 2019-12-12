@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
@@ -49,6 +50,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcE
 import org.opendaylight.yangtools.concepts.ObjectRegistration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
+import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,8 +145,10 @@ public class MappedPeerContext implements AutoCloseable {
 
         mountpointRegistration = mountBuilder.register();
 
-        // Publish operational state
-        final ActualEndpoints endpoint = new ActualEndpointsBuilder(newPeer).build();
+        // Publish operational state, list of modules contains all modules from effective schema
+        final ActualEndpoints endpoint = new ActualEndpointsBuilder(newPeer).setModules(
+                schema.getModules().stream().map(Module::getName).map(YangIdentifier::new).collect(Collectors.toList()))
+                .build();
         final InstanceIdentifier<ActualEndpoints> peerOpId = InstanceIdentifier.builder(Config.class)
                 .child(ActualEndpoints.class, new ActualEndpointsKey(newPeer.getName())).build();
         final WriteTransaction wrTrx = dataBroker.newWriteOnlyTransaction();
