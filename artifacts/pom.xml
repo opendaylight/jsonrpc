@@ -19,32 +19,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <version>1.8.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>JSON-RPC :: Artifacts</name>
-    <properties>
-        <json-path.version>2.2.0</json-path.version>
-    </properties>
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>org.opendaylight.mdsal</groupId>
-                <artifactId>mdsal-artifacts</artifactId>
-                <version>5.0.6</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight.netconf</groupId>
-                <artifactId>netconf-artifacts</artifactId>
-                <version>1.8.0-SNAPSHOT</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.opendaylight.aaa</groupId>
-                <artifactId>aaa-artifacts</artifactId>
-                <version>0.11.0-SNAPSHOT</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
                 <artifactId>jsonrpc-api</artifactId>
@@ -168,19 +144,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <groupId>${project.groupId}.security</groupId>
                 <artifactId>security-service</artifactId>
                 <version>${project.version}</version>
-            </dependency>
-            <!-- external -->
-            <dependency>
-                <groupId>com.jayway.jsonpath</groupId>
-                <artifactId>json-path</artifactId>
-                <version>${json-path.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.jayway.jsonpath</groupId>
-                <artifactId>json-path-assert</artifactId>
-                <version>${json-path.version}</version>
-                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -27,7 +27,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <dependencies>
             <dependency>
                 <groupId>org.opendaylight.jsonrpc</groupId>
-                <artifactId>jsonrpc-artifacts</artifactId>
+                <artifactId>jsonrpc-parent</artifactId>
                 <version>${project.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
