@@ -58,6 +58,7 @@ abstract class AbstractProxyHandlerAdapter {
         return methods.stream()
                 .filter(new StrictMatchingPredicate(msg))
                 .sorted(Util.nameAndArgsSorter())
+                .sorted(Util.payloadAwareSorter(msg.getParams()))
                 .collect(Collectors.toList());
     }
 
