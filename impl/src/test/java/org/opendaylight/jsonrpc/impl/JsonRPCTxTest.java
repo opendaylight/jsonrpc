@@ -32,6 +32,7 @@ import com.google.gson.JsonObject;
 import java.net.URISyntaxException;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -168,8 +169,10 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
     public void testCommitFailed() throws InterruptedException, ExecutionException {
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest
                 .createContainerNodeData(getCodec());
+        final String txid = UUID.randomUUID().toString();
+        doReturn(txid).when(om).txid();
         doReturn(false).when(om).commit((String)eq(null));
-        doReturn(Lists.newArrayList("err1", "err2")).when(om).error((String)eq(null));
+        doReturn(Lists.newArrayList("err1", "err2")).when(om).error(anyString());
         trx.put(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
         FluentFuture<? extends CommitInfo> result = trx.commit();
         result.addCallback(new FutureCallback<CommitInfo>() {
@@ -186,8 +189,8 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
                 assertEquals(2, tcfe.getErrorList().size());
             }
         }, MoreExecutors.directExecutor());
-        verify(om, times(1)).commit((String)eq(null));
-        verify(om, times(1)).error((String)eq(null));
+        verify(om, times(1)).commit(txid);
+        verify(om, times(1)).error(txid);
     }
 
     @Test
@@ -205,6 +208,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
     @Test(expected = TransactionCommitFailedException.class)
     public void testSubmitFailure()
             throws InterruptedException, TimeoutException, ExecutionException, TransactionCommitFailedException {
+        doReturn(UUID.randomUUID().toString()).when(om).txid();
         doReturn(false).when(om).commit(anyString());
         trx.delete(LogicalDatastoreType.CONFIGURATION, YangInstanceIdentifier.of(NetworkTopology.QNAME));
         try {

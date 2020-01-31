@@ -7,6 +7,7 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -51,11 +52,11 @@ public class TransactionManager implements AutoCloseable {
     }
 
     public boolean commit(String id) {
-        return removeAndThen(id, DataModificationContext::submit);
+        return removeUponSuccess(id, DataModificationContext::submit);
     }
 
     public boolean cancel(String id) {
-        return removeAndThen(id, DataModificationContext::cancel);
+        return removeUponSuccess(id, DataModificationContext::cancel);
     }
 
     public List<String> error(String id) {
@@ -75,21 +76,16 @@ public class TransactionManager implements AutoCloseable {
                 && entry.getValue().getCompletionTimestamp() + FAIL_TRX_TTL > System.currentTimeMillis();
     }
 
-    private boolean removeAndThen(String id, Predicate<DataModificationContext> mapper) {
-        return Optional.ofNullable(txLoader.asMap().remove(id)).map(mapper::test).orElse(false);
+    private boolean removeUponSuccess(String id, Predicate<DataModificationContext> mapper) {
+        if (Optional.ofNullable(txLoader.asMap().get(id)).map(mapper::test).orElse(false)) {
+            txLoader.asMap().remove(id);
+            return true;
+        }
+        return false;
     }
 
     private static String serializeError(final Throwable error) {
-        final StringBuilder sb = new StringBuilder();
-        Throwable cause = error;
-        while (cause != null) {
-            sb.append(cause.getMessage());
-            cause = cause.getCause();
-            if (cause != null) {
-                sb.append(" : ");
-            }
-        }
-        return sb.toString();
+        return Throwables.getRootCause(error).getMessage();
     }
 
     @Override

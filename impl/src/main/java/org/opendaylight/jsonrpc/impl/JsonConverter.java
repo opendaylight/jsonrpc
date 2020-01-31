@@ -37,6 +37,7 @@ import org.opendaylight.mdsal.dom.api.DOMNotification;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.QNameModule;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
+import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.AugmentationIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.NodeIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgument;
 /* rpc special casing */
@@ -59,7 +60,9 @@ import org.opendaylight.yangtools.yang.data.impl.schema.builder.impl.ImmutableCo
 import org.opendaylight.yangtools.yang.data.util.ContainerSchemaNodes;
 import org.opendaylight.yangtools.yang.data.util.DataSchemaContextNode;
 import org.opendaylight.yangtools.yang.data.util.DataSchemaContextTree;
+import org.opendaylight.yangtools.yang.model.api.ContainerSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
+import org.opendaylight.yangtools.yang.model.api.ListSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
@@ -441,55 +444,55 @@ public class JsonConverter {
      * @return the prepended json string
      */
     public JsonObject fromBus(final YangInstanceIdentifier path, JsonElement jsonElement) {
-        Iterator<PathArgument> it = path.getPathArguments().iterator();
-        if (!it.hasNext()) {
+        if (path.isEmpty()) {
             return null;
         }
-
-        /* Pull the last "key" off the path */
-
+        final Iterator<PathArgument> it = path.getPathArguments().iterator();
         PathArgument pathArg = it.next();
-
         QName nodeType = pathArg.getNodeType();
-
         Module possibleModule = getModule(nodeType.getModule());
-
-        /* use last here */
+        String prefixedNode = makeQualifiedName(possibleModule, pathArg.getNodeType());
         while (it.hasNext()) {
             pathArg = it.next();
+            if (pathArg instanceof AugmentationIdentifier) {
+                continue;
+            }
+            nodeType = pathArg.getNodeType();
+            possibleModule = getModule(nodeType.getModule());
+            prefixedNode = makeQualifiedName(possibleModule, pathArg.getNodeType());
         }
-        final String rootKey = makeQualifiedName(possibleModule, pathArg.getNodeType());
-
-        JsonObject result = new JsonObject();
+        final JsonObject result = new JsonObject();
         if (pathArg instanceof YangInstanceIdentifier.NodeIdentifierWithPredicates) {
-            JsonArray asArray = new JsonArray();
+            final JsonArray asArray = new JsonArray();
             if (jsonElement != null && !jsonElement.isJsonNull()) {
                 asArray.add(jsonElement);
             }
-            result.add(rootKey, asArray);
+            result.add(prefixedNode, asArray);
         } else {
             if (jsonElement != null && !jsonElement.isJsonNull()) {
-                result.add(rootKey, jsonElement);
+                result.add(prefixedNode, jsonElement);
             } else {
                 /* special case - read of empty container contents */
-                result.add(rootKey, new JsonObject());
+                result.add(prefixedNode, new JsonObject());
             }
         }
         return result;
     }
 
-    private SchemaNode findParentSchema(YangInstanceIdentifier yii) {
-        final DataSchemaContextNode<?> child = DataSchemaContextTree.from(schemaContext)
-                .findChild(yii)
-                .orElseThrow(() -> new IllegalStateException("No such child : " + yii));
-        SchemaNode parentSchema;
+    private DataSchemaContextNode<?> findDataSchemaNode(YangInstanceIdentifier path) {
+        return DataSchemaContextTree.from(schemaContext)
+                .findChild(path)
+                .orElseThrow(() -> new IllegalStateException("No such child : " + path));
+    }
+
+    SchemaNode findParentSchema(YangInstanceIdentifier yii) {
+        final DataSchemaContextNode<?> child = findDataSchemaNode(yii);
         if (SchemaPath.ROOT.equals(child.getDataSchemaNode().getPath().getParent())) {
-            parentSchema = schemaContext;
+            return schemaContext;
         } else {
-            parentSchema = SchemaContextUtil.findDataSchemaNode(schemaContext,
-                    child.getDataSchemaNode().getPath().getParent());
+            return SchemaContextUtil.findDataSchemaNode(schemaContext, child.getDataSchemaNode().getPath()
+                    .getParent());
         }
-        return parentSchema;
     }
 
     /**
@@ -527,7 +530,7 @@ public class JsonConverter {
             throw new IllegalStateException("Unable to close JsonParserStream", e);
         }
         NormalizedNode<?, ?> result = resultHolder.getResult();
-        if (result instanceof MapNode) {
+        if (result instanceof MapNode && !((MapNode) result).getValue().isEmpty()) {
             result = Iterables.getOnlyElement(((MapNode) result).getValue());
         }
         LOG.debug("Parsed result : {}", result);
@@ -537,14 +540,22 @@ public class JsonConverter {
     /**
      * To support simplified JSON data, we need to wrap it.
      */
-    private JsonElement wrapReducedJson(YangInstanceIdentifier id, JsonElement data) {
+    JsonElement wrapReducedJson(YangInstanceIdentifier id, JsonElement data) {
+        final DataSchemaContextNode<?> node = findDataSchemaNode(id);
         final QName qname = id.getLastPathArgument().getNodeType();
-        final JsonObject wrapper = new JsonObject();
         final String elName = qname.getLocalName();
-        final JsonArray arr = new JsonArray();
-        arr.add(data);
-        wrapper.add(elName, arr);
-        return wrapper;
+        final JsonObject wrapper = new JsonObject();
+        if (node.getDataSchemaNode() instanceof ContainerSchemaNode) {
+            wrapper.add(elName, data);
+            return wrapper;
+        }
+        if (node.getDataSchemaNode() instanceof ListSchemaNode) {
+            final JsonArray arr = new JsonArray();
+            arr.add(data);
+            wrapper.add(elName, arr);
+            return wrapper;
+        }
+        throw new IllegalStateException("Wrapping primitive value is not supported");
     }
 
     /**

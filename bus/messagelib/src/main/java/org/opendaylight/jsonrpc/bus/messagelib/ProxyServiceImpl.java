@@ -153,7 +153,11 @@ public class ProxyServiceImpl implements ProxyService {
                                 method.getDeclaringClass())
                         .bindTo(obj)
                         .invokeWithArguments(params);
-            } catch (Throwable e) {
+            }
+            catch (ProxyServiceGenericException e) {
+                throw e;
+            }
+            catch (Throwable e) {
                 throw new IllegalStateException("Fail to delegate invocation to default method", e);
             }
         }
@@ -172,6 +176,9 @@ public class ProxyServiceImpl implements ProxyService {
             int retry = configuredRetryCount;
             for (;;) {
                 try {
+                    if (configuredRetryCount == retry) {
+                        Util.awaitForTransport((ClientSession) session, 2000L);
+                    }
                     final JsonRpcReplyMessage reply = ((RequesterSession) session).sendRequestAndReadReply(methodName,
                             unwrappedArgs);
                     return getReturnFromReplyMessage(method, (JsonRpcReplyMessage) reply);

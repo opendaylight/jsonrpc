@@ -12,8 +12,10 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
 import com.google.gson.JsonElement;
 import java.net.URISyntaxException;
@@ -48,12 +50,10 @@ import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 
 /**
- * End-to-end test connecting {@link JsonRPCDataBroker}, {@link JsonRPCTx} and
- * {@link RemoteOmShard}.
+ * End-to-end test connecting {@link JsonRPCDataBroker}, {@link JsonRPCTx} and {@link RemoteOmShard}.
  *
  * <p>
- * Goal is to make sure that behavior of {@link JsonRPCDataBroker} is consistent
- * with {@link DOMDataBroker}
+ * Goal is to make sure that behavior of {@link JsonRPCDataBroker} is consistent with {@link DOMDataBroker}
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
@@ -75,9 +75,12 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         peer = new MutablePeer();
         peer.name("test");
         governance = mock(RemoteGovernance.class);
-        doReturn(shard).when(transportFactory).createRequesterProxy(any(), anyString(), anyBoolean());
-        pathMap.put(jsonParser.parse("{\"network-topology:network-topology\":{}}"),
-                DataType.OPERATIONAL_DATA, "zmq://localhost");
+        final RemoteOmShard shardMock = spy(shard);
+        // ignore close() as this is special case handled by transport
+        doNothing().when(shardMock).close();
+        doReturn(shardMock).when(transportFactory).createRequesterProxy(any(), anyString(), anyBoolean());
+        pathMap.put(jsonParser.parse("{\"network-topology:network-topology\":{}}"), DataType.OPERATIONAL_DATA,
+                "zmq://localhost");
 
         jrbroker = new JsonRPCDataBroker(peer, schemaContext, pathMap, new MockTransportFactory(transportFactory),
                 governance, new JsonConverter(schemaContext));
@@ -126,7 +129,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(getCodec());
         final DOMDataTreeReadWriteTransaction rwtx = jrbroker.newReadWriteTransaction();
         rwtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
-        Optional<NormalizedNode<?,?>> result = rwtx.read(LogicalDatastoreType.OPERATIONAL, e.getKey()).get();
+        Optional<NormalizedNode<?, ?>> result = rwtx.read(LogicalDatastoreType.OPERATIONAL, e.getKey()).get();
         rwtx.commit().get();
         assertNotNull(result.get());
     }

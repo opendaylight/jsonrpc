@@ -13,6 +13,7 @@ import com.google.common.base.Joiner.MapJoiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -26,6 +27,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseRequestMessage;
 import org.slf4j.Logger;
@@ -250,5 +252,22 @@ public final class Util {
             }
             return 0;
         };
+    }
+
+    /**
+     * Await for underlying transport o become ready. This is needed when request is made, but transport not yet
+     * finished handshake.
+     *
+     * @param session {@link ClientSession} to await for
+     * @param milliseconds period to wait for (at most)
+     */
+    static void awaitForTransport(ClientSession session, long milliseconds) {
+        final long future = System.currentTimeMillis() + milliseconds;
+        while (System.currentTimeMillis() < future) {
+            if (session.isConnectionReady()) {
+                return;
+            }
+            Uninterruptibles.sleepUninterruptibly(100L, TimeUnit.MILLISECONDS);
+        }
     }
 }
