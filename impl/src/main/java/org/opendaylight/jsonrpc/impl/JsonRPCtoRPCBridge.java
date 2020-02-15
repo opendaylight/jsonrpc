@@ -37,6 +37,7 @@ import java.util.function.Consumer;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
@@ -99,14 +100,11 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
             @NonNull TransportFactory transportFactory, @NonNull JsonConverter jsonConverter)
             throws URISyntaxException {
         super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
-        /* Endpoints via configuration */
-        if (peer.getRpcEndpoints() != null) {
-            Util.populateFromEndpointList(pathMap, peer.getRpcEndpoints(), DataType.RPC);
-        }
+        Util.populateFromEndpointList(pathMap, peer.getRpcEndpoints(), DataType.RPC);
         final ImmutableList.Builder<DOMRpcIdentifier> availableRpcsBuilder = ImmutableList.builder();
         final ImmutableMap.Builder<String, RpcState> mappedRpcsBuilder = ImmutableMap.builder();
         for (final RpcDefinition def : schemaContext.getOperations()) {
-            addRpcDefinition(peer, governance, def, availableRpcsBuilder, mappedRpcsBuilder);
+            addRpcDefinition(governance, def, availableRpcsBuilder, mappedRpcsBuilder);
         }
 
         mappedRpcs = mappedRpcsBuilder.build();
@@ -125,51 +123,25 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
         LOG.info("RPC bridge instantiated for '{}' with {} methods", peer.getName(), mappedRpcs.size());
     }
 
-    private void addRpcDefinition(Peer peer, RemoteGovernance governance, RpcDefinition def,
-            ImmutableList.Builder<DOMRpcIdentifier> toRpcIdentifiers,
-            ImmutableMap.Builder<String, RpcState> toMappedRpcs) throws URISyntaxException {
-        final QNameModule qmodule = def.getQName().getModule();
-        final Optional<Module> possibleModule = schemaContext.findModule(qmodule.getNamespace(), qmodule.getRevision());
-
-        Preconditions.checkState(possibleModule.isPresent(), "RPC %s cannot be mapped, module not found",
-                def.getQName().getLocalName());
-        final String topLevel = jsonConverter.makeQualifiedName(possibleModule.get(), def.getQName());
-        final JsonObject path = new JsonObject();
-        path.add(topLevel, new JsonObject());
-
-        String methodEndpoint = pathMap.lookup(path, DataType.RPC).orElse(null);
-        LOG.debug("Method endpoint - map lookup is  {}", methodEndpoint);
-
-        if (methodEndpoint == null) {
-            Preconditions.checkNotNull(governance,
-                    "Can't create mapping lookup because governance was not provided for peer %s", peer.toString());
-            methodEndpoint = governance.governance(-1, peer.getName(), path);
-            if (methodEndpoint != null) {
-                pathMap.put(path, DataType.RPC, methodEndpoint);
-            }
-        }
-
-        LOG.debug("Method endpoint - governance+map lookup is  {}", methodEndpoint);
-        if (methodEndpoint != null) {
-            LOG.debug("RPC {} mapped to {}", topLevel, methodEndpoint);
-            toMappedRpcs.put(def.getQName().getLocalName(),
-                    new RpcState(def.getQName().getLocalName(), def, methodEndpoint, transportFactory));
-            toRpcIdentifiers.add(DOMRpcIdentifier.create(def.getPath()));
+    private void addRpcDefinition(RemoteGovernance governance, RpcDefinition def,
+            ImmutableList.Builder<DOMRpcIdentifier> available, ImmutableMap.Builder<String, RpcState> mapped)
+            throws URISyntaxException {
+        final QNameModule qm = def.getQName().getModule();
+        final String localName = def.getQName().getLocalName();
+        final Optional<Module> possibleModule = schemaContext.findModule(qm.getNamespace(), qm.getRevision());
+        final JsonObject path = createRootPath(possibleModule.get(), def.getQName());
+        final String endpoint = getEndpoint(DataType.RPC, governance, path);
+        if (endpoint != null) {
+            LOG.info("RPC '{}' mapped to {}", localName, endpoint);
+            mapped.put(def.getQName().getLocalName(), new RpcState(localName, def, endpoint, transportFactory));
+            available.add(DOMRpcIdentifier.create(def.getPath()));
         } else {
-            LOG.error("RPC {} cannot be mapped, no known endpoint", topLevel);
+            LOG.warn("RPC '{}' cannot be mapped, no known endpoint", localName);
         }
     }
 
-    /* Perform a full check if a container node is null or empty
-     * ODL schema prior to 05 March 2017 returns nulls for empty
-     * input or output rpc statements. After that it returns
-     * empty containers.
-     * */
     private boolean isNotEmpty(ContainerSchemaNode arg) {
-        if (arg == null || arg.getChildNodes().isEmpty()) {
-            return false;
-        }
-        return true;
+        return !arg.getChildNodes().isEmpty();
     }
 
     /* RPC Bridge functionality */
