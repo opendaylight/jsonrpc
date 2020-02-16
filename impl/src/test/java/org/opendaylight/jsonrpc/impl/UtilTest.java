@@ -46,11 +46,6 @@ public class UtilTest {
     }
 
     @Test
-    public void ensureYangInstanceIdentifierDeserializerPrivateCtor() {
-        assertTrue(TestUtils.assertPrivateConstructor(YangInstanceIdentifierDeserializer.class));
-    }
-
-    @Test
     public void testCloseNullable() throws Exception {
         final AtomicBoolean bool = new AtomicBoolean(false);
         Util.closeNullable(() -> {

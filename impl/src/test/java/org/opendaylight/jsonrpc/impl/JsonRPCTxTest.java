@@ -83,7 +83,6 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         pathMap.put(new JsonObject(), DataType.CONFIGURATION_DATA, ENDPOINT);
         pathMap.put(new JsonObject(), DataType.OPERATIONAL_DATA, ENDPOINT);
         transportFactory = mock(TransportFactory.class);
-        NormalizedNodesHelper.init(schemaContext);
         om = mock(RemoteOmShard.class);
         doReturn(om).when(transportFactory).createRequesterProxy(any(), anyString(), anyBoolean());
         conv = new JsonConverter(schemaContext);
@@ -139,7 +138,8 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
 
     @Test
     public void testPut() throws InterruptedException, ExecutionException, TimeoutException {
-        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest.createContainerNodeData();
+        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest
+                .createContainerNodeData(getCodec());
         trx.put(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
         doReturn(true).when(om).commit((String)eq(null));
         trx.commit().get(5, TimeUnit.SECONDS);
@@ -168,7 +168,8 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
 
     @Test
     public void testCommitFailed() throws InterruptedException, ExecutionException {
-        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest.createContainerNodeData();
+        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest
+                .createContainerNodeData(getCodec());
         doReturn(false).when(om).commit((String)eq(null));
         doReturn(Lists.newArrayList("err1", "err2")).when(om).error((String)eq(null));
         trx.put(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
@@ -193,7 +194,8 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
 
     @Test
     public void testMerge() throws InterruptedException, ExecutionException, TimeoutException {
-        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest.createContainerNodeData();
+        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = JsonConverterTest
+                .createContainerNodeData(getCodec());
         doReturn(true).when(om).commit((String)eq(null));
         trx.merge(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
         trx.commit().get(5, TimeUnit.SECONDS);

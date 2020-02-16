@@ -9,9 +9,11 @@ package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map.Entry;
+
 import org.opendaylight.mdsal.binding.dom.adapter.BindingToNormalizedNodeCodec;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopologyBuilder;
@@ -28,7 +30,6 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
 /**
  * Utility class to reduce code duplication.
@@ -67,10 +68,8 @@ public final class TestUtils {
     }
 
     public static Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> getMockTopologyAsDom(
-            SchemaContext schemaContext) {
+            BindingToNormalizedNodeCodec codec) {
         final NetworkTopology nt = getMockTopology();
-        NormalizedNodesHelper.init(schemaContext);
-        final BindingToNormalizedNodeCodec codec = NormalizedNodesHelper.getBindingToNormalizedNodeCodec();
         return codec.toNormalizedNode(InstanceIdentifier.create(NetworkTopology.class), nt);
     }
 

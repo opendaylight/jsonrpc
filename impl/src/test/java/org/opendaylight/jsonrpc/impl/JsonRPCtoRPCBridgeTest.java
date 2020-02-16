@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.opendaylight.jsonrpc.bus.messagelib.AbstractTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.MessageLibrary;
@@ -36,7 +37,6 @@ import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
-import org.opendaylight.mdsal.binding.dom.adapter.BindingToNormalizedNodeCodec;
 import org.opendaylight.mdsal.dom.api.DOMRpcResult;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
@@ -80,7 +80,6 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCtoRPCBridgeTest.class);
     private JsonRPCtoRPCBridge bridge;
     private MessageLibrary messaging;
-    private BindingToNormalizedNodeCodec bi2baCodec;
     private Module mod;
     private int rpcResponderPort = -1;
     private ResponderSession rpcResponder;
@@ -94,8 +93,6 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         rpcResponderPort = getFreeTcpPort();
         transportFactory = new DefaultTransportFactory();
         startTransport();
-        NormalizedNodesHelper.init(schemaContext);
-        bi2baCodec = NormalizedNodesHelper.getBindingToNormalizedNodeCodec();
         bridge = new JsonRPCtoRPCBridge(getPeer(), schemaContext, pathMap, mock(RemoteGovernance.class),
                 transportFactory, new JsonConverter(schemaContext));
         mod = schemaContext.findModule("test-model", Revision.of("2016-11-17")).get();
@@ -265,14 +262,14 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     }
 
     private <T extends DataContainer> ContainerNode prepareRpcInput(T dataObject) {
-        return bi2baCodec.toNormalizedNodeRpcData(dataObject);
+        return getCodec().toNormalizedNodeRpcData(dataObject);
     }
 
     @SuppressWarnings("unchecked")
     private <T> T extractRpcOutput(DOMRpcResult result, Class<T> outputType, String rpcName, Module module) {
         SchemaPath path2 = SchemaPath.create(false, constructRpcQname(module, rpcName),
                 constructRpcQname(module, "output"));
-        return (T) bi2baCodec.fromNormalizedNodeRpcData(path2, (ContainerNode) result.getResult());
+        return (T) getCodec().fromNormalizedNodeRpcData(path2, (ContainerNode) result.getResult());
 
     }
 

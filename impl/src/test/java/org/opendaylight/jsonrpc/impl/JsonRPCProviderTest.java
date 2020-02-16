@@ -69,7 +69,6 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
 
     @Before
     public void setUp() throws URISyntaxException, InterruptedException, ExecutionException {
-        NormalizedNodesHelper.init(schemaContext);
         tf = mock(TransportFactory.class);
 
         when(tf.createRequesterProxy(eq(RemoteGovernance.class), anyString(), anyBoolean()))

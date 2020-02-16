@@ -185,11 +185,6 @@ public final class Util {
         return builder.build();
     }
 
-    static Optional<Module> findModuleWithLatestRevision(SchemaContext schemaContext, String name) {
-        // findModules is guaranteed to return latest revision first
-        return schemaContext.findModules(name).stream().findFirst();
-    }
-
     @VisibleForTesting
     static boolean isNullableTrue(@Nullable Boolean condition) {
         return condition != null && condition;

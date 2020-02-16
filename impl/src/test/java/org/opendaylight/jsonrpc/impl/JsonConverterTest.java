@@ -8,13 +8,13 @@
 package org.opendaylight.jsonrpc.impl;
 
 import static com.jayway.jsonpath.matchers.JsonPathMatchers.hasJsonPath;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -31,7 +31,9 @@ import java.util.Map.Entry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.opendaylight.jsonrpc.model.JSONRPCArg;
+import org.opendaylight.mdsal.binding.dom.adapter.BindingToNormalizedNodeCodec;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.Ipv4;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.Ipv4Builder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.Ipv4Key;
@@ -67,11 +69,12 @@ import org.slf4j.LoggerFactory;
 public class JsonConverterTest extends AbstractJsonRpcTest {
     private static final Logger LOG = LoggerFactory.getLogger(JsonConverter.class);
     private JsonConverter conv;
+    private JsonRpcPathCodec pathCodec;
 
     @Before
     public void setUp() {
-        NormalizedNodesHelper.init(schemaContext);
         conv = new JsonConverter(schemaContext);
+        pathCodec = JsonRpcPathCodec.create(schemaContext);
     }
 
     @After
@@ -83,7 +86,7 @@ public class JsonConverterTest extends AbstractJsonRpcTest {
     @Test
     public void testConvertContainerNode() throws IOException {
         StringWriter sw = new StringWriter();
-        Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = createContainerNodeData();
+        Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = createContainerNodeData(getCodec());
         dump((NormalizedNode<PathArgument, ?>) data.getValue(), sw, 1);
         LOG.info("Normalized node content : \n{}", sw.toString());
         JSONRPCArg arg = conv.toBus(data.getKey(), data.getValue());
@@ -149,11 +152,11 @@ public class JsonConverterTest extends AbstractJsonRpcTest {
     @Test
     public void testTopLevelListDeserialization() {
         JsonElement path = jsonParser.parse("{\"test-model:ipv4\":[{\"name\":\"eth0\"}]}");
-        YangInstanceIdentifier yii = YangInstanceIdentifierDeserializer.toYangInstanceIdentifier(path, schemaContext);
+        YangInstanceIdentifier yii = pathCodec.deserialize(path.getAsJsonObject());
         LOG.info("{}", yii);
         assertNotNull(yii);
         path = jsonParser.parse("{\"test-model:ipv4\":{\"ipv4\":[{\"name\":\"eth0\"}]}}");
-        yii = YangInstanceIdentifierDeserializer.toYangInstanceIdentifier(path, schemaContext);
+        yii = pathCodec.deserialize(path.getAsJsonObject());
         LOG.info("{}", yii);
         assertNotNull(yii);
     }
@@ -163,8 +166,7 @@ public class JsonConverterTest extends AbstractJsonRpcTest {
         Ipv4 ipv4 = new Ipv4Builder().withKey(new Ipv4Key("eth0"))
                 .build();
         InstanceIdentifier<Ipv4> path = InstanceIdentifier.builder(Ipv4.class, new Ipv4Key("eth0")).build();
-        Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> normalized = NormalizedNodesHelper
-                .getBindingToNormalizedNodeCodec().toNormalizedNode(path, ipv4);
+        Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> normalized = getCodec().toNormalizedNode(path, ipv4);
         JSONRPCArg arg = conv.toBus(normalized.getKey(), normalized.getValue());
         LOG.info("Result : {}", arg.getPath());
         assertEquals("{\"test-model:ipv4\":[{\"name\":\"eth0\"}]}",arg.getPath().toString());
@@ -192,27 +194,26 @@ public class JsonConverterTest extends AbstractJsonRpcTest {
                 new NodeBuilder()
                         .setTerminationPoint(
                                 Lists.newArrayList(new TerminationPointBuilder().setTpId(new TpId("eth0")).build()))
-                        .setNodeId(new NodeId("node-id-2")).build());
-        Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data2 = NormalizedNodesHelper
-                .getBindingToNormalizedNodeCodec()
-                .toNormalizedNode(InstanceIdentifier.create(NetworkTopology.class).child(Topology.class),
-                        new TopologyBuilder().setTopologyId(new TopologyId("topo-id")).setNode(data).build());
+                        .setNodeId(new NodeId("node-id-2"))
+                        .build());
+        Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data2 = getCodec().toNormalizedNode(
+                InstanceIdentifier.create(NetworkTopology.class).child(Topology.class),
+                new TopologyBuilder().setTopologyId(new TopologyId("topo-id")).setNode(data).build());
         NormalizedNode<?, ?> sub1 = data2.getValue();
         return new SimpleEntry<>(data2.getKey(), sub1);
     }
 
     private Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> createLeafNodeData() {
         final QName topoIdQname = QName.create(NetworkTopology.QNAME, "topology-id");
-        final InstanceIdentifier<Topology> ii = InstanceIdentifier.create(NetworkTopology.class).child(Topology.class,
-                new TopologyKey(new TopologyId("topo-id")));
-        LOG.info("II : {}, YII : {}", ii,
-                NormalizedNodesHelper.getBindingToNormalizedNodeCodec().toYangInstanceIdentifier(ii));
-        return new SimpleEntry<>(
-                NormalizedNodesHelper.getBindingToNormalizedNodeCodec().toYangInstanceIdentifier(ii),
+        final InstanceIdentifier<Topology> ii = InstanceIdentifier.create(NetworkTopology.class)
+                .child(Topology.class, new TopologyKey(new TopologyId("topo-id")));
+        LOG.info("II : {}, YII : {}", ii, getCodec().toYangInstanceIdentifier(ii));
+        return new SimpleEntry<>(getCodec().toYangInstanceIdentifier(ii),
                 ImmutableNodes.leafNode(topoIdQname, "topo-id"));
     }
 
-    static Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> createContainerNodeData() {
+    static Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> createContainerNodeData(
+            BindingToNormalizedNodeCodec codec) {
         //@formatter:off
         final InstanceIdentifier<NetworkTopology> ii = InstanceIdentifier.create(NetworkTopology.class);
         final NetworkTopology dObj = new NetworkTopologyBuilder()
@@ -233,7 +234,7 @@ public class JsonConverterTest extends AbstractJsonRpcTest {
                         .setTopologyId(new TopologyId("topo-id"))
                         .build()))
                 .build();
-        return NormalizedNodesHelper.getBindingToNormalizedNodeCodec().toNormalizedNode(ii, dObj);
+        return codec.toNormalizedNode(ii, dObj);
         //@formatter:on
     }
 }

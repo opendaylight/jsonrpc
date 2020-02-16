@@ -65,12 +65,12 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     private RemoteGovernance governance;
     private RemoteOmShard shard;
     private TransportFactory transportFactory;
+    private JsonRpcPathCodec pathCodec;
     private final HierarchicalEnumMap<JsonElement, DataType, String> pathMap = HierarchicalEnumHashMap
             .create(DataType.class, JsonPathCodec.create());
 
     @Before
     public void setUp() throws URISyntaxException {
-        NormalizedNodesHelper.init(schemaContext);
         transportFactory = mock(TransportFactory.class);
         shard = new RemoteControl(getDomBroker(), schemaContext, transportFactory,
                 mock(DOMNotificationPublishService.class), mock(DOMRpcService.class));
@@ -83,6 +83,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
 
         jrbroker = new JsonRPCDataBroker(peer, schemaContext, pathMap, new MockTransportFactory(transportFactory),
                 governance, new JsonConverter(schemaContext));
+        pathCodec = JsonRpcPathCodec.create(schemaContext);
         logTestName("START");
     }
 
@@ -97,7 +98,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     @Test
     public void testRead() throws Exception {
         // Write data to DOM DS
-        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(schemaContext);
+        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(getCodec());
         final DOMDataTreeWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
         wtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
         wtx.commit().get();
@@ -111,7 +112,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     @Test
     public void testWrite() throws Exception {
         // Write using JSON-RPC databroker
-        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(schemaContext);
+        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(getCodec());
         final DOMDataTreeWriteTransaction wtx = jrbroker.newWriteOnlyTransaction();
         wtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
         wtx.commit().get();
@@ -124,7 +125,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
 
     @Test
     public void testReadWriteTransaction() throws Exception {
-        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(schemaContext);
+        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(getCodec());
         final DOMDataTreeReadWriteTransaction rwtx = jrbroker.newReadWriteTransaction();
         rwtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
         Optional<NormalizedNode<?,?>> result = rwtx.read(LogicalDatastoreType.OPERATIONAL, e.getKey()).get();
@@ -156,7 +157,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     @Test
     public void testTxChain() throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
-        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(schemaContext);
+        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(getCodec());
         final DOMTransactionChain chain = jrbroker.createTransactionChain(new DOMTransactionChainListener() {
             @Override
             public void onTransactionChainSuccessful(DOMTransactionChain chain) {
@@ -179,6 +180,6 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     }
 
     private YangInstanceIdentifier yiiFromJson(String json) {
-        return YangInstanceIdentifierDeserializer.toYangInstanceIdentifier(jsonParser.parse(json), schemaContext);
+        return pathCodec.deserialize(jsonParser.parse(json).getAsJsonObject());
     }
 }
