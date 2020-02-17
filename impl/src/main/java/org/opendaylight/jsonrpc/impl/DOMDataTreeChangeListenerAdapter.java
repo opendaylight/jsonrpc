@@ -38,7 +38,7 @@ public class DOMDataTreeChangeListenerAdapter implements DataChangeNotificationP
     private final DOMDataTreeChangeListener listener;
     private final SubscriberSession session;
     private final JsonConverter converter;
-    private final SchemaContext schemaContext;
+    private final JsonRpcPathCodec pathCodec;
 
     public DOMDataTreeChangeListenerAdapter(@NonNull DOMDataTreeChangeListener delegate,
             @NonNull TransportFactory transportFactory, String uri, @NonNull JsonConverter converter,
@@ -46,8 +46,8 @@ public class DOMDataTreeChangeListenerAdapter implements DataChangeNotificationP
         Objects.requireNonNull(transportFactory);
         this.converter = Objects.requireNonNull(converter);
         this.listener = Objects.requireNonNull(delegate);
-        this.schemaContext = Objects.requireNonNull(schemaContext);
         this.session = transportFactory.endpointBuilder().subscriber().create(uri, this);
+        this.pathCodec = JsonRpcPathCodec.create(schemaContext);
     }
 
     /**
@@ -62,8 +62,7 @@ public class DOMDataTreeChangeListenerAdapter implements DataChangeNotificationP
     public void notifyListener(DataChangeNotification change) {
         final Set<DataTreeCandidate> changes = new LinkedHashSet<>();
         for (final JSONRPCArg c : change.getChanges()) {
-            final YangInstanceIdentifier yii = YangInstanceIdentifierDeserializer.toYangInstanceIdentifier(c.getPath(),
-                    schemaContext);
+            final YangInstanceIdentifier yii = pathCodec.deserialize(c.getPath().getAsJsonObject());
             final NormalizedNode<?, ?> data = converter.jsonElementToNormalizedNode(c.getData(), yii);
             changes.add(new DataTreeCandidateImpl(yii, data));
         }

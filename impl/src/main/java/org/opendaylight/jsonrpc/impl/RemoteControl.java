@@ -82,6 +82,7 @@ public class RemoteControl implements RemoteControlComposite {
     private final ScheduledExecutorService scheduledExecutorService;
     private final DOMNotificationPublishService publishService;
     private final DOMRpcService rpcService;
+    private final JsonRpcPathCodec pathCodec;
 
     public RemoteControl(@NonNull final DOMDataBroker domDataBroker, @NonNull final SchemaContext schemaContext,
             @NonNull TransportFactory transportFactory, @NonNull final DOMNotificationPublishService publishService,
@@ -104,6 +105,7 @@ public class RemoteControl implements RemoteControlComposite {
         this.dataChangeRegistry = new DataChangeListenerRegistry(domDataBroker, transportFactory, jsonConverter);
         this.publishService = Objects.requireNonNull(publishService);
         this.rpcService = Objects.requireNonNull(rpcService);
+        this.pathCodec = JsonRpcPathCodec.create(schemaContext);
     }
 
     /**
@@ -124,9 +126,8 @@ public class RemoteControl implements RemoteControlComposite {
         return txmap.entrySet().isEmpty();
     }
 
-    @VisibleForTesting
-    YangInstanceIdentifier path2II(JsonElement path) {
-        return YangInstanceIdentifierDeserializer.toYangInstanceIdentifier(path, schemaContext);
+    private YangInstanceIdentifier path2II(JsonElement path) {
+        return pathCodec.deserialize(path.getAsJsonObject());
     }
 
     @Override

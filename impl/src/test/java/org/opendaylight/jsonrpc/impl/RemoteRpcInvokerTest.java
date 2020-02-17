@@ -35,9 +35,8 @@ public class RemoteRpcInvokerTest extends AbstractJsonRpcTest {
 
     @Before
     public void setUp() throws Exception {
-        NormalizedNodesHelper.init(schemaContext);
         final BindingDOMRpcProviderServiceAdapter rpcAdapter = new BindingDOMRpcProviderServiceAdapter(
-                getDOMRpcRouter().getRpcProviderService(), NormalizedNodesHelper.getBindingToNormalizedNodeCodec());
+                getDOMRpcRouter().getRpcProviderService(), getCodec());
         rpcReg = rpcAdapter.registerRpcImplementation(TestModelService.class, new TestModelServiceImpl());
         getDOMRpcRouter().onGlobalContextUpdated(getSchemaContext());
         transportFactory = new DefaultTransportFactory();

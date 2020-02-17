@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
@@ -44,7 +45,6 @@ import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.jsonrpc.model.StoreOperationArgument;
 import org.opendaylight.jsonrpc.model.TxArgument;
 import org.opendaylight.jsonrpc.model.TxOperationArgument;
-import org.opendaylight.mdsal.binding.dom.adapter.BindingToNormalizedNodeCodec;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
@@ -82,16 +82,17 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     private JsonParser parser;
     private JsonConverter conv;
     private TransportFactory transportFactory;
+    private JsonRpcPathCodec codec;
 
     @Before
     public void setUp() throws Exception {
-        NormalizedNodesHelper.init(schemaContext);
         transportFactory = new DefaultTransportFactory();
         ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory, getDOMNotificationRouter(),
                 getDOMRpcRouter().getRpcService(), 100);
 
         parser = new JsonParser();
         conv = new JsonConverter(schemaContext);
+        codec = JsonRpcPathCodec.create(schemaContext);
         logTestName("START");
     }
 
@@ -144,19 +145,18 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
      */
     @Test
     public void testReadTopologyData() throws Exception {
-        final BindingToNormalizedNodeCodec codec = NormalizedNodesHelper.getBindingToNormalizedNodeCodec();
-        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(schemaContext);
+        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(getCodec());
         final DOMDataTreeWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
         wtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
         wtx.commit().get();
 
         InstanceIdentifier<NetworkTopology> nii = InstanceIdentifier.create(NetworkTopology.class);
 
-        YangInstanceIdentifier yii = codec.toYangInstanceIdentifier(nii);
+        YangInstanceIdentifier yii = getCodec().toYangInstanceIdentifier(nii);
         dumpYii(yii);
 
         final JsonElement path = conv.toBus(yii, null).getPath();
-        final YangInstanceIdentifier parsedYii = ctrl.path2II(path);
+        final YangInstanceIdentifier parsedYii = codec.deserialize(path.getAsJsonObject());
         assertEquals(yii, parsedYii);
 
         LOG.info("JSON path : {}", path);
@@ -171,13 +171,17 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
      */
     @Test
     public void testPathToLeaf() {
-        final YangInstanceIdentifier yii = YangInstanceIdentifier.builder().node(NetworkTopology.QNAME)
+        final YangInstanceIdentifier yii = YangInstanceIdentifier.builder()
+                .node(NetworkTopology.QNAME)
                 .node(Topology.QNAME)
                 .nodeWithKey(Topology.QNAME, QName.create(Topology.QNAME, "topology-id"), "topology1")
-                .node(QName.create(Topology.QNAME, "server-provided")).build();
+                .node(QName.create(Topology.QNAME, "server-provided"))
+                .build();
         LOG.info("YII : {}", yii);
-        final YangInstanceIdentifier ii = ctrl.path2II(parser.parse("{\"network-topology:network-topology\": "
-                + "{\"topology\": [{\"topology-id\": \"topology1\",\"server-provided\": {}}]}}"));
+        final YangInstanceIdentifier ii = codec.deserialize(parser
+                .parse("{\"network-topology:network-topology\": "
+                        + "{\"topology\": [{\"topology-id\": \"topology1\",\"server-provided\": {}}]}}")
+                .getAsJsonObject());
         assertEquals(yii, ii);
     }
 
@@ -192,7 +196,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
                 .nodeWithKey(Node.QNAME, QName.create(Node.QNAME, "node-id"), "node1").node(TerminationPoint.QNAME)
                 .nodeWithKey(TerminationPoint.QNAME, QName.create(TerminationPoint.QNAME, "tp-id"), "eth0").build();
         LOG.info("YII : {}", yii);
-        final YangInstanceIdentifier ii = ctrl.path2II(parser.parse(TOPO_TP_DATA));
+        final YangInstanceIdentifier ii = codec.deserialize(parser.parse(TOPO_TP_DATA).getAsJsonObject());
         assertEquals(yii, ii);
     }
 
@@ -204,16 +208,12 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
             "{\"network-topology:network-topology\":{\"topology\":[1]}}",
             "{\"network-topology:network-topology\":{\"topology\":[[]]}}",
             "{\"network-topology:network-topology\":null}",
-            "null",
-            "ABCD",
-            "[]",
             "{\"non-existent-module:data1\":{}}"
         };
-
         //@formatter:off
         for (final String p : paths) {
             try {
-                YangInstanceIdentifierDeserializer.toYangInstanceIdentifier(parser.parse(p), schemaContext);
+                codec.deserialize(parser.parse(p).getAsJsonObject());
                 fail("This path should not be parseable !  : " + p);
             } catch (RuntimeException e) {
                 LOG.info("This was expected : " + e.getMessage());
@@ -233,12 +233,11 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
      */
     @Test
     public void testMerge() throws OperationFailedException, InterruptedException, ExecutionException {
-        final BindingToNormalizedNodeCodec codec = NormalizedNodesHelper.getBindingToNormalizedNodeCodec();
         DOMDataTreeWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
         Config c1 = new ConfigBuilder().setWhoAmI(new Uri("urn:bla"))
                 .setConfiguredEndpoints(Lists.<ConfiguredEndpoints>newArrayList()).build();
 
-        Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e1 = codec
+        Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e1 = getCodec()
                 .toNormalizedNode(InstanceIdentifier.create(Config.class), c1);
 
         wtx.put(LogicalDatastoreType.CONFIGURATION, e1.getKey(), e1.getValue());
@@ -246,7 +245,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         ConfiguredEndpoints c2 = new ConfiguredEndpointsBuilder().setName("name-1")
                 .setModules(Lists.newArrayList(new YangIdentifier("ietf-inet-types"))).build();
 
-        Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e2 = codec.toNormalizedNode(InstanceIdentifier
+        Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e2 = getCodec().toNormalizedNode(InstanceIdentifier
                 .builder(Config.class).child(ConfiguredEndpoints.class, new ConfiguredEndpointsKey("name-1")).build(),
                 c2);
 
@@ -258,9 +257,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
 
     @Test
     public void testReducedData() {
-        YangInstanceIdentifier yii = YangInstanceIdentifierDeserializer.toYangInstanceIdentifier(
-                parser.parse(MLX_JSON_PATH),
-                schemaContext);
+        YangInstanceIdentifier yii = codec.deserialize(parser.parse(MLX_JSON_PATH).getAsJsonObject());
         assertNotNull(conv.jsonElementToNormalizedNode(parser.parse(MLX_CONFIG_DATA), yii, true));
     }
 

@@ -22,8 +22,12 @@ import junit.framework.AssertionFailedError;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.opendaylight.mdsal.binding.api.DataBroker;
+import org.opendaylight.mdsal.binding.dom.adapter.BindingToNormalizedNodeCodec;
 import org.opendaylight.mdsal.binding.dom.adapter.test.AbstractDataBrokerTest;
 import org.opendaylight.mdsal.binding.dom.adapter.test.ConcurrentDataBrokerTestCustomizer;
+import org.opendaylight.mdsal.binding.dom.codec.impl.BindingNormalizedNodeCodecRegistry;
+import org.opendaylight.mdsal.binding.generator.impl.GeneratedClassLoadingStrategy;
+import org.opendaylight.mdsal.binding.generator.util.BindingRuntimeContext;
 import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMMountPointService;
@@ -56,6 +60,7 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
     protected final JsonParser jsonParser = new JsonParser();
     @Rule
     public TestName nameRule = new TestName();
+    private BindingToNormalizedNodeCodec bnnc;
 
     @Override
     protected void setupWithSchema(SchemaContext context) {
@@ -66,6 +71,15 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
         this.schemaContext = context;
         setupWithDataBroker(this.dataBroker);
         rpcRouter = DOMRpcRouter.newInstance(getSchemaService());
+
+        BindingNormalizedNodeCodecRegistry codecRegistry = new BindingNormalizedNodeCodecRegistry();
+        BindingRuntimeContext bindingContext = BindingRuntimeContext
+                .create(GeneratedClassLoadingStrategy.getTCCLClassLoadingStrategy(), schemaContext);
+        codecRegistry.onBindingRuntimeContextUpdated(bindingContext);
+        bnnc = new BindingToNormalizedNodeCodec(GeneratedClassLoadingStrategy.getTCCLClassLoadingStrategy(),
+                codecRegistry);
+        bnnc.onGlobalContextUpdated(schemaContext);
+
     }
 
     @Override
@@ -75,6 +89,10 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
                 BindingReflections.getModuleInfo(TopElement.class),
                 BindingReflections.getModuleInfo(
                         org.opendaylight.yang.gen.v1.http.opendaylight.org.jsonrpc.test.rev180305.TopElement.class));
+    }
+
+    protected BindingToNormalizedNodeCodec getCodec() {
+        return bnnc;
     }
 
     protected DOMSchemaService getSchemaService() {

@@ -10,11 +10,11 @@ package org.opendaylight.jsonrpc.impl;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNull;
+
 import org.opendaylight.jsonrpc.model.SchemaContextProvider;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
@@ -40,11 +40,15 @@ public class BuiltinSchemaContextProvider implements SchemaContextProvider {
 
     @Override
     public SchemaContext createSchemaContext(Peer peer) {
-        Set<Module> moduleIds = peer.getModules().stream().map(YangIdentifier::getValue).map(m -> {
-            final Optional<Module> possibleModule = Util.findModuleWithLatestRevision(schemaContext, m);
-            Preconditions.checkState(possibleModule.isPresent(), "No model '%s' in global schema context", m);
-            return possibleModule.get();
-        }).collect(Collectors.toSet());
+        Set<Module> moduleIds = peer.getModules()
+                .stream()
+                .map(YangIdentifier::getValue)
+                .map(m -> schemaContext.findModules(m)
+                        .stream()
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalStateException(
+                                String.format("No model '%s' in global schema context", m))))
+                .collect(Collectors.toSet());
         return buildSchemaContext(moduleIds);
     }
 

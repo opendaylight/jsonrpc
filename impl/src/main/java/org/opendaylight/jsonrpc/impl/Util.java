@@ -18,6 +18,7 @@ import com.google.gson.JsonObject;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -143,9 +144,13 @@ public final class Util {
      * @param key {@link DataType} of entries to populate
      */
     public static void populateFromEndpointList(HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
-            Collection<? extends Endpoint> endpoints, DataType key) {
-        endpoints.stream().filter(p -> p != null && p.getEndpointUri() != null).forEach(
-            ep -> pathMap.put(GSON.fromJson(ep.getPath(), JsonObject.class), key, ep.getEndpointUri().getValue()));
+            @Nullable Collection<? extends Endpoint> endpoints, DataType key) {
+        Optional.ofNullable(endpoints)
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(p -> p != null && p.getEndpointUri() != null)
+                .forEach(ep -> pathMap.put(GSON.fromJson(ep.getPath(), JsonObject.class), key,
+                        ep.getEndpointUri().getValue()));
     }
 
     /**
@@ -178,11 +183,6 @@ public final class Util {
                 QName.create(ConfiguredEndpoints.QNAME.getNamespace(), ConfiguredEndpoints.QNAME.getRevision(), "name"),
                 name);
         return builder.build();
-    }
-
-    static Optional<Module> findModuleWithLatestRevision(SchemaContext schemaContext, String name) {
-        // findModules is guaranteed to return latest revision first
-        return schemaContext.findModules(name).stream().findFirst();
     }
 
     @VisibleForTesting
