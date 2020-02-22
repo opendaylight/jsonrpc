@@ -14,10 +14,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
-import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
-import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Date;
@@ -30,6 +28,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;
 import org.opendaylight.jsonrpc.model.JSONRPCArg;
+import org.opendaylight.jsonrpc.model.JsonReaderAdapter;
 import org.opendaylight.jsonrpc.model.JsonRpcNotification;
 import org.opendaylight.jsonrpc.model.NotificationContainerProxy;
 import org.opendaylight.jsonrpc.model.NotificationState;
@@ -165,7 +164,7 @@ public class JsonConverter {
                 JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
                         CODEC_SUPPLIER.getShared(schemaContext),
                         new NotificationContainerProxy(notificationState.notification()))) {
-            jsonParser.parse(new JsonReader(new StringReader(jsonResult.toString())));
+            jsonParser.parse(JsonReaderAdapter.from(jsonResult));
             return new JsonRpcNotification(notificationBuilder.build(), eventTime,
                     notificationState.notification().getPath());
         } catch (IOException e) {
@@ -180,7 +179,7 @@ public class JsonConverter {
         try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(builder);
                 JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
                         CODEC_SUPPLIER.getShared(schemaContext), def)) {
-            jsonParser.parse(new JsonReader(new StringReader(input.toString())));
+            jsonParser.parse(JsonReaderAdapter.from(input));
             return builder.build();
         } catch (IOException e) {
             LOG.error(JSON_IO_ERROR, e);
@@ -192,10 +191,9 @@ public class JsonConverter {
         NormalizedNodeResult result = new NormalizedNodeResult();
         JSONCodecFactory jsonCodecFactory = JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02
                 .createLazy(schemaContext);
-        try (JsonReader reader = new JsonReader(new StringReader(input.toString()));
-                NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(result);
+        try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(result);
                 JsonParserStream jsonParser = JsonParserStream.create(streamWriter, jsonCodecFactory, def)) {
-            jsonParser.parse(reader);
+            jsonParser.parse(JsonReaderAdapter.from(input));
             return result.getResult();
         } catch (IOException e) {
             LOG.error(JSON_IO_ERROR, e);
@@ -520,9 +518,7 @@ public class JsonConverter {
         final SchemaNode parentSchema = findParentSchema(path);
         try (JsonParserStream jsonParser = JsonParserStream.create(writer, CODEC_SUPPLIER.getShared(schemaContext),
                 parentSchema)) {
-            final JsonReader reader = new JsonReader(
-                    new StringReader((wrap ? wrapReducedJson(path, data) : data).toString()));
-            jsonParser.parse(reader);
+            jsonParser.parse(JsonReaderAdapter.from(wrap ? wrapReducedJson(path, data) : data));
         } catch (IOException e) {
             throw new IllegalStateException("Unable to close JsonParserStream", e);
         }
@@ -560,7 +556,7 @@ public class JsonConverter {
         try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(builder);
                 JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
                         CODEC_SUPPLIER.getShared(schemaContext), ContainerSchemaNodes.forNotification(def))) {
-            jsonParser.parse(new JsonReader(new StringReader(data.toString())));
+            jsonParser.parse(JsonReaderAdapter.from(data));
             return new JsonRpcNotification(builder.build(), new Date(), def.getPath());
         } catch (IOException e) {
             LOG.error(JSON_IO_ERROR, e);

@@ -18,10 +18,8 @@ import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.stream.JsonReader;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Map;
@@ -37,6 +35,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
+import org.opendaylight.jsonrpc.model.JsonReaderAdapter;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.RpcExceptionImpl;
 import org.opendaylight.jsonrpc.model.RpcState;
@@ -295,7 +294,7 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
         try (JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
                 JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext),
                 rpcState.rpc().getOutput())) {
-            jsonParser.parse(new JsonReader(new StringReader(wrapper.toString())));
+            jsonParser.parse(JsonReaderAdapter.from(wrapper));
             return new DefaultDOMRpcResult(resultBuilder.build());
         } catch (IOException e) {
             LOG.error("Failed to process JSON", e);

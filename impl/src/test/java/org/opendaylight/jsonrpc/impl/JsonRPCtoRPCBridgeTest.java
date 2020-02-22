@@ -15,8 +15,6 @@ import static org.mockito.Mockito.mock;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
-import com.google.gson.stream.JsonReader;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -33,6 +31,7 @@ import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
+import org.opendaylight.jsonrpc.model.JsonReaderAdapter;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.mdsal.dom.api.DOMRpcResult;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
@@ -211,10 +210,9 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
                 .filter(r -> "method-with-anyxml".equals(r.getQName().getLocalName()))
                 .findFirst()
                 .get();
-        try (JsonParserStream jsonParser = JsonParserStream.create(writer,
+        try (JsonParserStream parser = JsonParserStream.create(writer,
                 JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext), rpcDef)) {
-            JsonReader reader = new JsonReader(new StringReader("{\"input\" : { }}"));
-            jsonParser.parse(reader).flush();
+            parser.parse(JsonReaderAdapter.from(jsonParser.parse("{\"input\" : { }}")));
         }
         DOMRpcResult result = bridge.invokeRpc(path, resultHolder.getResult()).get();
         logResult(result);
