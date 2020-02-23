@@ -38,6 +38,14 @@ public final class JsonRpcRequestMessage extends JsonRpcBaseRequestMessage {
     }
 
     public static class Builder extends AbstractRequestBuilder<Builder, JsonRpcRequestMessage> {
+        public Builder(JsonRpcRequestMessage copyFrom) {
+            super(copyFrom);
+        }
+
+        public Builder() {
+            // default no-args ctor
+        }
+
         @Override
         protected JsonRpcRequestMessage newInstance() {
             return new JsonRpcRequestMessage(this);

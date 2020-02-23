@@ -115,13 +115,19 @@ public abstract class JsonRpcBaseMessage {
     @NonNull
     public abstract JsonRpcMessageType getType();
 
-    protected abstract static class AbstractBuilder<T extends AbstractBuilder<T, M>, M extends JsonRpcBaseMessage> {
+    public abstract static class AbstractBuilder<T extends AbstractBuilder<T, M>, M extends JsonRpcBaseMessage> {
         private String jsonrpc;
         private JsonElement id;
         private JsonObject metadata;
 
         protected AbstractBuilder() {
             jsonrpc = VERSION;
+        }
+
+        protected AbstractBuilder(M copyFrom) {
+            this.id = copyFrom.getId();
+            this.jsonrpc = copyFrom.getJsonrpc();
+            this.metadata = copyFrom.getMetadata();
         }
 
         @SuppressWarnings("unchecked")

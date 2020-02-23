@@ -14,13 +14,13 @@ import com.google.gson.JsonSerializer;
 import java.lang.reflect.Type;
 
 /**
- * This serializer extracts the error data to form a JSON RPC with error.
+ * This serializer extracts the error data to form a JSON RPC error message.
  *
  * @author Shaleen Saxena
  */
-public class JsonRpcMessageErrorSerializer implements JsonSerializer<JsonRpcMessageError> {
+public class JsonRpcErrorMessageSerializer implements JsonSerializer<JsonRpcErrorMessage> {
     @Override
-    public JsonElement serialize(JsonRpcMessageError src, Type typeOfSrc, JsonSerializationContext context) {
+    public JsonElement serialize(JsonRpcErrorMessage src, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject err = new JsonObject();
         err.addProperty(JsonRpcConstants.CODE, Integer.valueOf(src.getCode()));
         err.addProperty(JsonRpcConstants.MESSAGE, src.getMessage());

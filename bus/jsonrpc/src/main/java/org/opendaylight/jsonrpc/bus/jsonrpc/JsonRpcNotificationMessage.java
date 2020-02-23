@@ -30,7 +30,19 @@ public final class JsonRpcNotificationMessage extends JsonRpcBaseRequestMessage 
         return new Builder();
     }
 
+    public static Builder builder(JsonRpcNotificationMessage copyFrom) {
+        return new Builder(copyFrom);
+    }
+
     public static class Builder extends AbstractRequestBuilder<Builder, JsonRpcNotificationMessage> {
+        public Builder() {
+            //default no-args ctor
+        }
+
+        public Builder(JsonRpcNotificationMessage copyFrom) {
+            super(copyFrom);
+        }
+
         @Override
         protected JsonRpcNotificationMessage newInstance() {
             return new JsonRpcNotificationMessage(this);

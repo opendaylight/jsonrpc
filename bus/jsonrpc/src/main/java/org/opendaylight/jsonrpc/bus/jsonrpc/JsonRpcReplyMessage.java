@@ -76,9 +76,23 @@ public final class JsonRpcReplyMessage extends JsonRpcBaseMessage {
         return new Builder();
     }
 
+    public static Builder builder(JsonRpcReplyMessage copyFrom) {
+        return new Builder(copyFrom);
+    }
+
     public static class Builder extends AbstractBuilder<Builder, JsonRpcReplyMessage> {
         private JsonElement result;
         private JsonRpcErrorObject error;
+
+        public Builder() {
+            //default no-args ctor
+        }
+
+        public Builder(JsonRpcReplyMessage copyFrom) {
+            super(copyFrom);
+            this.result = copyFrom.result;
+            this.error = copyFrom.error;
+        }
 
         public Builder result(JsonElement value) {
             this.result = value;

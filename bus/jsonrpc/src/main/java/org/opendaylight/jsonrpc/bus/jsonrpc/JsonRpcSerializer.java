@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 public final class JsonRpcSerializer {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRpcSerializer.class);
     private static final Gson GSON = new GsonBuilder()
-            .registerTypeAdapter(JsonRpcMessageError.class, new JsonRpcMessageErrorSerializer())
+            .registerTypeAdapter(JsonRpcErrorMessage.class, new JsonRpcErrorMessageSerializer())
             .registerTypeAdapter(JsonRpcReplyMessage.class, new JsonRpcReplyMessageSerializer())
             .registerTypeAdapter(JsonRpcRequestMessage.class, new JsonRpcRequestMessageSerializer())
             .registerTypeAdapter(JsonRpcNotificationMessage.class, new JsonRpcNotificationMessageSerializer())
@@ -41,28 +41,28 @@ public final class JsonRpcSerializer {
     private static JsonRpcBaseMessage processOneElement(JsonElement elem) {
         JsonObject obj = elem.getAsJsonObject();
         if (obj == null) {
-            return JsonRpcMessageError.builder().code(-32700).message("Unable to parse object").build();
+            return JsonRpcErrorMessage.builder().code(-32700).message("Unable to parse object").build();
         }
 
         JsonElement id = obj.get(JsonRpcConstants.ID);
 
         JsonElement jsonrpcElem = obj.get(JsonRpcConstants.JSONRPC);
         if (jsonrpcElem == null || jsonrpcElem.isJsonNull()) {
-            return JsonRpcMessageError.builder().id(id).code(-32700).message("JSON RPC version is not defined").build();
+            return JsonRpcErrorMessage.builder().id(id).code(-32700).message("JSON RPC version is not defined").build();
         }
 
         String jsonrpc = jsonrpcElem.getAsString();
         if (!JsonRpcBaseMessage.isSupportedVersion(jsonrpc)) {
             JsonObject data = new JsonObject();
             data.addProperty(JsonRpcConstants.JSONRPC, jsonrpc);
-            return JsonRpcMessageError.builder().id(id).code(-32700).data(data)
+            return JsonRpcErrorMessage.builder().id(id).code(-32700).data(data)
                     .message("JSON RPC version is not supported").build();
         }
 
         if (obj.has(JsonRpcConstants.METHOD)) {
             // This is a Request or Notification - Verify it does not contain either result or error fields.
             if (obj.has(JsonRpcConstants.ERROR) || obj.has(JsonRpcConstants.RESULT)) {
-                return JsonRpcMessageError.builder().id(id).code(-32700).message("Request message has error or result")
+                return JsonRpcErrorMessage.builder().id(id).code(-32700).message("Request message has error or result")
                         .build();
             }
 
@@ -82,7 +82,7 @@ public final class JsonRpcSerializer {
         if (obj.has(JsonRpcConstants.RESULT)) {
             if (obj.has(JsonRpcConstants.ERROR)) {
                 // Invalid message with result and error fields
-                return JsonRpcMessageError.builder().id(id).code(-32700)
+                return JsonRpcErrorMessage.builder().id(id).code(-32700)
                         .message("Reply has both error and result").build();
             } else {
                 // Valid result message
@@ -99,7 +99,7 @@ public final class JsonRpcSerializer {
                     .build();
         } else {
             // Unable to determine reply message type
-            return JsonRpcMessageError.builder().id(id).code(-32700).message("Reply has neither error nor result")
+            return JsonRpcErrorMessage.builder().id(id).code(-32700).message("Reply has neither error nor result")
                     .build();
         }
     }
@@ -130,7 +130,7 @@ public final class JsonRpcSerializer {
      * Parses an incoming JSON RPC message. This can handle either a single
      * message or an array of messages. Hence, the return value is a list of
      * {@link JsonRpcBaseMessage}, even for single messages. If a message cannot
-     * be parsed, then a {@link JsonRpcMessageError} object is returned.
+     * be parsed, then a {@link JsonRpcErrorMessage} object is returned.
      *
      * @param strJson Incoming String containing JSON RPC message.
      * @return Returns a list of messages.
@@ -147,7 +147,7 @@ public final class JsonRpcSerializer {
         }
 
         if (parsedJson == null) {
-            JsonRpcMessageError err = JsonRpcMessageError.builder().code(-32700)
+            JsonRpcErrorMessage err = JsonRpcErrorMessage.builder().code(-32700)
                     .message("Unable to parse incoming message").build();
             list.add(err);
             return list;
@@ -160,7 +160,7 @@ public final class JsonRpcSerializer {
         } else if (parsedJson.isJsonObject()) {
             list.add(processOneElement(parsedJson));
         } else {
-            JsonRpcMessageError err = JsonRpcMessageError.builder().code(-32700)
+            JsonRpcErrorMessage err = JsonRpcErrorMessage.builder().code(-32700)
                     .message("Unable to determine incoming message").build();
             list.add(err);
         }

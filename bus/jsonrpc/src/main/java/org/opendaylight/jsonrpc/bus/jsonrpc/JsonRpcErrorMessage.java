@@ -18,14 +18,17 @@ import org.eclipse.jdt.annotation.Nullable;
  * {@link org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage
  * JsonRpcReplyMessage} containing the error details.
  *
+ * <p>
+ * <a href="https://www.jsonrpc.org/specification#error_object">See message definition</a>
+ *
  * @author Shaleen Saxena
  */
-public final class JsonRpcMessageError extends JsonRpcBaseMessage {
+public final class JsonRpcErrorMessage extends JsonRpcBaseMessage {
     private final int code;
     private final String message;
     private final JsonElement data;
 
-    private JsonRpcMessageError(Builder builder) {
+    private JsonRpcErrorMessage(Builder builder) {
         super(builder);
         this.code = builder.code;
         this.message = Objects.requireNonNull(builder.message);
@@ -65,10 +68,25 @@ public final class JsonRpcMessageError extends JsonRpcBaseMessage {
         return new Builder();
     }
 
-    public static class Builder extends AbstractBuilder<Builder, JsonRpcMessageError> {
+    public static Builder builder(JsonRpcErrorMessage copyFrom) {
+        return new Builder(copyFrom);
+    }
+
+    public static class Builder extends AbstractBuilder<Builder, JsonRpcErrorMessage> {
         private int code;
         private String message;
         private JsonElement data;
+
+        public Builder() {
+            //default no-arg ctor
+        }
+
+        public Builder(JsonRpcErrorMessage copyFrom) {
+            super(copyFrom);
+            this.code = copyFrom.code;
+            this.message = copyFrom.message;
+            this.data = copyFrom.data;
+        }
 
         public Builder code(int value) {
             this.code = value;
@@ -90,8 +108,8 @@ public final class JsonRpcMessageError extends JsonRpcBaseMessage {
         }
 
         @Override
-        protected JsonRpcMessageError newInstance() {
-            return new JsonRpcMessageError(this);
+        protected JsonRpcErrorMessage newInstance() {
+            return new JsonRpcErrorMessage(this);
         }
     }
 }

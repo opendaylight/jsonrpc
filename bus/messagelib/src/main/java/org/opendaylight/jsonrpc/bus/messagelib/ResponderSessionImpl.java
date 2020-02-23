@@ -15,7 +15,7 @@ import org.opendaylight.jsonrpc.bus.api.MessageListener;
 import org.opendaylight.jsonrpc.bus.api.PeerContext;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseMessage.JsonRpcMessageType;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcMessageError;
+import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage.Builder;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
@@ -52,7 +52,7 @@ public class ResponderSessionImpl extends AbstractSession implements MessageList
                     handler.handleRequest((JsonRpcRequestMessage) msg, replyBuilder);
                     reply(peerContext, JsonRpcSerializer.toJson(replyBuilder.build()));
                 } else {
-                    reply(peerContext, JsonRpcSerializer.toJson(JsonRpcMessageError.builder()
+                    reply(peerContext, JsonRpcSerializer.toJson(JsonRpcErrorMessage.builder()
                             .code(-32600)
                             .message("Unexpected message type : " + msg.getType())
                             .build()));

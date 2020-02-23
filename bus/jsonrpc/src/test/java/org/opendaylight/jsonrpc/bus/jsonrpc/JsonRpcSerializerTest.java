@@ -159,7 +159,7 @@ public class JsonRpcSerializerTest {
             " {\"jsonrpc\": \"2.0\", \"method\": \"get_data\", \"id\": \"9\""
         };
 
-        testMessagesHelper(msgs, 3, JsonRpcMessageError.class);
+        testMessagesHelper(msgs, 3, JsonRpcErrorMessage.class);
     }
 
 }

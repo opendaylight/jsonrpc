@@ -75,15 +75,24 @@ public abstract class JsonRpcBaseRequestMessage extends JsonRpcBaseMessage {
     }
 
     protected abstract static class AbstractRequestBuilder<T extends AbstractRequestBuilder<T, M>,
-            M extends JsonRpcBaseMessage> extends AbstractBuilder<T, M> {
+        M extends JsonRpcBaseRequestMessage> extends AbstractBuilder<T, M> {
         private String method;
         private JsonElement params;
+
+        public AbstractRequestBuilder() {
+            // default no-args ctor
+        }
+
+        public AbstractRequestBuilder(M copyFrom) {
+            super(copyFrom);
+            this.params = copyFrom.getParams();
+            this.method = copyFrom.getMethod();
+        }
 
         public T method(String value) {
             this.method = value;
             return self();
         }
-
 
         public T params(JsonElement value) {
             this.params = value;
@@ -93,5 +102,12 @@ public abstract class JsonRpcBaseRequestMessage extends JsonRpcBaseMessage {
         public T paramsFromObject(Object obj) {
             return params(obj != null ? convertClassToJsonElement(obj) : null);
         }
+    }
+
+
+    @Override
+    public String toString() {
+        return "JsonRpcBaseRequestMessage [method=" + method + ", params=" + params + ", jsonrpc=" + getJsonrpc()
+                + ", metadata=" + getMetadata() + ", id=" + getId() + ", type=" + getType() + "]";
     }
 }
