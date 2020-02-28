@@ -7,13 +7,25 @@
  */
 package org.opendaylight.jsonrpc.bus.jsonrpc;
 
+import static org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcConstants.canRepresentJsonPrimitive;
+
+import com.google.common.collect.Iterators;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.slf4j.Logger;
@@ -82,13 +94,84 @@ public abstract class JsonRpcBaseMessage {
      * though.
      */
     @SuppressWarnings("checkstyle:IllegalCatch")
-    protected static <T> T convertJsonElementToClass(JsonElement elem,
-            Type type) throws JsonRpcException {
+    protected static <T> T convertJsonElementToClass(JsonElement elem, Type type) throws JsonRpcException {
+        JsonElement fixed = elem;
         try {
-            return GSON.fromJson(GSON.toJson(elem), type);
+            final Optional<Class<?>> knownType = getClassType(type);
+            if (elem != null && knownType.isPresent()
+                    && !(JsonElement.class.isAssignableFrom((Class<?>) knownType.get()))) {
+                final Class<?> clazz = knownType.get();
+                if (elem.isJsonPrimitive() && !canRepresentJsonPrimitive(clazz) && !isArrayLikeType(clazz)) {
+                    fixed = wrap(elem.getAsJsonPrimitive(), clazz, field -> field.getType().isPrimitive());
+                } else if (elem.isJsonObject() && isArrayLikeType(clazz)) {
+                    fixed = unwrap(elem.getAsJsonObject());
+                } else if (elem.isJsonObject() && canRepresentJsonPrimitive(clazz)) {
+                    fixed = unwrap(elem.getAsJsonObject());
+                } else if (elem.isJsonArray() && !isArrayLikeType(clazz)) {
+                    fixed = wrap(elem.getAsJsonArray(), clazz, field -> isArrayLikeType(field.getType()));
+                }
+            }
+            return GSON.fromJson(GSON.toJson(fixed), type);
         } catch (RuntimeException e) {
             throw new JsonRpcException(e);
         }
+    }
+
+    /*
+     * If return value is of primitive type, but object is expected, try to figure out field/property name by
+     * inspecting given type and wrap primitive value into object.
+     *
+     * FIXME: This is compatibility workaround to support different serialization formats, consider dropping support
+     * for "simpler" format so we don't need hacks like these.
+     */
+    private static JsonElement wrap(JsonElement elem, Class<?> type, Predicate<Field> filter) {
+        // find non-static primitive fields declared in type
+        final List<Field> possibleFields = Arrays.asList(type.getDeclaredFields())
+                .stream()
+                .filter(filter)
+                .filter(field -> !Modifier.isStatic(field.getModifiers()))
+                .collect(Collectors.toList());
+        if (possibleFields.size() == 1) {
+            // TODO : What if field has GSON's @SerializedName annotation ?
+            final String fieldName = possibleFields.get(0).getName();
+            LOG.trace("Found field to wrap '{}' in type {}", fieldName, type);
+            final JsonObject wrapper = new JsonObject();
+            wrapper.add(fieldName, elem);
+            return wrapper;
+        } else {
+            // no luck, either more then 1 fields matched or none
+            return elem;
+        }
+    }
+
+    /*
+     * If return value is Json object containing single field and expected return type is primitive, then unwrap value.
+     * This can happen if response comes from service that is sending full json, not just primitive value, such as
+     * boolean.
+     *
+     * FIXME: This is compatibility workaround to support different serialization formats, consider dropping support
+     * for "simpler" format so we don't need hacks like these.
+     */
+    private static JsonElement unwrap(JsonObject json) {
+        if (json.entrySet().size() == 1) {
+            final JsonObject wrapper = json.getAsJsonObject();
+            return wrapper.get(Iterators.getOnlyElement(wrapper.keySet().iterator()));
+        }
+        return json;
+    }
+
+    private static Optional<Class<?>> getClassType(Type type) {
+        if (type instanceof Class) {
+            return Optional.of((Class<?>) type);
+        }
+        if (((type instanceof ParameterizedType) && ((ParameterizedType) type).getRawType() instanceof Class)) {
+            return Optional.of((Class<?>) ((ParameterizedType) type).getRawType());
+        }
+        return Optional.empty();
+    }
+
+    private static boolean isArrayLikeType(Class<?> type) {
+        return type.isArray() || Collection.class.isAssignableFrom(type);
     }
 
     /*

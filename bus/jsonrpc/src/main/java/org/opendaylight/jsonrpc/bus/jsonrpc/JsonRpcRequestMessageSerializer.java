@@ -20,7 +20,7 @@ import java.lang.reflect.Type;
  *
  * @author Shaleen Saxena
  */
-public class JsonRpcRequestMessageSerializer extends Object implements JsonSerializer<JsonRpcRequestMessage> {
+public class JsonRpcRequestMessageSerializer implements JsonSerializer<JsonRpcRequestMessage> {
 
     @Override
     public JsonElement serialize(JsonRpcRequestMessage src, Type typeOfSrc, JsonSerializationContext context) {

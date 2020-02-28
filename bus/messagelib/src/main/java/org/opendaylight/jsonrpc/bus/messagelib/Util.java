@@ -7,12 +7,13 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
+import static org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcConstants.canRepresentJsonPrimitive;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Joiner.MapJoiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -26,7 +27,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseRequestMessage;
@@ -42,9 +42,6 @@ import org.slf4j.LoggerFactory;
 public final class Util {
     private static final Logger LOG = LoggerFactory.getLogger(Util.class);
     private static final MapJoiner QUERY_JOINER = Joiner.on('&').withKeyValueSeparator("=");
-    private static final Set<Class<?>> PRIMITIVE_TYPES_AND_STRING = ImmutableSet.<Class<?>>of(int.class, long.class,
-            short.class, float.class, double.class, byte.class, boolean.class, char.class, Integer.class, Long.class,
-            Short.class, Float.class, Double.class, Byte.class, Boolean.class, Character.class, String.class);
 
     private Util() {
         // noop
@@ -219,10 +216,6 @@ public final class Util {
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(e);
         }
-    }
-
-    private static boolean canRepresentJsonPrimitive(Class<?> clazz) {
-        return PRIMITIVE_TYPES_AND_STRING.contains(clazz);
     }
 
     /**

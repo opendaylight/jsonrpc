@@ -7,6 +7,9 @@
  */
 package org.opendaylight.jsonrpc.bus.jsonrpc;
 
+import com.google.common.collect.ImmutableSet;
+import java.util.Set;
+
 public final class JsonRpcConstants {
     private JsonRpcConstants() {
         // no instantiation
@@ -22,4 +25,12 @@ public final class JsonRpcConstants {
     static final String MESSAGE = "message";
     static final String DATA = "data";
     static final String METADATA = "metadata";
+
+    private static final Set<Class<?>> PRIMITIVE_TYPES_AND_STRING = ImmutableSet.<Class<?>>of(int.class, long.class,
+            short.class, float.class, double.class, byte.class, boolean.class, char.class, Integer.class, Long.class,
+            Short.class, Float.class, Double.class, Byte.class, Boolean.class, Character.class, String.class);
+
+    public static boolean canRepresentJsonPrimitive(Class<?> clazz) {
+        return PRIMITIVE_TYPES_AND_STRING.contains(clazz);
+    }
 }
