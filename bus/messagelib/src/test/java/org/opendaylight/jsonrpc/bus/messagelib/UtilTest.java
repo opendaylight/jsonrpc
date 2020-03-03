@@ -48,6 +48,12 @@ public class UtilTest {
                 Util.injectQueryParam("zmq://127.0.0.1:10000/path?query1=1&query2=2", "abc", "123"));
     }
 
+    @Test
+    public void testInjectQueryParamConditionally() {
+        assertEquals("xyz://localhost?timeout=15000",
+                Util.injectQueryParam("xyz://localhost?timeout=15000", PARAM_TIMEOUT, "60000"));
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testInjectQueryParamInvalidUri() {
         Util.injectQueryParam("%not-a-valid-uri", "", "");
