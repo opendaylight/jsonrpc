@@ -198,11 +198,19 @@ public final class Util {
         }
     }
 
+    /**
+     * Inject query parameter with value into URI, if it not exists. Multi-valued query parameters are not supported.
+     *
+     * @param uri URI to inject parameter into
+     * @param queryParamName query parameter name to inject
+     * @param queryParamValue query parameter value
+     * @return modified URI
+     */
     public static String injectQueryParam(String uri, String queryParamName, String queryParamValue) {
         try {
             final URI parsed = new URI(uri);
             final Map<String, String> params = tokenizeQuery(parsed.getQuery());
-            params.put(queryParamName, queryParamValue);
+            params.putIfAbsent(queryParamName, queryParamValue);
             final StringBuilder sb = new StringBuilder();
             sb.append(parsed.getScheme()).append("://").append(parsed.getHost());
             if (parsed.getPort() != -1) {
