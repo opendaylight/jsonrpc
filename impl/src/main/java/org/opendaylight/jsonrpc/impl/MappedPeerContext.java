@@ -49,6 +49,7 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.Module;
+import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,30 +74,34 @@ public class MappedPeerContext implements AutoCloseable {
 
     public MappedPeerContext(@NonNull Peer peer, @NonNull TransportFactory transportFactory,
             @NonNull DOMSchemaService schemaService, @NonNull DataBroker dataBroker,
-            @NonNull DOMMountPointService mountService, @Nullable RemoteGovernance governance)
+            @NonNull DOMMountPointService mountService, @Nullable RemoteGovernance governance,
+            @NonNull YangXPathParserFactory yangXPathParserFactory)
             throws URISyntaxException {
         this.peer = Objects.requireNonNull(peer);
         this.dataBroker = Objects.requireNonNull(dataBroker);
         final MutablePeer newPeer = new MutablePeer().name(peer.getName());
         final EffectiveModelContext schema;
 
+        LOG.debug("Preparing to mount {}", peer);
+
         //check if peer can supply modules by himself
         if (supportInbandModels(peer)) {
             schema = InbandModelsSchemaContextProvider.create(transportFactory).createSchemaContext(peer);
-            //actual list of modules lies in created SchemaContext
-            newPeer.addModels(schema.getModules()
-                    .stream()
-                    .map(m -> new YangIdentifier(m.getName()))
-                    .collect(Collectors.toList()));
         } else {
             /*
              * We obtain models from the same source as the bus master to ensure
              * that everyone has a coherent view of the system using the same model
              * versions
              */
-            schema = governance != null ? new GovernanceSchemaContextProvider(governance).createSchemaContext(peer)
+            schema = governance != null
+                    ? new GovernanceSchemaContextProvider(governance, yangXPathParserFactory).createSchemaContext(peer)
                     : new BuiltinSchemaContextProvider(schemaService.getGlobalContext()).createSchemaContext(peer);
         }
+        //actual list of modules lies in created SchemaContext
+        newPeer.addModels(schema.getModules()
+                .stream()
+                .map(m -> new YangIdentifier(m.getName()))
+                .collect(Collectors.toList()));
 
         biPath = Util.createBiPath(peer.getName());
 

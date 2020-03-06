@@ -16,6 +16,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <reference id="transportFactory" interface="org.opendaylight.jsonrpc.bus.messagelib.TransportFactory" />
     <reference id="domRpcService" interface="org.opendaylight.mdsal.dom.api.DOMRpcService" />
     <reference id="domNotificationPublishService" interface="org.opendaylight.mdsal.dom.api.DOMNotificationPublishService" />
+    <reference id="yangXPathParserFactory" interface="org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory" />
 
     <bean id="jsonRpcProvider" class="org.opendaylight.jsonrpc.impl.JsonRPCProvider" init-method="init" destroy-method="close">
         <property name="dataBroker" ref="dataBroker" />
@@ -25,6 +26,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <property name="schemaService" ref="schemaService" />
         <property name="domRpcService" ref="domRpcService" />
         <property name="domNotificationPublishService" ref="domNotificationPublishService" />
+        <property name="yangXPathParserFactory" ref="yangXPathParserFactory" />
     </bean>
 
     <odl:rpc-implementation ref="jsonRpcProvider" />

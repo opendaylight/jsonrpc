@@ -7,7 +7,6 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
-import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -15,11 +14,13 @@ import com.google.common.collect.Queues;
 import com.google.common.io.ByteSource;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.model.ModuleInfo;
@@ -38,6 +39,7 @@ import org.opendaylight.yangtools.yang.parser.rfc7950.repo.TextToASTTransformer;
 import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangStatementStreamSource;
 import org.opendaylight.yangtools.yang.parser.spi.meta.ReactorException;
 import org.opendaylight.yangtools.yang.parser.stmt.reactor.CrossSourceStatementReactor.BuildAction;
+import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,22 +53,39 @@ import org.slf4j.LoggerFactory;
 public class GovernanceSchemaContextProvider implements SchemaContextProvider {
     private static final Logger LOG = LoggerFactory.getLogger(GovernanceSchemaContextProvider.class);
     private final RemoteGovernance governance;
-    // cache to speed-up module lookups
+    private static final Duration CACHE_TTL = Duration.ofMinutes(10L);
+    private final YangXPathParserFactory xpathParserFactory;
+    // cache to speed-up module import lookups
     private final LoadingCache<ModuleInfo, Set<ModuleImport>> moduleImportCache = CacheBuilder.newBuilder()
-            .expireAfterWrite(30, TimeUnit.SECONDS)
+            .expireAfterWrite(CACHE_TTL)
             .build(new CacheLoader<ModuleInfo, Set<ModuleImport>>() {
                 @Override
                 public Set<ModuleImport> load(ModuleInfo key) throws Exception {
-                    LOG.trace("Resolving imports of {}", key);
-                    final String content = fetchModuleSource(key);
+                    LOG.trace("Resolving imports of module '{}'", key);
+                    final String content = sourceCache.getUnchecked(key);
                     final ASTSchemaSource schemaSource = TextToASTTransformer
                             .transformText(new StringYangTextSchemaSource(key.getModule(), content));
                     return schemaSource.getDependencyInformation().getDependencies();
                 }
             });
 
-    public GovernanceSchemaContextProvider(@NonNull final RemoteGovernance governance) {
-        this.governance = Preconditions.checkNotNull(governance);
+    //cache to speed-up module source fetch
+    private final LoadingCache<ModuleInfo, String> sourceCache = CacheBuilder.newBuilder()
+            .expireAfterWrite(CACHE_TTL)
+            .build(new CacheLoader<ModuleInfo, String>() {
+                @Override
+                public String load(ModuleInfo key) throws Exception {
+                    LOG.trace("Fetching source of module '{}'", key.getModule());
+                    return Optional.ofNullable(governance.source(key.getModule()))
+                            .orElseThrow(() -> new IllegalArgumentException(
+                                    "Module not found in governance : " + key.getModule()));
+                }
+            });
+
+    public GovernanceSchemaContextProvider(@NonNull final RemoteGovernance governance,
+            @NonNull final YangXPathParserFactory xpathParserFactory) {
+        this.governance = Objects.requireNonNull(governance);
+        this.xpathParserFactory = Objects.requireNonNull(xpathParserFactory);
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
@@ -81,13 +100,17 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
 
     @SuppressWarnings("checkstyle:IllegalCatch")
     private EffectiveModelContext createInternal(Peer peer) throws ReactorException {
-        final BuildAction reactor = RFC7950Reactors.defaultReactor().newBuild();
+        final BuildAction reactor = RFC7950Reactors.defaultReactorBuilder(xpathParserFactory).build().newBuild();
         final Deque<ModuleInfo> toResolve = Queues.newArrayDeque();
         try {
-            peer.getModules().forEach(mod -> {
-                LOG.trace("Resolving dependencies of '{}'", mod.getValue());
-                toResolve.addAll(governance.depends(mod.getValue(), null));
-            });
+            Optional.ofNullable(peer.getModules())
+                    .orElse(Collections.emptyList())
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .forEach(mod -> {
+                        LOG.debug("Resolving dependencies of '{}'", mod.getValue());
+                        toResolve.addAll(governance.depends(mod.getValue(), null));
+                    });
         } catch (Exception e) {
             LOG.warn("Governance failed to provide dependencies, will attempt to resolve it locally", e);
             final Set<ModuleInfo> resolved = new HashSet<>();
@@ -114,11 +137,12 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
                 toResolve.addAll(imports);
                 LOG.trace("Remaining to resolve : {}", toResolve);
             }
+            toResolve.addAll(resolved);
         }
-        toResolve.forEach(m -> {
-            final String source = fetchModuleSource(m);
-            addSourceToReactor(reactor, m.getModule(), source);
-        });
+        LOG.trace("Assembling schema from following modules : {}", toResolve);
+        toResolve.stream()
+                .distinct()
+                .forEach(m -> addSourceToReactor(reactor, m.getModule(), sourceCache.getUnchecked(m)));
         return reactor.buildEffective();
     }
 
@@ -129,11 +153,5 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
         } catch (YangSyntaxErrorException | IOException e) {
             throw new IllegalStateException("Unable to add source of '" + name + "' into reactor", e);
         }
-    }
-
-    private String fetchModuleSource(ModuleInfo mi) {
-        LOG.trace("Fetching yang model '{}'", mi.getModule());
-        return Optional.ofNullable(governance.source(mi.getModule()))
-                .orElseThrow(() -> new IllegalArgumentException("Module not found in governance : " + mi.getModule()));
     }
 }

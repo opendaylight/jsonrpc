@@ -19,6 +19,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.Lists;
 import java.net.URISyntaxException;
 import java.util.Optional;
+import java.util.ServiceLoader;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
@@ -49,6 +50,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.Noti
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpointsKey;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
 
 /**
  * Tests for {@link JsonRPCProvider}.
@@ -87,6 +89,8 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         provider.setDomMountPointService(getDOMMountPointService());
         provider.setDomNotificationPublishService(getDOMNotificationRouter());
         provider.setDomRpcService(getDOMRpcRouter().getRpcService());
+        provider.setYangXPathParserFactory(ServiceLoader.load(YangXPathParserFactory.class)
+                .findFirst().orElseThrow());
         provider.init();
         logTestName("START");
     }

@@ -54,6 +54,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
+import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +82,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private DOMRpcService domRpcService;
     private String lastGovernanceUri;
     private String lastWhoAmIUri;
+    private YangXPathParserFactory yangXPathParserFactory;
 
     /**
      * Get current configuration or operational state. Configuration can be set
@@ -311,7 +313,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         try {
             LOG.debug("Creating mapping context for peer {}", peer.getName());
             final MappedPeerContext ctx = new MappedPeerContext(peer, transportFactory, schemaService, dataBroker,
-                    domMountPointService, governance);
+                    domMountPointService, governance, yangXPathParserFactory);
             peerState.put(peer.getName(), ctx);
             LOG.info("Peer mounted : {}", ctx);
             return true;
@@ -406,5 +408,9 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
 
     public void setDomRpcService(DOMRpcService domRpcService) {
         this.domRpcService = domRpcService;
+    }
+
+    public void setYangXPathParserFactory(YangXPathParserFactory yangXPathParserFactory) {
+        this.yangXPathParserFactory = yangXPathParserFactory;
     }
 }
