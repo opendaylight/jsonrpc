@@ -10,10 +10,8 @@ package org.opendaylight.jsonrpc.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 
 /**
@@ -49,15 +47,6 @@ public class UtilTest {
         Util.closeNullable(() -> {
             bool.set(true);
         });
-        assertTrue(bool.get());
-    }
-
-    @Test
-    public void testCloseNullableWithException() throws Exception {
-        final AtomicBoolean bool = new AtomicBoolean(false);
-        AutoCloseable cl = Mockito.mock(AutoCloseable.class);
-        Mockito.doThrow(IOException.class).when(cl).close();
-        Util.closeNullableWithExceptionCallback(cl, t -> bool.set(true));
         assertTrue(bool.get());
     }
 

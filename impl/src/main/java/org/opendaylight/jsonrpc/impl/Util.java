@@ -19,7 +19,6 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.eclipse.jdt.annotation.NonNull;
@@ -37,6 +36,8 @@ import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.opendaylight.yangtools.yang.model.api.SchemaNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class.
@@ -44,6 +45,7 @@ import org.opendaylight.yangtools.yang.model.api.SchemaNode;
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public final class Util {
+    private static final Logger LOG = LoggerFactory.getLogger(Util.class);
     private static final String ERR_UNRECOGNIZED_STORE = "Unrecognized store value %s";
     private static final Gson GSON = new Gson();
     private static final BiMap<Integer, LogicalDatastoreType> STORE_MAP = ImmutableBiMap
@@ -150,20 +152,16 @@ public final class Util {
     }
 
     /**
-     * Utility method to close {@link AutoCloseable} with eventual exception
-     * callback.
+     * Attempt to close provided {@link AutoCloseable} instance and log error if {@link Exception} is thrown.
      *
-     * @param closeable {@link AutoCloseable} instance to close, can be null
-     * @param callback Callback to be invoked when exception occur, must not be
-     *            null
+     * @param closeable instance of {@link AutoCloseable} to close, can be null.
      */
     @SuppressWarnings("checkstyle:IllegalCatch")
-    public static void closeNullableWithExceptionCallback(@Nullable AutoCloseable closeable,
-            @NonNull Consumer<Exception> callback) {
+    public static void closeAndLogOnError(@Nullable AutoCloseable closeable) {
         try {
             closeNullable(closeable);
         } catch (Exception e) {
-            callback.accept(e);
+            LOG.error("Fail to close {}", closeable, e);
         }
     }
 

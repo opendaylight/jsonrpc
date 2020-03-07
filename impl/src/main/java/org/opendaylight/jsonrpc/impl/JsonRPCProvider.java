@@ -11,6 +11,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -62,8 +63,6 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private static final String ME = "JSON RPC Provider";
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCProvider.class);
     private static final InstanceIdentifier<Config> GLOBAL_CFG_II = InstanceIdentifier.create(Config.class);
-    private static final DataTreeIdentifier<Config> OPER_DTI = DataTreeIdentifier
-            .create(LogicalDatastoreType.OPERATIONAL, GLOBAL_CFG_II);
     private static final DataTreeIdentifier<Config> CFG_DTI = DataTreeIdentifier
             .create(LogicalDatastoreType.CONFIGURATION, GLOBAL_CFG_II);
     private TransportFactory transportFactory;
@@ -72,7 +71,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private DOMSchemaService schemaService;
     private volatile RemoteGovernance governance;
     private volatile ResponderSession remoteControl;
-    private final Map<String, MappedPeerContext> peerState = Maps.newConcurrentMap();
+    private final Map<String, AbstractPeerContext> peerState = Maps.newConcurrentMap();
     private final List<AutoCloseable> toClose = new LinkedList<>();
     private final ReentrantReadWriteLock changeLock = new ReentrantReadWriteLock();
     private volatile boolean sessionInitialized = false;
@@ -194,19 +193,13 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     }
 
     private void stopRemoteControl() {
-        if (remoteControl != null) {
-            Util.closeNullableWithExceptionCallback(remoteControl,
-                t -> LOG.warn("Failed to close RemoteControl", t));
-            remoteControl = null;
-        }
+        Util.closeAndLogOnError(remoteControl);
+        remoteControl = null;
     }
 
     private void stopGovernance() {
-        if (governance != null) {
-            Util.closeNullableWithExceptionCallback(governance,
-                t -> LOG.warn("Failed to close RemoteGovernance", t));
-            governance = null;
-        }
+        Util.closeAndLogOnError(governance);
+        governance = null;
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
@@ -282,8 +275,6 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         Objects.requireNonNull(domMountPointService, "DOMMountPointService was not set");
         Objects.requireNonNull(domRpcService, "DOMRpcService was not set");
         Objects.requireNonNull(domNotificationPublishService, "DOMNotificationPublishService was not set");
-        toClose.add(dataBroker.registerDataTreeChangeListener(OPER_DTI,
-                (ClusteredDataTreeChangeListener<Config>) changes -> processNotification()));
         toClose.add(dataBroker.registerDataTreeChangeListener(CFG_DTI,
                 (ClusteredDataTreeChangeListener<Config>) changes -> processNotification()));
         sessionInitialized = true;
@@ -293,12 +284,11 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     @Override
     public void close() {
         providerClosed = true;
-        peerState.values().forEach(p -> doUnmount(p.getName()));
+        peerState.values().forEach(AbstractPeerContext::close);
         peerState.clear();
         stopRemoteControl();
         stopGovernance();
-        toClose.forEach(
-            c -> Util.closeNullableWithExceptionCallback(c, e -> LOG.warn("Failed to close object {}", c, e)));
+        toClose.forEach(Util::closeAndLogOnError);
         LOG.debug("JsonRPCProvider Closed");
     }
 
@@ -312,13 +302,15 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         }
         try {
             LOG.debug("Creating mapping context for peer {}", peer.getName());
+
             final MappedPeerContext ctx = new MappedPeerContext(peer, transportFactory, schemaService, dataBroker,
                     domMountPointService, governance, yangXPathParserFactory);
             peerState.put(peer.getName(), ctx);
             LOG.info("Peer mounted : {}", ctx);
             return true;
-        } catch (Exception e) {
-            LOG.error("Device '{}' can't be mounted", peer.getName(), e);
+        } catch (RuntimeException | URISyntaxException e) {
+            LOG.error("Mount failed for peer '{}'", peer.getName(), e);
+            peerState.put(peer.getName(), new FailedPeerContext(peer, dataBroker, e));
             return false;
         }
     }
@@ -332,13 +324,13 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         if (Strings.isNullOrEmpty(deviceName)) {
             return false;
         }
-        final MappedPeerContext toDelete = peerState.remove(deviceName);
+        final AbstractPeerContext toDelete = peerState.remove(deviceName);
         if (toDelete == null) {
             LOG.error("Device '{}' did not complete mount, cannot remove", deviceName);
             return false;
         } else {
             try {
-                LOG.debug("Destroying mapping context of peer '{}'", toDelete.getName());
+                LOG.debug("Destroying mapping context of peer '{}'", toDelete);
                 toDelete.close();
                 LOG.debug("Device '{}' unmounted successfully", deviceName);
                 return true;

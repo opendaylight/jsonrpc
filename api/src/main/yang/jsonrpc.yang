@@ -164,6 +164,41 @@ module jsonrpc {
         }
     }
 
+    typedef mount-status {
+        type enumeration {
+            enum initial {
+                description "No action has been taken yet.";
+            }
+            enum processing {
+                description "Mount operation has started. This is temporary state that could transition
+                         only to `completed` or `failed` state";
+            }
+            enum mounted {
+                description "Mount operation was successful and peer is ready to be used.";
+            }
+            enum failed {
+                description "Mount operation has failed. This state is permanent";
+            }
+        }
+        default "initial";
+    }
+
+    grouping operational-attributes {
+        description "Peer operational attributes";
+        leaf mount-status {
+            config false;
+            description "Status of mount operation";
+            type mount-status;
+            mandatory true;
+        }
+        leaf failure-reason {
+            config false;
+            description "";
+            type string;
+            when "../mount-status = 'failed'";
+        }
+    }
+
     grouping peer {
         uses entity;
         list data-config-endpoints {
@@ -274,6 +309,7 @@ module jsonrpc {
             key "name";
             config false;
             uses peer;
+            uses operational-attributes;
             description "For each named entity, the JSON-RPC peer endpoints that comprise all, or part,
                          of its remote implementation. This list contains entries for each named entity
                          in 'configured-endpoints' that was successfully mounted, complemented by

@@ -66,8 +66,7 @@ public class DataChangeListenerRegistration
     public void close() {
         LOG.debug("Closing notification publisher for path {}", path);
         try {
-            Stream.of(publisher, delegate).forEach(
-                c -> Util.closeNullableWithExceptionCallback(c, e -> LOG.warn("Unable to close {}", c, e)));
+            Stream.of(publisher, delegate).forEach(Util::closeAndLogOnError);
             closeCallback.accept(listenerKey);
         } catch (Exception e) {
             throw new IllegalStateException("Failed while closing registration", e);

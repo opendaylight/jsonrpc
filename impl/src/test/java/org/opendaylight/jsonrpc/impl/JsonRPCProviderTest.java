@@ -38,6 +38,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ConfigBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.MountStatus;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ActualEndpoints;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ActualEndpointsKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpointsBuilder;
@@ -226,14 +227,41 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         retryAction(TimeUnit.SECONDS, 3, () -> getPeerOpState("test-model-op-only").isPresent());
     }
 
+    @Test
+    public void testMountInvalid() throws InterruptedException, ExecutionException {
+        // unconfigure all
+        updateConfig(new ConfigBuilder().build());
+        // wait until nothing there
+        retryAction(TimeUnit.SECONDS, 2, () -> !getPeerOpState("test-model-op-only").isPresent());
+
+        updateConfig(
+                new ConfigBuilder().setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
+                        .setConfiguredEndpoints(Lists.newArrayList(new ConfiguredEndpointsBuilder()
+                                .setName("test-model-op-only")
+                                .setModules(Lists.newArrayList(new YangIdentifier("bad-module")))
+                                .setDataOperationalEndpoints(Lists.newArrayList(new DataOperationalEndpointsBuilder()
+                                        .withKey(new DataOperationalEndpointsKey("{}"))
+                                        .setEndpointUri(new Uri(dummyUri()))
+                                        .build()))
+                                .build()))
+                        .build());
+
+        retryAction(TimeUnit.SECONDS, 2, () -> getPeerOpState("test-model-op-only").isPresent()
+                && getPeerOpState("test-model-op-only").get().getMountStatus().equals(MountStatus.Failed));
+
+        updateConfig(new ConfigBuilder().build());
+        // wait until nothing there
+        retryAction(TimeUnit.SECONDS, 2, () -> !getPeerOpState("test-model-op-only").isPresent());
+    }
+
     private Optional<ActualEndpoints> getPeerOpState(String name) throws InterruptedException, ExecutionException {
-        final ReadTransaction rtx = getDataBroker().newReadOnlyTransaction();
-        try {
-            return rtx.read(LogicalDatastoreType.OPERATIONAL, InstanceIdentifier.builder(Config.class)
-                    .child(ActualEndpoints.class, new ActualEndpointsKey(name))
-                    .build()).get();
-        } finally {
-            rtx.close();
+        try (ReadTransaction rtx = getDataBroker().newReadOnlyTransaction()) {
+            return rtx
+                    .read(LogicalDatastoreType.OPERATIONAL,
+                            InstanceIdentifier.builder(Config.class)
+                                    .child(ActualEndpoints.class, new ActualEndpointsKey(name))
+                                    .build())
+                    .get();
         }
     }
 
