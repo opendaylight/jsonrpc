@@ -12,12 +12,10 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
-
 import java.lang.reflect.Proxy;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
-
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
 import org.opendaylight.jsonrpc.bus.messagelib.EndpointBuilders.EndpointBuilder;
 

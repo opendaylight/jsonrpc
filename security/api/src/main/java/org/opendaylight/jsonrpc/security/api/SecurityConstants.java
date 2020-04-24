@@ -8,12 +8,9 @@
 package org.opendaylight.jsonrpc.security.api;
 
 import com.google.common.base.Splitter;
-
 import io.netty.handler.ssl.ClientAuth;
-
 import java.security.KeyStore;
 import java.security.PrivateKey;
-
 import javax.net.ssl.KeyManagerFactory;
 
 /**

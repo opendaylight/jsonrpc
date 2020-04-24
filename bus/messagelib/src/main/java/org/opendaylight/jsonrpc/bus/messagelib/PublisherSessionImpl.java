@@ -9,9 +9,7 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import java.util.function.Consumer;
-
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.Publisher;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;

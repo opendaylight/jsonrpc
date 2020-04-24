@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.bus.spi;
 
 import io.netty.channel.EventLoopGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
-
 import java.util.Objects;
 
 /**

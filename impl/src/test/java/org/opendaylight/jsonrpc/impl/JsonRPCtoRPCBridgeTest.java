@@ -16,13 +16,11 @@ import static org.mockito.Mockito.mock;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
 import com.google.gson.stream.JsonReader;
-
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

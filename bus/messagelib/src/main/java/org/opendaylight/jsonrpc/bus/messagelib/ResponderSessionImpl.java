@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
-
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
 import org.opendaylight.jsonrpc.bus.api.PeerContext;

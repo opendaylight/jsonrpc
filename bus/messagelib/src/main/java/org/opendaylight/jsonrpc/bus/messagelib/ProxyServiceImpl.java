@@ -13,7 +13,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.MapMaker;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.JsonElement;
-
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -22,7 +21,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
-
 import org.opendaylight.jsonrpc.bus.api.RecoverableTransportException;
 import org.opendaylight.jsonrpc.bus.api.RpcMethod;
 import org.opendaylight.jsonrpc.bus.api.UnrecoverableTransportException;

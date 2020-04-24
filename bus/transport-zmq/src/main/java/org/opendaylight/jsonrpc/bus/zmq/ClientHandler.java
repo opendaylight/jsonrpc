@@ -9,9 +9,7 @@ package org.opendaylight.jsonrpc.bus.zmq;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-
 import java.nio.charset.StandardCharsets;
-
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
 import org.opendaylight.jsonrpc.bus.spi.AbstractMessageListenerAdapter;
 import org.opendaylight.jsonrpc.bus.spi.CommonConstants;

@@ -8,14 +8,11 @@
 package org.opendaylight.jsonrpc.bus.spi;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.EventExecutorGroup;
-
 import java.util.Objects;
-
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 
 /**

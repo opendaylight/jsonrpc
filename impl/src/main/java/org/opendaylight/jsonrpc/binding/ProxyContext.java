@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.binding;
 
 import java.util.function.Consumer;
-
 import org.opendaylight.jsonrpc.bus.messagelib.BaseSession;
 import org.opendaylight.yangtools.concepts.ObjectRegistration;
 import org.opendaylight.yangtools.yang.binding.RpcService;

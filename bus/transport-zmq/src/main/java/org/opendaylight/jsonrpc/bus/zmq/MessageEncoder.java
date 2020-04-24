@@ -11,7 +11,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
-
 import org.opendaylight.jsonrpc.bus.spi.CommonConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

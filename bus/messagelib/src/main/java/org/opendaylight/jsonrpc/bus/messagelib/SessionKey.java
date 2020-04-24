@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.bus.messagelib;
 
 import java.util.Objects;
-
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 
 /**

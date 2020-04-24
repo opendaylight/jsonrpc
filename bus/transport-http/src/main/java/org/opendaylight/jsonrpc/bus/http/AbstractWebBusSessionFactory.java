@@ -8,16 +8,13 @@
 package org.opendaylight.jsonrpc.bus.http;
 
 import com.google.common.collect.Maps;
-
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
-
 import java.util.Map;
-
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
 import org.opendaylight.jsonrpc.bus.api.Publisher;
@@ -31,7 +28,6 @@ import org.opendaylight.jsonrpc.bus.spi.AbstractChannelInitializer;
 import org.opendaylight.jsonrpc.bus.spi.DiscardingMessageListener;
 import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
 import org.opendaylight.jsonrpc.security.api.SecurityService;
-
 
 /**
  * Base class of web-based {@link BusSessionFactory} implementations.

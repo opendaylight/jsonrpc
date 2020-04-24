@@ -10,9 +10,7 @@ package org.opendaylight.jsonrpc.bus.zmq;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.EventExecutorGroup;
-
 import java.util.concurrent.atomic.AtomicReference;
-
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 import org.opendaylight.jsonrpc.bus.spi.AbstractChannelInitializer;

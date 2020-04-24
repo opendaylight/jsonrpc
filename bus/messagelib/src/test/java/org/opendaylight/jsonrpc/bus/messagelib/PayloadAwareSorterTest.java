@@ -12,12 +12,10 @@ import static org.junit.Assert.assertEquals;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
 import org.junit.Test;
 
 /**

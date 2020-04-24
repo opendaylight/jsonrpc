@@ -12,10 +12,8 @@ import static org.mockito.Mockito.mock;
 
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.common.util.concurrent.Uninterruptibles;
-
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

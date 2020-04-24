@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-
 import org.opendaylight.jsonrpc.bus.api.Publisher;
 import org.opendaylight.jsonrpc.bus.messagelib.EndpointBuilders.BaseEndpointBuilder;
 import org.opendaylight.jsonrpc.bus.messagelib.EndpointBuilders.EndpointBuilder;

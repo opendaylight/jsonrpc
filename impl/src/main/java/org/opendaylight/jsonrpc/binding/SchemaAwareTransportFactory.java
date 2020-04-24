@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.binding;
 import com.google.common.collect.ClassToInstanceMap;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.Reflection;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
@@ -18,7 +17,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
 import org.opendaylight.jsonrpc.bus.messagelib.AbstractTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.NoopReplyMessageHandler;

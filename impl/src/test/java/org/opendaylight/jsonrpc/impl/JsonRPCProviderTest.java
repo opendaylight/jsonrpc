@@ -17,12 +17,10 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
-
 import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,7 +54,6 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
  * Tests for {@link JsonRPCProvider}.
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
- *
  */
 public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     private static final String DEMO1_MODEL = "demo1";

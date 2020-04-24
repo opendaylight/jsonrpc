@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.model;
 
 import java.time.Instant;
 import java.util.Date;
-
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.mdsal.dom.api.DOMEvent;
 import org.opendaylight.mdsal.dom.api.DOMNotification;

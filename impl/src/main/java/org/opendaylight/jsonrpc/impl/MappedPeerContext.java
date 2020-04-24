@@ -10,15 +10,12 @@ package org.opendaylight.jsonrpc.impl;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.JsonElement;
-
 import java.net.URISyntaxException;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
-
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
@@ -60,7 +57,6 @@ import org.slf4j.LoggerFactory;
  *
  * <p>
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
- *
  */
 public class MappedPeerContext implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(MappedPeerContext.class);

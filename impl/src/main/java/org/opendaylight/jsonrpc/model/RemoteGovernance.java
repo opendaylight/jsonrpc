@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.model;
 
 import com.google.gson.JsonElement;
-
 import java.util.List;
 
 /**

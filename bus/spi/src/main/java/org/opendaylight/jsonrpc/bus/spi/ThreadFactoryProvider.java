@@ -8,12 +8,9 @@
 package org.opendaylight.jsonrpc.bus.spi;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
 import io.netty.util.concurrent.EventExecutorGroup;
-
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.concurrent.ThreadFactory;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -8,10 +8,8 @@
 package org.opendaylight.jsonrpc.bus.messagelib;
 
 import com.google.common.collect.Lists;
-
 import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

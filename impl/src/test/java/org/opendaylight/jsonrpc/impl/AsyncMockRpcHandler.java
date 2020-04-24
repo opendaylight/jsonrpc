@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.impl;
 
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
-
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage.Builder;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.RequestMessageHandler;
