@@ -8,9 +8,7 @@
 package org.opendaylight.jsonrpc.model;
 
 import com.google.common.base.Preconditions;
-
 import java.net.URISyntaxException;
-
 import org.opendaylight.jsonrpc.bus.messagelib.NotificationMessageHandler;
 import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;

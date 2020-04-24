@@ -20,18 +20,15 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.opendaylight.jsonrpc.model.JSONRPCArg;
 import org.opendaylight.mdsal.binding.dom.adapter.BindingToNormalizedNodeCodec;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.Ipv4;
@@ -64,7 +61,6 @@ import org.slf4j.LoggerFactory;
  * Tests for {@link JsonConverter}.
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
- *
  */
 public class JsonConverterTest extends AbstractJsonRpcTest {
     private static final Logger LOG = LoggerFactory.getLogger(JsonConverter.class);

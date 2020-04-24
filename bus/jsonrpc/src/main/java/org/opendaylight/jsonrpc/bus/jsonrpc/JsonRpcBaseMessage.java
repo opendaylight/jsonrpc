@@ -12,10 +12,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-
 import java.lang.reflect.Type;
 import java.util.Objects;
-
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.slf4j.Logger;
@@ -28,7 +26,6 @@ import org.slf4j.LoggerFactory;
  * should be written for Object to JSON conversion.
  *
  * @author Shaleen Saxena
- *
  */
 public abstract class JsonRpcBaseMessage {
     public enum JsonRpcMessageType {

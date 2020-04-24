@@ -9,11 +9,9 @@ package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.ServiceLoader;
-
 import org.opendaylight.jsonrpc.model.InbandModelsService;
 import org.opendaylight.jsonrpc.model.Module;
 import org.opendaylight.yangtools.yang.binding.YangModelBindingProvider;

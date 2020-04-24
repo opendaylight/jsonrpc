@@ -11,10 +11,8 @@ import static org.opendaylight.jsonrpc.impl.Util.findNode;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
 import org.eclipse.jdt.annotation.NonNull;
 import org.junit.After;
 import org.junit.Before;

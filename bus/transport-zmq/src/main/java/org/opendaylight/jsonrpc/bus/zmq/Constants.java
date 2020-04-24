@@ -9,9 +9,7 @@ package org.opendaylight.jsonrpc.bus.zmq;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
-
 import io.netty.util.AttributeKey;
-
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 
 /**

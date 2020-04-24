@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.model;
 
 import java.util.List;
-
 import org.opendaylight.jsonrpc.bus.api.RpcMethod;
 
 /**

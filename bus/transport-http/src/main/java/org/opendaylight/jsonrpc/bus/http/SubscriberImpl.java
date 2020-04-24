@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.bus.http;
 
 import io.netty.bootstrap.Bootstrap;
-
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 import org.opendaylight.jsonrpc.bus.api.Subscriber;
 import org.opendaylight.jsonrpc.bus.spi.AbstractChannelInitializer;

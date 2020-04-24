@@ -14,7 +14,6 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
@@ -24,7 +23,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
-
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.hmap.DataType;
@@ -45,7 +43,6 @@ import org.opendaylight.yangtools.yang.model.api.SchemaNode;
  * Utility class.
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
- *
  */
 public final class Util {
     private static final String ERR_UNRECOGNIZED_STORE = "Unrecognized store value %s";

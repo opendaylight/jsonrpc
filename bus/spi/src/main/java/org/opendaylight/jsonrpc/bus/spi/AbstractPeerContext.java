@@ -8,9 +8,7 @@
 package org.opendaylight.jsonrpc.bus.spi;
 
 import io.netty.channel.Channel;
-
 import java.util.Objects;
-
 import org.opendaylight.jsonrpc.bus.api.PeerContext;
 
 /**

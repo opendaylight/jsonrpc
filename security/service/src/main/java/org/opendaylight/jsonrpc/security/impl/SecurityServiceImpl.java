@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.security.impl;
 
 import java.util.Objects;
-
 import org.opendaylight.jsonrpc.security.api.AuthenticationProvider;
 import org.opendaylight.jsonrpc.security.api.SecurityService;
 

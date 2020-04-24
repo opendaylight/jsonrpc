@@ -12,7 +12,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
@@ -21,7 +20,6 @@ import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
  * Tests for {@link Util} class.
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
- *
  */
 public class UtilTest {
     @Test(expected = RuntimeException.class)

@@ -13,7 +13,6 @@ import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.PA
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

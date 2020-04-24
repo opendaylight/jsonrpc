@@ -9,10 +9,8 @@ package org.opendaylight.jsonrpc.bus.bb.example;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.net.URISyntaxException;
 import java.util.concurrent.CountDownLatch;
-
 import org.opendaylight.jsonrpc.binding.EmbeddedRpcInvocationAdapter;
 import org.opendaylight.jsonrpc.binding.ProxyContext;
 import org.opendaylight.jsonrpc.binding.SchemaAwareTransportFactory;

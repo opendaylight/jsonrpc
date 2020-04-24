@@ -18,7 +18,6 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.util.Map;
 import java.util.Objects;
-
 import javax.net.ssl.ManagerFactoryParameters;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;

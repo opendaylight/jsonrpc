@@ -12,7 +12,6 @@ import io.netty.util.concurrent.DefaultProgressivePromise;
 import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GlobalEventExecutor;
-
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
 import org.opendaylight.jsonrpc.bus.api.RecoverableTransportException;
 import org.opendaylight.jsonrpc.bus.api.Requester;

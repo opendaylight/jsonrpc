@@ -10,15 +10,12 @@ package org.opendaylight.jsonrpc.impl;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonParser;
-
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-
 import junit.framework.AssertionFailedError;
-
 import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.opendaylight.mdsal.binding.api.DataBroker;

@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.model;
 
 import java.beans.ConstructorProperties;
 import java.util.Objects;
-
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 

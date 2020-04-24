@@ -8,9 +8,7 @@
 package org.opendaylight.jsonrpc.hmap;
 
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Objects;
-
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 
 /**

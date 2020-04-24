@@ -9,13 +9,11 @@ package org.opendaylight.jsonrpc.bus.zmq;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 
 /**

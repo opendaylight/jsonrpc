@@ -14,9 +14,7 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.ProgressivePromise;
 import io.netty.util.internal.SystemPropertyUtil;
-
 import java.util.concurrent.atomic.AtomicReference;
-
 import org.opendaylight.jsonrpc.bus.api.PeerContext;
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 

@@ -8,14 +8,11 @@
 package org.opendaylight.jsonrpc.bus.spi;
 
 import com.google.common.net.InetAddresses;
-
 import io.netty.channel.ChannelFuture;
-
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Objects;
-
 import org.opendaylight.jsonrpc.bus.api.BusSession;
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 

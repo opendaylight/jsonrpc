@@ -9,11 +9,8 @@ package org.opendaylight.jsonrpc.impl;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import java.util.Objects;
-
 import org.eclipse.jdt.annotation.NonNull;
-
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;

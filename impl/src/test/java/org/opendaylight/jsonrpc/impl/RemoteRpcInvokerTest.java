@@ -11,7 +11,6 @@ import static org.junit.Assert.assertNotNull;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

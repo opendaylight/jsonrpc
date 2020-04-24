@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.bus.spi;
 
 import java.util.Map;
-
 import org.opendaylight.jsonrpc.security.api.SecurityConstants;
 
 public final class ChannelAuthentication {

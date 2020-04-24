@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseRequestMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
 import org.slf4j.Logger;

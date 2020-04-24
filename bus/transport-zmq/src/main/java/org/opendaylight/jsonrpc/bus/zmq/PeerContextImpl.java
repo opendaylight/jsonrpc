@@ -8,9 +8,7 @@
 package org.opendaylight.jsonrpc.bus.zmq;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import io.netty.channel.Channel;
-
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 import org.opendaylight.jsonrpc.bus.spi.AbstractPeerContext;
 

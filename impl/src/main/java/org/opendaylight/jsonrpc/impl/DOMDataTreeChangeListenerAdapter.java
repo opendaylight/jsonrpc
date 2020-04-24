@@ -11,7 +11,6 @@ import java.net.URISyntaxException;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
-
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;

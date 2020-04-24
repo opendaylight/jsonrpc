@@ -10,21 +10,17 @@ package org.opendaylight.jsonrpc.bus.spi;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.Uninterruptibles;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.ScheduledFuture;
-
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-
 import org.opendaylight.jsonrpc.bus.api.ClientSession;
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 import org.slf4j.Logger;

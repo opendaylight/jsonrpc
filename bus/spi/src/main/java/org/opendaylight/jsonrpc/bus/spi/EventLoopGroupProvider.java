@@ -8,13 +8,11 @@
 package org.opendaylight.jsonrpc.bus.spi;
 
 import com.google.common.util.concurrent.Uninterruptibles;
-
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.internal.SystemPropertyUtil;
-
 import java.util.concurrent.TimeUnit;
 
 /**

@@ -8,11 +8,9 @@
 package org.opendaylight.jsonrpc.bus.http;
 
 import com.google.common.base.Strings;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.RecoverableTransportException;

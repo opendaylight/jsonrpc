@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.bus.zmq;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 

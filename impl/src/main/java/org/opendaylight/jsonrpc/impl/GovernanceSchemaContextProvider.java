@@ -13,7 +13,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Queues;
 import com.google.common.io.ByteSource;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Deque;
@@ -22,7 +21,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.model.ModuleInfo;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
@@ -48,7 +46,6 @@ import org.slf4j.LoggerFactory;
  * recursively first.
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
- *
  */
 public class GovernanceSchemaContextProvider implements SchemaContextProvider {
     private static final Logger LOG = LoggerFactory.getLogger(GovernanceSchemaContextProvider.class);

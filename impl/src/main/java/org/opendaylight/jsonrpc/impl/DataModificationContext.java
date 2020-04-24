@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.collect.ImmutableList;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -18,7 +17,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.model.TransactionFactory;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;

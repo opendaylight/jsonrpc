@@ -11,9 +11,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-
 import java.net.URISyntaxException;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

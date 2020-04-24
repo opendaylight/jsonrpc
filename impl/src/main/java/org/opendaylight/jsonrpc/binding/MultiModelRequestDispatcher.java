@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.binding;
 
 import java.util.Optional;
 import java.util.Set;
-
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage.Builder;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;

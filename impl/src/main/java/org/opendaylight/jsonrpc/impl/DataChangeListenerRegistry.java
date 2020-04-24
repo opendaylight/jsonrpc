@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.collect.Maps;
-
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -16,7 +15,6 @@ import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.api.PeerContext;
 import org.opendaylight.jsonrpc.bus.messagelib.PeerContextHolder;

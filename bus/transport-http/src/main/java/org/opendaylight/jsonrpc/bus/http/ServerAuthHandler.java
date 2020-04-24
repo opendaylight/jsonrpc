@@ -12,9 +12,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpHeaderNames;
-
 import java.util.Objects;
-
 import org.opendaylight.jsonrpc.security.api.AuthenticationProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

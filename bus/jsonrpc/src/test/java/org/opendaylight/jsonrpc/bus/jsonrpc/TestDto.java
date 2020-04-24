@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.bus.jsonrpc;
 
 import com.google.gson.JsonElement;
-
 import java.beans.ConstructorProperties;
 
 /**

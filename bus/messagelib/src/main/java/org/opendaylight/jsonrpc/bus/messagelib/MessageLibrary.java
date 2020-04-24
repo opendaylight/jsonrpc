@@ -11,12 +11,10 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
 import org.opendaylight.jsonrpc.bus.api.SessionType;
@@ -27,7 +25,6 @@ import org.opendaylight.jsonrpc.bus.api.SessionType;
  * use it to create sessions of various types.
  *
  * @author Shaleen Saxena
- *
  */
 public class MessageLibrary implements AutoCloseable, Consumer<AutoCloseable> {
     private final BusSessionFactory factory;

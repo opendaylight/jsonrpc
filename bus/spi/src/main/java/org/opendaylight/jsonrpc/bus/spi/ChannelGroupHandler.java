@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.bus.spi;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.group.ChannelGroup;
-
 import java.util.Objects;
 
 /**

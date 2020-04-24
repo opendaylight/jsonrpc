@@ -11,7 +11,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-
 import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Iterator;
@@ -20,9 +19,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import org.eclipse.jdt.annotation.NonNull;
-
 import org.opendaylight.yangtools.concepts.Codec;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
@@ -37,7 +34,6 @@ import org.slf4j.LoggerFactory;
 /**
  * {@link Codec} to perform transformation between {@link YangInstanceIdentifier} and JSONRPC path. Instance of this
  * codec is safe to use from multiple threads concurrently.
- *
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Feb 15, 2020

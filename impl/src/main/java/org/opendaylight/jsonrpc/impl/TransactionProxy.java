@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.impl;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-
 import org.opendaylight.jsonrpc.model.JsonRpcTransactionFacade;
 import org.opendaylight.yangtools.yang.common.OperationFailedException;
 
