@@ -6,16 +6,13 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-
 package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.util.concurrent.AbstractFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -23,7 +20,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-
 import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.mdsal.dom.api.DOMRpcResult;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
@@ -31,7 +27,6 @@ import org.opendaylight.yangtools.yang.model.api.SchemaPath;
 
 /**
  * Simplistic implementation of CheckedFuture to be returned by the RPC implementation.
- *
  */
 @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
 @SuppressFBWarnings("NP_NONNULL_PARAM_VIOLATION")

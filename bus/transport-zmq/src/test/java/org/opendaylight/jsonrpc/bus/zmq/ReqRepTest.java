@@ -10,12 +10,10 @@ package org.opendaylight.jsonrpc.bus.zmq;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Strings;
-
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.MessageListener;

@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.bus.zmq;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
-
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
 import org.opendaylight.jsonrpc.bus.api.Publisher;

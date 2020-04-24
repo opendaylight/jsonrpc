@@ -6,20 +6,17 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-
 package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.gson.JsonElement;
-
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;

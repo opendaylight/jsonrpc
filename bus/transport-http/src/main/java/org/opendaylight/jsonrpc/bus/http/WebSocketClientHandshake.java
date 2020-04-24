@@ -14,7 +14,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException;
-
 import org.opendaylight.jsonrpc.bus.spi.CommonConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

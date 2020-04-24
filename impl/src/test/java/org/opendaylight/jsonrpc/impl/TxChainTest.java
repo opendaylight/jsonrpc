@@ -5,7 +5,6 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-
 package org.opendaylight.jsonrpc.impl;
 
 import static org.mockito.Mockito.never;
@@ -13,7 +12,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.gson.JsonElement;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;

@@ -13,7 +13,6 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseRequestMessage;
 
 /**

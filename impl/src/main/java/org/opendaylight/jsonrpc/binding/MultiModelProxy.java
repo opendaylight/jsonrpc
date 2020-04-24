@@ -9,11 +9,9 @@ package org.opendaylight.jsonrpc.binding;
 
 import com.google.common.collect.ClassToInstanceMap;
 import com.google.common.collect.ImmutableClassToInstanceMap;
-
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import org.opendaylight.yangtools.yang.binding.RpcService;
 
 /**

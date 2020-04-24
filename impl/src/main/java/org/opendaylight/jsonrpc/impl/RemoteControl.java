@@ -15,7 +15,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
-
 import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.Collections;
@@ -34,7 +33,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
-
 import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;

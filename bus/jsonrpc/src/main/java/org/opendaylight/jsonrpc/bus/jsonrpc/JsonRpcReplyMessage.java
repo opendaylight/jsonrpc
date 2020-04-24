@@ -9,9 +9,7 @@ package org.opendaylight.jsonrpc.bus.jsonrpc;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import java.lang.reflect.Type;
-
 import org.eclipse.jdt.annotation.Nullable;
 
 /**

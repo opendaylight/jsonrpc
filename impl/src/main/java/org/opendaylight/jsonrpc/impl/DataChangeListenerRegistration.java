@@ -12,7 +12,6 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.model.DataChangeNotification;
 import org.opendaylight.jsonrpc.model.DataChangeNotificationPublisher;

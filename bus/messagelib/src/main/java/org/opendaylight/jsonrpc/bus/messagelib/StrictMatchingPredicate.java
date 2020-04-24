@@ -9,7 +9,6 @@
 package org.opendaylight.jsonrpc.bus.messagelib;
 
 import java.lang.reflect.Method;
-
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseRequestMessage;
 
 /**

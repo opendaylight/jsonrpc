@@ -8,13 +8,10 @@
 package org.opendaylight.jsonrpc.bus.spi;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.concurrent.ProgressivePromise;
-
 import java.util.Objects;
-
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
 import org.opendaylight.jsonrpc.bus.api.PeerContext;
 import org.slf4j.Logger;

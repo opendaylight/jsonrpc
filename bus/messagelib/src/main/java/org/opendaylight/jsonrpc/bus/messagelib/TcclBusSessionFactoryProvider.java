@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 
 import java.util.Iterator;
 import java.util.ServiceLoader;
-
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
 
@@ -23,7 +22,6 @@ import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
  * {@link Thread#setContextClassLoader(ClassLoader)}
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
- *
  */
 public final class TcclBusSessionFactoryProvider implements BusSessionFactoryProvider {
     private static final BusSessionFactoryProvider INSTANCE = new TcclBusSessionFactoryProvider();

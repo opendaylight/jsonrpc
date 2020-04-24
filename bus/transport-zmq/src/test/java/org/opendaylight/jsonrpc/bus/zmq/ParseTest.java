@@ -13,7 +13,6 @@ import static org.junit.Assert.assertTrue;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
-
 import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 

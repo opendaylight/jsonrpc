@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.bus.http;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
-
 import org.junit.Test;
 import org.opendaylight.jsonrpc.security.api.SecurityConstants;
 

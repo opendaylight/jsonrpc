@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.example;
 
 import com.google.gson.JsonObject;
-
 import org.opendaylight.jsonrpc.model.InbandModelsService;
 
 public interface DemoService extends InbandModelsService {

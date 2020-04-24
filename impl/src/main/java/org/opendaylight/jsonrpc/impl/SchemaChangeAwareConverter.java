@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.impl;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;

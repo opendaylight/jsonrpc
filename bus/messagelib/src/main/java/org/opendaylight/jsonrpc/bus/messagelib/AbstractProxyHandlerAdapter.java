@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.bus.messagelib;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,7 +16,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcBaseRequestMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.slf4j.Logger;

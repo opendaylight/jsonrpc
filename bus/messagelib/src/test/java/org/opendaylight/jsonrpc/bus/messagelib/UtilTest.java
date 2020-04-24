@@ -13,7 +13,6 @@ import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.DE
 import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.PARAM_TIMEOUT;
 
 import java.util.Map;
-
 import org.junit.Test;
 
 /**

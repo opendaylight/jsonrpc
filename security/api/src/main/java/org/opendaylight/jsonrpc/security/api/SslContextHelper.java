@@ -21,14 +21,11 @@ import static org.opendaylight.jsonrpc.security.api.SecurityConstants.OPT_PROTOC
 import static org.opendaylight.jsonrpc.security.api.SecurityConstants.TLS_CLIENT_VERIFY_DEFAULT;
 
 import com.google.common.base.Preconditions;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import io.netty.handler.ssl.ClientAuth;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
@@ -42,9 +39,7 @@ import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 import java.util.Map;
 import java.util.Objects;
-
 import javax.net.ssl.TrustManagerFactory;
-
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

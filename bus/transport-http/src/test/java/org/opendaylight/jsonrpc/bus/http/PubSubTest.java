@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
 import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.MessageListener;

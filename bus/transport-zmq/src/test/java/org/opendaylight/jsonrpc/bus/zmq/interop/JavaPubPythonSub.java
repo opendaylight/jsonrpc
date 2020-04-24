@@ -8,9 +8,7 @@
 package org.opendaylight.jsonrpc.bus.zmq.interop;
 
 import com.google.common.util.concurrent.Uninterruptibles;
-
 import java.util.concurrent.TimeUnit;
-
 import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.api.Publisher;
 

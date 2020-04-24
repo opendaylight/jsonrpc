@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.bus.messagelib.osgi;
 
 import java.util.Iterator;
 import java.util.List;
-
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
 
@@ -19,7 +18,6 @@ import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
  * specifically in 121.7.3 "reference-list" manager.
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
- *
  */
 public class OsgiBusSessionFactoryProvider implements BusSessionFactoryProvider {
     private final List<BusSessionFactory> sessionFactories;

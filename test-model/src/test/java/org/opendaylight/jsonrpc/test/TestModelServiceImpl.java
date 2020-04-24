@@ -11,10 +11,8 @@ import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.opendaylight.yangtools.yang.common.RpcResultBuilder.success;
 
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.Coffee;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.ErrorMethodInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.ErrorMethodOutput;

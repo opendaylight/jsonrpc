@@ -16,7 +16,6 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -27,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-
 import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;

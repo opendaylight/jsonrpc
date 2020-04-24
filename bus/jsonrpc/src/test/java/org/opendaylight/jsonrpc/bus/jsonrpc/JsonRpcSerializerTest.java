@@ -13,9 +13,7 @@ import static org.junit.Assert.fail;
 
 import com.google.gson.JsonNull;
 import com.google.gson.JsonParser;
-
 import java.util.List;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;

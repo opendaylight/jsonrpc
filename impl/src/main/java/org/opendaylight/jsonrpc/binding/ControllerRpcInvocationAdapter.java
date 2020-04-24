@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.binding;
 
 import java.util.Objects;
-
 import org.opendaylight.jsonrpc.impl.SchemaChangeAwareConverter;
 import org.opendaylight.mdsal.binding.dom.adapter.BindingToNormalizedNodeCodec;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;

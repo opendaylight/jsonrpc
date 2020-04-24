@@ -8,12 +8,10 @@
 package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.io.ByteSource;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
-
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.InbandModelsService;
 import org.opendaylight.jsonrpc.model.SchemaContextProvider;

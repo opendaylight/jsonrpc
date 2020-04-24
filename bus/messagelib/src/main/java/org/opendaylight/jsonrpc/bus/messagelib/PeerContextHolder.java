@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.bus.messagelib;
 
 import io.netty.util.concurrent.FastThreadLocal;
-
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
 import org.opendaylight.jsonrpc.bus.api.PeerContext;
 

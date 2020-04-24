@@ -14,7 +14,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
 import org.opendaylight.jsonrpc.bus.api.Requester;
 import org.opendaylight.jsonrpc.bus.api.Responder;
 import org.opendaylight.jsonrpc.bus.spi.AbstractSessionTest;

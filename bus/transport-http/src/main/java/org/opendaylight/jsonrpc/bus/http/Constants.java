@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.bus.http;
 import io.netty.channel.Channel;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
-
 import java.util.Map;
 
 /**

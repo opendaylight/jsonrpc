@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.security.aaa;
 
 import java.util.Objects;
 import java.util.Optional;
-
 import org.opendaylight.aaa.api.AuthenticationException;
 import org.opendaylight.aaa.api.CredentialAuth;
 import org.opendaylight.aaa.api.IDMStoreException;

@@ -8,9 +8,7 @@
 package org.opendaylight.jsonrpc.example;
 
 import com.google.gson.JsonObject;
-
 import java.util.concurrent.CountDownLatch;
-
 import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;

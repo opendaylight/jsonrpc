@@ -9,9 +9,7 @@ package org.opendaylight.jsonrpc.model;
 
 import java.util.Objects;
 import java.util.Set;
-
 import org.opendaylight.mdsal.dom.api.DOMDataTreeChangeListener;
-
 
 /**
  * Data change notification object.

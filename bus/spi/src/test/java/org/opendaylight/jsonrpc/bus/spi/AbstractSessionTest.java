@@ -8,17 +8,14 @@
 package org.opendaylight.jsonrpc.bus.spi;
 
 import com.google.common.io.Resources;
-
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
-
 import org.junit.After;
 import org.junit.Before;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;

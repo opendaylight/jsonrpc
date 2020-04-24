@@ -11,7 +11,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,9 +21,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
-
 import org.eclipse.jdt.annotation.NonNull;
-
 import org.opendaylight.yangtools.concepts.Builder;
 
 /**

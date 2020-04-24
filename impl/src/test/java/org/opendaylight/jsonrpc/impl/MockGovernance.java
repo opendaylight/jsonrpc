@@ -10,13 +10,11 @@ package org.opendaylight.jsonrpc.impl;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-
 import org.opendaylight.jsonrpc.model.ModuleInfo;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.StoreOperationArgument;

@@ -9,9 +9,7 @@ package org.opendaylight.jsonrpc.bus.http;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-
 import java.nio.charset.StandardCharsets;
-
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
 import org.opendaylight.jsonrpc.bus.spi.AbstractMessageListenerAdapter;
 import org.opendaylight.jsonrpc.bus.spi.CommonConstants;

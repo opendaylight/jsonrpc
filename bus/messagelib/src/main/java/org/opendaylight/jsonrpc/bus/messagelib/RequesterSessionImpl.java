@@ -15,17 +15,14 @@ import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.PA
 import com.google.common.collect.Queues;
 import com.google.common.primitives.Ints;
 import com.google.gson.JsonObject;
-
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
 import org.opendaylight.jsonrpc.bus.api.PeerContext;

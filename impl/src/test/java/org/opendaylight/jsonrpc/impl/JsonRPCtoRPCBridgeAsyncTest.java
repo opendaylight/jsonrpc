@@ -11,14 +11,11 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 
 import com.google.gson.JsonElement;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.MessageLibrary;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;

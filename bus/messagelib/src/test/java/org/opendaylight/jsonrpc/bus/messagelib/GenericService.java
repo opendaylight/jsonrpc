@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-
 import java.util.List;
 import java.util.Map;
 

@@ -8,9 +8,7 @@
 package org.opendaylight.jsonrpc.bus.spi;
 
 import io.netty.channel.group.ChannelGroup;
-
 import java.util.Objects;
-
 import org.opendaylight.jsonrpc.bus.api.ServerSession;
 import org.opendaylight.jsonrpc.bus.api.SessionType;
 

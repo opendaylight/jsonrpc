@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.impl;
 
 import java.util.concurrent.CountDownLatch;
-
 import org.opendaylight.jsonrpc.model.DataChangeNotification;
 import org.opendaylight.jsonrpc.model.DataChangeNotificationPublisher;
 

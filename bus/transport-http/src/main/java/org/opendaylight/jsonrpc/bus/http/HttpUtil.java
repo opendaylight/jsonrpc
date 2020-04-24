@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.bus.http;
 
 import com.google.common.base.Preconditions;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
@@ -22,13 +21,11 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
-
 import org.opendaylight.jsonrpc.bus.spi.ChannelAuthentication;
 import org.opendaylight.jsonrpc.security.api.SecurityConstants;
 

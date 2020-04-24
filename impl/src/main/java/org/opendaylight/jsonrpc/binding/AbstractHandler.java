@@ -10,12 +10,10 @@ package org.opendaylight.jsonrpc.binding;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.reflect.AbstractInvocationHandler;
-
 import java.lang.reflect.Method;
 import java.util.AbstractMap;
 import java.util.Objects;
 import java.util.stream.Collector;
-
 import org.opendaylight.yangtools.yang.binding.RpcService;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 

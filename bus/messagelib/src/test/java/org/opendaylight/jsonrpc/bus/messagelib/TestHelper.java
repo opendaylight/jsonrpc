@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.bus.messagelib;
 
 import com.google.common.util.concurrent.Uninterruptibles;
-
 import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.TimeUnit;
