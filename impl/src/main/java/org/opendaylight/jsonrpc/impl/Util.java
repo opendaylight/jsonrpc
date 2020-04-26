@@ -18,6 +18,7 @@ import com.google.gson.JsonObject;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -141,9 +142,13 @@ public final class Util {
      * @param key {@link DataType} of entries to populate
      */
     public static void populateFromEndpointList(HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
-            Collection<? extends Endpoint> endpoints, DataType key) {
-        endpoints.stream().filter(p -> p != null && p.getEndpointUri() != null).forEach(
-            ep -> pathMap.put(GSON.fromJson(ep.getPath(), JsonObject.class), key, ep.getEndpointUri().getValue()));
+            @Nullable Collection<? extends Endpoint> endpoints, DataType key) {
+        Optional.ofNullable(endpoints)
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(p -> p != null && p.getEndpointUri() != null)
+                .forEach(ep -> pathMap.put(GSON.fromJson(ep.getPath(), JsonObject.class), key,
+                        ep.getEndpointUri().getValue()));
     }
 
     /**

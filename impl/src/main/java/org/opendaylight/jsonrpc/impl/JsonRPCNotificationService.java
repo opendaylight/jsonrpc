@@ -53,47 +53,20 @@ public class JsonRPCNotificationService extends AbstractJsonRPCComponent
             @NonNull TransportFactory transportFactory, @Nullable RemoteGovernance governance)
             throws URISyntaxException {
         super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
-
-        if (peer.getNotificationEndpoints() != null) {
-            Util.populateFromEndpointList(pathMap, peer.getNotificationEndpoints(), DataType.NOTIFICATION);
-        }
-
+        Util.populateFromEndpointList(pathMap, peer.getNotificationEndpoints(), DataType.NOTIFICATION);
         for (final NotificationDefinition def : schemaContext.getNotifications()) {
             final QNameModule qm = def.getQName().getModule();
+            final String localName = def.getQName().getLocalName();
             final Optional<Module> possibleModule = schemaContext.findModule(qm.getNamespace(), qm.getRevision());
-            if (!possibleModule.isPresent()) {
-                LOG.error("Notification {} cannot be mapped, module not found", def.getQName().getLocalName());
-                continue;
-            }
-            final String topLevel = jsonConverter.makeQualifiedName(possibleModule.get(), def.getQName());
-            final JsonObject path = new JsonObject();
-            path.add(topLevel, new JsonObject());
-            final String notificationEndpoint = getEndpoint(peer, pathMap, governance, path);
-            if (notificationEndpoint != null) {
-                LOG.info("Notification {} mapped to {}", topLevel, notificationEndpoint);
-                mappedNotifications.put(def.getQName().getLocalName(),
-                        new NotificationState(def, notificationEndpoint, this, transportFactory));
+            final JsonObject path = createRootPath(possibleModule.get(), def.getQName());
+            final String endpoint = getEndpoint(DataType.NOTIFICATION, governance, path);
+            if (endpoint != null) {
+                LOG.info("Notification '{}' mapped to {}", localName, endpoint);
+                mappedNotifications.put(localName, new NotificationState(def, endpoint, this, transportFactory));
             } else {
-                LOG.error("Notifications {} cannot be mapped, no known endpoint", topLevel);
+                LOG.warn("Notification '{}' cannot be mapped, no known endpoint", localName);
             }
         }
-    }
-
-    private String getEndpoint(Peer peer, HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
-            RemoteGovernance governance, final JsonObject path) {
-        String notificationEndpoint = pathMap.lookup(path, DataType.NOTIFICATION).orElse(null);
-        LOG.debug("Notification endpoint - map lookup is  {}", notificationEndpoint);
-        if (notificationEndpoint == null && governance != null) {
-            notificationEndpoint = governance.governance(-1, peer.getName(), path);
-            if (notificationEndpoint != null) {
-                /*
-                 * Store the endpoint from governance so we can generate actual
-                 * opstate
-                 */
-                pathMap.put(path, DataType.NOTIFICATION, notificationEndpoint);
-            }
-        }
-        return notificationEndpoint;
     }
 
     @Override
