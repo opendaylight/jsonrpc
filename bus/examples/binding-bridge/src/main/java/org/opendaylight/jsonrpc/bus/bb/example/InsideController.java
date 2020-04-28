@@ -16,7 +16,7 @@ import org.opendaylight.jsonrpc.binding.ProxyContext;
 import org.opendaylight.jsonrpc.binding.SchemaAwareTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
-import org.opendaylight.mdsal.binding.dom.adapter.BindingToNormalizedNodeCodec;
+import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.bb.example.rev180924.BbExampleService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.bb.example.rev180924.Method1Input;
@@ -46,7 +46,7 @@ public class InsideController implements BbExampleService, AutoCloseable {
     private ProxyContext<TestModelService> proxy;
     private ResponderSession responder;
     private DOMSchemaService schemaService;
-    private BindingToNormalizedNodeCodec codec;
+    private BindingNormalizedNodeSerializer codec;
 
     /**
      * Called by blueprint when provider is created.
@@ -88,8 +88,9 @@ public class InsideController implements BbExampleService, AutoCloseable {
      */
     @Override
     public ListenableFuture<RpcResult<Method1Output>> method1(Method1Input input) {
-        return Futures.immediateFuture(RpcResultBuilder
-                .<Method1Output>success(new Method1OutputBuilder().setOutParam(input.getInParam())).build());
+        return Futures.immediateFuture(
+                RpcResultBuilder.<Method1Output>success(new Method1OutputBuilder().setOutParam(input.getInParam()))
+                        .build());
     }
 
     /*
@@ -103,7 +104,7 @@ public class InsideController implements BbExampleService, AutoCloseable {
         this.schemaService = schemaService;
     }
 
-    public void setCodec(BindingToNormalizedNodeCodec codec) {
+    public void setCodec(BindingNormalizedNodeSerializer codec) {
         this.codec = codec;
     }
 }

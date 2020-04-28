@@ -11,8 +11,12 @@ import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static org.opendaylight.yangtools.yang.common.RpcResultBuilder.success;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.AbstractMap;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.Coffee;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.ErrorMethodInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.ErrorMethodOutput;
@@ -38,6 +42,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.Simp
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.TestModelService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.numbers.list.Numbers;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.numbers.list.NumbersBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.numbers.list.NumbersKey;
 import org.opendaylight.yangtools.yang.common.RpcError.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
@@ -47,12 +52,15 @@ public class TestModelServiceImpl implements TestModelService {
 
     @Override
     public ListenableFuture<RpcResult<MultiplyListOutput>> multiplyList(MultiplyListInput input) {
-        final List<Numbers> ret = new ArrayList<>();
-        short multiplier = input.getMultiplier();
-        for (Numbers i : input.getNumbers()) {
-            ret.add(new NumbersBuilder().setNum(multiplier * i.getNum()).build());
-        }
-        return immediateFuture(success(new MultiplyListOutputBuilder().setNumbers(ret).build()).build());
+        final short multiplier = input.getMultiplier();
+        final Map<NumbersKey, Numbers> map = Optional.ofNullable(input.getNumbers())
+                .orElse(Collections.emptyMap())
+                .entrySet()
+                .stream()
+                .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(),
+                        new NumbersBuilder().setNum(e.getValue().getNum() * multiplier).build()))
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+        return immediateFuture(success(new MultiplyListOutputBuilder().setNumbers(map).build()).build());
     }
 
     @Override

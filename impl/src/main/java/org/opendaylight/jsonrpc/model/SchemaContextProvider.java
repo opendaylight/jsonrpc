@@ -9,20 +9,19 @@ package org.opendaylight.jsonrpc.model;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 
 /**
- * API for creating {@link SchemaContext} for given {@link Peer}.
+ * API for creating {@link EffectiveModelContext} for given {@link Peer}.
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public interface SchemaContextProvider {
     /**
-     * Create {@link SchemaContext} for given {@link Peer}. This method never
-     * returns null.
+     * Create {@link EffectiveModelContext} for given {@link Peer}. This method never returns null.
      *
-     * @param peer {@link Peer} instance to create {@link SchemaContext} for
-     * @return {@link SchemaContext}
+     * @param peer {@link Peer} instance to create {@link EffectiveModelContext} for
+     * @return {@link EffectiveModelContext}
      */
-    SchemaContext createSchemaContext(@NonNull Peer peer);
+    EffectiveModelContext createSchemaContext(@NonNull Peer peer);
 }

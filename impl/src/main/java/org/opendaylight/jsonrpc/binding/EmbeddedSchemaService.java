@@ -15,8 +15,8 @@ import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.mdsal.dom.api.DOMSchemaServiceExtension;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.util.ListenerRegistry;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
-import org.opendaylight.yangtools.yang.model.api.SchemaContextListener;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContextListener;
 
 /**
  * Dummy implementation of {@link DOMSchemaService}.
@@ -25,27 +25,22 @@ import org.opendaylight.yangtools.yang.model.api.SchemaContextListener;
  * @since Sep 18, 2018
  */
 public final class EmbeddedSchemaService implements DOMSchemaService {
-    private final ListenerRegistry<SchemaContextListener> listeners = ListenerRegistry.create();
-    private final SchemaContext schemaContext;
+    private final ListenerRegistry<EffectiveModelContextListener> listeners = ListenerRegistry.create();
+    private final EffectiveModelContext schemaContext;
 
-    public EmbeddedSchemaService(final SchemaContext schemaContext) {
+    public EmbeddedSchemaService(final EffectiveModelContext schemaContext) {
         this.schemaContext = Objects.requireNonNull(schemaContext);
     }
 
     @Override
-    public SchemaContext getSessionContext() {
+    public EffectiveModelContext getGlobalContext() {
         return schemaContext;
     }
 
     @Override
-    public SchemaContext getGlobalContext() {
-        return schemaContext;
-    }
-
-    @Override
-    public ListenerRegistration<SchemaContextListener> registerSchemaContextListener(
-            final SchemaContextListener listener) {
-        listener.onGlobalContextUpdated(schemaContext);
+    public ListenerRegistration<EffectiveModelContextListener> registerSchemaContextListener(
+            EffectiveModelContextListener listener) {
+        listener.onModelContextUpdated(schemaContext);
         return listeners.register(listener);
     }
 

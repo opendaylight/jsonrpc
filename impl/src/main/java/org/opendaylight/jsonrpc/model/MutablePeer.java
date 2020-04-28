@@ -9,12 +9,19 @@ package org.opendaylight.jsonrpc.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.DataConfigEndpoints;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.DataConfigEndpointsKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.DataOperationalEndpoints;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.DataOperationalEndpointsKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.NotificationEndpoints;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.NotificationEndpointsKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpoints;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpointsKey;
+import org.opendaylight.yangtools.yang.binding.CodeHelpers;
 
 public class MutablePeer implements Peer {
     private String name;
@@ -71,22 +78,23 @@ public class MutablePeer implements Peer {
     }
 
     @Override
-    public List<DataConfigEndpoints> getDataConfigEndpoints() {
-        return endpoints;
+    public @Nullable Map<DataConfigEndpointsKey, DataConfigEndpoints> getDataConfigEndpoints() {
+        return CodeHelpers.compatMap(endpoints);
     }
 
     @Override
-    public List<DataOperationalEndpoints> getDataOperationalEndpoints() {
-        return dataOperationalEndpoints;
+    public @Nullable Map<DataOperationalEndpointsKey, DataOperationalEndpoints> getDataOperationalEndpoints() {
+        return CodeHelpers.compatMap(dataOperationalEndpoints);
     }
 
     @Override
-    public List<RpcEndpoints> getRpcEndpoints() {
-        return rpcEndpoints;
+    public @Nullable Map<RpcEndpointsKey, RpcEndpoints> getRpcEndpoints() {
+        return CodeHelpers.compatMap(rpcEndpoints);
     }
 
     @Override
-    public List<NotificationEndpoints> getNotificationEndpoints() {
-        return notificationEndpoints;
+    public @Nullable Map<NotificationEndpointsKey, NotificationEndpoints> getNotificationEndpoints() {
+        return CodeHelpers.compatMap(notificationEndpoints);
     }
+
 }

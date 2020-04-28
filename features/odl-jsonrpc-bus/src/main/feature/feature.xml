@@ -11,7 +11,7 @@
         <configfile finalname="etc/org.opendaylight.jsonrpc.bus.cfg">
             mvn:org.opendaylight.jsonrpc.bus/bus-config/${project.version}/cfg/config
         </configfile>
-        <feature version="[6,7)">odl-netty-4</feature>
+        <feature version="[7,8)">odl-netty-4</feature>
     </feature>
 </features>
 

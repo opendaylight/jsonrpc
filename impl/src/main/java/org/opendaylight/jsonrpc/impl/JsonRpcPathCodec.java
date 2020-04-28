@@ -151,7 +151,7 @@ public final class JsonRpcPathCodec implements Codec<JsonObject, YangInstanceIde
         }
     }
 
-    private Module ensureModuleFound(Optional<Module> module, String name) {
+    private Module ensureModuleFound(Optional<? extends Module> module, String name) {
         return module.orElseThrow(
             () -> new IllegalArgumentException(String.format("Module '%s' not found in schema", name)));
     }
