@@ -51,7 +51,7 @@ public class JsonRPCNotificationService extends AbstractJsonRPCComponent
             @NonNull TransportFactory transportFactory, @Nullable RemoteGovernance governance)
             throws URISyntaxException {
         super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
-        Util.populateFromEndpointList(pathMap, peer.getNotificationEndpoints(), DataType.NOTIFICATION);
+        Util.populateFromEndpointList(pathMap, peer.nonnullNotificationEndpoints().values(), DataType.NOTIFICATION);
         for (final NotificationDefinition def : schemaContext.getNotifications()) {
             final QNameModule qm = def.getQName().getModule();
             final String localName = def.getQName().getLocalName();

@@ -19,7 +19,6 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -222,10 +221,10 @@ public final class Util {
      * @return {@link Optional} of {@link NotificationDefinition}.
      */
     public static <T extends SchemaNode> Optional<T> findNode(SchemaContext schemaContext, String name,
-            Function<Module, Set<T>> mapper) {
+            Function<Module, Collection<T>> mapper) {
         if (name.indexOf(':') != -1) {
             final String[] parts = name.split(":");
-            final Optional<Module> modOpt = findModule(schemaContext, parts[0]);
+            final Optional<? extends Module> modOpt = findModule(schemaContext, parts[0]);
             if (!modOpt.isPresent()) {
                 return Optional.empty();
             } else {
@@ -240,7 +239,7 @@ public final class Util {
         return stream.filter(r -> r.getQName().getLocalName().equals(name)).findFirst();
     }
 
-    private static Optional<Module> findModule(SchemaContext schemaContext, String name) {
+    private static Optional<? extends Module> findModule(SchemaContext schemaContext, String name) {
         return schemaContext.getModules().stream().filter(m -> m.getName().equals(name)).findFirst();
     }
 

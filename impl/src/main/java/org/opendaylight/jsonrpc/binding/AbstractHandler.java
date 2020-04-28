@@ -14,8 +14,14 @@ import java.lang.reflect.Method;
 import java.util.AbstractMap;
 import java.util.Objects;
 import java.util.stream.Collector;
+import org.opendaylight.binding.runtime.api.BindingRuntimeContext;
+import org.opendaylight.mdsal.binding.spec.naming.BindingMapping;
+import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
 import org.opendaylight.yangtools.yang.binding.RpcService;
+import org.opendaylight.yangtools.yang.common.QNameModule;
+import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
+import org.opendaylight.yangtools.yang.model.api.SchemaPath;
 
 /**
  * Abstract class that hold common fields for in/out handlers.
@@ -29,17 +35,49 @@ abstract class AbstractHandler<T extends RpcService> extends AbstractInvocationH
 
     AbstractHandler(final Class<T> type, RpcInvocationAdapter adapter) {
         this.adapter = Objects.requireNonNull(adapter);
-        rpcMethodMap = adapter.codec().getRpcMethodToSchemaPath(type)
-                .entrySet()
+        rpcMethodMap = getRpcMethodToSchemaPath(type).entrySet()
                 .stream()
-                .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(), adapter.schemaContext()
-                        .getOperations()
-                        .stream()
-                        .filter(r -> r.getPath().equals(e.getValue()))
-                        .findFirst()
-                        .get()))
+                .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(),
+                        adapter.schemaContext()
+                                .getOperations()
+                                .stream()
+                                .filter(r -> r.getPath().equals(e.getValue()))
+                                .findFirst()
+                                .get()))
                 .collect(Collector.of(ImmutableBiMap::<Method, RpcDefinition>builder,
                     (builder, entry) -> builder.put(entry.getKey(), entry.getValue()),
                     (k, v) -> k.putAll(v.build()), ImmutableBiMap.Builder<Method, RpcDefinition>::build));
+    }
+
+    ImmutableBiMap<Method, SchemaPath> getRpcMethodToSchemaPath(final Class<? extends RpcService> key) {
+        final Module module = getModule(key);
+        final ImmutableBiMap.Builder<Method, SchemaPath> ret = ImmutableBiMap.builder();
+        try {
+            for (final RpcDefinition rpcDef : module.getRpcs()) {
+                final Method method = findRpcMethod(key, rpcDef);
+                ret.put(method, rpcDef.getPath());
+            }
+        } catch (final NoSuchMethodException e) {
+            throw new IllegalStateException("Rpc defined in model does not have representation in generated class.", e);
+        }
+        return ret.build();
+    }
+
+    private Method findRpcMethod(final Class<? extends RpcService> key, final RpcDefinition rpcDef)
+            throws NoSuchMethodException {
+        final String methodName = BindingMapping.getRpcMethodName(rpcDef.getQName());
+        final Class<?> inputClz = adapter.getRuntimeContext().getClassForSchema(rpcDef.getInput());
+        return key.getMethod(methodName, inputClz);
+    }
+
+    private Module getModule(final Class<?> modeledClass) {
+        final QNameModule moduleName = BindingReflections.getQNameModule(modeledClass);
+        final BindingRuntimeContext localRuntimeContext = adapter.getRuntimeContext();
+        final Module module = localRuntimeContext.getSchemaContext().findModule(moduleName).orElse(null);
+        if (module != null) {
+            return module;
+        }
+        throw new IllegalStateException(String.format("Schema for %s is not available; expected module name: %s; "
+                + "full BindingRuntimeContext available in trace log", modeledClass, moduleName));
     }
 }

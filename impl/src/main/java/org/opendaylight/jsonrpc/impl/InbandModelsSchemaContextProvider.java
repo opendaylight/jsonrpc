@@ -17,7 +17,7 @@ import org.opendaylight.jsonrpc.model.InbandModelsService;
 import org.opendaylight.jsonrpc.model.SchemaContextProvider;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpoints;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.parser.api.YangSyntaxErrorException;
 import org.opendaylight.yangtools.yang.model.repo.api.YangTextSchemaSource;
 import org.opendaylight.yangtools.yang.parser.rfc7950.reactor.RFC7950Reactors;
@@ -43,9 +43,9 @@ public final class InbandModelsSchemaContextProvider implements SchemaContextPro
 
     @Override
     @SuppressWarnings("checkstyle:IllegalCatch")
-    public SchemaContext createSchemaContext(Peer peer) {
+    public EffectiveModelContext createSchemaContext(Peer peer) {
         Objects.requireNonNull(peer.getRpcEndpoints(), "RPC endpoint is mandatory for for inband models");
-        RpcEndpoints enpodint = peer.getRpcEndpoints()
+        RpcEndpoints enpodint = peer.nonnullRpcEndpoints().values()
                 .stream()
                 .filter(rpc -> rpc.getPath().equals("{}"))
                 .findFirst()

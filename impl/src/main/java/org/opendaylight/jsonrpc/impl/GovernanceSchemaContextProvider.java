@@ -27,8 +27,9 @@ import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.SchemaContextProvider;
 import org.opendaylight.jsonrpc.model.StringYangTextSchemaSource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContextProvider;
 import org.opendaylight.yangtools.yang.model.api.ModuleImport;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.opendaylight.yangtools.yang.model.parser.api.YangSyntaxErrorException;
 import org.opendaylight.yangtools.yang.model.repo.api.YangTextSchemaSource;
 import org.opendaylight.yangtools.yang.parser.rfc7950.reactor.RFC7950Reactors;
@@ -41,7 +42,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Implementation of {@link SchemaContextProvider} which uses {@link RemoteGovernance} to obtain models
+ * Implementation of {@link EffectiveModelContextProvider} which uses {@link RemoteGovernance} to obtain models
  * from.Implementation is fail-fast, so any missing model will cause error. Models dependencies are resolved
  * recursively first.
  *
@@ -70,16 +71,16 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
 
     @SuppressWarnings("checkstyle:IllegalCatch")
     @Override
-    public SchemaContext createSchemaContext(Peer peer) {
+    public EffectiveModelContext createSchemaContext(Peer peer) {
         try {
             return createInternal(peer);
         } catch (Exception e) {
-            throw new IllegalStateException("Unable to build SchemaContext", e);
+            throw new IllegalStateException("Unable to build EffectiveModelContext", e);
         }
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
-    private SchemaContext createInternal(Peer peer) throws ReactorException {
+    private EffectiveModelContext createInternal(Peer peer) throws ReactorException {
         final BuildAction reactor = RFC7950Reactors.defaultReactor().newBuild();
         final Deque<ModuleInfo> toResolve = Queues.newArrayDeque();
         try {

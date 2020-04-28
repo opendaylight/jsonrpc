@@ -35,7 +35,7 @@ import org.opendaylight.yangtools.yang.model.api.UsesNode;
  */
 public final class NotificationContainerProxy implements ContainerSchemaNode {
 
-    private final Set<AugmentationSchemaNode> availableAugmentations;
+    private final Collection<? extends AugmentationSchemaNode> availableAugmentations;
     private final Map<QName, DataSchemaNode> childNodes = new HashMap<>();
     private final QName qname;
 
@@ -79,7 +79,7 @@ public final class NotificationContainerProxy implements ContainerSchemaNode {
     }
 
     @Override
-    public Set<AugmentationSchemaNode> getAvailableAugmentations() {
+    public Collection<? extends AugmentationSchemaNode> getAvailableAugmentations() {
         return availableAugmentations;
     }
 

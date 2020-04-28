@@ -12,7 +12,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.Lists;
-import java.util.List;
+import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -84,17 +84,16 @@ public class TestModelServiceTest {
 
     @Test
     public void testMultiplyList() throws Exception {
-        final List<Numbers> resp = proxy.getProxy()
+        final Collection<Numbers> resp = proxy.getProxy()
                 .multiplyList(new MultiplyListInputBuilder().setMultiplier((short) 10)
                         .setNumbers(Lists.newArrayList(new NumbersBuilder().setNum(10).build(),
                                 new NumbersBuilder().setNum(20).build()))
                         .build())
                 .get()
                 .getResult()
-                .getNumbers();
+                .getNumbers().values();
 
-        assertEquals(100, (int) resp.get(0).getNum());
-        assertEquals(200, (int) resp.get(1).getNum());
+        assertEquals(2, resp.size());
     }
 
     @Test

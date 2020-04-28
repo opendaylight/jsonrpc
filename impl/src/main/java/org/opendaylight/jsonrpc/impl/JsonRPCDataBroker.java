@@ -53,10 +53,8 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
      * @param peer {@link Peer} to create Data broker for
      * @param schemaContext the schema context
      * @param pathMap shared instance of {@link HierarchicalEnumMap}
-     * @param transportFactory {@link TransportFactory} used to create RPC
-     *            connections
-     * @param governance {@link RemoteGovernance} used to provide additional
-     *            governance info
+     * @param transportFactory {@link TransportFactory} used to create RPC connections
+     * @param governance {@link RemoteGovernance} used to provide additional governance info
      * @param jsonConverter shared {@link JsonConverter}
      * @see DOMDataBroker
      */
@@ -69,7 +67,8 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
                 .put(DOMDataTreeChangeService.class, this)
                 .build();
         if (peer.getDataConfigEndpoints() != null) {
-            Util.populateFromEndpointList(pathMap, peer.getDataConfigEndpoints(), DataType.CONFIGURATION_DATA);
+            Util.populateFromEndpointList(pathMap, peer.nonnullDataConfigEndpoints().values(),
+                    DataType.CONFIGURATION_DATA);
         } else {
             if (governance != null) {
                 pathMap.put(TOP, DataType.CONFIGURATION_DATA, governance
@@ -78,7 +77,8 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
         }
 
         if (peer.getDataOperationalEndpoints() != null) {
-            Util.populateFromEndpointList(pathMap, peer.getDataOperationalEndpoints(), DataType.OPERATIONAL_DATA);
+            Util.populateFromEndpointList(pathMap, peer.nonnullDataOperationalEndpoints().values(),
+                    DataType.OPERATIONAL_DATA);
         } else {
             if (governance != null) {
                 pathMap.put(TOP, DataType.OPERATIONAL_DATA, governance
@@ -137,7 +137,7 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
             throw new IllegalStateException("Unable to create subscriber", e);
         }
 
-        return new AbstractListenerRegistration<L>(listener) {
+        return new AbstractListenerRegistration<>(listener) {
             @Override
             protected void removeRegistration() {
                 shard.deleteListener(new DeleteListenerArgument(listenerKey.getUri(), listenerKey.getName()));

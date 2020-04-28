@@ -160,7 +160,7 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
     private JsonObject wrapArrayInput(JsonArray inputArr, RpcDefinition rpcDef) {
         final JsonObject wrapper = new JsonObject();
         final JsonObject prop = new JsonObject();
-        final Iterator<DataSchemaNode> it = rpcDef.getInput().getChildNodes().iterator();
+        final Iterator<? extends DataSchemaNode> it = rpcDef.getInput().getChildNodes().iterator();
         int counter = 0;
         if (inputArr.size() > rpcDef.getInput().getChildNodes().size()) {
             LOG.warn("Extra parameter(s) provided, expected : {}, given : {}", rpcDef.getInput().getChildNodes().size(),

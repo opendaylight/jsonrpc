@@ -96,7 +96,7 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent
             @NonNull TransportFactory transportFactory, @NonNull JsonConverter jsonConverter)
             throws URISyntaxException {
         super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
-        Util.populateFromEndpointList(pathMap, peer.getRpcEndpoints(), DataType.RPC);
+        Util.populateFromEndpointList(pathMap, peer.nonnullRpcEndpoints().values(), DataType.RPC);
         final ImmutableList.Builder<DOMRpcIdentifier> availableRpcsBuilder = ImmutableList.builder();
         final ImmutableMap.Builder<String, RpcState> mappedRpcsBuilder = ImmutableMap.builder();
         for (final RpcDefinition def : schemaContext.getOperations()) {
