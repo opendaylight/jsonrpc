@@ -30,7 +30,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.opendaylight.jsonrpc.model.JSONRPCArg;
-import org.opendaylight.mdsal.binding.dom.adapter.BindingToNormalizedNodeCodec;
+import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.Ipv4;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.Ipv4Builder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.Ipv4Key;
@@ -209,7 +209,7 @@ public class JsonConverterTest extends AbstractJsonRpcTest {
     }
 
     static Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> createContainerNodeData(
-            BindingToNormalizedNodeCodec codec) {
+            BindingNormalizedNodeSerializer codec) {
         //@formatter:off
         final InstanceIdentifier<NetworkTopology> ii = InstanceIdentifier.create(NetworkTopology.class);
         final NetworkTopology dObj = new NetworkTopologyBuilder()

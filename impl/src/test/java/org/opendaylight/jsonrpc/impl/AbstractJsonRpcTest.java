@@ -18,13 +18,17 @@ import java.util.concurrent.TimeUnit;
 import junit.framework.AssertionFailedError;
 import org.junit.Rule;
 import org.junit.rules.TestName;
+import org.opendaylight.binding.runtime.api.BindingRuntimeContext;
+import org.opendaylight.binding.runtime.api.BindingRuntimeTypes;
+import org.opendaylight.binding.runtime.api.ClassLoadingStrategy;
+import org.opendaylight.binding.runtime.api.DefaultBindingRuntimeContext;
+import org.opendaylight.binding.runtime.spi.GeneratedClassLoadingStrategy;
 import org.opendaylight.mdsal.binding.api.DataBroker;
-import org.opendaylight.mdsal.binding.dom.adapter.BindingToNormalizedNodeCodec;
 import org.opendaylight.mdsal.binding.dom.adapter.test.AbstractDataBrokerTest;
 import org.opendaylight.mdsal.binding.dom.adapter.test.ConcurrentDataBrokerTestCustomizer;
-import org.opendaylight.mdsal.binding.dom.codec.impl.BindingNormalizedNodeCodecRegistry;
-import org.opendaylight.mdsal.binding.generator.impl.GeneratedClassLoadingStrategy;
-import org.opendaylight.mdsal.binding.generator.util.BindingRuntimeContext;
+import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer;
+import org.opendaylight.mdsal.binding.dom.codec.impl.BindingCodecContext;
+import org.opendaylight.mdsal.binding.generator.impl.DefaultBindingRuntimeGenerator;
 import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMMountPointService;
@@ -36,6 +40,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.TopElement;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yangtools.yang.binding.YangModuleInfo;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +51,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
+    private static final ClassLoadingStrategy CLS = GeneratedClassLoadingStrategy.getTCCLClassLoadingStrategy();
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractJsonRpcTest.class);
     private ConcurrentDataBrokerTestCustomizer testCustomizer;
     private final DOMMountPointService domMountPointService = new DOMMountPointServiceImpl();
@@ -53,14 +59,15 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
     private DataBroker dataBroker;
     private DOMDataBroker domBroker;
     private DOMRpcRouter rpcRouter;
-    protected SchemaContext schemaContext;
+    protected EffectiveModelContext schemaContext;
     protected final JsonParser jsonParser = new JsonParser();
     @Rule
     public TestName nameRule = new TestName();
-    private BindingToNormalizedNodeCodec bnnc;
+    private BindingCodecContext bnnc;
+    private DefaultBindingRuntimeContext runtimeContext;
 
     @Override
-    protected void setupWithSchema(SchemaContext context) {
+    protected void setupWithSchema(EffectiveModelContext context) {
         this.testCustomizer = new ConcurrentDataBrokerTestCustomizer(true);
         this.dataBroker = this.testCustomizer.createDataBroker();
         this.domBroker = this.testCustomizer.createDOMDataBroker();
@@ -69,26 +76,21 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
         setupWithDataBroker(this.dataBroker);
         rpcRouter = DOMRpcRouter.newInstance(getSchemaService());
 
-        BindingNormalizedNodeCodecRegistry codecRegistry = new BindingNormalizedNodeCodecRegistry();
-        BindingRuntimeContext bindingContext = BindingRuntimeContext
-                .create(GeneratedClassLoadingStrategy.getTCCLClassLoadingStrategy(), schemaContext);
-        codecRegistry.onBindingRuntimeContextUpdated(bindingContext);
-        bnnc = new BindingToNormalizedNodeCodec(GeneratedClassLoadingStrategy.getTCCLClassLoadingStrategy(),
-                codecRegistry);
-        bnnc.onGlobalContextUpdated(schemaContext);
-
+        final DefaultBindingRuntimeGenerator brg = new DefaultBindingRuntimeGenerator();
+        final BindingRuntimeTypes runtimeTypes = brg.generateTypeMapping(schemaContext);
+        runtimeContext = DefaultBindingRuntimeContext.create(runtimeTypes, CLS);
+        bnnc = new BindingCodecContext(runtimeContext);
     }
 
     @Override
     protected Set<YangModuleInfo> getModuleInfos() throws Exception {
         return Sets.newHashSet(BindingReflections.getModuleInfo(Config.class),
                 BindingReflections.getModuleInfo(NetworkTopology.class),
-                BindingReflections.getModuleInfo(TopElement.class),
-                BindingReflections.getModuleInfo(
+                BindingReflections.getModuleInfo(TopElement.class), BindingReflections.getModuleInfo(
                         org.opendaylight.yang.gen.v1.http.opendaylight.org.jsonrpc.test.rev180305.TopElement.class));
     }
 
-    protected BindingToNormalizedNodeCodec getCodec() {
+    protected BindingNormalizedNodeSerializer getCodec() {
         return bnnc;
     }
 
@@ -117,6 +119,10 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
 
     public DOMNotificationRouter getDOMNotificationRouter() {
         return notificationRouter;
+    }
+
+    public BindingRuntimeContext getBindingRuntimeContext() {
+        return runtimeContext;
     }
 
     protected void logTestName(String stage) {

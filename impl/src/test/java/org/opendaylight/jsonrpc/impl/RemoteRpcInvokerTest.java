@@ -18,6 +18,8 @@ import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
 import org.opendaylight.jsonrpc.model.RemoteRpcInvoker;
 import org.opendaylight.jsonrpc.test.TestModelServiceImpl;
 import org.opendaylight.mdsal.binding.dom.adapter.BindingDOMRpcProviderServiceAdapter;
+import org.opendaylight.mdsal.binding.dom.adapter.ConstantAdapterContext;
+import org.opendaylight.mdsal.binding.dom.codec.impl.BindingCodecContext;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.TestModelService;
 import org.opendaylight.yangtools.concepts.ObjectRegistration;
 
@@ -35,12 +37,14 @@ public class RemoteRpcInvokerTest extends AbstractJsonRpcTest {
     @Before
     public void setUp() throws Exception {
         final BindingDOMRpcProviderServiceAdapter rpcAdapter = new BindingDOMRpcProviderServiceAdapter(
-                getDOMRpcRouter().getRpcProviderService(), getCodec());
+                new ConstantAdapterContext(new BindingCodecContext(getBindingRuntimeContext())),
+                getDOMRpcRouter().getRpcProviderService());
         rpcReg = rpcAdapter.registerRpcImplementation(TestModelService.class, new TestModelServiceImpl());
-        getDOMRpcRouter().onGlobalContextUpdated(getSchemaContext());
+        getDOMRpcRouter().onModelContextUpdated(schemaContext);
         transportFactory = new DefaultTransportFactory();
         ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory, getDOMNotificationRouter(),
                 getDOMRpcRouter().getRpcService());
+
         logTestName("START");
     }
 

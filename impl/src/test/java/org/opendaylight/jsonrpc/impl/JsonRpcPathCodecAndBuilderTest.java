@@ -72,7 +72,7 @@ public class JsonRpcPathCodecAndBuilderTest extends AbstractJsonRpcTest {
                 .child(Topology.class, new TopologyKey(new TopologyId("topo-1")))
                 .child(Node.class, new NodeKey(new NodeId("node-1")))
                 .child(TerminationPoint.class, new TerminationPointKey(new TpId("eth0")));
-        YangInstanceIdentifier yiiExpected = getCodec().toNormalized(ii);
+        YangInstanceIdentifier yiiExpected = getCodec().toYangInstanceIdentifier(ii);
         LOG.info("Expected : {}", yiiExpected);
 
         JsonConverter jsonConverter = new JsonConverter(schemaContext);

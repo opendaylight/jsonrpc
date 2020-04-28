@@ -12,6 +12,7 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -96,7 +97,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         }
     }
 
-    private Map<String, Peer> generateCache(List<? extends Peer> arg) {
+    private Map<String, Peer> generateCache(Collection<? extends Peer> arg) {
         return Optional.ofNullable(arg)
                 .orElse(Collections.emptyList())
                 .stream()
@@ -119,7 +120,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         if (peersConfState == null) {
             // in case entire config was wiped, we still need to unconfigure
             // existing peers, hence supply empty list
-            unmountPeers(new ConfigBuilder().setConfiguredEndpoints(Collections.emptyList()).build());
+            unmountPeers(new ConfigBuilder().setConfiguredEndpoints(Collections.emptyMap()).build());
             LOG.info("{} configuration absent", ME);
             stopGovernance();
             stopRemoteControl();
@@ -163,7 +164,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
 
     private boolean unmountPeers(final Config peersConfState) {
         boolean result = true;
-        final Map<String, Peer> cache = generateCache(peersConfState.getConfiguredEndpoints());
+        final Map<String, Peer> cache = generateCache(peersConfState.nonnullConfiguredEndpoints().values());
         final List<String> toUnmountList = peerState.entrySet()
                 .stream()
                 .filter(e -> !cache.containsKey(e.getKey()))
@@ -178,7 +179,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private boolean mountPeers(final Config peersConfState) {
         boolean result = true;
         if (peersConfState.getConfiguredEndpoints() != null) {
-            for (final Peer confPeer : peersConfState.getConfiguredEndpoints()) {
+            for (final Peer confPeer : peersConfState.nonnullConfiguredEndpoints().values()) {
                 LOG.debug("Processing peer from conf {}", confPeer.getName());
                 if (!peerState.containsKey(confPeer.getName())) {
                     result &= doMountDevice(confPeer);

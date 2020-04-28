@@ -7,8 +7,9 @@
  */
 package org.opendaylight.jsonrpc.binding;
 
+import org.opendaylight.binding.runtime.api.BindingRuntimeContext;
 import org.opendaylight.jsonrpc.impl.SchemaChangeAwareConverter;
-import org.opendaylight.mdsal.binding.dom.adapter.BindingToNormalizedNodeCodec;
+import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer;
 import org.opendaylight.yangtools.concepts.ObjectRegistration;
 import org.opendaylight.yangtools.yang.binding.RpcService;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
@@ -16,9 +17,11 @@ import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 public interface RpcInvocationAdapter {
     SchemaChangeAwareConverter converter();
 
-    BindingToNormalizedNodeCodec codec();
+    BindingNormalizedNodeSerializer codec();
 
     <T extends RpcService> ObjectRegistration<T> registerImpl(Class<T> type, T impl);
 
     SchemaContext schemaContext();
+
+    BindingRuntimeContext getRuntimeContext();
 }
