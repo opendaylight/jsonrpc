@@ -17,16 +17,22 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <reference id="domRpcService" interface="org.opendaylight.mdsal.dom.api.DOMRpcService" />
     <reference id="domNotificationPublishService" interface="org.opendaylight.mdsal.dom.api.DOMNotificationPublishService" />
     <reference id="yangXPathParserFactory" interface="org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory" />
+    <reference id="clusterSingletonServiceProvider" interface="org.opendaylight.mdsal.singleton.common.api.ClusterSingletonServiceProvider" />
 
-    <bean id="jsonRpcProvider" class="org.opendaylight.jsonrpc.impl.JsonRPCProvider" init-method="init" destroy-method="close">
-        <property name="dataBroker" ref="dataBroker" />
-        <property name="domDataBroker" ref="domDataBroker" />
-        <property name="transportFactory" ref="transportFactory" />
-        <property name="domMountPointService" ref="domMountPointService" />
-        <property name="schemaService" ref="schemaService" />
-        <property name="domRpcService" ref="domRpcService" />
-        <property name="domNotificationPublishService" ref="domNotificationPublishService" />
-        <property name="yangXPathParserFactory" ref="yangXPathParserFactory" />
+    <bean id="dependencies" class="org.opendaylight.jsonrpc.impl.JsonRpcProviderDependencies">
+        <argument ref="transportFactory" />
+        <argument ref="dataBroker" />
+        <argument ref="domMountPointService" />
+        <argument ref="domDataBroker" />
+        <argument ref="schemaService" />
+        <argument ref="domNotificationPublishService" />
+        <argument ref="domRpcService" />
+        <argument ref="clusterSingletonServiceProvider" />
+        <argument ref="yangXPathParserFactory" />
+    </bean>
+
+    <bean id="jsonRpcProvider" class="org.opendaylight.jsonrpc.impl.JsonRPCProvider" destroy-method="close">
+        <argument ref="dependencies" />
     </bean>
 
     <odl:rpc-implementation ref="jsonRpcProvider" />

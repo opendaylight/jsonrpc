@@ -9,6 +9,7 @@ package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.net.URISyntaxException;
@@ -29,18 +30,15 @@ import java.util.stream.Collectors;
 import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
-import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.mdsal.binding.api.ClusteredDataTreeChangeListener;
-import org.opendaylight.mdsal.binding.api.DataBroker;
 import org.opendaylight.mdsal.binding.api.DataTreeIdentifier;
 import org.opendaylight.mdsal.binding.api.ReadTransaction;
+import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
-import org.opendaylight.mdsal.dom.api.DOMDataBroker;
-import org.opendaylight.mdsal.dom.api.DOMMountPointService;
-import org.opendaylight.mdsal.dom.api.DOMNotificationPublishService;
-import org.opendaylight.mdsal.dom.api.DOMRpcService;
-import org.opendaylight.mdsal.dom.api.DOMSchemaService;
+import org.opendaylight.mdsal.singleton.common.api.ClusterSingletonService;
+import org.opendaylight.mdsal.singleton.common.api.ClusterSingletonServiceRegistration;
+import org.opendaylight.mdsal.singleton.common.api.ServiceGroupIdentifier;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ConfigBuilder;
@@ -55,20 +53,16 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
-import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
+public class JsonRPCProvider implements JsonrpcService, AutoCloseable, ClusterSingletonService {
     private static final String ME = "JSON RPC Provider";
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCProvider.class);
+    private static final ServiceGroupIdentifier SERVICE_GROUP_ID = ServiceGroupIdentifier.create("jsonrpc");
     private static final InstanceIdentifier<Config> GLOBAL_CFG_II = InstanceIdentifier.create(Config.class);
     private static final DataTreeIdentifier<Config> CFG_DTI = DataTreeIdentifier
             .create(LogicalDatastoreType.CONFIGURATION, GLOBAL_CFG_II);
-    private TransportFactory transportFactory;
-    private DataBroker dataBroker;
-    private DOMDataBroker domDataBroker;
-    private DOMSchemaService schemaService;
     private volatile RemoteGovernance governance;
     private volatile ResponderSession remoteControl;
     private final Map<String, AbstractPeerContext> peerState = Maps.newConcurrentMap();
@@ -76,12 +70,16 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private final ReentrantReadWriteLock changeLock = new ReentrantReadWriteLock();
     private volatile boolean sessionInitialized = false;
     private volatile boolean providerClosed = false;
-    private DOMMountPointService domMountPointService;
-    private DOMNotificationPublishService domNotificationPublishService;
-    private DOMRpcService domRpcService;
     private String lastGovernanceUri;
     private String lastWhoAmIUri;
-    private YangXPathParserFactory yangXPathParserFactory;
+    private final JsonRpcProviderDependencies dependencies;
+    private ClusterSingletonServiceRegistration singletonRegistration;
+
+    public JsonRPCProvider(JsonRpcProviderDependencies dependencies) {
+        this.dependencies = Objects.requireNonNull(dependencies);
+        singletonRegistration = this.dependencies.getClusterSingletonServiceProvider()
+                .registerClusterSingletonService(this);
+    }
 
     /**
      * Get current configuration or operational state. Configuration can be set
@@ -90,7 +88,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
      */
     @Nullable
     private Config getConfig(LogicalDatastoreType store) {
-        try (ReadTransaction roTrx = dataBroker.newReadOnlyTransaction()) {
+        try (ReadTransaction roTrx = dependencies.getDataBroker().newReadOnlyTransaction()) {
             return roTrx.read(store, GLOBAL_CFG_II).get().orElse(null);
         } catch (InterruptedException | ExecutionException e) {
             LOG.error("Failed to read configuration", e);
@@ -210,11 +208,13 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
                     lastWhoAmIUri = whoAmI.getValue();
                     stopRemoteControl();
                     LOG.debug("Exposing remote control at {}", whoAmI);
-                    remoteControl = transportFactory.endpointBuilder()
+                    remoteControl = dependencies.getTransportFactory()
+                            .endpointBuilder()
                             .responder()
-                            .create(whoAmI.getValue(),
-                                    new RemoteControl(domDataBroker, schemaService.getGlobalContext(), transportFactory,
-                                            domNotificationPublishService, domRpcService));
+                            .create(whoAmI.getValue(), new RemoteControl(dependencies.getDomDataBroker(),
+                                    dependencies.getSchemaService().getGlobalContext(),
+                                    dependencies.getTransportFactory(), dependencies.getDomNotificationPublishService(),
+                                    dependencies.getDomRpcService()));
                 }
             } else {
                 remoteControl = null;
@@ -237,8 +237,10 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
                     lastGovernanceUri = rootOm.getValue();
                     stopGovernance();
                     LOG.debug("(Re)setting governance root for JSON RPC to {}", rootOm.getValue());
-                    governance = transportFactory.endpointBuilder().requester().createProxy(RemoteGovernance.class,
-                            rootOm.getValue());
+                    governance = dependencies.getTransportFactory()
+                            .endpointBuilder()
+                            .requester()
+                            .createProxy(RemoteGovernance.class, rootOm.getValue());
                 }
             } else {
                 governance = null;
@@ -266,30 +268,36 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         }
     }
 
-    public void init() {
-        LOG.debug("JSON RPC Provider init");
-        // fail-fast validation
-        Objects.requireNonNull(transportFactory, "TransportFactory was not set");
-        Objects.requireNonNull(dataBroker, "DataBroker was not set");
-        Objects.requireNonNull(domDataBroker, "DOMDataBroker was not set");
-        Objects.requireNonNull(domMountPointService, "DOMMountPointService was not set");
-        Objects.requireNonNull(domRpcService, "DOMRpcService was not set");
-        Objects.requireNonNull(domNotificationPublishService, "DOMNotificationPublishService was not set");
-        toClose.add(dataBroker.registerDataTreeChangeListener(CFG_DTI,
+    @Override
+    public ServiceGroupIdentifier getIdentifier() {
+        return SERVICE_GROUP_ID;
+    }
+
+    @Override
+    public synchronized void instantiateServiceInstance() {
+        toClose.add(dependencies.getDataBroker().registerDataTreeChangeListener(CFG_DTI,
                 (ClusteredDataTreeChangeListener<Config>) changes -> processNotification()));
         sessionInitialized = true;
         processNotification();
     }
 
     @Override
-    public void close() {
+    public synchronized FluentFuture<? extends CommitInfo> closeServiceInstance() {
         providerClosed = true;
         peerState.values().forEach(AbstractPeerContext::close);
         peerState.clear();
         stopRemoteControl();
         stopGovernance();
         toClose.forEach(Util::closeAndLogOnError);
-        LOG.debug("JsonRPCProvider Closed");
+        return CommitInfo.emptyFluentFuture();
+    }
+
+    @Override
+    public void close() {
+        if (singletonRegistration != null) {
+            singletonRegistration.close();
+            singletonRegistration = null;
+        }
     }
 
     /*
@@ -303,14 +311,15 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         try {
             LOG.debug("Creating mapping context for peer {}", peer.getName());
 
-            final MappedPeerContext ctx = new MappedPeerContext(peer, transportFactory, schemaService, dataBroker,
-                    domMountPointService, governance, yangXPathParserFactory);
+            final MappedPeerContext ctx = new MappedPeerContext(peer, dependencies.getTransportFactory(),
+                    dependencies.getSchemaService(), dependencies.getDataBroker(),
+                    dependencies.getDomMountPointService(), governance, dependencies.getYangXPathParserFactory());
             peerState.put(peer.getName(), ctx);
             LOG.info("Peer mounted : {}", ctx);
             return true;
         } catch (RuntimeException | URISyntaxException e) {
             LOG.error("Mount failed for peer '{}'", peer.getName(), e);
-            peerState.put(peer.getName(), new FailedPeerContext(peer, dataBroker, e));
+            peerState.put(peer.getName(), new FailedPeerContext(peer, dependencies.getDataBroker(), e));
             return false;
         }
     }
@@ -368,41 +377,5 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         result &= processNotification();
         outputBuilder.setResult(result);
         return Futures.immediateFuture(RpcResultBuilder.<ForceReloadOutput>success(outputBuilder.build()).build());
-    }
-
-    /*
-     * Public setters
-     */
-
-    public void setTransportFactory(TransportFactory transportFactory) {
-        this.transportFactory = transportFactory;
-    }
-
-    public void setDataBroker(DataBroker dataBroker) {
-        this.dataBroker = dataBroker;
-    }
-
-    public void setDomMountPointService(DOMMountPointService domMountPointService) {
-        this.domMountPointService = domMountPointService;
-    }
-
-    public void setDomDataBroker(DOMDataBroker domDataBroker) {
-        this.domDataBroker = domDataBroker;
-    }
-
-    public void setSchemaService(DOMSchemaService schemaService) {
-        this.schemaService = schemaService;
-    }
-
-    public void setDomNotificationPublishService(DOMNotificationPublishService domNotificationPublishService) {
-        this.domNotificationPublishService = domNotificationPublishService;
-    }
-
-    public void setDomRpcService(DOMRpcService domRpcService) {
-        this.domRpcService = domRpcService;
-    }
-
-    public void setYangXPathParserFactory(YangXPathParserFactory yangXPathParserFactory) {
-        this.yangXPathParserFactory = yangXPathParserFactory;
     }
 }

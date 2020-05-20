@@ -27,6 +27,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.opendaylight.jsonrpc.bus.messagelib.MockTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
@@ -36,6 +38,9 @@ import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.mdsal.binding.api.ReadTransaction;
 import org.opendaylight.mdsal.binding.api.WriteTransaction;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.mdsal.singleton.common.api.ClusterSingletonService;
+import org.opendaylight.mdsal.singleton.common.api.ClusterSingletonServiceProvider;
+import org.opendaylight.mdsal.singleton.common.api.ClusterSingletonServiceRegistration;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
@@ -85,17 +90,20 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         dummyPort = getFreeTcpPort();
         updateConfig(new ConfigBuilder().setGovernanceRoot(new Uri(String.format("zmq://localhost:%d", governancePort)))
                 .build());
-        provider = new JsonRPCProvider();
-        provider.setTransportFactory(new MockTransportFactory(tf));
-        provider.setDataBroker(getDataBroker());
-        provider.setDomDataBroker(getDomBroker());
-        provider.setSchemaService(getSchemaService());
-        provider.setDomMountPointService(getDOMMountPointService());
-        provider.setDomNotificationPublishService(getDOMNotificationRouter());
-        provider.setDomRpcService(getDOMRpcRouter().getRpcService());
-        provider.setYangXPathParserFactory(ServiceLoader.load(YangXPathParserFactory.class)
-                .findFirst().orElseThrow());
-        provider.init();
+        ClusterSingletonServiceProvider clusterSingletonServiceProvider = mock(ClusterSingletonServiceProvider.class);
+        when(clusterSingletonServiceProvider.registerClusterSingletonService(any(ClusterSingletonService.class)))
+                .then(new Answer<ClusterSingletonServiceRegistration>() {
+                    @Override
+                    public ClusterSingletonServiceRegistration answer(InvocationOnMock invocation) throws Throwable {
+                        ((JsonRPCProvider) invocation.getArgument(0)).instantiateServiceInstance();
+                        return mock(ClusterSingletonServiceRegistration.class);
+                    }
+                });
+        JsonRpcProviderDependencies deps = new JsonRpcProviderDependencies(new MockTransportFactory(tf),
+                getDataBroker(), getDOMMountPointService(), getDomBroker(), getSchemaService(),
+                getDOMNotificationRouter(), getDOMRpcRouter().getRpcService(), clusterSingletonServiceProvider,
+                ServiceLoader.load(YangXPathParserFactory.class).findFirst().orElseThrow());
+        provider = new JsonRPCProvider(deps);
         logTestName("START");
     }
 
