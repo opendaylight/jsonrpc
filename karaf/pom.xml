@@ -20,7 +20,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <name>JSON-RPC :: Karaf</name>
     <packaging>pom</packaging>
     <properties>
+	<!--
         <karaf.localFeature>features-jsonrpc</karaf.localFeature>
+		-->
+        <karaf.localFeature>odl-jsonrpc-cluster</karaf.localFeature>
     </properties>
     <dependencyManagement>
         <dependencies>
