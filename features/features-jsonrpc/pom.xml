@@ -48,9 +48,18 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>
+        <!-- 
         <dependency>
             <groupId>org.opendaylight.jsonrpc</groupId>
             <artifactId>odl-jsonrpc-provider</artifactId>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+         -->
+        <!-- TODO remove below -->
+        <dependency>
+            <groupId>org.opendaylight.jsonrpc</groupId>
+            <artifactId>odl-jsonrpc-cluster</artifactId>
             <type>xml</type>
             <classifier>features</classifier>
         </dependency>

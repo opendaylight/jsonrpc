@@ -38,12 +38,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <dependencies>
         <dependency>
             <groupId>org.opendaylight.jsonrpc</groupId>
-            <artifactId>odl-jsonrpc-bus</artifactId>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.jsonrpc</groupId>
             <artifactId>odl-jsonrpc-provider</artifactId>
             <type>xml</type>
             <classifier>features</classifier>
