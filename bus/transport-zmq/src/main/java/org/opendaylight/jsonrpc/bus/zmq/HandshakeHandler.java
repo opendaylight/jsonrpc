@@ -119,7 +119,7 @@ public class HandshakeHandler extends SimpleChannelInboundHandler<ByteBuf> {
         msg.skipBytes(2);
         ctx.channel().attr(CommonConstants.ATTR_HANDSHAKE_DONE).set(true);
         ctx.pipeline().remove(HandshakeHandler.this);
-        LOG.debug("Handshake completed with {}", ctx.channel().attr(CommonConstants.ATTR_PEER_CONTEXT).get());
+        LOG.trace("Handshake completed with {}", ctx.channel().attr(CommonConstants.ATTR_PEER_CONTEXT).get());
         ctx.fireUserEventTriggered(Constants.HANDSHAKE_COMPLETED);
         state = HandshakeState.DONE;
         if (msg.isReadable()) {
@@ -149,7 +149,7 @@ public class HandshakeHandler extends SimpleChannelInboundHandler<ByteBuf> {
         state = HandshakeState.DONE;
         ctx.channel().attr(CommonConstants.ATTR_HANDSHAKE_DONE).set(true);
         ctx.pipeline().remove(this);
-        LOG.debug("Handshake completed with {}", ctx.channel().attr(CommonConstants.ATTR_PEER_CONTEXT).get());
+        LOG.trace("Handshake completed with {}", ctx.channel().attr(CommonConstants.ATTR_PEER_CONTEXT).get());
         ctx.fireUserEventTriggered(Constants.HANDSHAKE_COMPLETED);
         if (msg.isReadable()) {
             ctx.fireChannelRead(msg.retain());
@@ -184,7 +184,7 @@ public class HandshakeHandler extends SimpleChannelInboundHandler<ByteBuf> {
     private void processMajorVersion(ChannelHandlerContext ctx, ByteBuf msg, final SessionType socketType) {
         int peerMajorVersion;
         peerMajorVersion = msg.readByte();
-        LOG.debug("Peer {} advertised major version {}", ctx.channel(), peerMajorVersion);
+        LOG.trace("Peer {} advertised major version {}", ctx.channel(), peerMajorVersion);
         if (peerMajorVersion >= 3) {
             // If the peer version number is 3 or higher, the peer is
             // using ZMTP 3.0, so

@@ -197,6 +197,11 @@ module jsonrpc {
             type string;
             when "../mount-status = 'failed'";
         }
+        leaf managed-by {
+            config false;
+            description "Name of node maintaining connection to peer in clustered environment";
+            type string;
+        }
     }
 
     grouping peer {

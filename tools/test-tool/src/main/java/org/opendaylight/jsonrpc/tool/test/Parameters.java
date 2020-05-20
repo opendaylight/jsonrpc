@@ -7,25 +7,34 @@
  */
 package org.opendaylight.jsonrpc.tool.test;
 
-import java.nio.file.Path;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.annotation.Arg;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
 
-class Parameters {
-    @Arg(dest = "governance")
-    private String governance;
+final class Parameters {
+    private Parameters() {
+        // noop
+    }
 
-    @Arg(dest = "yang-directory")
-    private Path yangDirectory;
+    static final class Options {
+        @Arg(dest = "governance")
+        public String governance;
 
-    @Arg(dest = "datastore")
-    private String datastore;
+        @Arg(dest = "yang-directory")
+        public String yangDirectory;
 
-    @Arg(dest = "datastore-modules")
-    private String datastoreModules;
+        @Arg(dest = "datastore")
+        public String datastore;
 
-    static ArgumentParser createArgParser() {
+        @Arg(dest = "datastore-modules")
+        public String datastoreModules;
+
+        @Arg(dest = "rpc")
+        public String rpc;
+    }
+
+    static Options createArgParser(String[] args) throws ArgumentParserException {
         final ArgumentParser parser = ArgumentParsers.newFor("jsonrpc-testtool").addHelp(true).build();
 
         parser.addArgument("--governance")
@@ -49,6 +58,14 @@ class Parameters {
                 .help("Directory containing YANG modules.")
                 .dest("yang-directory");
 
-        return parser;
+        parser.addArgument("--rpc")
+                .type(String.class)
+                .required(false)
+                .help("RPC endpoint (partially) implementing test-model YANG")
+                .dest("rpc");
+
+        final Options opts = new Options();
+        parser.parseArgs(args, opts);
+        return opts;
     }
 }

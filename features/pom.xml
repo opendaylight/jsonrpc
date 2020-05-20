@@ -24,5 +24,6 @@
         <module>odl-jsonrpc-all</module>
         <module>odl-jsonrpc-bus</module>
         <module>odl-jsonrpc-provider</module>
+        <module>odl-jsonrpc-cluster</module>
     </modules>
 </project>

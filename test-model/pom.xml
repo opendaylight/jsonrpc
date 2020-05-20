@@ -35,6 +35,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <groupId>org.opendaylight.mdsal.binding.model.ietf</groupId>
             <artifactId>rfc6991-ietf-inet-types</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.opendaylight.jsonrpc.bus</groupId>
+            <artifactId>bus-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

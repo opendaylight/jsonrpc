@@ -1,0 +1,34 @@
+module jsonrpc-cluster-provider-config {
+    yang-version 1;
+    namespace "urn:opendaylight:jsonrpc:cluster-provider:config";
+    prefix jcpc;
+
+    description "Configuration for JSONRPC cluster provider";
+
+    revision "2020-07-08" {
+        description "Initial revision.";
+    }
+
+    container config {
+        leaf write-transaction-idle-timeout {
+            type uint16;
+            default 120;
+            description "Idle time in seconds after which write transaction is cancelled
+                         automatically.";
+        }
+        leaf actor-response-wait-time {
+            type uint16 {
+                range 1..max;
+            }
+            description "Time that slave actor will wait for response from master";
+            default 10;
+        }
+        leaf rpc-response-wait-time {
+            type uint16 {
+                range 1..max;
+            }
+            description "Time that slave actor will wait for RPC response from master";
+            default 30;
+        }
+    }
+}
