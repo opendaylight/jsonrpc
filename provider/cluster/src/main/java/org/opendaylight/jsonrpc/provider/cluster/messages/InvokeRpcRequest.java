@@ -1,0 +1,35 @@
+/*
+ * Copyright (c) 2020 Lumina Networks, Inc. All rights reserved.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ * and is available at http://www.eclipse.org/legal/epl-v10.html
+ */
+package org.opendaylight.jsonrpc.provider.cluster.messages;
+
+import java.io.Serializable;
+import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
+import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
+import org.opendaylight.yangtools.yang.model.api.SchemaPath;
+
+public class InvokeRpcRequest implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    public InvokeRpcRequest() {
+        // default ctor is required
+    }
+
+    public InvokeRpcRequest(SchemaPathMsg schemaPathMsg, PathAndDataMsg data) {
+
+    }
+
+    public static InvokeRpcRequest create(SchemaPath path, NormalizedNode<?, ?> input) {
+        final PathAndDataMsg data;
+        if (input != null) {
+            data = new PathAndDataMsg(YangInstanceIdentifier.empty(), input);
+        } else {
+            data = null;
+        }
+        return new InvokeRpcRequest(new SchemaPathMsg(path), data);
+    }
+}

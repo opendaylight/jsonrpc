@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-Copyright (C) 2017 Brocade Communications Systems, Inc. All Rights Reserved.
+Copyright (C) 2020 Lumina Networks, Inc. All Rights Reserved.
 
 This program and the accompanying materials are made available under the
 terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -16,9 +16,15 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <relativePath>../parent</relativePath>
     </parent>
 
-    <artifactId>jsonrpc-impl</artifactId>
-    <packaging>bundle</packaging>
-    <name>JSON-RPC :: Implementation</name>
+    <artifactId>jsonrpc-provider</artifactId>
+    <packaging>pom</packaging>
+    <name>JSON-RPC :: Provider</name>
+
+    <modules>
+        <module>cluster</module>
+        <module>common</module>
+        <module>single</module>
+    </modules>
 
     <build>
         <pluginManagement>
@@ -209,10 +215,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.jsonrpc</groupId>
-            <artifactId>jsonrpc-provider-common</artifactId>
         </dependency>
     </dependencies>
 </project>

@@ -18,6 +18,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <reference id="domNotificationPublishService" interface="org.opendaylight.mdsal.dom.api.DOMNotificationPublishService" />
     <reference id="yangXPathParserFactory" interface="org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory" />
     <reference id="clusterSingletonServiceProvider" interface="org.opendaylight.mdsal.singleton.common.api.ClusterSingletonServiceProvider" />
+    <reference if="governance" interface="org.opendaylight.jsonrpc.model.GovernanceProvider" />
 
     <bean id="dependencies" class="org.opendaylight.jsonrpc.provider.common.ProviderDependencies">
         <argument ref="transportFactory" />
@@ -27,12 +28,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <argument ref="schemaService" />
         <argument ref="domNotificationPublishService" />
         <argument ref="domRpcService" />
-        <argument ref="clusterSingletonServiceProvider" />
         <argument ref="yangXPathParserFactory" />
     </bean>
 
     <bean id="jsonRpcProvider" class="org.opendaylight.jsonrpc.impl.JsonRPCProvider" destroy-method="close">
         <argument ref="dependencies" />
+        <argument ref="governance" />
     </bean>
 
     <odl:rpc-implementation ref="jsonRpcProvider" />

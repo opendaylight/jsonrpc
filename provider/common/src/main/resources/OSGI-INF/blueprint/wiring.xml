@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-Copyright (C) 2017 Brocade Communications Systems, Inc. All Rights Reserved.
+Copyright (C) 2020 Lumina Networks, Inc. All Rights Reserved.
 
 This program and the accompanying materials are made available under the
 terms of the Eclipse Public License v1.0 which accompanies this distribution,
 and is available at http://www.eclipse.org/legal/epl-v10.html
 -->
-<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0" xmlns:odl="http://opendaylight.org/xmlns/blueprint/v1.0.0"
-    odl:use-default-for-reference-types="true">
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+    xmlns:odl="http://opendaylight.org/xmlns/blueprint/v1.0.0" odl:use-default-for-reference-types="true">
 
     <reference id="dataBroker" interface="org.opendaylight.mdsal.binding.api.DataBroker" odl:type="default" />
     <reference id="domDataBroker" interface="org.opendaylight.mdsal.dom.api.DOMDataBroker" />
@@ -17,7 +17,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <reference id="domRpcService" interface="org.opendaylight.mdsal.dom.api.DOMRpcService" />
     <reference id="domNotificationPublishService" interface="org.opendaylight.mdsal.dom.api.DOMNotificationPublishService" />
     <reference id="yangXPathParserFactory" interface="org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory" />
-    <reference id="clusterSingletonServiceProvider" interface="org.opendaylight.mdsal.singleton.common.api.ClusterSingletonServiceProvider" />
 
     <bean id="dependencies" class="org.opendaylight.jsonrpc.provider.common.ProviderDependencies">
         <argument ref="transportFactory" />
@@ -27,13 +26,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <argument ref="schemaService" />
         <argument ref="domNotificationPublishService" />
         <argument ref="domRpcService" />
-        <argument ref="clusterSingletonServiceProvider" />
         <argument ref="yangXPathParserFactory" />
     </bean>
-
-    <bean id="jsonRpcProvider" class="org.opendaylight.jsonrpc.impl.JsonRPCProvider" destroy-method="close">
-        <argument ref="dependencies" />
+    
+    <bean id="remoteControl" class="org.opendaylight.jsonrpc.impl.RemoteControl">
+    
     </bean>
-
-    <odl:rpc-implementation ref="jsonRpcProvider" />
 </blueprint>

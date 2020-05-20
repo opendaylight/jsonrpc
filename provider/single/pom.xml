@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-Copyright (C) 2017 Brocade Communications Systems, Inc. All Rights Reserved.
+Copyright (C) 2020 Lumina Networks, Inc. All Rights Reserved.
 
 This program and the accompanying materials are made available under the
 terms of the Eclipse Public License v1.0 which accompanies this distribution,
@@ -11,45 +11,20 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.opendaylight.jsonrpc</groupId>
-        <artifactId>jsonrpc-parent</artifactId>
+        <artifactId>jsonrpc-provider</artifactId>
         <version>1.9.0-SNAPSHOT</version>
-        <relativePath>../parent</relativePath>
+        <relativePath>..</relativePath>
     </parent>
 
-    <artifactId>jsonrpc-impl</artifactId>
+    <artifactId>jsonrpc-provider-single</artifactId>
     <packaging>bundle</packaging>
-    <name>JSON-RPC :: Implementation</name>
+    <name>JSON-RPC :: Provider :: Single node</name>
 
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <configuration>
-                        <rerunFailingTestsCount>3</rerunFailingTestsCount>
-                        <forkedProcessTimeoutInSeconds>60</forkedProcessTimeoutInSeconds>
-                        <reuseForks>false</reuseForks>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
     <dependencies>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-transport</artifactId>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>jsonrpc-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.yangtools</groupId>
