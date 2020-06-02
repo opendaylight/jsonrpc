@@ -9,22 +9,17 @@ package org.opendaylight.jsonrpc.impl;
 
 import static org.opendaylight.jsonrpc.impl.Util.store2int;
 import static org.opendaylight.jsonrpc.impl.Util.store2str;
+import static org.opendaylight.yangtools.util.concurrent.FluentFutures.immediateFluentFuture;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.stream.JsonReader;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -47,35 +42,24 @@ import org.opendaylight.yangtools.yang.common.RpcError;
 import org.opendaylight.yangtools.yang.common.RpcError.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
-import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgument;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
-import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStreamWriter;
-import org.opendaylight.yangtools.yang.data.codec.gson.JSONCodecFactorySupplier;
-import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
-import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeStreamWriter;
-import org.opendaylight.yangtools.yang.data.impl.schema.NormalizedNodeResult;
-import org.opendaylight.yangtools.yang.model.api.DataNodeContainer;
-import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
-import org.opendaylight.yangtools.yang.model.api.ListSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
-import org.opendaylight.yangtools.yang.model.api.SchemaNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFacade {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCTx.class);
-    private static final JSONCodecFactorySupplier CODEC = JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02;
     private static final Function<String, RpcError> ERROR_MAPPER = msg -> RpcResultBuilder
             .newError(ErrorType.APPLICATION, "commit", msg);
     private static final FluentFuture<Optional<NormalizedNode<?, ?>>> NO_DATA = FluentFutures
             .immediateFluentFuture(Optional.empty());
-    /* Transaction ID */
-    private final Map<String, RemoteOmShard> endPointMap;
+    /* Keep track of TX id to given endpoint (key is endpoint, value is TX ID) */
     private final Map<String, String> txIdMap;
     private final List<TransactionListener> listeners = new CopyOnWriteArrayList<>();
+    private final JsonRpcPathCodec pathCodec;
 
     /**
-     * Instantiates a new ZMQ Bus Transaction.
+     * Instantiates a new JSONRPC Transaction.
      *
      * @param transportFactory used to create underlying transport connections
      * @param peer remote peer
@@ -88,102 +72,50 @@ public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFac
             @NonNull SchemaContext schemaContext) {
         super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
         Preconditions.checkArgument(!Strings.isNullOrEmpty(peer.getName()), "Peer name is missing");
-        this.endPointMap = new HashMap<>();
         this.txIdMap = new HashMap<>();
-        /*
-         * Instantiate our "for real" bus interface. This is a simplification -
-         * it assumes that the "ownership" of a device does not change across
-         * the device tree. That may not be the case as a device is entitled to
-         * be sharded, same as we are. We, however, will cross this bridge when
-         * we cross it and we may end up crossing it on the bus side via proxy
-         * functionality in the device tree implementation.
-         */
+        this.pathCodec = JsonRpcPathCodec.create(schemaContext);
     }
 
-    private RemoteOmShard getOmShard(final LogicalDatastoreType store, JsonElement path) {
-        return endPointMap.computeIfAbsent(lookupEndPoint(store, path), shard -> getShard(store, path));
+    private <T> T withRemoteShard(LogicalDatastoreType store, JsonElement path,
+            Function<RemoteOmShard, T> mappingFunction) {
+        try (RemoteOmShard shard = getShard(store, path)) {
+            return mappingFunction.apply(shard);
+        }
     }
 
-    private String getTxId(String endpoint) {
-        return txIdMap.computeIfAbsent(endpoint, k -> endPointMap.get(k).txid());
+    /*
+     * Get cached TX id or allocate new one from corresponding remote shard mapped to given store and path
+     */
+    private String getTxId(LogicalDatastoreType store, JsonElement path) {
+        return txIdMap.computeIfAbsent(lookupEndPoint(store, path),
+            k -> withRemoteShard(store, path, RemoteOmShard::txid));
     }
 
     @Override
     @SuppressWarnings("checkstyle:IllegalCatch")
-    // jsonParser may be null in the finally block below - this is OK but FB flags it.
-    @SuppressFBWarnings("NP_LOAD_OF_KNOWN_NULL_VALUE")
     public FluentFuture<Optional<NormalizedNode<?, ?>>> read(final LogicalDatastoreType store,
             final YangInstanceIdentifier path) {
-        final JSONRPCArg arg = jsonConverter.toBus(path, null);
         if (path.getPathArguments().isEmpty()) {
             return NO_DATA;
         }
-        final NormalizedNodeResult result = new NormalizedNodeResult();
-        DataNodeContainer tracker = schemaContext;
-        try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(result)) {
-            final RemoteOmShard omshard = getOmShard(store, arg.getPath());
-            /* Read from the bus and adjust for BUS to ODL differences */
-            final JsonObject rootJson = jsonConverter.fromBus(path,
-                    omshard.read(store2str(store2int(store)), peer.getName(), arg.getPath()));
-            if (rootJson == null) {
+        final JsonObject jsonPath = pathCodec.serialize(path);
+        try (RemoteOmShard shard = getShard(store, jsonPath)) {
+            final JsonElement data = jsonConverter.fromBus(path,
+                    shard.read(store2str(store2int(store)), peer.getName(), jsonPath));
+            if (data == null) {
                 return NO_DATA;
             }
-            final Iterator<PathArgument> pathIterator = path.getPathArguments().iterator();
-            while (pathIterator.hasNext()) {
-                final PathArgument step = pathIterator.next();
-                if (pathIterator.hasNext()) {
-                    final Optional<DataSchemaNode> nextNode = tracker.findDataChildByName(step.getNodeType());
-                    if (!nextNode.isPresent()) {
-                        return readFailure("Cannot locate corresponding schema node "
-                                + step.getNodeType().getLocalName());
-                    }
-                    if (!DataNodeContainer.class.isInstance(nextNode.get())) {
-                        return readFailure("Corresponding schema node " + step.getNodeType().getLocalName()
-                                + " is neither list nor container");
-                    }
-                    /*
-                     * List looks like a two path entry sequentially, so we need
-                     * to skip one
-                     */
-                    if (!ListSchemaNode.class.isInstance(nextNode)) {
-                        tracker = (DataNodeContainer) nextNode.get();
-                    }
-                }
-            }
-            try (JsonParserStream jsonParser = JsonParserStream.create(streamWriter, CODEC.getShared(schemaContext),
-                    (SchemaNode) tracker)) {
-                /*
-                 * Kludge - we convert to string so that the StringReader can
-                 * consume it, we need to replace this with a native translator into
-                 * NormalizedNode
-                 */
-                jsonParser.parse(new JsonReader(new StringReader(rootJson.toString())));
-                return FluentFutures.immediateFluentFuture(Optional.of(result.getResult()));
-
-            }
-        } catch (IOException e) {
-            return readFailure("I/O error while reading data at path" + path, e);
-        } catch (Exception e) {
-            return readFailure("Unable to read data at path " + path, e);
+            return immediateFluentFuture(Optional.of(jsonConverter.jsonElementToNormalizedNode(data, path, false)));
         }
-    }
-
-    private FluentFuture<Optional<NormalizedNode<?, ?>>> readFailure(String message, Exception ex) {
-        return FluentFutures.immediateFailedFluentFuture(new ReadFailedException(message, ex));
-    }
-
-    private FluentFuture<Optional<NormalizedNode<?, ?>>> readFailure(String message) {
-        return readFailure(message, null);
     }
 
     @Override
     @SuppressWarnings("checkstyle:IllegalCatch")
     public FluentFuture<Boolean> exists(LogicalDatastoreType store, YangInstanceIdentifier path) {
-        try {
-            final JSONRPCArg arg = jsonConverter.toBus(path, null);
-            final RemoteOmShard omshard = getOmShard(store, arg.getPath());
+        final JsonObject jsonPath = pathCodec.serialize(path);
+        try (RemoteOmShard omshard = getShard(store, jsonPath)) {
             return FluentFutures.immediateBooleanFluentFuture(
-                    omshard.exists(store2str(store2int(store)), peer.getName(), arg.getPath()));
+                    omshard.exists(store2str(store2int(store)), peer.getName(), jsonPath));
         } catch (Exception e) {
             return FluentFutures.immediateFailedFluentFuture(ReadFailedException.MAPPER.apply(e));
         }
@@ -194,8 +126,10 @@ public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFac
             final NormalizedNode<?, ?> data) {
         final JSONRPCArg arg = jsonConverter.toBusWithStripControl(path, data, true);
         if (arg.getData() != null) {
-            getOmShard(store, arg.getPath()).put(getTxId(lookupEndPoint(store, arg.getPath())),
-                    store2str(store2int(store)), peer.getName(), arg.getPath(), arg.getData());
+            try (RemoteOmShard omshard = getShard(store, arg.getPath())) {
+                omshard.put(getTxId(store, arg.getPath()), store2str(store2int(store)), peer.getName(), arg.getPath(),
+                        arg.getData());
+            }
         }
     }
 
@@ -203,17 +137,18 @@ public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFac
     public void merge(final LogicalDatastoreType store, final YangInstanceIdentifier path,
             final NormalizedNode<?, ?> data) {
         final JSONRPCArg arg = jsonConverter.toBus(path, data);
-        final RemoteOmShard omshard = getOmShard(store, arg.getPath());
-        omshard.merge(getTxId(lookupEndPoint(store, arg.getPath())), store2str(store2int(store)), peer.getName(),
-                arg.getPath(), arg.getData());
+        try (RemoteOmShard omshard = getShard(store, arg.getPath())) {
+            omshard.merge(getTxId(store, arg.getPath()), store2str(store2int(store)), peer.getName(), arg.getPath(),
+                    arg.getData());
+        }
     }
 
     @Override
     public void delete(final LogicalDatastoreType store, final YangInstanceIdentifier path) {
-        final JSONRPCArg arg = jsonConverter.toBus(path, null);
-        final RemoteOmShard omshard = getOmShard(store, arg.getPath());
-        omshard.delete(getTxId(lookupEndPoint(store, arg.getPath())), store2str(store2int(store)), peer.getName(),
-                arg.getPath());
+        final JsonObject jsonPath = pathCodec.serialize(path);
+        try (RemoteOmShard omshard = getShard(store, jsonPath)) {
+            omshard.delete(getTxId(store, jsonPath), store2str(store2int(store)), peer.getName(), jsonPath);
+        }
     }
 
     @Override
@@ -226,15 +161,12 @@ public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFac
     public boolean cancel() {
         try {
             boolean result = true;
-            for (Map.Entry<String, RemoteOmShard> entry : endPointMap.entrySet()) {
-                RemoteOmShard omshard = endPointMap.get(entry.getKey());
-                if (getTxId(entry.getKey()) != null) {
-                    /*
-                     * We never allocated a txid, so no need to send message to om.
-                     */
-                    result &= omshard.cancel(getTxId(entry.getKey()));
+            for (Map.Entry<String, String> entry : txIdMap.entrySet()) {
+                try (RemoteOmShard shard = getShard(entry.getKey())) {
+                    result &= shard.cancel(entry.getValue());
                 }
             }
+            txIdMap.clear();
             listeners.forEach(listener -> listener.onCancel(this));
             return result;
         } catch (Exception e) {
@@ -248,14 +180,17 @@ public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFac
         listeners.forEach(txl -> txl.onSubmit(this));
         boolean result = true;
         final List<String> errors = new ArrayList<>();
-        for (Entry<String, RemoteOmShard> entry : endPointMap.entrySet()) {
-            final String txid = getTxId(entry.getKey());
-            if (!entry.getValue().commit(txid)) {
-                result = false;
-                LOG.debug("Commit of {} failed, requesting more info", txid);
-                errors.addAll(entry.getValue().error(txid));
+
+        for (Map.Entry<String, String> entry : txIdMap.entrySet()) {
+            try (RemoteOmShard shard = getShard(entry.getKey())) {
+                if (!shard.commit(entry.getValue())) {
+                    result = false;
+                    LOG.debug("Commit of {} failed, requesting more info", entry.getValue());
+                    errors.addAll(shard.error(entry.getValue()));
+                }
             }
         }
+        txIdMap.clear();
         if (result) {
             listeners.forEach(txListener -> txListener.onSuccess(this));
             return CommitInfo.emptyFluentFuture();

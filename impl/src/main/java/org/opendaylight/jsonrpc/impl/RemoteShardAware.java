@@ -7,10 +7,8 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.gson.JsonElement;
+import java.net.URISyntaxException;
 import java.util.function.Supplier;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
@@ -31,22 +29,24 @@ abstract class RemoteShardAware extends AbstractJsonRPCComponent implements Auto
     private static final String SHARD_NOT_AVAILABLE = "[%s] : Datastore mapping does not exists "
             + "for store '%s'at path '%s'.Make sure that requested path is within configured data endpoints "
             + "or governance is aware of such path.";
-    private final LoadingCache<String, RemoteOmShard> shardCache = CacheBuilder.newBuilder()
-            .build(new CacheLoader<String, RemoteOmShard>() {
-                @Override
-                public RemoteOmShard load(String uri) throws Exception {
-                    return transportFactory.endpointBuilder().requester().useCache().createProxy(RemoteOmShard.class,
-                            uri);
-                }
-            });
 
     RemoteShardAware(SchemaContext schemaContext, TransportFactory transportFactory,
             HierarchicalEnumMap<JsonElement, DataType, String> pathMap, JsonConverter jsonConverter, Peer peer) {
         super(schemaContext, transportFactory, pathMap, jsonConverter ,peer);
     }
 
+    protected RemoteOmShard getShard(String endpoint) {
+        try {
+            return transportFactory.endpointBuilder()
+                    .requester()
+                    .createProxy(RemoteOmShard.class, endpoint);
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     protected RemoteOmShard getShard(final LogicalDatastoreType store, final JsonElement path) {
-        return shardCache.getUnchecked(lookupEndPoint(store, path));
+        return getShard(lookupEndPoint(store, path));
     }
 
     protected String lookupEndPoint(final LogicalDatastoreType store, final JsonElement path) {
@@ -67,7 +67,6 @@ abstract class RemoteShardAware extends AbstractJsonRPCComponent implements Auto
 
     @Override
     public void close() {
-        shardCache.asMap().values().stream().forEach(RemoteOmShard::close);
-        shardCache.asMap().clear();
+        //NOOP
     }
 }

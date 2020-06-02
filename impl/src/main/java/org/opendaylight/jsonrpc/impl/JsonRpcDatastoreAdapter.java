@@ -100,7 +100,7 @@ public class JsonRpcDatastoreAdapter implements RemoteOmShard {
     public void merge(DataOperationArgument arg) {
         final DOMDataTreeWriteTransaction trx = txManager.allocate(arg.getTxid()).getValue().newWriteTransaction();
         final YangInstanceIdentifier path = pathCodec.deserialize(arg.getPath().getAsJsonObject());
-        LOG.info("MERGE : tx={}, store={}, entity={}, path={}, YII={}, data={}", arg.getTxid(),
+        LOG.debug("MERGE : tx={}, store={}, entity={}, path={}, YII={}, data={}", arg.getTxid(),
                 storeFromString(arg.getStore()), arg.getEntity(), arg.getPath(), path, arg.getData());
         trx.merge(storeFromString(arg.getStore()), path,
                 jsonConverter.jsonElementToNormalizedNode(arg.getData(), path, wrapBeforeMerge));
