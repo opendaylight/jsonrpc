@@ -85,7 +85,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     public void setUp() throws Exception {
         transportFactory = new DefaultTransportFactory();
         ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory, getDOMNotificationRouter(),
-                getDOMRpcRouter().getRpcService(), 100);
+                getDOMRpcRouter().getRpcService());
 
         parser = new JsonParser();
         conv = new JsonConverter(schemaContext);
@@ -268,18 +268,6 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
                 parser.parse(MLX_JSON_PATH),
                 parser.parse(MLX_CONFIG_DATA)));
         assertTrue(ctrl.commit(new TxArgument(txId)));
-    }
-
-    @Test
-    public void testFailedTransactionsVanished() throws InterruptedException {
-        String txId = ctrl.txid();
-        ctrl.delete(new TxOperationArgument(txId, store2str(store2int(LogicalDatastoreType.CONFIGURATION)),
-                "test-model", parser.parse("{}")));
-        assertFalse(ctrl.commit(new TxArgument(txId)));
-        List<String> err = ctrl.error(new TxArgument(txId));
-        assertFalse(err.isEmpty());
-        LOG.info("Collected errors : {}", err);
-        retryAction(TimeUnit.SECONDS, 5, () -> ctrl.isTxMapEmpty());
     }
 
     @Test
