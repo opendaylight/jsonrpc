@@ -17,7 +17,9 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.concurrent.ExecutionException;
@@ -50,6 +52,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.Noti
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.NotificationEndpointsKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpointsKey;
+import org.opendaylight.yangtools.yang.binding.Identifiable;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
 
@@ -120,14 +123,14 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         updateConfig(new ConfigBuilder()
                 .setGovernanceRoot(new Uri(String.format("zmq://localhost:%d", governancePort)))
                 .setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
-                .setConfiguredEndpoints(Lists.newArrayList(
+                .setConfiguredEndpoints(Maps.uniqueIndex(Lists.newArrayList(
                         new ConfiguredEndpointsBuilder().setName(DEMO1_MODEL)
                             .setModules(Lists.newArrayList(new YangIdentifier(DEMO1_MODEL)))
-                            .setDataConfigEndpoints(Lists.newArrayList(
+                            .setDataConfigEndpoints(Maps.uniqueIndex(Lists.newArrayList(
                                     new DataConfigEndpointsBuilder()
                                         .withKey(new DataConfigEndpointsKey("{}"))
-                                        .setEndpointUri(new Uri(dummyUri())).build()))
-                                    .build()))
+                                        .setEndpointUri(new Uri(dummyUri())).build()),Identifiable::key))
+                                    .build()), Identifiable::key))
                         .build());
         //@formatter:on
         retryAction(TimeUnit.SECONDS, 3, () -> getPeerOpState(DEMO1_MODEL).isPresent());
@@ -146,21 +149,22 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         retryAction(TimeUnit.SECONDS, 2, () -> !getPeerOpState(DEMO1_MODEL).isPresent());
         updateConfig(new ConfigBuilder()
                 .setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
-                .setConfiguredEndpoints(Lists.newArrayList(new ConfiguredEndpointsBuilder().setName("test-model")
-                        .setModules(Lists.newArrayList(new YangIdentifier("test-model")))
-                        .setRpcEndpoints(Lists.newArrayList(new RpcEndpointsBuilder().withKey(new RpcEndpointsKey("{}"))
+                .setConfiguredEndpoints(compatItem(new ConfiguredEndpointsBuilder().setName("test-model")
+                        .setModules(Collections.singletonList((new YangIdentifier("test-model"))))
+                        .setRpcEndpoints(compatItem(new RpcEndpointsBuilder().withKey(new RpcEndpointsKey("{}"))
                                 .setEndpointUri(new Uri(dummyUri()))
                                 .build()))
-                        .setNotificationEndpoints(Lists.newArrayList(
+                        .setNotificationEndpoints(compatItem(
                                 new NotificationEndpointsBuilder().withKey(new NotificationEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri()))
                                         .build()))
-                        .setDataOperationalEndpoints(Lists.newArrayList(
+                        .setDataOperationalEndpoints(compatItem(
                                 new DataOperationalEndpointsBuilder().withKey(new DataOperationalEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri()))
                                         .build()))
-                        .setDataConfigEndpoints(Lists.newArrayList(new DataConfigEndpointsBuilder()
-                                .withKey(new DataConfigEndpointsKey("{}")).setEndpointUri(new Uri(dummyUri())).build()))
+                        .setDataConfigEndpoints(compatItem(new DataConfigEndpointsBuilder()
+                                .withKey(new DataConfigEndpointsKey("{}")).setEndpointUri(new Uri(dummyUri()))
+                                .build()))
                         .build()))
                 .build());
         retryAction(TimeUnit.SECONDS, 3, () -> getPeerOpState("test-model").isPresent());
@@ -175,25 +179,25 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         //@formatter:off
         updateConfig(new ConfigBuilder()
                 .setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
-                .setConfiguredEndpoints(Lists.newArrayList(
+                .setConfiguredEndpoints(compatItem(
                         new ConfiguredEndpointsBuilder().setName(DEMO1_MODEL)
-                            .setModules(Lists.newArrayList(new YangIdentifier("jsonrpc-inband-models")))
-                            .setRpcEndpoints(Lists.newArrayList(
+                            .setModules(Collections.singletonList(new YangIdentifier("jsonrpc-inband-models")))
+                            .setRpcEndpoints(compatItem(
                                     new RpcEndpointsBuilder()
                                         .withKey(new RpcEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri()))
                                     .build()))
-                            .setNotificationEndpoints(Lists.newArrayList(
+                            .setNotificationEndpoints(compatItem(
                                     new NotificationEndpointsBuilder()
                                         .withKey(new NotificationEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri()))
                                     .build()))
-                            .setDataOperationalEndpoints(Lists.newArrayList(
+                            .setDataOperationalEndpoints(compatItem(
                                     new DataOperationalEndpointsBuilder()
                                         .withKey(new DataOperationalEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri()))
                                      .build()))
-                            .setDataConfigEndpoints(Lists.newArrayList(
+                            .setDataConfigEndpoints(compatItem(
                                     new DataConfigEndpointsBuilder()
                                         .withKey(new DataConfigEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri())).build()))
@@ -216,9 +220,9 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         updateConfig(new ConfigBuilder()
                 .setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
                 .setConfiguredEndpoints(
-                        Lists.newArrayList(new ConfiguredEndpointsBuilder().setName("test-model-op-only")
-                                .setModules(Lists.newArrayList(new YangIdentifier("test-model-op-only")))
-                                .setDataOperationalEndpoints(Lists.newArrayList(new DataOperationalEndpointsBuilder()
+                        compatItem(new ConfiguredEndpointsBuilder().setName("test-model-op-only")
+                                .setModules(Collections.singletonList(new YangIdentifier("test-model-op-only")))
+                                .setDataOperationalEndpoints(compatItem(new DataOperationalEndpointsBuilder()
                                         .withKey(new DataOperationalEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri()))
                                         .build()))
@@ -236,10 +240,10 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
 
         updateConfig(
                 new ConfigBuilder().setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
-                        .setConfiguredEndpoints(Lists.newArrayList(new ConfiguredEndpointsBuilder()
+                        .setConfiguredEndpoints(compatItem(new ConfiguredEndpointsBuilder()
                                 .setName("test-model-op-only")
                                 .setModules(Lists.newArrayList(new YangIdentifier("bad-module")))
-                                .setDataOperationalEndpoints(Lists.newArrayList(new DataOperationalEndpointsBuilder()
+                                .setDataOperationalEndpoints(compatItem(new DataOperationalEndpointsBuilder()
                                         .withKey(new DataOperationalEndpointsKey("{}"))
                                         .setEndpointUri(new Uri(dummyUri()))
                                         .build()))

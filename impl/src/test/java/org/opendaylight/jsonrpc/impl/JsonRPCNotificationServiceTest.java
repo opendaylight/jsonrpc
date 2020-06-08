@@ -141,7 +141,7 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
                 .setModules(Lists.newArrayList(
                         new YangIdentifier("test-model")
                         ))
-                .setNotificationEndpoints(Lists.newArrayList(new NotificationEndpointsBuilder()
+                .setNotificationEndpoints(compatItem(new NotificationEndpointsBuilder()
                         .setPath("{}")
                         .setEndpointUri(new Uri(getPath()))
                         .build()))

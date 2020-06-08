@@ -8,14 +8,19 @@
 package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import junit.framework.AssertionFailedError;
+import org.eclipse.jdt.annotation.Nullable;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.opendaylight.binding.runtime.api.BindingRuntimeContext;
@@ -39,6 +44,8 @@ import org.opendaylight.mdsal.dom.broker.DOMRpcRouter;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.TopElement;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
+import org.opendaylight.yangtools.yang.binding.Identifiable;
+import org.opendaylight.yangtools.yang.binding.Identifier;
 import org.opendaylight.yangtools.yang.binding.YangModuleInfo;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
@@ -163,5 +170,15 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    protected static <K extends Identifier<V>, V extends Identifiable<K>> @Nullable Map<K, V> compatMap(
+            final @Nullable List<V> list) {
+        return Maps.uniqueIndex(list, Identifiable::key);
+    }
+
+    protected static <K extends Identifier<V>, V extends Identifiable<K>> @Nullable Map<K, V> compatItem(
+            final @Nullable V item) {
+        return compatMap(Collections.singletonList(item));
     }
 }

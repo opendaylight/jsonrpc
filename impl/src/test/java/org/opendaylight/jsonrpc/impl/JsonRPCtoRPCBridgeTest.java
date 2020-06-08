@@ -15,8 +15,6 @@ import static org.mockito.Mockito.mock;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
@@ -37,7 +35,6 @@ import org.opendaylight.mdsal.dom.api.DOMRpcResult;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpointsBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpoints;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.FactorialInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.FactorialOutput;
@@ -184,8 +181,8 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         // BA => BI
         final ContainerNode rpcDef = prepareRpcInput(
                 new MultiplyListInputBuilder().setMultiplier((short) 3)
-                        .setNumbers(Lists.newArrayList(new NumbersBuilder().setNum(10).build(),
-                                new NumbersBuilder().setNum(15).build(), new NumbersBuilder().setNum(17).build()))
+                        .setNumbers(compatMap(Lists.newArrayList(new NumbersBuilder().setNum(10).build(),
+                                new NumbersBuilder().setNum(15).build(), new NumbersBuilder().setNum(17).build())))
                         .build());
 
         LOG.info("Transformed RPC NormalizedNode : {}", rpcDef);
@@ -269,12 +266,12 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     }
 
     private Peer getPeer() {
-        RpcEndpointsBuilder rpcEndpointsBuilder = new RpcEndpointsBuilder();
-        rpcEndpointsBuilder.setEndpointUri(new Uri(String.format(TRANSPORT + "://localhost:%d", rpcResponderPort)));
-        rpcEndpointsBuilder.setPath("{}");
-        List<RpcEndpoints> list = new ArrayList<>();
-        list.add(rpcEndpointsBuilder.build());
-        return new ConfiguredEndpointsBuilder().setName("BlahBlah").setRpcEndpoints(list).build();
+        final RpcEndpointsBuilder builder = new RpcEndpointsBuilder();
+        builder.setEndpointUri(new Uri(String.format(TRANSPORT + "://localhost:%d", rpcResponderPort)));
+        builder.setPath("{}");
+        return new ConfiguredEndpointsBuilder().setName("BlahBlah")
+                .setRpcEndpoints(compatItem(builder.build()))
+                .build();
     }
 
     private void startTransport() {

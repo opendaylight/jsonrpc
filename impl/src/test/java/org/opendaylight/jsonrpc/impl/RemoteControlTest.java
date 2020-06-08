@@ -21,6 +21,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.UUID;
@@ -232,7 +233,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     public void testMerge() throws OperationFailedException, InterruptedException, ExecutionException {
         DOMDataTreeWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
         Config c1 = new ConfigBuilder().setWhoAmI(new Uri("urn:bla"))
-                .setConfiguredEndpoints(Lists.<ConfiguredEndpoints>newArrayList()).build();
+                .setConfiguredEndpoints(Collections.emptyMap()).build();
 
         Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e1 = getCodec()
                 .toNormalizedNode(InstanceIdentifier.create(Config.class), c1);

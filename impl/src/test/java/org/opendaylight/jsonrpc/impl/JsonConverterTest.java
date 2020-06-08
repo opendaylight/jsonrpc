@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map.Entry;
 import org.junit.After;
 import org.junit.Before;
@@ -42,7 +41,6 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.TopologyBuilder;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.TopologyKey;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.NodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPointBuilder;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
@@ -186,15 +184,16 @@ public class JsonConverterTest extends AbstractJsonRpcTest {
     }
 
     private Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> createListNodeData() {
-        final List<Node> data = Lists.newArrayList(new NodeBuilder().setNodeId(new NodeId("node-id-1")).build(),
-                new NodeBuilder()
-                        .setTerminationPoint(
-                                Lists.newArrayList(new TerminationPointBuilder().setTpId(new TpId("eth0")).build()))
-                        .setNodeId(new NodeId("node-id-2"))
-                        .build());
-        Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data2 = getCodec().toNormalizedNode(
-                InstanceIdentifier.create(NetworkTopology.class).child(Topology.class),
-                new TopologyBuilder().setTopologyId(new TopologyId("topo-id")).setNode(data).build());
+        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data2 = getCodec()
+                .toNormalizedNode(InstanceIdentifier.create(NetworkTopology.class).child(Topology.class),
+                        new TopologyBuilder().setTopologyId(new TopologyId("topo-id"))
+                                .setNode(compatMap(Lists.newArrayList(
+                                        new NodeBuilder().setNodeId(new NodeId("node-id-1")).build(),
+                                        new NodeBuilder().setTerminationPoint(compatItem(
+                                                new TerminationPointBuilder().setTpId(new TpId("eth0")).build()))
+                                                .setNodeId(new NodeId("node-id-2"))
+                                                .build())))
+                                .build());
         NormalizedNode<?, ?> sub1 = data2.getValue();
         return new SimpleEntry<>(data2.getKey(), sub1);
     }
@@ -213,20 +212,18 @@ public class JsonConverterTest extends AbstractJsonRpcTest {
         //@formatter:off
         final InstanceIdentifier<NetworkTopology> ii = InstanceIdentifier.create(NetworkTopology.class);
         final NetworkTopology dObj = new NetworkTopologyBuilder()
-                .setTopology(Lists.newArrayList(new TopologyBuilder()
-                        .setNode(Lists.newArrayList(
+                .setTopology(compatItem(new TopologyBuilder()
+                        .setNode(compatMap(Lists.newArrayList(
                                 new NodeBuilder()
-                                    .setNodeId(new NodeId("node-id-1"))
-                                .build(),
-                                new NodeBuilder()
-                                    .setTerminationPoint(Lists.newArrayList(
-                                            new TerminationPointBuilder()
-                                                .setTpId(new TpId("eth0"))
-                                            .build()
-                                            ))
-                                    .setNodeId(new NodeId("node-id-2"))
-                            .build()
-                                ))
+                                .setNodeId(new NodeId("node-id-1"))
+                            .build(),
+                            new NodeBuilder()
+                                .setTerminationPoint(compatItem(new TerminationPointBuilder()
+                                            .setTpId(new TpId("eth0"))
+                                        .build()))
+                                .setNodeId(new NodeId("node-id-2"))
+                        .build()
+                            )))
                         .setTopologyId(new TopologyId("topo-id"))
                         .build()))
                 .build();
