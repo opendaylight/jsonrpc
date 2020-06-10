@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.binding;
 
 import java.util.Objects;
 import org.opendaylight.binding.runtime.api.BindingRuntimeContext;
-import org.opendaylight.jsonrpc.impl.SchemaChangeAwareConverter;
 import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yangtools.concepts.AbstractObjectRegistration;
