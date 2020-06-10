@@ -29,6 +29,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <module>test-model</module>
         <module>parent</module>
         <module>security</module>
+        <module>tools</module>
+        <module>binding-adapter</module>
     </modules>
 
     <profiles>
