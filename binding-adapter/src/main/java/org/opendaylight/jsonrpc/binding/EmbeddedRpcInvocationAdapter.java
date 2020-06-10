@@ -13,7 +13,6 @@ import org.opendaylight.binding.runtime.api.ClassLoadingStrategy;
 import org.opendaylight.binding.runtime.api.DefaultBindingRuntimeContext;
 import org.opendaylight.binding.runtime.spi.GeneratedClassLoadingStrategy;
 import org.opendaylight.binding.runtime.spi.ModuleInfoBackedContext;
-import org.opendaylight.jsonrpc.impl.SchemaChangeAwareConverter;
 import org.opendaylight.mdsal.binding.dom.adapter.BindingDOMRpcProviderServiceAdapter;
 import org.opendaylight.mdsal.binding.dom.adapter.ConstantAdapterContext;
 import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer;

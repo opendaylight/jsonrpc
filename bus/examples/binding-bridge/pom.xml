@@ -160,5 +160,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.opendaylight.jsonrpc</groupId>
+            <artifactId>binding-adapter</artifactId>
+        </dependency>
     </dependencies>
 </project>
