@@ -12,6 +12,7 @@
             mvn:org.opendaylight.jsonrpc.bus/bus-config/${project.version}/cfg/config
         </configfile>
         <feature version="[7,8)">odl-netty-4</feature>
+        <feature version="[6,7)">odl-mdsal-model-rfc6991</feature>
     </feature>
 </features>
 
