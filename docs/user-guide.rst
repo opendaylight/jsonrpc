@@ -15,8 +15,8 @@ Supported Transports
 --------------------
 
 The JSON-RPC 2.0 plugin in OpenDaylight supports both ODL as server
-and as a client with ZMQ. HTTP support will be added in future
-versions.
+and as a client with ZMQ, HTTP and Websocket. HTTP can be used only with
+`requester` and `responder` pattern.
 
 Additional Information
 ----------------------

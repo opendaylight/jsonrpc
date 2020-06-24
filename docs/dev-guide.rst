@@ -28,7 +28,7 @@ Concepts
 4. Data
 
 Naming, Schema, and Endpoint Configuration
--------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 JSON-RPC 2.0 is a stateless, lightweight protocol. The specification was
 designed to allow two entities to easily interoperate with a minimal
@@ -195,7 +195,7 @@ stacks):
     }
 
 RPCs
-----
+~~~~
 
 Regarding RPCs, for starters, we can look again at the simplistic governance
 example in the previous section. This code is also a good simplistic example
@@ -249,7 +249,7 @@ described earlier:
     }
 
 Notifications
--------------
+~~~~~~~~~~~~~
 
 Notifications in JSON-RPC 2.0 are virtually identical to RPCs. The difference
 is that they do not expect a response and do not have the additional fields
@@ -260,7 +260,7 @@ stream of notifications to which the listeners need to subscribe at a specific
 URL.
 
 Data Endpoints
---------------
+~~~~~~~~~~~~~~
 
 YANG-modelled data is significantly more complex than RPCs and Notifications.
 A YANG data endpoint must be capable of understanding a path and mapping it onto
