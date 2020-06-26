@@ -10,6 +10,7 @@
 *~
 .gitignore
 target
+target-ide
 .idea
 .factorypath
 .fbExcludeFilterFile
