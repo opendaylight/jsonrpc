@@ -31,7 +31,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <argument ref="yangXPathParserFactory" />
     </bean>
 
-    <bean id="jsonRpcProvider" class="org.opendaylight.jsonrpc.provider.single.JsonRPCProvider" destroy-method="close">
+    <bean id="jsonRpcProvider" class="org.opendaylight.jsonrpc.provider.single.JsonRPCProvider" init-method="init" destroy-method="close">
         <argument ref="dependencies" />
         <argument ref="governance" />
     </bean>
