@@ -18,6 +18,7 @@ import com.google.gson.JsonParser;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.junit.Test;
@@ -76,7 +77,7 @@ public class HierarchicalEnumHashMapTest {
         json = CODEC.deserialize(Lists.newArrayList(null, "level1", "level2", "level3"));
         LOG.info("JSON : {}", json);
         assertEquals("{\"level1\":{\"level2\":{\"level3\":{}}}}", json.toString());
-        final List<String> rootOnlyPath = Lists.newArrayList();
+        final List<String> rootOnlyPath = new ArrayList<>();
         rootOnlyPath.add(null);
         json = CODEC.deserialize(rootOnlyPath);
         LOG.info("JSON : {}", json);

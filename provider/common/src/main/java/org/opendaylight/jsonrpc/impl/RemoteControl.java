@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.impl;
 import static org.opendaylight.jsonrpc.provider.common.Util.findNode;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -18,6 +17,7 @@ import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import org.eclipse.jdt.annotation.NonNull;
@@ -45,7 +45,7 @@ import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 public class RemoteControl implements RemoteControlComposite {
     private final SchemaContext schemaContext;
     private final JsonConverter jsonConverter;
-    private final ConcurrentMap<String, DataModificationContext> txmap = Maps.newConcurrentMap();
+    private final ConcurrentMap<String, DataModificationContext> txmap = new ConcurrentHashMap<>();
     private final DOMNotificationPublishService publishService;
     private final DOMRpcService rpcService;
     private final JsonRpcDatastoreAdapter datastore;

@@ -9,10 +9,10 @@
 package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import com.google.gson.JsonElement;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -53,8 +53,7 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
     private volatile boolean closed = false;
     private volatile boolean successful = true;
     @GuardedBy("rwLock")
-    private final ConcurrentMap<DOMDataTreeWriteTransaction, AutoCloseable> pendingTransactions =
-        Maps.newConcurrentMap();
+    private final ConcurrentMap<DOMDataTreeWriteTransaction, AutoCloseable> pendingTxs = new ConcurrentHashMap<>();
 
     public TxChain(@NonNull final DOMTransactionFactory dataBroker, @NonNull final DOMTransactionChainListener listener,
             @NonNull TransportFactory transportFactory,
@@ -79,7 +78,7 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
             final DOMDataTreeReadWriteTransaction writeTransaction = dataBroker.newReadWriteTransaction();
             Preconditions.checkState(writeTransaction instanceof JsonRpcTransactionFacade);
             final DOMDataTreeReadWriteTransaction pendingWriteTx = writeTransaction;
-            pendingTransactions.put(pendingWriteTx, ((JsonRpcTransactionFacade) pendingWriteTx).addCallback(this));
+            pendingTxs.put(pendingWriteTx, ((JsonRpcTransactionFacade) pendingWriteTx).addCallback(this));
             currentTransaction = pendingWriteTx;
             return pendingWriteTx;
         } finally {
@@ -116,7 +115,7 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
     }
 
     private void notifyChainListenerSuccess() {
-        if (closed && successful && pendingTransactions.isEmpty()) {
+        if (closed && successful && pendingTxs.isEmpty()) {
             listener.onTransactionChainSuccessful(this);
         }
     }
@@ -128,7 +127,7 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
         // from List#remove does not cause NPE
         try {
             lock.lock();
-            Optional.ofNullable(pendingTransactions.remove(tx)).orElse(() -> {
+            Optional.ofNullable(pendingTxs.remove(tx)).orElse(() -> {
                 // NOOP
             }).close();
         } catch (Exception e) {

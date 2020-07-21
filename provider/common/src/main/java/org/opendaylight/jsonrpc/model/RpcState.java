@@ -7,10 +7,10 @@
  */
 package org.opendaylight.jsonrpc.model;
 
-import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.net.URISyntaxException;
+import java.util.Objects;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
@@ -28,9 +28,9 @@ public class RpcState implements AutoCloseable {
     private JsonRpcErrorObject error;
 
     public RpcState(String qname, RpcDefinition rpc, String endpoint, TransportFactory transportFactory) {
-        this.name = Preconditions.checkNotNull(qname);
-        Preconditions.checkNotNull(endpoint);
-        this.rpc = Preconditions.checkNotNull(rpc);
+        this.name = Objects.requireNonNull(qname);
+        Objects.requireNonNull(endpoint);
+        this.rpc = Objects.requireNonNull(rpc);
         try {
             this.client = transportFactory.endpointBuilder()
                     .requester()

@@ -19,6 +19,7 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -90,7 +91,7 @@ public final class Util {
         } catch (NumberFormatException e) {
             /* String representation of the datastore */
             final Integer s = STORE_STR_MAP.get(store);
-            Preconditions.checkNotNull(s, ERR_UNRECOGNIZED_STORE, store);
+            Objects.requireNonNull(s, () -> String.format(ERR_UNRECOGNIZED_STORE, store));
             return s;
         }
     }
@@ -102,9 +103,9 @@ public final class Util {
      * @return 0 for config, 1 for operational
      */
     public static int store2int(@NonNull final LogicalDatastoreType store) {
-        Preconditions.checkNotNull(store);
+        Objects.requireNonNull(store);
         final Integer ldt = STORE_MAP.inverse().get(store);
-        Preconditions.checkNotNull(ldt, ERR_UNRECOGNIZED_STORE, store);
+        Objects.requireNonNull(ldt, () -> String.format(ERR_UNRECOGNIZED_STORE, store));
         return ldt;
     }
 

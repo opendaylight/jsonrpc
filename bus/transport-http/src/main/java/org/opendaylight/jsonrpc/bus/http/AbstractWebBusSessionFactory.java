@@ -7,13 +7,13 @@
  */
 package org.opendaylight.jsonrpc.bus.http;
 
-import com.google.common.collect.Maps;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.MessageListener;
@@ -106,7 +106,7 @@ abstract class AbstractWebBusSessionFactory extends AbstractBusSessionFactory {
     }
 
     private Map<String, String> getOptions(String uriStr) {
-        return Maps.newLinkedHashMap(UriParser.parse(uriStr));
+        return new LinkedHashMap<>(UriParser.parse(uriStr));
     }
 
     private AbstractChannelInitializer createClientInitializer(SessionType socketType,

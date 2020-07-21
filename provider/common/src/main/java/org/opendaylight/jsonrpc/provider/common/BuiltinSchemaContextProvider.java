@@ -7,11 +7,11 @@
  */
 package org.opendaylight.jsonrpc.provider.common;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.eclipse.jdt.annotation.NonNull;
@@ -36,7 +36,7 @@ public class BuiltinSchemaContextProvider implements SchemaContextProvider {
     private final EffectiveModelContext schemaContext;
 
     public BuiltinSchemaContextProvider(@NonNull final EffectiveModelContext schemaContext) {
-        this.schemaContext = Preconditions.checkNotNull(schemaContext);
+        this.schemaContext = Objects.requireNonNull(schemaContext);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class BuiltinSchemaContextProvider implements SchemaContextProvider {
     }
 
     private EffectiveModelContext buildSchemaContext(Set<Module> modules) {
-        final Set<Module> resolved = Sets.newHashSet();
+        final Set<Module> resolved = new HashSet<>();
         resolved.addAll(modules);
         modules.stream()
                 .forEach(m -> resolved.addAll(m.getImports()

@@ -7,8 +7,8 @@
  */
 package org.opendaylight.jsonrpc.model;
 
-import com.google.common.base.Preconditions;
 import java.net.URISyntaxException;
+import java.util.Objects;
 import org.opendaylight.jsonrpc.bus.messagelib.NotificationMessageHandler;
 import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
@@ -20,7 +20,7 @@ public class NotificationState implements AutoCloseable {
 
     public NotificationState(NotificationDefinition notification, String endpoint, NotificationMessageHandler handler,
             final TransportFactory transportFactory) throws URISyntaxException {
-        this.notification = Preconditions.checkNotNull(notification);
+        this.notification = Objects.requireNonNull(notification);
         this.client = transportFactory.endpointBuilder().subscriber().useCache().create(endpoint, handler);
     }
 

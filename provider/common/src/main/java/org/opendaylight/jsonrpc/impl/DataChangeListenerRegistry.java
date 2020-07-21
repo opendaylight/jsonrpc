@@ -7,7 +7,6 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
-import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -15,6 +14,7 @@ import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.api.PeerContext;
 import org.opendaylight.jsonrpc.bus.messagelib.PeerContextHolder;
@@ -32,7 +32,7 @@ import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
  * @since Apr 17, 2018
  */
 public class DataChangeListenerRegistry implements AutoCloseable {
-    private final Map<ListenerKey, DataChangeListenerRegistration> listenerMap = Maps.newConcurrentMap();
+    private final Map<ListenerKey, DataChangeListenerRegistration> listenerMap = new ConcurrentHashMap<>();
     private final DOMDataBroker domDataBroker;
     private final TransportFactory transportFactory;
     private final JsonConverter jsonConverter;

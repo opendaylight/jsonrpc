@@ -31,7 +31,7 @@ public class Main extends AbstractInbandModelsService implements DemoService {
 
     private void run(String endpoint) throws Exception {
         try (TransportFactory tf = new DefaultTransportFactory();
-                ResponderSession responder = tf.createResponder(endpoint, new Main())) {
+                ResponderSession responder = tf.endpointBuilder().responder().create(endpoint, this)) {
             // wait forever
             new CountDownLatch(1).await();
         }
