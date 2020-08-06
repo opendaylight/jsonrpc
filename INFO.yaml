@@ -1,0 +1,63 @@
+---
+project: 'jsonrpc'
+project_creation_date: '2016-04-21'
+project_category: ''
+lifecycle_state: 'Incubation'
+project_lead: &odl_jsonrpc_ptl
+    name: 'Anton Ivanov'
+    email: 'anton.ivanov@cambridgegreys.com'
+    company: 'cambridgegreys'
+    id: 'aivanov'
+    timezone: 'Unknown/Unknown'
+primary_contact: *odl_jsonrpc_ptl
+issue_tracking:
+    type: 'jira'
+    url: 'https://jira.opendaylight.org/projects/'
+    key: 'jsonrpc'
+mailing_list:
+    type: 'groups.io'
+    url: 'app-dev@lists.opendaylight.org'
+    tag: '[]'
+realtime_discussion:
+    type: 'irc'
+    server: 'freenode.net'
+    channel: '#opendaylight'
+meetings:
+    - type: 'gotomeeting+irc'
+      agenda: 'https://wiki.opendaylight.org'
+      url: ''
+      server: 'freenode.net'
+      channel: '#opendaylight'
+      repeats: ''
+      time: ''
+repositories:
+    - jsonrpc
+committers:
+    - <<: *odl_jsonrpc_ptl
+    - name: 'David Spence'
+      email: 'david@roughsketch.co.uk'
+      company: 'roughsketch.co'
+      id: 'dspence'
+      timezone: 'Unknown/Unknown'
+    - name: 'Shaleen Saxena'
+      email: 'shaleen.external@gmail.com'
+      company: ''
+      id: 'ssaxena'
+      timezone: 'Unknown/Unknown'
+    - name: 'Richard Kosegi'
+      email: 'richard.kosegi@gmail.com'
+      company: ''
+      id: 'rkosegi'
+      timezone: 'Unknown/Unknown'
+    - name: 'Tom Pantelis'
+      email: 'tompantelis@gmail.com'
+      company: ''
+      id: 'tpantelis'
+      timezone: 'Unknown/Unknown'
+tsc:
+    # yamllint disable rule:line-length
+    approval: 'https://meetings.opendaylight.org/meetings/opendaylight-meeting/2016/tsc/opendaylight-meeting-tsc.2016-04-21-17.00.html'
+    changes:
+        - type: ''
+          name: ''
+          link: ''
