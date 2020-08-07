@@ -8,6 +8,7 @@
 package org.opendaylight.jsonrpc.provider.common;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -107,11 +108,13 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      * Test case : Invoke non-existent RPC method. <br />
      * Expected result : exception from RPC bridge
      */
-    @Test(expected = ExecutionException.class, timeout = 15_000)
+    @Test(timeout = 15_000)
     public void testRpcUnknownMethod() throws InterruptedException, ExecutionException {
         NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "unknown-method"));
         SchemaPath path = rpcPath(mod, "unknown-method");
-        bridge.invokeRpc(path, rpcDef).get();
+        final DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
+        logResult(result);
+        assertFalse(result.getErrors().isEmpty());
     }
 
     /**
@@ -231,10 +234,12 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      * Test case : return error from RPC implementation. <br />
      * Verify that DOMRpcException is propagated from RPC bridge.
      */
-    @Test(expected = ExecutionException.class, timeout = 15_000)
+    @Test(timeout = 15_000)
     public void testRpcError() throws Exception {
         NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "error-method"));
-        bridge.invokeRpc(rpcPath(mod, "error-method"), rpcDef).get();
+        DOMRpcResult result = bridge.invokeRpc(rpcPath(mod, "error-method"), rpcDef).get();
+        logResult(result);
+        assertFalse(result.getErrors().isEmpty());
     }
 
     @Test(timeout = 15_000)
