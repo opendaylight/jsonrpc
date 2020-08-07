@@ -22,14 +22,15 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import org.eclipse.jdt.annotation.NonNull;
-import org.opendaylight.jsonrpc.model.RpcExceptionImpl;
 import org.opendaylight.jsonrpc.provider.cluster.messages.PathAndDataMsg;
 import org.opendaylight.jsonrpc.provider.cluster.rpc.EmptyRpcResponse;
 import org.opendaylight.jsonrpc.provider.cluster.rpc.InvokeRpcRequest;
 import org.opendaylight.jsonrpc.provider.cluster.rpc.InvokeRpcResponse;
 import org.opendaylight.mdsal.dom.api.DOMRpcAvailabilityListener;
+import org.opendaylight.mdsal.dom.api.DOMRpcException;
 import org.opendaylight.mdsal.dom.api.DOMRpcResult;
 import org.opendaylight.mdsal.dom.api.DOMRpcService;
+import org.opendaylight.mdsal.dom.api.DefaultDOMRpcException;
 import org.opendaylight.mdsal.dom.spi.DefaultDOMRpcResult;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
@@ -77,11 +78,11 @@ class ProxyDOMRpcService implements DOMRpcService {
             @Override
             public void onComplete(final Throwable failure, final Object response) {
                 if (failure != null) {
-                    if (failure instanceof RpcExceptionImpl) {
+                    if (failure instanceof DOMRpcException) {
                         result.setException(failure);
                     } else {
                         result.setException(
-                                new RpcExceptionImpl(String.format("%s : RPC invocation failed", peer), failure));
+                                new DefaultDOMRpcException(String.format("%s : RPC invocation failed", peer), failure));
                     }
                     return;
                 }
