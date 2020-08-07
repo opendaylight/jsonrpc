@@ -47,4 +47,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <argument ref="dependencies" />
     </bean>
 
+    <odl:rpc-implementation ref="provider" />
+
 </blueprint>

@@ -97,4 +97,8 @@ public abstract class AbstractPeerContext implements AutoCloseable {
         LOG.debug("Changing op state to {}", opState);
         commitTransaction(wrTrx, peer.getName(), "Publish " + status + " state");
     }
+
+    public Peer getPeer() {
+        return peer;
+    }
 }
