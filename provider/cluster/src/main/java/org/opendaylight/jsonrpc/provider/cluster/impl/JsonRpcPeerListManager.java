@@ -10,22 +10,37 @@ package org.opendaylight.jsonrpc.provider.cluster.impl;
 import static org.opendaylight.jsonrpc.provider.common.Util.removeFromMapAndClose;
 
 import akka.util.Timeout;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import org.checkerframework.checker.lock.qual.GuardedBy;
+import org.checkerframework.checker.lock.qual.Holding;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.provider.cluster.api.JsonRpcPeerSingletonService;
+import org.opendaylight.jsonrpc.provider.common.AbstractPeerContext;
 import org.opendaylight.jsonrpc.provider.common.Util;
 import org.opendaylight.mdsal.binding.api.ClusteredDataTreeChangeListener;
 import org.opendaylight.mdsal.binding.api.DataObjectModification;
 import org.opendaylight.mdsal.binding.api.DataTreeModification;
 import org.opendaylight.mdsal.singleton.common.api.ClusterSingletonServiceRegistration;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReloadInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReloadOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReloadOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.JsonrpcService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpoints;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yangtools.yang.common.RpcResult;
+import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,10 +51,11 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jul 1, 2020
  */
-public class JsonRpcPeerListManager
-        implements ClusteredDataTreeChangeListener<ConfiguredEndpoints>, JsonRpcPeerSingletonService, AutoCloseable {
+public class JsonRpcPeerListManager implements ClusteredDataTreeChangeListener<ConfiguredEndpoints>,
+        JsonRpcPeerSingletonService, JsonrpcService, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRpcPeerListManager.class);
     private final ListenerRegistration<JsonRpcPeerListManager> dtcListener;
+    @GuardedBy("this")
     private final Map<String, RemotePeerContext> peerMap = new HashMap<>();
     private final Map<String, ClusterSingletonServiceRegistration> clusterRegistrations = new HashMap<>();
     private final ClusterDependencies dependencies;
@@ -82,21 +98,23 @@ public class JsonRpcPeerListManager
         }
     }
 
-    @SuppressFBWarnings(value = "UCF_USELESS_CONTROL_FLOW",
-            justification = "Kept here as a reminder to implement updates later")
-    private void updatePeerContext(ConfiguredEndpoints peer) {
+    @Holding("this")
+    private synchronized void updatePeerContext(ConfiguredEndpoints peer) {
         if (peerMap.containsKey(peer.getName())) {
-            // TODO : implement updates later?
+            destroyPeerContext(peer.getName());
+            createPeerContext(peer);
         }
     }
 
-    private void destroyPeerContext(String name) {
+    @Holding("this")
+    private synchronized void destroyPeerContext(String name) {
         LOG.info("Removing context '{}'", name);
         removeFromMapAndClose(peerMap, name);
         removeFromMapAndClose(clusterRegistrations, name);
     }
 
-    private void createPeerContext(ConfiguredEndpoints peer) {
+    @Holding("this")
+    private synchronized void createPeerContext(ConfiguredEndpoints peer) {
         LOG.info("Creating context for '{}'", peer.getName());
         final RemotePeerContext service = new RemotePeerContext(peer, dependencies);
 
@@ -116,5 +134,24 @@ public class JsonRpcPeerListManager
         clusterRegistrations.values().forEach(Util::closeAndLogOnError);
         peerMap.values().forEach(Util::closeAndLogOnError);
         peerMap.clear();
+    }
+
+    @Override
+    public ListenableFuture<RpcResult<ForceRefreshOutput>> forceRefresh(ForceRefreshInput input) {
+        // This is NOOP nowadays
+        return Futures.immediateFuture(RpcResultBuilder.success(new ForceRefreshOutputBuilder().build()).build());
+    }
+
+    @Holding("this")
+    @Override
+    public synchronized ListenableFuture<RpcResult<ForceReloadOutput>> forceReload(ForceReloadInput input) {
+        //take snapshot of configured peers
+        final Set<Peer> configured = peerMap.values()
+                .stream()
+                .map(AbstractPeerContext::getPeer)
+                .collect(Collectors.toSet());
+        //cast is safe here, we populated peers from ConfiguredEndpoints objects
+        configured.stream().map(ConfiguredEndpoints.class::cast).forEach(this::updatePeerContext);
+        return Futures.immediateFuture(RpcResultBuilder.success(new ForceReloadOutputBuilder().build()).build());
     }
 }
