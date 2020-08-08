@@ -134,8 +134,9 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(getCodec());
         final DOMDataTreeReadWriteTransaction rwtx = jrbroker.newReadWriteTransaction();
         rwtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
-        Optional<NormalizedNode<?, ?>> result = rwtx.read(LogicalDatastoreType.OPERATIONAL, e.getKey()).get();
         rwtx.commit().get();
+        final DOMDataTreeReadWriteTransaction rwtx2 = jrbroker.newReadWriteTransaction();
+        Optional<NormalizedNode<?, ?>> result = rwtx2.read(LogicalDatastoreType.OPERATIONAL, e.getKey()).get();
         assertNotNull(result.get());
     }
 
