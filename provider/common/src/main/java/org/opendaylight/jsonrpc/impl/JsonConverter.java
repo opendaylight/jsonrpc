@@ -442,7 +442,7 @@ public class JsonConverter {
      * @return the prepended json string
      */
     public JsonObject fromBus(final YangInstanceIdentifier path, JsonElement jsonElement) {
-        if (path.isEmpty()) {
+        if (path.isEmpty() || jsonElement == null || jsonElement.isJsonNull()) {
             return null;
         }
         final Iterator<PathArgument> it = path.getPathArguments().iterator();
