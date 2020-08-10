@@ -17,9 +17,9 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
-import org.opendaylight.jsonrpc.impl.JsonConverter;
 import org.opendaylight.jsonrpc.impl.JsonRPCTx;
 import org.opendaylight.jsonrpc.impl.TxChain;
 import org.opendaylight.mdsal.common.api.TransactionCommitFailedException;
@@ -37,8 +37,7 @@ public class TxChainTest {
 
     @Mock
     private EffectiveModelContext schemaContext;
-    @Mock
-    private JsonConverter jsonConverter;
+    private JsonRpcCodecFactory codec;
     @Mock
     private TransportFactory transportFactory;
     @Mock
@@ -57,10 +56,10 @@ public class TxChainTest {
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
-
-        writeOnlyTx1 = new JsonRPCTx(transportFactory, DEVICE, pathMap, jsonConverter, schemaContext);
-        writeOnlyTx2 = new JsonRPCTx(transportFactory, DEVICE, pathMap, jsonConverter, schemaContext);
-        writeOnlyTx3 = new JsonRPCTx(transportFactory, DEVICE, pathMap, jsonConverter, schemaContext);
+        codec = new JsonRpcCodecFactory(schemaContext);
+        writeOnlyTx1 = new JsonRPCTx(transportFactory, DEVICE, pathMap, codec, schemaContext);
+        writeOnlyTx2 = new JsonRPCTx(transportFactory, DEVICE, pathMap, codec, schemaContext);
+        writeOnlyTx3 = new JsonRPCTx(transportFactory, DEVICE, pathMap, codec, schemaContext);
 
         when(broker.newReadOnlyTransaction()).thenReturn(readOnlyTx);
         when(broker.newWriteOnlyTransaction()).thenReturn(writeOnlyTx1)
@@ -69,7 +68,7 @@ public class TxChainTest {
         when(broker.newReadWriteTransaction()).thenReturn(writeOnlyTx1)
                 .thenReturn(writeOnlyTx2)
                 .thenReturn(writeOnlyTx3);
-        chain = new TxChain(broker, listener, transportFactory, pathMap, jsonConverter, schemaContext, DEVICE);
+        chain = new TxChain(broker, listener, transportFactory, pathMap, codec, schemaContext, DEVICE);
     }
 
     @Test()

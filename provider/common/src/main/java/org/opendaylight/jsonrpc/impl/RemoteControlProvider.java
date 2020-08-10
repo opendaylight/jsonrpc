@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.Optional;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.model.GovernanceProvider;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.provider.common.ProviderDependencies;
@@ -41,6 +42,7 @@ public class RemoteControlProvider
     private static final Logger LOG = LoggerFactory.getLogger(RemoteControlProvider.class);
     private final ListenerRegistration<RemoteControlProvider> registration;
     private final ProviderDependencies dependencies;
+    private final JsonRpcCodecFactory codecFactory;
     private String remoteControlUri;
     private String governanceRootUri;
     private RemoteGovernance governance;
@@ -51,6 +53,7 @@ public class RemoteControlProvider
                 .registerDataTreeChangeListener(DataTreeIdentifier.create(LogicalDatastoreType.CONFIGURATION,
                         InstanceIdentifier.builder(Config.class).build()), this);
         this.dependencies = Objects.requireNonNull(dependencies);
+        this.codecFactory = new JsonRpcCodecFactory(dependencies.getSchemaService().getGlobalContext());
     }
 
     @Override
@@ -111,7 +114,8 @@ public class RemoteControlProvider
                         .responder()
                         .create(whoAmI.getValue(), new RemoteControl(dependencies.getDomDataBroker(),
                                 dependencies.getSchemaService().getGlobalContext(), dependencies.getTransportFactory(),
-                                dependencies.getDomNotificationPublishService(), dependencies.getDomRpcService()));
+                                dependencies.getDomNotificationPublishService(), dependencies.getDomRpcService(),
+                                codecFactory));
             }
         } else {
             remoteControl = null;

@@ -11,6 +11,7 @@ import com.google.gson.JsonElement;
 import java.net.URISyntaxException;
 import java.util.function.Supplier;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
@@ -31,15 +32,13 @@ abstract class RemoteShardAware extends AbstractJsonRPCComponent implements Auto
             + "or governance is aware of such path.";
 
     RemoteShardAware(EffectiveModelContext schemaContext, TransportFactory transportFactory,
-            HierarchicalEnumMap<JsonElement, DataType, String> pathMap, JsonConverter jsonConverter, Peer peer) {
-        super(schemaContext, transportFactory, pathMap, jsonConverter ,peer);
+            HierarchicalEnumMap<JsonElement, DataType, String> pathMap, JsonRpcCodecFactory codecFactory, Peer peer) {
+        super(schemaContext, transportFactory, pathMap, codecFactory, peer);
     }
 
     protected RemoteOmShard getShard(String endpoint) {
         try {
-            return transportFactory.endpointBuilder()
-                    .requester()
-                    .createProxy(RemoteOmShard.class, endpoint);
+            return transportFactory.endpointBuilder().requester().createProxy(RemoteOmShard.class, endpoint);
         } catch (URISyntaxException e) {
             throw new IllegalStateException(e);
         }
@@ -67,6 +66,6 @@ abstract class RemoteShardAware extends AbstractJsonRPCComponent implements Auto
 
     @Override
     public void close() {
-        //NOOP
+        // NOOP
     }
 }

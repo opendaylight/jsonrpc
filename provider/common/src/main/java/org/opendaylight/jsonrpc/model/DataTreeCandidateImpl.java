@@ -19,6 +19,7 @@ import org.opendaylight.yangtools.yang.data.api.schema.tree.DataTreeCandidateNod
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since May 8, 2018
  */
+@Deprecated(forRemoval = true)
 public class DataTreeCandidateImpl implements DataTreeCandidate {
     private DataTreeCandidateNode node;
     private YangInstanceIdentifier path;

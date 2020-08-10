@@ -1,0 +1,35 @@
+module test-model-ext2 {
+    namespace "urn:opendaylight:jsonrpc:test-ext2";
+    prefix "ext2";
+
+    import test-model-data {
+        prefix "data";
+    }
+
+    organization "OpenDayLight";
+    description "Mock model (ext2) to test various aspects of JSON-RPC ODL plugin";
+    revision "2020-10-14";
+
+    grouping ext-grouping-3 {
+        leaf field-10 {
+            type string;
+        }
+        leaf field-11 {
+            type uint16;
+        }
+    }
+
+    grouping ext-grouping-4 {
+        leaf field-12 {
+            type string;
+        }
+        leaf field-13 {
+            type uint16;
+        }
+    }
+
+    augment "/data:top-container/data:level2a" {
+        uses ext-grouping-3;
+        uses ext-grouping-4;
+    }
+}
