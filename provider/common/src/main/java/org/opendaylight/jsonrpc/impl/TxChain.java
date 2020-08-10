@@ -20,6 +20,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.JsonRpcTransactionFacade;
@@ -46,8 +47,7 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     /**
-     * Transaction created by this chain that hasn't been submitted or cancelled
-     * yet.
+     * Transaction created by this chain that hasn't been submitted or cancelled yet.
      */
     private DOMDataTreeWriteTransaction currentTransaction = null;
     private volatile boolean closed = false;
@@ -57,9 +57,10 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
 
     public TxChain(@NonNull final DOMTransactionFactory dataBroker, @NonNull final DOMTransactionChainListener listener,
             @NonNull TransportFactory transportFactory,
-            @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @NonNull JsonConverter jsonConverter,
-            @NonNull EffectiveModelContext schemaContext, @NonNull Peer peer) {
-        super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
+            @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
+            @NonNull JsonRpcCodecFactory codecFactory, @NonNull EffectiveModelContext schemaContext,
+            @NonNull Peer peer) {
+        super(schemaContext, transportFactory, pathMap, codecFactory, peer);
         this.dataBroker = Objects.requireNonNull(dataBroker);
         this.listener = Objects.requireNonNull(listener);
     }
@@ -104,8 +105,7 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
     }
 
     /**
-     * Checks, if chain isn't closed and if there is no not submitted write
-     * transaction waiting.
+     * Checks, if chain isn't closed and if there is no not submitted write transaction waiting.
      */
     private void checkOperationPermitted() {
         if (closed) {

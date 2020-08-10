@@ -26,18 +26,18 @@ import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TestHelper;
 import org.opendaylight.jsonrpc.test.TestModelServiceImpl;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.Coffee;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.ErrorMethodInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.ErrorMethodOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.FactorialInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.FactorialOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.MultiplyListInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.RemoveCoffeePotInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.RemoveCoffeePotOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.SimpleMethodInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.TestModelService;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.numbers.list.Numbers;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.numbers.list.NumbersBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.base.rev201014.numbers.list.Numbers;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.base.rev201014.numbers.list.NumbersBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.Coffee;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.ErrorMethodInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.ErrorMethodOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.FactorialInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.FactorialOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.MultiplyListInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.RemoveCoffeePotInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.RemoveCoffeePotOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.SimpleMethodInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.TestModelRpcService;
 import org.opendaylight.yangtools.yang.binding.Identifiable;
 import org.opendaylight.yangtools.yang.common.RpcError;
 import org.opendaylight.yangtools.yang.common.RpcError.ErrorSeverity;
@@ -53,7 +53,7 @@ import org.opendaylight.yangtools.yang.common.Uint16;
 public class TestModelServiceTest {
     private SchemaAwareTransportFactory transportFactory;
     private ResponderSession responder;
-    private ProxyContext<TestModelService> proxy;
+    private ProxyContext<TestModelRpcService> proxy;
     private RequesterSession requester;
 
     @Before
@@ -61,9 +61,9 @@ public class TestModelServiceTest {
         transportFactory = new SchemaAwareTransportFactory.Builder()
                 .withRpcInvocationAdapter(EmbeddedRpcInvocationAdapter.INSTANCE).build();
         final int port = TestHelper.getFreeTcpPort();
-        responder = transportFactory.createResponder(TestModelService.class, new TestModelServiceImpl(),
+        responder = transportFactory.createResponder(TestModelRpcService.class, new TestModelServiceImpl(),
                 TestHelper.getBindUri("ws", port));
-        proxy = transportFactory.createBindingRequesterProxy(TestModelService.class,
+        proxy = transportFactory.createBindingRequesterProxy(TestModelRpcService.class,
                 TestHelper.getConnectUri("ws", port));
         requester = transportFactory.createRequester(TestHelper.getConnectUri("ws", port),
                 NoopReplyMessageHandler.INSTANCE);
@@ -139,12 +139,6 @@ public class TestModelServiceTest {
     @Test
     public void testSendSingleArrayParameter() {
         final JsonRpcReplyMessage response = requester.sendRequestAndReadReply("factorial", new Object[] { 5 });
-        assertEquals(120, response.getResult().getAsJsonObject().get("out-number").getAsInt());
-    }
-
-    @Test
-    public void testSendMultipleArrayParameters() {
-        final JsonRpcReplyMessage response = requester.sendRequestAndReadReply("factorial", new Object[] { 5, 6 });
         assertEquals(120, response.getResult().getAsJsonObject().get("out-number").getAsInt());
     }
 

@@ -23,12 +23,13 @@ import akka.actor.ActorSystem;
 import akka.testkit.javadsl.TestKit;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.typesafe.config.ConfigFactory;
+import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -44,7 +45,7 @@ import org.opendaylight.jsonrpc.bus.messagelib.MockTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.ReplyMessageHandler;
 import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
-import org.opendaylight.jsonrpc.impl.JsonConverter;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.impl.JsonRpcDatastoreAdapter;
 import org.opendaylight.jsonrpc.model.GovernanceProvider;
 import org.opendaylight.jsonrpc.provider.cluster.impl.ClusterDependencies;
@@ -82,7 +83,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.Data
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.DataConfigEndpointsKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpointsKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.numbers.list.Numbers;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.data.rev201014.TopContainer;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.FactorialInput;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
@@ -121,7 +123,7 @@ public class MountpointTest {
     private TestCustomizer slaveTestCustomizer;
     private ActorSystem masterActorSystem;
     private ActorSystem slaveActorSystem;
-    private JsonConverter masterConverter;
+    private JsonRpcCodecFactory masterConverter;
 
     @Before
     public void setUp() throws Exception {
@@ -164,10 +166,10 @@ public class MountpointTest {
                 slaveTestCustomizer.getDOMRpcRouter().getRpcService(), yangXPathParserFactory, slaveActorSystem,
                 mockClusterSingletonServiceProvider, governanceProvider, null);
 
-        masterConverter = new JsonConverter(masterTestCustomizer.getSchemaService().getGlobalContext());
+        masterConverter = new JsonRpcCodecFactory(masterTestCustomizer.getSchemaService().getGlobalContext());
         JsonRpcDatastoreAdapter datastoreAdapter = new JsonRpcDatastoreAdapter(masterConverter,
                 masterTestCustomizer.getDomBroker(), masterTestCustomizer.getSchemaService().getGlobalContext(),
-                transportFactory, true) {
+                transportFactory) {
             @Override
             public void close() {
                 // intentionally NOOP
@@ -194,8 +196,9 @@ public class MountpointTest {
             protected Set<YangModuleInfo> getModuleInfos() throws Exception {
                 return ImmutableSet.of(BindingReflections.getModuleInfo(NetworkTopology.class),
                         BindingReflections.getModuleInfo(Topology.class),
-                        BindingReflections.getModuleInfo(Numbers.class),
-                        BindingReflections.getModuleInfo(Config.class));
+                        BindingReflections.getModuleInfo(TopContainer.class),
+                        BindingReflections.getModuleInfo(Config.class),
+                        BindingReflections.getModuleInfo(FactorialInput.class));
             }
         };
 
@@ -207,8 +210,8 @@ public class MountpointTest {
         final WriteTransaction wtx = dataBroker.newWriteOnlyTransaction();
         wtx.put(LogicalDatastoreType.CONFIGURATION, MOCK_PEER_CFG_ID, new ConfiguredEndpointsBuilder()
                 .setName("device-1")
-                .setModules(
-                        Lists.newArrayList(new YangIdentifier("network-topology"), new YangIdentifier("test-model")))
+                .setModules(List.of(new YangIdentifier("network-topology"), new YangIdentifier("test-model-data"),
+                        new YangIdentifier("test-model-rpc")))
                 .setDataConfigEndpoints(ImmutableMap.of(new DataConfigEndpointsKey("{}"),
                         new DataConfigEndpointsBuilder().setPath("{}")
                                 .setEndpointUri(new Uri("zmq://localhost:10000"))
@@ -227,7 +230,7 @@ public class MountpointTest {
         }
     }
 
-    private void testMaster() throws InterruptedException, ExecutionException {
+    private void testMaster() throws InterruptedException, ExecutionException, IOException {
         createPeer(masterTestCustomizer.getDataBroker());
         await().atMost(TEN_SECONDS)
                 .until(() -> getMountPoint(masterTestCustomizer.getDOMMountPointService()).isPresent());
@@ -243,21 +246,20 @@ public class MountpointTest {
                 .getService(DOMRpcService.class)
                 .get();
 
-        RpcDefinition rpc = Util
-                .findNode(masterTestCustomizer.getSchemaService().getGlobalContext(), "test-model:removeCoffeePot",
-                        Module::getRpcs)
+        RpcDefinition rpc = Util.findNode(masterTestCustomizer.getSchemaService().getGlobalContext(),
+                "test-model-rpc:removeCoffeePot", Module::getRpcs)
                 .get();
         ListenableFuture<? extends DOMRpcResult> rpcResult = rpcService.invokeRpc(rpc.getQName(), null);
 
-        assertNotNull(rpcResult.get().getResult());
+        assertNotNull(rpcResult.get());
 
         DOMDataBroker domDataBroker = getMountPoint(masterTestCustomizer.getDOMMountPointService()).get()
                 .getService(DOMDataBroker.class)
                 .get();
 
-        NormalizedNode<?, ?> data = masterConverter.jsonElementToNormalizedNode(
-                PARSER.parse("{\"network-topology\": {\"topology\": [{\"topology-id\": \"topology-1\"}]}}"),
-                YangInstanceIdentifier.builder().node(NetworkTopology.QNAME).build());
+        NormalizedNode<?, ?> data = masterConverter
+                .dataCodec(YangInstanceIdentifier.builder().node(NetworkTopology.QNAME).build())
+                .deserialize(PARSER.parse("{\"topology\": [{\"topology-id\": \"topology-1\"}]}"));
         final DOMDataTreeReadWriteTransaction wtx = domDataBroker.newReadWriteTransaction();
         wtx.put(LogicalDatastoreType.CONFIGURATION, YangInstanceIdentifier.of(NetworkTopology.QNAME), data);
         wtx.commit().get();
@@ -304,11 +306,11 @@ public class MountpointTest {
                 .get();
 
         RpcDefinition rpc = Util
-                .findNode(slaveTestCustomizer.getSchemaService().getGlobalContext(), "test-model:removeCoffeePot",
+                .findNode(slaveTestCustomizer.getSchemaService().getGlobalContext(), "test-model-rpc:removeCoffeePot",
                         Module::getRpcs)
                 .get();
         ListenableFuture<? extends DOMRpcResult> rpcResult = rpcService.invokeRpc(rpc.getQName(), null);
-        assertNotNull(rpcResult.get().getResult());
+        assertNotNull(rpcResult.get());
 
     }
 
@@ -317,7 +319,7 @@ public class MountpointTest {
     }
 
     @Test
-    public void test() throws InterruptedException, ExecutionException {
+    public void test() throws InterruptedException, ExecutionException, IOException {
         LOG.info("Test master mountpoint");
         testMaster();
         LOG.info("Test slave mountpoint");

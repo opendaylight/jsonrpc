@@ -46,9 +46,9 @@ public class RemoteNotificationPublisherTest extends AbstractJsonRpcTest {
     public void setUp() {
         transportFactory = new DefaultTransportFactory();
         ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory, getDOMNotificationRouter(),
-                getDOMRpcRouter().getRpcService());
-        NotificationDefinition path = findNode(schemaContext, "test-model:too-many-numbers", Module::getNotifications)
-                .get();
+                getDOMRpcRouter().getRpcService(), codecFactory);
+        NotificationDefinition path = findNode(schemaContext, "test-model-notification:notification1",
+                Module::getNotifications).get();
         latch = new CountDownLatch(1);
         reg = getDOMNotificationRouter().registerNotificationListener(new DOMNotificationListener() {
             @Override
@@ -72,20 +72,20 @@ public class RemoteNotificationPublisherTest extends AbstractJsonRpcTest {
     public void testWithPrefix() throws InterruptedException {
         JsonObject data = new JsonObject();
         data.add("current-level", new JsonPrimitive(10));
-        ctrl.publishNotification("test-model:too-many-numbers", data);
+        ctrl.publishNotification("test-model-notification:notification1", data);
         latch.await(10, TimeUnit.SECONDS);
     }
 
     @Test
     public void testWithoutPrefix() throws InterruptedException {
         JsonObject data = new JsonObject();
-        ctrl.publishNotification("too-many-numbers", data);
+        ctrl.publishNotification("notification1", data);
         latch.await(10, TimeUnit.SECONDS);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testNonExistingModule() throws InterruptedException {
-        ctrl.publishNotification("module-not-exists:too-many-numbers", new JsonObject());
+        ctrl.publishNotification("module-not-exists:notification1", new JsonObject());
     }
 
     @Test(expected = IllegalArgumentException.class)

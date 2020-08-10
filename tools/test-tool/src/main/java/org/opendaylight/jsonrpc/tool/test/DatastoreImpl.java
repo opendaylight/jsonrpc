@@ -21,7 +21,7 @@ import java.util.concurrent.Executors;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
-import org.opendaylight.jsonrpc.impl.JsonConverter;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.impl.JsonRpcDatastoreAdapter;
 import org.opendaylight.jsonrpc.model.MutablePeer;
 import org.opendaylight.jsonrpc.provider.common.GovernanceSchemaContextProvider;
@@ -44,9 +44,9 @@ class DatastoreImpl extends JsonRpcDatastoreAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(DatastoreImpl.class);
     private final ResponderSession session;
 
-    DatastoreImpl(JsonConverter jsonConverter, DOMDataBroker domDataBroker, SchemaContext schemaContext,
+    DatastoreImpl(JsonRpcCodecFactory codecFactory, DOMDataBroker domDataBroker, SchemaContext schemaContext,
             TransportFactory transportFactory, String endpoint) throws URISyntaxException {
-        super(jsonConverter, domDataBroker, schemaContext, transportFactory, true);
+        super(codecFactory, domDataBroker, schemaContext, transportFactory);
         session = transportFactory.endpointBuilder().responder().create(endpoint, this);
     }
 
@@ -57,10 +57,10 @@ class DatastoreImpl extends JsonRpcDatastoreAdapter {
         LOG.info("Schema : {}", schemaContext);
         final DOMSchemaService domSchemaService = FixedDOMSchemaService
                 .of(new FixedEffectiveModelContextProvider(schemaContext));
-        final JsonConverter jsonConverter = new JsonConverter(schemaContext);
+        final JsonRpcCodecFactory codecFactory = new JsonRpcCodecFactory(schemaContext);
         final DOMDataBroker domDataBroker = createDomDataBroker(domSchemaService,
                 MoreExecutors.listeningDecorator(Executors.newCachedThreadPool()));
-        return new DatastoreImpl(jsonConverter, domDataBroker, schemaContext, transportFactory, endpoint);
+        return new DatastoreImpl(codecFactory, domDataBroker, schemaContext, transportFactory, endpoint);
     }
 
     private static class FixedEffectiveModelContextProvider implements EffectiveModelContextProvider {

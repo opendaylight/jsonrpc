@@ -29,11 +29,11 @@ import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.MessageLibrary;
 import org.opendaylight.jsonrpc.bus.messagelib.PublisherSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
-import org.opendaylight.jsonrpc.impl.JsonConverter;
 import org.opendaylight.jsonrpc.impl.JsonRPCNotificationService;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.mdsal.dom.api.DOMNotificationListener;
@@ -73,12 +73,12 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
         port = getFreeTcpPort();
         governance = mock(RemoteGovernance.class);
         when(governance.governance(anyInt(), anyString(), any())).thenReturn(getPath());
-        mod = schemaContext.findModule("test-model", Revision.of("2016-11-17")).get();
+        mod = schemaContext.findModule("test-model-notification", Revision.of("2020-10-14")).get();
 
         transportFactory = new DefaultTransportFactory();
         svc = new JsonRPCNotificationService(getPeer(),
                 new BuiltinSchemaContextProvider(schemaContext).createSchemaContext(getPeer()), pathMap,
-                new JsonConverter(schemaContext), transportFactory, governance);
+                new JsonRpcCodecFactory(schemaContext), transportFactory, governance);
         ml = new MessageLibrary("ws");
         pubSession = ml.publisher(getPath(), true);
         TimeUnit.MILLISECONDS.sleep(150);
@@ -101,11 +101,11 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
             regs.add(svc.registerNotificationListener((DOMNotificationListener) notification -> {
                 LOG.info("Received notification : {}", notification);
                 cl.countDown();
-            }, notificationPath(mod, "too-many-numbers")));
+            }, notificationPath(mod, "notification1")));
         }
         TimeUnit.MILLISECONDS.sleep(5000L);
         for (int i = 0; i < count; i++) {
-            pubSession.publish("too-many-numbers", new int[] { 1, 2 });
+            pubSession.publish("notification1", new int[] { 1, 2 });
         }
         assertTrue(cl.await(5, TimeUnit.SECONDS));
         regs.stream().forEach(ListenerRegistration<DOMNotificationListener>::close);
@@ -117,19 +117,19 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
         svc.registerNotificationListener((DOMNotificationListener) notification -> {
             LOG.info("Received notification : {}", notification);
             cl.countDown();
-        }, notificationPath(mod, "too-many-numbers"));
+        }, notificationPath(mod, "notification1"));
         TimeUnit.MILLISECONDS.sleep(500L);
         // send primitive value - this is against specification, but we can
         // handle it easily
-        pubSession.publish("too-many-numbers", 1);
+        pubSession.publish("notification1", 1);
         JsonObject obj = new JsonObject();
         obj.addProperty("current-level", 1);
         obj.addProperty("max-level", 2);
         // named parameters
-        pubSession.publish("too-many-numbers", obj);
+        pubSession.publish("notification1", obj);
         // positional parameters, but not all values are present
-        pubSession.publish("too-many-numbers", new int[] { 1 });
-        pubSession.publish("too-many-numbers", new int[] { 1, 2 });
+        pubSession.publish("notification1", new int[] { 1, 3 });
+        pubSession.publish("notification1", new int[] { 1, 2 });
         assertTrue(cl.await(5, TimeUnit.SECONDS));
     }
 
@@ -142,7 +142,7 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
         return new ConfiguredEndpointsBuilder()
                 .setName("test")
                 .setModules(Lists.newArrayList(
-                        new YangIdentifier("test-model")
+                        new YangIdentifier("test-model-notification")
                         ))
                 .setNotificationEndpoints(compatItem(new NotificationEndpointsBuilder()
                         .setPath("{}")

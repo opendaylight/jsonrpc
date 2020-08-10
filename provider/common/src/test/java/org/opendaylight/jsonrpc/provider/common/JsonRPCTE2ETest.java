@@ -33,10 +33,8 @@ import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
-import org.opendaylight.jsonrpc.impl.JsonConverter;
 import org.opendaylight.jsonrpc.impl.JsonRPCDataBroker;
 import org.opendaylight.jsonrpc.impl.JsonRPCTx;
-import org.opendaylight.jsonrpc.impl.JsonRpcPathCodec;
 import org.opendaylight.jsonrpc.impl.RemoteControl;
 import org.opendaylight.jsonrpc.model.MutablePeer;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
@@ -68,7 +66,6 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     private RemoteGovernance governance;
     private RemoteOmShard shard;
     private TransportFactory transportFactory;
-    private JsonRpcPathCodec pathCodec;
     private final HierarchicalEnumMap<JsonElement, DataType, String> pathMap = HierarchicalEnumHashMap
             .create(DataType.class, JsonPathCodec.create());
 
@@ -76,7 +73,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     public void setUp() throws URISyntaxException {
         transportFactory = mock(TransportFactory.class);
         shard = new RemoteControl(getDomBroker(), schemaContext, transportFactory,
-                mock(DOMNotificationPublishService.class), mock(DOMRpcService.class));
+                mock(DOMNotificationPublishService.class), mock(DOMRpcService.class), codecFactory);
         peer = new MutablePeer();
         peer.name("test");
         governance = mock(RemoteGovernance.class);
@@ -88,8 +85,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
                 "zmq://localhost");
 
         jrbroker = new JsonRPCDataBroker(peer, schemaContext, pathMap, new MockTransportFactory(transportFactory),
-                governance, new JsonConverter(schemaContext));
-        pathCodec = JsonRpcPathCodec.create(schemaContext);
+                governance, codecFactory);
         logTestName("START");
     }
 
@@ -187,6 +183,6 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     }
 
     private YangInstanceIdentifier yiiFromJson(String json) {
-        return pathCodec.deserialize(jsonParser.parse(json).getAsJsonObject());
+        return codecFactory.pathCodec().deserialize(jsonParser.parse(json).getAsJsonObject());
     }
 }

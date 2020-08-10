@@ -7,27 +7,28 @@
  */
 package org.opendaylight.jsonrpc.provider.common;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.gson.JsonElement;
 import java.net.URISyntaxException;
+import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
-import org.opendaylight.jsonrpc.impl.JsonConverter;
 import org.opendaylight.jsonrpc.impl.JsonRPCDataBroker;
 import org.opendaylight.jsonrpc.impl.JsonRPCNotificationService;
 import org.opendaylight.jsonrpc.impl.JsonRPCtoRPCBridge;
+import org.opendaylight.jsonrpc.impl.JsonRpcDOMSchemaService;
 import org.opendaylight.jsonrpc.model.MutablePeer;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.SchemaContextProvider;
 import org.opendaylight.mdsal.binding.api.DataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
-import org.opendaylight.mdsal.dom.api.DOMMountPoint;
 import org.opendaylight.mdsal.dom.api.DOMMountPointService;
 import org.opendaylight.mdsal.dom.api.DOMNotificationService;
 import org.opendaylight.mdsal.dom.api.DOMRpcService;
@@ -41,7 +42,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.Data
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.DataOperationalEndpointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.NotificationEndpointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpointsBuilder;
-import org.opendaylight.yangtools.concepts.ObjectRegistration;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.Module;
@@ -56,14 +56,10 @@ import org.opendaylight.yangtools.yang.model.api.Module;
 public class MappedPeerContext extends AbstractPeerContext {
     private final HierarchicalEnumMap<JsonElement, DataType, String> pathMap = HierarchicalEnumHashMap
             .create(DataType.class, JsonPathCodec.create());
-    private final JsonConverter jsonConverter;
-    private final JsonRPCtoRPCBridge rpcBridge;
-    private final JsonRPCDataBroker rpcDataBroker;
-    private final JsonRPCNotificationService notificationService;
-    private final ObjectRegistration<DOMMountPoint> mountpointRegistration;
+    private final JsonRpcCodecFactory codecFactory;
     private final YangInstanceIdentifier biPath;
+    private final Set<AutoCloseable> toClose;
 
-    @SuppressWarnings("checkstyle:IllegalCatch")
     public MappedPeerContext(@NonNull Peer peer, @NonNull TransportFactory transportFactory,
             @NonNull DOMSchemaService schemaService, @NonNull DataBroker dataBroker,
             @NonNull DOMMountPointService mountService, @Nullable RemoteGovernance governance,
@@ -75,63 +71,82 @@ public class MappedPeerContext extends AbstractPeerContext {
         publishState(new ActualEndpointsBuilder(peer), MountStatus.Processing);
         final EffectiveModelContext schema = schemaProvider.createSchemaContext(peer);
         // actual list of modules lies in created SchemaContext
-        newPeer.addModels(
-                schema.getModules().stream().map(m -> new YangIdentifier(m.getName())).collect(Collectors.toList()));
+        newPeer.addModels(schema.getModules()
+                .stream()
+                .map(Module::getName)
+                .map(YangIdentifier::new)
+                .collect(Collectors.toList()));
 
         biPath = Util.createBiPath(peer.getName());
 
         final DOMMountPointService.DOMMountPointBuilder mountBuilder = mountService.createMountPoint(biPath);
-        jsonConverter = new JsonConverter(schema);
+        codecFactory = new JsonRpcCodecFactory(schema);
+        populatePathMap(pathMap, peer);
 
-        /*
-         * DataBroker
-         */
-        rpcDataBroker = new JsonRPCDataBroker(peer, schema, pathMap, transportFactory, governance, jsonConverter);
-        mountBuilder.addService(DOMDataBroker.class, rpcDataBroker);
+        final ImmutableSet.Builder<AutoCloseable> toCloseBuilder = ImmutableSet.<AutoCloseable>builder();
 
-        pathMap.toMap(DataType.CONFIGURATION_DATA)
-                .entrySet()
-                .stream()
-                .forEach(e -> newPeer.addDataConfigEndpoint(
-                        new DataConfigEndpointsBuilder().setPath(e.getKey().getAsJsonObject().toString())
-                                .setEndpointUri(new Uri(e.getValue()))
-                                .build()));
-        pathMap.toMap(DataType.OPERATIONAL_DATA)
-                .entrySet()
-                .stream()
-                .forEach(e -> newPeer.addDataOperationalEndpoint(
-                        new DataOperationalEndpointsBuilder().setPath(e.getKey().getAsJsonObject().toString())
-                                .setEndpointUri(new Uri(e.getValue()))
-                                .build()));
+        if (!schema.getDataDefinitions().isEmpty()) {
+            pathMap.toMap(DataType.CONFIGURATION_DATA)
+                    .entrySet()
+                    .stream()
+                    .forEach(e -> newPeer.addDataConfigEndpoint(
+                            new DataConfigEndpointsBuilder().setPath(e.getKey().getAsJsonObject().toString())
+                                    .setEndpointUri(new Uri(e.getValue()))
+                                    .build()));
+            pathMap.toMap(DataType.OPERATIONAL_DATA)
+                    .entrySet()
+                    .stream()
+                    .forEach(e -> newPeer.addDataOperationalEndpoint(
+                            new DataOperationalEndpointsBuilder().setPath(e.getKey().getAsJsonObject().toString())
+                                    .setEndpointUri(new Uri(e.getValue()))
+                                    .build()));
+            final JsonRPCDataBroker rpcDataBroker = new JsonRPCDataBroker(peer, schema, pathMap, transportFactory,
+                    governance, codecFactory);
+            toCloseBuilder.add(rpcDataBroker);
+            mountBuilder.addService(DOMDataBroker.class, rpcDataBroker);
+        } else {
+            LOG.info("[{}] DOMDataBroker not registered as no data definitions has been found in schema",
+                    peer.getName());
+        }
 
-        /*
-         * RPC bridge
-         */
-        rpcBridge = new JsonRPCtoRPCBridge(peer, schema, pathMap, governance, transportFactory, jsonConverter);
-        mountBuilder.addService(DOMRpcService.class, rpcBridge);
-        pathMap.toMap(DataType.RPC)
-                .entrySet()
-                .stream()
-                .forEach(e -> newPeer
-                        .addRpcEndpoint(new RpcEndpointsBuilder().setPath(e.getKey().getAsJsonObject().toString())
-                                .setEndpointUri(new Uri(e.getValue()))
-                                .build()));
+        if (!schema.getOperations().isEmpty()) {
+            JsonRPCtoRPCBridge rpcBridge = new JsonRPCtoRPCBridge(peer, schema, pathMap, governance, transportFactory,
+                    codecFactory);
+            pathMap.toMap(DataType.RPC)
+                    .entrySet()
+                    .stream()
+                    .forEach(e -> newPeer
+                            .addRpcEndpoint(new RpcEndpointsBuilder().setPath(e.getKey().getAsJsonObject().toString())
+                                    .setEndpointUri(new Uri(e.getValue()))
+                                    .build()));
+            toCloseBuilder.add(rpcBridge);
+            mountBuilder.addService(DOMRpcService.class, rpcBridge);
+        } else {
+            LOG.info("[{}] DOMRpcService not registered as no RPC definitions has been found in schema",
+                    peer.getName());
+        }
 
-        /*
-         * Notification service
-         */
-        notificationService = new JsonRPCNotificationService(peer, schema, pathMap, jsonConverter, transportFactory,
-                governance);
-        pathMap.toMap(DataType.NOTIFICATION)
-                .entrySet()
-                .stream()
-                .forEach(e -> newPeer.addNotificationEndpoint(
-                        new NotificationEndpointsBuilder().setPath(e.getKey().getAsJsonObject().toString())
-                                .setEndpointUri(new Uri(e.getValue()))
-                                .build()));
-        mountBuilder.addService(DOMNotificationService.class, notificationService);
-
-        mountpointRegistration = mountBuilder.register();
+        if (!schema.getNotifications().isEmpty()) {
+            JsonRPCNotificationService notificationService = new JsonRPCNotificationService(peer, schema, pathMap,
+                    codecFactory, transportFactory, governance);
+            pathMap.toMap(DataType.NOTIFICATION)
+                    .entrySet()
+                    .stream()
+                    .forEach(e -> newPeer.addNotificationEndpoint(
+                            new NotificationEndpointsBuilder().setPath(e.getKey().getAsJsonObject().toString())
+                                    .setEndpointUri(new Uri(e.getValue()))
+                                    .build()));
+            mountBuilder.addService(DOMNotificationService.class, notificationService);
+            toCloseBuilder.add(notificationService);
+        } else {
+            LOG.info("[{}] DOMNotificationService not registered as no notifications has been found in schema",
+                    peer.getName());
+        }
+        final JsonRpcDOMSchemaService peerSchemaService = new JsonRpcDOMSchemaService(newPeer, schema);
+        mountBuilder.addService(DOMSchemaService.class, peerSchemaService);
+        toCloseBuilder.add(peerSchemaService);
+        toCloseBuilder.add(mountBuilder.register());
+        toClose = toCloseBuilder.build();
 
         // Publish operational state, list of modules contains all modules from effective schema
         final ActualEndpointsBuilder endpoint = new ActualEndpointsBuilder(newPeer).setModules(schema.getModules()
@@ -144,8 +159,7 @@ public class MappedPeerContext extends AbstractPeerContext {
 
     @Override
     public void close() {
-        Stream.of(rpcDataBroker, rpcBridge, notificationService, mountpointRegistration)
-                .forEach(Util::closeAndLogOnError);
+        toClose.forEach(Util::closeAndLogOnError);
         super.close();
     }
 

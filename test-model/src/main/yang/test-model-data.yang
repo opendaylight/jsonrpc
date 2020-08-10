@@ -1,0 +1,40 @@
+module test-model-data {
+    namespace "urn:opendaylight:jsonrpc:test-data";
+    prefix "tm";
+
+    import test-model-base {
+        prefix "base";
+    }
+
+    organization "OpenDayLight";
+    description "Mock model (data) to test various aspects of JSON-RPC ODL plugin";
+    revision "2020-10-14";
+
+    list top-list {
+        key "item-key";
+        leaf item-key {
+            type string;
+        }
+        leaf item-value {
+            type uint16;
+        }
+    }
+
+    container top-container {
+        uses base:bucket;
+        container level2a {
+            leaf abc {
+                type string;
+            }
+        }
+    }
+
+    container grillconf {
+        leaf gasKnob {
+            config true;
+            type uint32 {
+                range "1..11";
+            }
+        }
+    }
+}

@@ -19,6 +19,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.api.PeerContext;
 import org.opendaylight.jsonrpc.bus.messagelib.PeerContextHolder;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.model.DataChangeNotificationPublisher;
 import org.opendaylight.jsonrpc.model.ListenerKey;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
@@ -35,13 +36,13 @@ public class DataChangeListenerRegistry implements AutoCloseable {
     private final Map<ListenerKey, DataChangeListenerRegistration> listenerMap = new ConcurrentHashMap<>();
     private final DOMDataBroker domDataBroker;
     private final TransportFactory transportFactory;
-    private final JsonConverter jsonConverter;
+    private final JsonRpcCodecFactory codecFactory;
 
     public DataChangeListenerRegistry(@NonNull final DOMDataBroker domDataBroker,
-            @NonNull final TransportFactory transportFactory, @NonNull final JsonConverter jsonConverter) {
+            @NonNull final TransportFactory transportFactory, @NonNull final JsonRpcCodecFactory codecFactory) {
         this.domDataBroker = Objects.requireNonNull(domDataBroker);
         this.transportFactory = Objects.requireNonNull(transportFactory);
-        this.jsonConverter = Objects.requireNonNull(jsonConverter);
+        this.codecFactory = Objects.requireNonNull(codecFactory);
     }
 
     // suppress complains about using try-with-resources on publisher - we
@@ -55,7 +56,7 @@ public class DataChangeListenerRegistry implements AutoCloseable {
                     .publisher()
                     .createProxy(DataChangeNotificationPublisher.class, response.getUri());
             listenerMap.put(response, new DataChangeListenerRegistration(path, listenerMap::remove, domDataBroker,
-                    jsonConverter, store, publisher, response));
+                    codecFactory, store, publisher, response));
             return response;
         } catch (URISyntaxException e) {
             // impossible to land here

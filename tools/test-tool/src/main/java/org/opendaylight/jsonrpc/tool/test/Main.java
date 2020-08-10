@@ -52,7 +52,7 @@ public final class Main {
                         "Argument 'datastore-modules' is required if --datastore option is provided");
                 final List<String> modules = Lists.newArrayList(opts.datastoreModules.split(","));
                 if (opts.rpc != null) {
-                    modules.add("test-model");
+                    modules.add("test-model-rpc");
                 }
                 LOG.info("Datastore modules : {}", modules);
                 final DatastoreImpl datastore = DatastoreImpl.create(tf, opts.datastore,

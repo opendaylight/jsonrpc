@@ -7,20 +7,19 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import static com.google.common.util.concurrent.Futures.getUnchecked;
+import static org.opendaylight.jsonrpc.dom.codec.CodecUtils.decodeUnchecked;
+import static org.opendaylight.jsonrpc.dom.codec.CodecUtils.encodeUnchecked;
 import static org.opendaylight.jsonrpc.provider.common.Util.storeFromString;
 
-import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.model.AddListenerArgument;
 import org.opendaylight.jsonrpc.model.DataOperationArgument;
 import org.opendaylight.jsonrpc.model.DeleteListenerArgument;
@@ -29,10 +28,11 @@ import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.jsonrpc.model.StoreOperationArgument;
 import org.opendaylight.jsonrpc.model.TxArgument;
 import org.opendaylight.jsonrpc.model.TxOperationArgument;
+import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
-import org.opendaylight.yangtools.yang.common.QName;
+import org.opendaylight.yangtools.concepts.Codec;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
@@ -46,24 +46,21 @@ import org.slf4j.LoggerFactory;
  */
 public class JsonRpcDatastoreAdapter implements RemoteOmShard {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRpcDatastoreAdapter.class);
-    private final JsonConverter jsonConverter;
+    private final JsonRpcCodecFactory codecFactory;
     private final TransactionManager txManager;
     private final DOMDataBroker domDataBroker;
-    private final JsonRpcPathCodec pathCodec;
     private final DataChangeListenerRegistry dataChangeRegistry;
-    // TODO : check if we can get rid of this
-    private final boolean wrapBeforeMerge;
+    private Codec<JsonObject, YangInstanceIdentifier, RuntimeException> pathCodec;
 
-    public JsonRpcDatastoreAdapter(@NonNull JsonConverter jsonConverter, @NonNull DOMDataBroker domDataBroker,
-            @NonNull SchemaContext schemaContext, @NonNull TransportFactory transportFactory, boolean wrapBeforeMerge) {
+    public JsonRpcDatastoreAdapter(@NonNull JsonRpcCodecFactory codecFactory, @NonNull DOMDataBroker domDataBroker,
+            @NonNull SchemaContext schemaContext, @NonNull TransportFactory transportFactory) {
         Objects.requireNonNull(schemaContext);
         Objects.requireNonNull(transportFactory);
         this.domDataBroker = Objects.requireNonNull(domDataBroker);
-        this.jsonConverter = Objects.requireNonNull(jsonConverter);
+        this.codecFactory = Objects.requireNonNull(codecFactory);
         this.txManager = new TransactionManager(domDataBroker, schemaContext);
-        this.pathCodec = JsonRpcPathCodec.create(schemaContext);
-        this.dataChangeRegistry = new DataChangeListenerRegistry(domDataBroker, transportFactory, jsonConverter);
-        this.wrapBeforeMerge = wrapBeforeMerge;
+        this.dataChangeRegistry = new DataChangeListenerRegistry(domDataBroker, transportFactory, codecFactory);
+        this.pathCodec = codecFactory.pathCodec();
     }
 
     @Override
@@ -71,28 +68,28 @@ public class JsonRpcDatastoreAdapter implements RemoteOmShard {
         final YangInstanceIdentifier path = pathCodec.deserialize(arg.getPath().getAsJsonObject());
         LOG.debug("READ : YII :{}", path);
         try (DOMDataTreeReadTransaction tx = domDataBroker.newReadOnlyTransaction()) {
-            return jsonConverter.toBus(path, getUnchecked(tx.read(storeFromString(arg.getStore()), path)).orElse(null))
-                    .getData();
+            return encodeUnchecked(codecFactory, path,
+                    getUnchecked(tx.read(storeFromString(arg.getStore()), path)).orElse(null));
         }
     }
 
     @Override
     public void put(DataOperationArgument arg) {
         final YangInstanceIdentifier path = pathCodec.deserialize(arg.getPath().getAsJsonObject());
-        LOG.debug("PUT txId : {}, store : {}, entity : {}, path : {}, YII :{}, data : {}", arg.getTxid(),
-                storeFromString(arg.getStore()), arg.getEntity(), arg.getPath(), path, arg.getData());
+        final LogicalDatastoreType store = storeFromString(arg.getStore());
+        LOG.debug("PUT txId : {}, store : {}, entity : {}, path : {}, YII :{}, data : {}", arg.getTxid(), store,
+                arg.getEntity(), arg.getPath(), path, arg.getData());
         final DOMDataTreeWriteTransaction wtx = txManager.allocate(arg.getTxid()).getValue().newWriteTransaction();
-        wtx.put(storeFromString(arg.getStore()), path,
-                jsonConverter.jsonElementToNormalizedNode(injectQName(path, arg.getData()), path));
+        wtx.put(store, path, decodeUnchecked(codecFactory, path, arg.getData()));
     }
 
     @Override
     public boolean exists(StoreOperationArgument arg) {
         final YangInstanceIdentifier path = pathCodec.deserialize(arg.getPath().getAsJsonObject());
-        LOG.debug("EXISTS store={}, entity={}, path={}, YII={}", storeFromString(arg.getStore()), arg.getEntity(),
-                arg.getPath(), path);
+        final LogicalDatastoreType store = storeFromString(arg.getStore());
+        LOG.debug("EXISTS store={}, entity={}, path={}, YII={}", store, arg.getEntity(), arg.getPath(), path);
         try (DOMDataTreeReadTransaction tx = domDataBroker.newReadOnlyTransaction()) {
-            return getUnchecked(tx.exists(storeFromString(arg.getStore()), path));
+            return getUnchecked(tx.exists(store, path));
         }
     }
 
@@ -100,19 +97,20 @@ public class JsonRpcDatastoreAdapter implements RemoteOmShard {
     public void merge(DataOperationArgument arg) {
         final DOMDataTreeWriteTransaction trx = txManager.allocate(arg.getTxid()).getValue().newWriteTransaction();
         final YangInstanceIdentifier path = pathCodec.deserialize(arg.getPath().getAsJsonObject());
-        LOG.debug("MERGE : tx={}, store={}, entity={}, path={}, YII={}, data={}", arg.getTxid(),
-                storeFromString(arg.getStore()), arg.getEntity(), arg.getPath(), path, arg.getData());
-        trx.merge(storeFromString(arg.getStore()), path,
-                jsonConverter.jsonElementToNormalizedNode(arg.getData(), path, wrapBeforeMerge));
+        final LogicalDatastoreType store = storeFromString(arg.getStore());
+        LOG.debug("MERGE : tx={}, store={}, entity={}, path={}, YII={}, data={}", arg.getTxid(), store, arg.getEntity(),
+                arg.getPath(), path, arg.getData());
+        trx.merge(store, path, decodeUnchecked(codecFactory, path, arg.getData()));
     }
 
     @Override
     public void delete(TxOperationArgument arg) {
         final YangInstanceIdentifier path = pathCodec.deserialize(arg.getPath().getAsJsonObject());
-        LOG.debug("DELETE : tx={}, store={}, entity={}, path={}, YII={}", arg.getTxid(),
-                storeFromString(arg.getStore()), arg.getEntity(), arg.getPath(), path);
+        final LogicalDatastoreType store = storeFromString(arg.getStore());
+        LOG.debug("DELETE : tx={}, store={}, entity={}, path={}, YII={}", arg.getTxid(), store, arg.getEntity(),
+                arg.getPath(), path);
         final DOMDataTreeWriteTransaction trx = txManager.allocate(arg.getTxid()).getValue().newWriteTransaction();
-        trx.delete(storeFromString(arg.getStore()), path);
+        trx.delete(store, path);
     }
 
     @Override
@@ -155,71 +153,5 @@ public class JsonRpcDatastoreAdapter implements RemoteOmShard {
     public void close() {
         txManager.close();
         dataChangeRegistry.close();
-    }
-
-    private <V> V getUnchecked(Future<V> future) {
-        try {
-            return Uninterruptibles.getUninterruptibly(future);
-        } catch (ExecutionException e) {
-            throw new IllegalStateException("Unable to get result of future", e);
-        }
-    }
-
-    /**
-     * Helper method to achieve compatibility between JSON-RPC data spec and
-     * <a href="https://tools.ietf.org/html/rfc7951">RFC-7951</a><br />
-     * <strong>Incompatibility example:</strong> YANG model (in module 'test-model'):
-     *
-     * <pre>
-     * container grillconf {
-     *     leaf gasKnob {
-     *         type unit32;
-     *     }
-     * }
-     * </pre>
-     *
-     * <p>
-     * To set leaf 'gasKnob' to value eg. 5, path is
-     *
-     * <pre>
-     * {"test-model:grillconf":{}}
-     * </pre>
-     *
-     * <p>
-     * and data is
-     *
-     * <pre>
-     * {"gasKnob":10}
-     * </pre>
-     *
-     * <p>
-     * This breaks requirement of GSON codec, which needs data to be qualified by module name. Injecting/wrapping
-     * qualifier around it can workaround this issue, so outcome of this method will be such as:
-     *
-     * <pre>
-     *  {"test-model:grillconf":{"gasKnob":5}}
-     * </pre>
-     *
-     * @param yii {@link YangInstanceIdentifier} of container node
-     * @param inJson input JSON to be wrapped with qualifier
-     * @return wrapped JSON with injected qualifier
-     */
-    private JsonElement injectQName(YangInstanceIdentifier yii, JsonElement inJson) {
-        LOG.debug("Injecting QName from {} into JSON '{}'", yii, inJson);
-        final Set<Entry<String, JsonElement>> fields = ((JsonObject) inJson).entrySet();
-        // nothing to wrap
-        if (fields.isEmpty()) {
-            return inJson;
-        }
-        final Entry<String, JsonElement> firstNode = fields.iterator().next();
-        // already qualified
-        if (firstNode.getKey().indexOf(':') != -1) {
-            return inJson;
-        }
-        final QName qn = yii.getLastPathArgument().getNodeType();
-        final JsonObject wrapper = new JsonObject();
-        wrapper.add(qn.getLocalName(), inJson);
-        LOG.debug("Wrapped data : {}", wrapper);
-        return wrapper;
     }
 }

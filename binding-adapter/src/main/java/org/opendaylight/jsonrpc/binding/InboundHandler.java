@@ -13,9 +13,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
@@ -32,7 +32,6 @@ import org.opendaylight.yangtools.yang.common.RpcError;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
-import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 import org.slf4j.Logger;
@@ -46,7 +45,6 @@ import org.slf4j.LoggerFactory;
  * @since Sep 20, 2018
  */
 public class InboundHandler<T extends RpcService> extends AbstractHandler<T> implements RequestMessageHandler {
-    private static final String INPUT = "input";
     private static final Logger LOG = LoggerFactory.getLogger(InboundHandler.class);
     private final T impl;
 
@@ -69,18 +67,8 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
         try {
             final Entry<RpcDefinition, Method> rpcDefEntry = findMethod(request.getMethod())
                     .orElseThrow(() -> new NoSuchMethodError(request.getMethod()));
-            final JsonObject wrapper;
-            // handle case when requester sent positional arguments to us (in form of JsonArray).
-            if (request.getParams() instanceof JsonArray) {
-                wrapper = wrapArrayInput((JsonArray) request.getParams(), rpcDefEntry.getKey());
-            } else if (request.getParams() instanceof JsonPrimitive) {
-                wrapper = wrapPrimitiveInput((JsonPrimitive) request.getParams(), rpcDefEntry.getKey());
-            } else {
-                wrapper = new JsonObject();
-                wrapper.add(INPUT, request.getParams());
-            }
             final Method method = rpcDefEntry.getValue();
-            final Object[] args = convertArguments(rpcDefEntry, wrapper, method);
+            final Object[] args = convertArguments(rpcDefEntry, request.getParams(), method);
             @SuppressWarnings("unchecked")
             final Future<RpcResult<Object>> output = (Future<RpcResult<Object>>) method.invoke(impl, args);
             LOG.debug("Output : {}", output);
@@ -89,9 +77,10 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
                 if (rpcResult.getResult() != null) {
                     final ContainerNode domData = adapter.codec()
                             .toNormalizedNodeRpcData((DataContainer) rpcResult.getResult());
-                    final JsonObject reply = adapter.converter()
+                    final JsonElement reply = adapter.converter()
                             .get()
-                            .rpcConvert(rpcDefEntry.getKey().getOutput().getPath(), domData);
+                            .rpcOutputCodec(rpcDefEntry.getKey())
+                            .serialize(domData);
                     replyBuilder.result(reply);
                 }
             } else {
@@ -127,16 +116,18 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
         }
     }
 
-    private Object[] convertArguments(final Entry<RpcDefinition, Method> rpcDefEntry, final JsonObject wrapper,
-            final Method method) {
+    private Object[] convertArguments(final Entry<RpcDefinition, Method> rpcDefEntry, final JsonElement wrapper,
+            final Method method) throws IOException {
         final Object[] args;
         if (method.getParameterCount() == 1) {
-            if (wrapper.get(INPUT).isJsonNull()) {
-                wrapper.add(INPUT, new JsonObject());
-            }
-            final NormalizedNode<?, ?> nn = adapter.converter().get().rpcOutputConvert(rpcDefEntry.getKey(), wrapper);
-            final DataObject dataObject = adapter.codec().fromNormalizedNodeRpcData(Absolute.of(
-                    rpcDefEntry.getKey().getQName(), rpcDefEntry.getKey().getInput().getQName()),(ContainerNode) nn);
+            final NormalizedNode<?, ?> nn = adapter.converter()
+                    .get()
+                    .rpcInputCodec(rpcDefEntry.getKey())
+                    .deserialize(wrapper);
+            final DataObject dataObject = adapter.codec()
+                    .fromNormalizedNodeRpcData(
+                            Absolute.of(rpcDefEntry.getKey().getQName(), rpcDefEntry.getKey().getInput().getQName()),
+                            (ContainerNode) nn);
             LOG.debug("Input : {}", dataObject);
             args = new Object[] { dataObject };
         } else {
@@ -147,31 +138,6 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
 
     private void logRpcInvocationFailure(Throwable cause) {
         LOG.error("RPC invocation failed", cause);
-    }
-
-    private JsonObject wrapPrimitiveInput(JsonPrimitive request, RpcDefinition rpcDef) {
-        final JsonObject wrapper = new JsonObject();
-        DataSchemaNode node = rpcDef.getInput().getChildNodes().iterator().next();
-        JsonObject prop = new JsonObject();
-        prop.add(node.getQName().getLocalName(), request);
-        wrapper.add(INPUT, prop);
-        return wrapper;
-    }
-
-    private JsonObject wrapArrayInput(JsonArray inputArr, RpcDefinition rpcDef) {
-        final JsonObject wrapper = new JsonObject();
-        final JsonObject prop = new JsonObject();
-        final Iterator<? extends DataSchemaNode> it = rpcDef.getInput().getChildNodes().iterator();
-        int counter = 0;
-        if (inputArr.size() > rpcDef.getInput().getChildNodes().size()) {
-            LOG.warn("Extra parameter(s) provided, expected : {}, given : {}", rpcDef.getInput().getChildNodes().size(),
-                    inputArr.size());
-        }
-        while (it.hasNext() && counter < inputArr.size()) {
-            prop.add(it.next().getQName().getLocalName(), inputArr.get(counter++));
-        }
-        wrapper.add(INPUT, prop);
-        return wrapper;
     }
 
     private JsonElement mapError(RpcError rpcError) {

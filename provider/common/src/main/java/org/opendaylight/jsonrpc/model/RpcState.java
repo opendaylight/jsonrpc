@@ -19,6 +19,7 @@ import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 
+@Deprecated(forRemoval = true)
 public class RpcState implements AutoCloseable {
     private final String name;
     private final RpcDefinition rpc;

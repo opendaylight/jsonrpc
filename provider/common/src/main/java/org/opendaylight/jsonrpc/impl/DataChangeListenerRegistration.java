@@ -7,14 +7,19 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.eclipse.jdt.annotation.NonNull;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.model.DataChangeNotification;
 import org.opendaylight.jsonrpc.model.DataChangeNotificationPublisher;
+import org.opendaylight.jsonrpc.model.JSONRPCArg;
 import org.opendaylight.jsonrpc.model.ListenerKey;
 import org.opendaylight.jsonrpc.provider.common.Util;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
@@ -29,9 +34,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class is {@link DOMDataTreeChangeListener} and its registration object
- * at same time. It forwards data change event to remote subscriber and perform
- * necessary cleanup when no longer needed.
+ * This class is {@link DOMDataTreeChangeListener} and its registration object at same time. It forwards data change
+ * event to remote subscriber and perform necessary cleanup when no longer needed.
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since May 8, 2018
@@ -42,17 +46,17 @@ public class DataChangeListenerRegistration
     private final DataChangeNotificationPublisher publisher;
     private final YangInstanceIdentifier path;
     private final ListenerRegistration<DataChangeListenerRegistration> delegate;
-    private final JsonConverter converter;
+    private final JsonRpcCodecFactory codecFactory;
     private final Consumer<ListenerKey> closeCallback;
     private ListenerKey listenerKey;
 
     public DataChangeListenerRegistration(@NonNull YangInstanceIdentifier path,
             @NonNull Consumer<ListenerKey> closeCallback, @NonNull final DOMDataBroker domDataBroker,
-            @NonNull final JsonConverter converter, @NonNull LogicalDatastoreType store,
+            @NonNull final JsonRpcCodecFactory codecFactory, @NonNull LogicalDatastoreType store,
             @NonNull DataChangeNotificationPublisher publisher, @NonNull ListenerKey listenerKey) {
         this.path = Objects.requireNonNull(path);
         this.closeCallback = Objects.requireNonNull(closeCallback);
-        this.converter = Objects.requireNonNull(converter);
+        this.codecFactory = Objects.requireNonNull(codecFactory);
         this.publisher = Objects.requireNonNull(publisher);
         this.listenerKey = Objects.requireNonNull(listenerKey);
         Objects.requireNonNull(domDataBroker);
@@ -81,10 +85,20 @@ public class DataChangeListenerRegistration
 
     @Override
     public void onDataTreeChanged(Collection<DataTreeCandidate> treeChanges) {
-        final DataChangeNotification dcn = new DataChangeNotification(treeChanges.stream()
-                .map(dtc -> converter.toBus(dtc.getRootPath(), dtc.getRootNode().getDataAfter().orElse(null)))
-                .collect(Collectors.toSet()));
+        final DataChangeNotification dcn = new DataChangeNotification(
+                treeChanges.stream().map(this::mapDtc).collect(Collectors.toSet()));
         LOG.debug("Sending notification {}", dcn);
         publisher.notifyListener(dcn);
+    }
+
+    private JSONRPCArg mapDtc(DataTreeCandidate dtc) {
+        final JsonObject jsonpath = codecFactory.pathCodec().serialize(dtc.getRootPath());
+        try {
+            final JsonElement data = codecFactory.dataCodec(dtc.getRootPath())
+                    .serialize(dtc.getRootNode().getDataAfter().orElse(null));
+            return new JSONRPCArg(jsonpath, data);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 }
