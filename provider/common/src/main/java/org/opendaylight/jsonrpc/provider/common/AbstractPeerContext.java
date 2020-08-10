@@ -7,11 +7,17 @@
  */
 package org.opendaylight.jsonrpc.provider.common;
 
+import static org.opendaylight.jsonrpc.provider.common.Util.populateFromEndpointList;
+
 import com.google.common.annotations.Beta;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.gson.JsonElement;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Objects;
 import java.util.Optional;
+import org.opendaylight.jsonrpc.hmap.DataType;
+import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.mdsal.binding.api.DataBroker;
 import org.opendaylight.mdsal.binding.api.WriteTransaction;
 import org.opendaylight.mdsal.common.api.CommitInfo;
@@ -33,8 +39,9 @@ import org.slf4j.LoggerFactory;
  * @since Mar 11, 2020
  */
 @Beta
+@SuppressFBWarnings("SLF4J_LOGGER_SHOULD_BE_PRIVATE")
 public abstract class AbstractPeerContext implements AutoCloseable {
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractPeerContext.class);
+    protected static final Logger LOG = LoggerFactory.getLogger(AbstractPeerContext.class);
     protected final Peer peer;
     protected final DataBroker dataBroker;
 
@@ -96,6 +103,13 @@ public abstract class AbstractPeerContext implements AutoCloseable {
         wrTrx.merge(LogicalDatastoreType.OPERATIONAL, peerId, opState);
         LOG.debug("Changing op state to {}", opState);
         commitTransaction(wrTrx, peer.getName(), "Publish " + status + " state");
+    }
+
+    protected static void populatePathMap(HierarchicalEnumMap<JsonElement, DataType, String> pathMap, Peer peer) {
+        populateFromEndpointList(pathMap, peer.nonnullDataConfigEndpoints().values(), DataType.CONFIGURATION_DATA);
+        populateFromEndpointList(pathMap, peer.nonnullDataOperationalEndpoints().values(), DataType.OPERATIONAL_DATA);
+        populateFromEndpointList(pathMap, peer.nonnullRpcEndpoints().values(), DataType.RPC);
+        populateFromEndpointList(pathMap, peer.nonnullNotificationEndpoints().values(), DataType.NOTIFICATION);
     }
 
     public Peer getPeer() {

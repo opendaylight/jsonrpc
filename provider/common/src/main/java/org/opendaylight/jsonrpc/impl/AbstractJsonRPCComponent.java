@@ -12,6 +12,8 @@ import com.google.gson.JsonObject;
 import java.util.Objects;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.dom.codec.CodecUtils;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
@@ -32,24 +34,24 @@ import org.slf4j.LoggerFactory;
 abstract class AbstractJsonRPCComponent {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractJsonRPCComponent.class);
     protected final EffectiveModelContext schemaContext;
-    protected final JsonConverter jsonConverter;
+    protected final JsonRpcCodecFactory codecFactory;
     protected final TransportFactory transportFactory;
     protected final HierarchicalEnumMap<JsonElement, DataType, String> pathMap;
     protected final Peer peer;
 
     AbstractJsonRPCComponent(@NonNull final EffectiveModelContext schemaContext,
             @NonNull TransportFactory transportFactory,
-            @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @NonNull JsonConverter jsonConverter,
-            @NonNull Peer peer) {
+            @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
+            @NonNull JsonRpcCodecFactory codecFactory, @NonNull Peer peer) {
         this.schemaContext = Objects.requireNonNull(schemaContext);
         this.transportFactory = Objects.requireNonNull(transportFactory);
         this.pathMap = Objects.requireNonNull(pathMap);
-        this.jsonConverter = Objects.requireNonNull(jsonConverter);
         this.peer = Objects.requireNonNull(peer);
+        this.codecFactory = Objects.requireNonNull(codecFactory);
     }
 
     protected JsonObject createRootPath(Module module, QName node) {
-        final String topLevel = jsonConverter.makeQualifiedName(module, node);
+        final String topLevel = CodecUtils.makeQualifiedName(module, node);
         final JsonObject path = new JsonObject();
         path.add(topLevel, new JsonObject());
         return path;

@@ -15,13 +15,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.impl.RemoteControl;
 import org.opendaylight.jsonrpc.model.RemoteRpcInvoker;
 import org.opendaylight.jsonrpc.test.TestModelServiceImpl;
 import org.opendaylight.mdsal.binding.dom.adapter.BindingDOMRpcProviderServiceAdapter;
 import org.opendaylight.mdsal.binding.dom.adapter.ConstantAdapterContext;
 import org.opendaylight.mdsal.binding.dom.codec.impl.BindingCodecContext;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.TestModelService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.TestModelRpcService;
 import org.opendaylight.yangtools.concepts.ObjectRegistration;
 
 /**
@@ -34,17 +35,19 @@ public class RemoteRpcInvokerTest extends AbstractJsonRpcTest {
     private DefaultTransportFactory transportFactory;
     private ObjectRegistration<TestModelServiceImpl> rpcReg;
     private RemoteControl ctrl;
+    private JsonRpcCodecFactory codecFactory;
 
     @Before
     public void setUp() throws Exception {
         final BindingDOMRpcProviderServiceAdapter rpcAdapter = new BindingDOMRpcProviderServiceAdapter(
                 new ConstantAdapterContext(new BindingCodecContext(getBindingRuntimeContext())),
                 getDOMRpcRouter().getRpcProviderService());
-        rpcReg = rpcAdapter.registerRpcImplementation(TestModelService.class, new TestModelServiceImpl());
+        rpcReg = rpcAdapter.registerRpcImplementation(TestModelRpcService.class, new TestModelServiceImpl());
         getDOMRpcRouter().onModelContextUpdated(schemaContext);
+        codecFactory = new JsonRpcCodecFactory(schemaContext);
         transportFactory = new DefaultTransportFactory();
         ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory, getDOMNotificationRouter(),
-                getDOMRpcRouter().getRpcService());
+                getDOMRpcRouter().getRpcService(), codecFactory);
 
         logTestName("START");
     }
@@ -59,7 +62,7 @@ public class RemoteRpcInvokerTest extends AbstractJsonRpcTest {
 
     @Test
     public void testInvokeWithModulePrefix() {
-        JsonElement result = ctrl.invokeRpc("test-model:simple-method", new JsonObject());
+        JsonElement result = ctrl.invokeRpc("test-model-rpc:simple-method", new JsonObject());
         assertNotNull(result);
     }
 

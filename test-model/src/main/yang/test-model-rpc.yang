@@ -1,0 +1,125 @@
+module test-model-rpc {
+    namespace "urn:opendaylight:jsonrpc:test-rpc";
+    prefix "rpc";
+
+    import test-model-base {
+        prefix "base";
+    }
+
+    organization "OpenDayLight";
+    description "Mock model to test various aspects of JSON-RPC ODL plugin";
+    revision "2020-10-14";
+
+    rpc simple-method {
+        description "Simplest RPC, no input, no output";
+    }
+
+    rpc multiply-ll {
+        description "RPC with input and output data structures - using leaf-list.
+                Multiplies each number in list by multiplier ";
+        input {
+            leaf multiplier {
+                type int16;
+            }
+            uses base:numbers-ll;
+        }
+        output {
+            uses base:numbers-ll;
+        }
+    }
+
+    rpc method-with-anyxml {
+        description "Arbitrary method which have anyxml as input";
+        input {
+            leaf some-number {
+                type uint32;
+            }
+            anyxml some-data {
+                description "Anyxml data input";
+            }
+        }
+        output {
+            anyxml some-data {
+                description "Anyxml data output";
+            }
+        }
+    }
+
+    rpc get-all-numbers {
+        description "RPC method with no input but output";
+        output {
+            uses base:bucket;
+        }
+    }
+
+    rpc multiply-list {
+        description "RPC with input and output data structures - using list. Multiplies
+                each number in list by multuplier ";
+        input {
+            leaf multiplier {
+                type int16;
+            }
+            uses base:numbers-list;
+        }
+        output {
+            uses base:numbers-list;
+        }
+    }
+
+    rpc error-method {
+        description "This method will produce error in RPC handler";
+    }
+
+    rpc factorial {
+        input {
+            leaf in-number {
+                type uint16;
+            }
+        }
+        output {
+            leaf out-number {
+                type uint32;
+            }
+        }
+    }
+
+    rpc get-any-xml {
+        description "Datastructure to test anyxml";
+        input {
+            leaf indata {
+                type string;
+            }
+        }
+        output {
+            anyxml outdata {
+            }
+        }
+    }
+
+    rpc removeCoffeePot {
+        description "Remove coffee from the brewer";
+        output {
+            leaf cups-brewed {
+                type uint32 {
+                    range "1 .. 6";
+                }
+                description "How many cups were brewed";
+            }
+            leaf drink {
+                type identityref {
+                    base drinks;
+                }
+                default 'coffee';
+                description "Plain simple black coffee";
+            }
+        }
+    }
+
+    identity drinks {
+        description "Base for various coffee drinks";
+    }
+
+    identity coffee {
+        base drinks;
+    }
+}

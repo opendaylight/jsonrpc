@@ -7,6 +7,7 @@
  */
 package org.opendaylight.jsonrpc.impl;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -14,39 +15,40 @@ import java.util.Set;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.model.DataChangeNotification;
 import org.opendaylight.jsonrpc.model.DataChangeNotificationPublisher;
-import org.opendaylight.jsonrpc.model.DataTreeCandidateImpl;
 import org.opendaylight.jsonrpc.model.JSONRPCArg;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeChangeListener;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.data.api.schema.tree.DataTreeCandidate;
+import org.opendaylight.yangtools.yang.data.api.schema.tree.DataTreeCandidates;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Adapter for {@link DOMDataTreeChangeListener} which subscribes to remote
- * event producer and call
- * {@link DOMDataTreeChangeListener#onDataTreeChanged(java.util.Collection)} on
+ * event producer and call {@link DOMDataTreeChangeListener#onDataTreeChanged(java.util.Collection)} on
  * event reception.
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since May 6, 2018
  */
 public class DOMDataTreeChangeListenerAdapter implements DataChangeNotificationPublisher, AutoCloseable {
+    private static final Logger LOG = LoggerFactory.getLogger(DOMDataTreeChangeListenerAdapter.class);
     private final DOMDataTreeChangeListener listener;
     private final SubscriberSession session;
-    private final JsonConverter converter;
-    private final JsonRpcPathCodec pathCodec;
+    private final JsonRpcCodecFactory codecFactory;
 
     public DOMDataTreeChangeListenerAdapter(@NonNull DOMDataTreeChangeListener delegate,
-            @NonNull TransportFactory transportFactory, String uri, @NonNull JsonConverter converter,
+            @NonNull TransportFactory transportFactory, String uri, @NonNull JsonRpcCodecFactory codecFactory,
             @NonNull SchemaContext schemaContext) throws URISyntaxException {
         Objects.requireNonNull(transportFactory);
-        this.converter = Objects.requireNonNull(converter);
         this.listener = Objects.requireNonNull(delegate);
         this.session = transportFactory.endpointBuilder().subscriber().create(uri, this);
-        this.pathCodec = JsonRpcPathCodec.create(schemaContext);
+        this.codecFactory = Objects.requireNonNull(codecFactory);
     }
 
     /**
@@ -61,9 +63,13 @@ public class DOMDataTreeChangeListenerAdapter implements DataChangeNotificationP
     public void notifyListener(DataChangeNotification change) {
         final Set<DataTreeCandidate> changes = new LinkedHashSet<>();
         for (final JSONRPCArg c : change.getChanges()) {
-            final YangInstanceIdentifier yii = pathCodec.deserialize(c.getPath().getAsJsonObject());
-            final NormalizedNode<?, ?> data = converter.jsonElementToNormalizedNode(c.getData(), yii);
-            changes.add(new DataTreeCandidateImpl(yii, data));
+            final YangInstanceIdentifier yii = codecFactory.pathCodec().deserialize(c.getPath().getAsJsonObject());
+            try {
+                final NormalizedNode<?, ?> data = codecFactory.dataCodec(yii).deserialize(c.getData());
+                changes.add(DataTreeCandidates.fromNormalizedNode(yii, data));
+            } catch (IOException e) {
+                LOG.error("Unable to deserialize DCN {}", c.getData(), e);
+            }
         }
         listener.onDataTreeChanged(changes);
     }

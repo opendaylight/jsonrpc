@@ -1,0 +1,39 @@
+module test-model-ext {
+    namespace "urn:opendaylight:jsonrpc:test-ext";
+    prefix "ext";
+
+    import test-model-base {
+        prefix "base";
+    }
+
+    import test-model-data {
+        prefix "data";
+    }
+
+    organization "OpenDayLight";
+    description "Mock model (ext) to test various aspects of JSON-RPC ODL plugin";
+    revision "2020-10-14";
+
+    grouping ext-grouping-1 {
+        leaf leaf1 {
+            type string;
+        }
+    }
+
+    grouping ext-grouping-2 {
+        container aug-container {
+            leaf leaf2 {
+                type string;
+            }
+            uses base:numbers-list;
+        }
+    }
+
+    augment "/data:top-container" {
+        uses ext-grouping-1;
+    }
+
+    augment "/data:top-container/data:level2a" {
+        uses ext-grouping-2;
+    }
+}

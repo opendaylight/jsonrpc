@@ -45,4 +45,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             </plugin>
         </plugins>
     </build>
+    <dependencies>
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>1.10.10</version>
+        </dependency>
+    </dependencies>
 </project>

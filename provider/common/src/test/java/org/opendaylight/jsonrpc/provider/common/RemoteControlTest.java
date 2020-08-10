@@ -36,8 +36,7 @@ import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TestHelper;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
-import org.opendaylight.jsonrpc.impl.JsonConverter;
-import org.opendaylight.jsonrpc.impl.JsonRpcPathCodec;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.impl.RemoteControl;
 import org.opendaylight.jsonrpc.model.DataOperationArgument;
 import org.opendaylight.jsonrpc.model.DeleteListenerArgument;
@@ -72,28 +71,25 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     private static final String TOPO_TP_DATA = "{\"network-topology:network-topology\":"
             + "{\"topology\":[{\"topology-id\":\"topology1\",\"node\":[{\"node-id\":\"node1\","
             + "\"termination-point\":[{\"tp-id\": \"eth0\"}]}]}]}}";
-    private static final String TEST_MODEL_PATH = "{\"test-model:top-element\":{}}";
-    private static final String MLX_JSON_PATH =
-            "{\"jsonrpc:config\":{ \"configured-endpoints\" : [ { \"name\" : \"lab-mlx\"} ]}}";
+    private static final String TEST_MODEL_PATH = "{\"test-model-data:top-container\":{}}";
+    private static final String MLX_JSON_PATH = "{\"jsonrpc:config\":{ \"configured-endpoints\" :"
+            + " [ { \"name\" : \"lab-mlx\"} ]}}";
     private static final String MLX_CONFIG_DATA = "{\"name\":\"lab-mlx\", \"modules\": [\"ietf-inet-types\", "
             + "\"brocade-mlx-interfaces\", \"brocade-mlx-router\", \"brocade-mlx-security\", \"brocade-mlx-types\"]}";
     private static final String ENTITY = "test-model";
     private static final Logger LOG = LoggerFactory.getLogger(RemoteControlTest.class);
     private RemoteControl ctrl;
     private JsonParser parser;
-    private JsonConverter conv;
     private TransportFactory transportFactory;
-    private JsonRpcPathCodec codec;
 
     @Before
     public void setUp() throws Exception {
         transportFactory = new DefaultTransportFactory();
+        codecFactory = new JsonRpcCodecFactory(schemaContext);
         ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory, getDOMNotificationRouter(),
-                getDOMRpcRouter().getRpcService());
+                getDOMRpcRouter().getRpcService(), codecFactory);
 
         parser = new JsonParser();
-        conv = new JsonConverter(schemaContext);
-        codec = JsonRpcPathCodec.create(schemaContext);
         logTestName("START");
     }
 
@@ -107,8 +103,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     public void testCRUD() throws Exception {
         JsonElement path = parser.parse(TEST_MODEL_PATH);
         String txId = ctrl.txid();
-        ctrl.put(new DataOperationArgument(txId, "1", ENTITY, path,
-                parser.parse("{ \"test-model:top-element\" : { \"level2a\" : {}}}")));
+        ctrl.put(new DataOperationArgument(txId, "1", ENTITY, path, parser.parse("{ \"level2a\" : {}}")));
         assertTrue(ctrl.commit(new TxArgument(txId)));
         assertTrue(ctrl.exists(new StoreOperationArgument("1", ENTITY, path)));
         txId = ctrl.txid();
@@ -122,7 +117,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         JsonElement path = parser.parse(TEST_MODEL_PATH);
         String txId = ctrl.txid();
         ctrl.put(new DataOperationArgument(txId, "1", ENTITY, path,
-                parser.parse("{ \"test-model:top-element\" : { \"level2a\" : { \"abc\" : \"123\"}}}")));
+                parser.parse("{ \"level2a\" : { \"abc\" : \"123\"}}")));
         assertFalse(ctrl.exists(new StoreOperationArgument("1", ENTITY, path)));
         assertTrue(ctrl.commit(new TxArgument(txId)));
         assertTrue(ctrl.exists(new StoreOperationArgument("1", ENTITY, path)));
@@ -139,10 +134,8 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     }
 
     /**
-     * This is quite complex test scenario. First, lets create
-     * {@link NetworkTopology} with some node in it. Then, write it to
-     * datastore. Lastly, use {@link RemoteControl} to read this data using
-     * JSON-RPC request.
+     * This is quite complex test scenario. First, lets create {@link NetworkTopology} with some node in it. Then,
+     * write it to datastore. Lastly, use {@link RemoteControl} to read this data using JSON-RPC request.
      */
     @Test
     public void testReadTopologyData() throws Exception {
@@ -156,8 +149,8 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         YangInstanceIdentifier yii = getCodec().toYangInstanceIdentifier(nii);
         dumpYii(yii);
 
-        final JsonElement path = conv.toBus(yii, null).getPath();
-        final YangInstanceIdentifier parsedYii = codec.deserialize(path.getAsJsonObject());
+        final JsonElement path = codecFactory.pathCodec().serialize(yii);
+        final YangInstanceIdentifier parsedYii = codecFactory.pathCodec().deserialize(path.getAsJsonObject());
         assertEquals(yii, parsedYii);
 
         LOG.info("JSON path : {}", path);
@@ -179,10 +172,11 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
                 .node(QName.create(Topology.QNAME, "server-provided"))
                 .build();
         LOG.info("YII : {}", yii);
-        final YangInstanceIdentifier ii = codec.deserialize(parser
-                .parse("{\"network-topology:network-topology\": "
-                        + "{\"topology\": [{\"topology-id\": \"topology1\",\"server-provided\": {}}]}}")
-                .getAsJsonObject());
+        final YangInstanceIdentifier ii = codecFactory.pathCodec()
+                .deserialize(parser
+                        .parse("{\"network-topology:network-topology\": "
+                                + "{\"topology\": [{\"topology-id\": \"topology1\",\"server-provided\": {}}]}}")
+                        .getAsJsonObject());
         assertEquals(yii, ii);
     }
 
@@ -191,13 +185,18 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
      */
     @Test
     public void testPathToListItem() {
-        final YangInstanceIdentifier yii = YangInstanceIdentifier.builder().node(NetworkTopology.QNAME)
+        final YangInstanceIdentifier yii = YangInstanceIdentifier.builder()
+                .node(NetworkTopology.QNAME)
                 .node(Topology.QNAME)
-                .nodeWithKey(Topology.QNAME, QName.create(Topology.QNAME, "topology-id"), "topology1").node(Node.QNAME)
-                .nodeWithKey(Node.QNAME, QName.create(Node.QNAME, "node-id"), "node1").node(TerminationPoint.QNAME)
-                .nodeWithKey(TerminationPoint.QNAME, QName.create(TerminationPoint.QNAME, "tp-id"), "eth0").build();
+                .nodeWithKey(Topology.QNAME, QName.create(Topology.QNAME, "topology-id"), "topology1")
+                .node(Node.QNAME)
+                .nodeWithKey(Node.QNAME, QName.create(Node.QNAME, "node-id"), "node1")
+                .node(TerminationPoint.QNAME)
+                .nodeWithKey(TerminationPoint.QNAME, QName.create(TerminationPoint.QNAME, "tp-id"), "eth0")
+                .build();
         LOG.info("YII : {}", yii);
-        final YangInstanceIdentifier ii = codec.deserialize(parser.parse(TOPO_TP_DATA).getAsJsonObject());
+        final YangInstanceIdentifier ii = codecFactory.pathCodec()
+                .deserialize(parser.parse(TOPO_TP_DATA).getAsJsonObject());
         assertEquals(yii, ii);
     }
 
@@ -214,7 +213,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         //@formatter:off
         for (final String p : paths) {
             try {
-                codec.deserialize(parser.parse(p).getAsJsonObject());
+                codecFactory.pathCodec().deserialize(parser.parse(p).getAsJsonObject());
                 fail("This path should not be parseable !  : " + p);
             } catch (RuntimeException e) {
                 LOG.info("This was expected : " + e.getMessage());
@@ -257,9 +256,10 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     }
 
     @Test
-    public void testReducedData() {
-        YangInstanceIdentifier yii = codec.deserialize(parser.parse(MLX_JSON_PATH).getAsJsonObject());
-        assertNotNull(conv.jsonElementToNormalizedNode(parser.parse(MLX_CONFIG_DATA), yii, true));
+    public void testReducedData() throws IOException {
+        YangInstanceIdentifier yii = codecFactory.pathCodec().deserialize(parser.parse(MLX_JSON_PATH)
+                .getAsJsonObject());
+        assertNotNull(codecFactory.dataCodec(yii).deserialize(parser.parse(MLX_CONFIG_DATA)));
     }
 
     /**
@@ -283,7 +283,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
                 store2str(store2int(LogicalDatastoreType.OPERATIONAL)),
                 "test-model", // entity
                 parser.parse(TEST_MODEL_PATH), // path
-                parser.parse("{\"test-model:top-element\":{\"level2a\":{}}}"))); // data
+                parser.parse("{\"level2a\":{}}"))); // data
 
         ctrl.commit(new TxArgument(uuid.toString()));
 
@@ -292,7 +292,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
                 store2str(store2int(LogicalDatastoreType.CONFIGURATION)),
                 "something",
                 parser.parse("{\"jsonrpc:config\":{}}"),
-                parser.parse("{\"jsonrpc:config\":{\"configured-endpoints\":[]}}")));
+                parser.parse("{\"configured-endpoints\":[]}")));
         ctrl.commit(new TxArgument(uuid.toString()));
 
         uuid = UUID.randomUUID();
@@ -328,14 +328,14 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     public void testPutWithoutTx() {
         ctrl.put(new DataOperationArgument(UUID.randomUUID().toString(),
                 store2str(store2int(LogicalDatastoreType.OPERATIONAL)), "test-model", parser.parse(TEST_MODEL_PATH),
-                parser.parse("{ \"test-model:top-element\" : { \"level2a\" : {}}}")));
+                parser.parse("{ \"level2a\" : {}}")));
     }
 
     @Test
     public void testPutReducedDataForm() {
         final String uuid = UUID.randomUUID().toString();
         ctrl.put(new DataOperationArgument(uuid, store2str(store2int(LogicalDatastoreType.CONFIGURATION)), "test-model",
-                parser.parse("{\"test-model:grillconf\":{}}"), parser.parse("{\"gasKnob\":10}")));
+                parser.parse("{\"test-model-data:grillconf\":{}}"), parser.parse("{\"gasKnob\":10}")));
         assertTrue(ctrl.commit(new TxArgument(uuid)));
     }
 
@@ -357,7 +357,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
                 new DcnPublisherImpl(latch), true);
         String txId = ctrl.txid();
         ctrl.put(new DataOperationArgument(txId, "0", ENTITY, path,
-                parser.parse("{ \"test-model:top-element\" : { \"level2a\" : { \"abc\" : \"123\"}}}")));
+                parser.parse("{ \"level2a\" : { \"abc\" : \"123\"}}")));
         ctrl.commit(new TxArgument(txId));
         txId = ctrl.txid();
         ctrl.delete(new TxOperationArgument(txId, "0", ENTITY, path));
@@ -372,7 +372,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
 
     @Test
     public void testRemoveNonExistentDcn() {
-        assertFalse(ctrl.deleteListener(new DeleteListenerArgument("","")));
+        assertFalse(ctrl.deleteListener(new DeleteListenerArgument("", "")));
     }
 
     /*

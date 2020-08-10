@@ -22,8 +22,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.bb.example.rev18092
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.bb.example.rev180924.Method1Input;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.bb.example.rev180924.Method1Output;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.bb.example.rev180924.Method1OutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.SimpleMethodInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.TestModelService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.SimpleMethodInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.TestModelRpcService;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 
@@ -43,7 +43,7 @@ import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 public class InsideController implements BbExampleService, AutoCloseable {
     private EventLoopConfiguration eventLoopConfiguration;
     private SchemaAwareTransportFactory transport;
-    private ProxyContext<TestModelService> proxy;
+    private ProxyContext<TestModelRpcService> proxy;
     private ResponderSession responder;
     private DOMSchemaService schemaService;
     private BindingNormalizedNodeSerializer codec;
@@ -58,7 +58,7 @@ public class InsideController implements BbExampleService, AutoCloseable {
                 .withRpcInvocationAdapter(new ControllerRpcInvocationAdapter(schemaService, codec))
                 .build();
         // create proxy to remote service
-        proxy = transport.createBindingRequesterProxy(TestModelService.class, "zmq://192.168.1.100:20000");
+        proxy = transport.createBindingRequesterProxy(TestModelRpcService.class, "zmq://192.168.1.100:20000");
         // expose self to outside
         responder = transport.createResponder(BbExampleService.class, this, "zmq://0.0.0.0:20000");
     }

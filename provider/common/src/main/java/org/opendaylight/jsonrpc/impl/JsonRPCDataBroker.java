@@ -19,6 +19,7 @@ import java.net.URISyntaxException;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.AddListenerArgument;
@@ -56,14 +57,14 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
      * @param pathMap shared instance of {@link HierarchicalEnumMap}
      * @param transportFactory {@link TransportFactory} used to create RPC connections
      * @param governance {@link RemoteGovernance} used to provide additional governance info
-     * @param jsonConverter shared {@link JsonConverter}
+     * @param codecFactory shared {@link JsonRpcCodecFactory}
      * @see DOMDataBroker
      */
     public JsonRPCDataBroker(@NonNull Peer peer, @NonNull EffectiveModelContext schemaContext,
             @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
             @NonNull TransportFactory transportFactory, @Nullable RemoteGovernance governance,
-            @NonNull JsonConverter jsonConverter) {
-        super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
+            @NonNull JsonRpcCodecFactory codecFactory) {
+        super(schemaContext, transportFactory, pathMap, codecFactory, peer);
         extensions = ImmutableClassToInstanceMap.<DOMDataBrokerExtension>builder()
                 .put(DOMDataTreeChangeService.class, this)
                 .build();
@@ -91,22 +92,22 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
 
     @Override
     public JsonRpcTransactionFacade newReadOnlyTransaction() {
-        return TransactionProxy.create(new JsonRPCTx(transportFactory, peer, pathMap, jsonConverter, schemaContext));
+        return newReadWriteTransaction();
     }
 
     @Override
     public JsonRpcTransactionFacade newWriteOnlyTransaction() {
-        return TransactionProxy.create(new JsonRPCTx(transportFactory, peer, pathMap, jsonConverter, schemaContext));
+        return newReadWriteTransaction();
     }
 
     @Override
     public JsonRpcTransactionFacade newReadWriteTransaction() {
-        return TransactionProxy.create(new JsonRPCTx(transportFactory, peer, pathMap, jsonConverter, schemaContext));
+        return TransactionProxy.create(new JsonRPCTx(transportFactory, peer, pathMap, codecFactory, schemaContext));
     }
 
     @Override
     public DOMTransactionChain createTransactionChain(DOMTransactionChainListener listener) {
-        return new TxChain(this, listener, transportFactory, pathMap, jsonConverter, schemaContext, peer);
+        return new TxChain(this, listener, transportFactory, pathMap, codecFactory, schemaContext, peer);
     }
 
     @Override
@@ -122,7 +123,7 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
     @Override
     public <L extends DOMDataTreeChangeListener> ListenerRegistration<L> registerDataTreeChangeListener(
             DOMDataTreeIdentifier treeId, L listener) {
-        final JsonElement busPath = jsonConverter.toBus(treeId.getRootIdentifier(), null).getPath();
+        final JsonElement busPath = codecFactory.pathCodec().serialize(treeId.getRootIdentifier());
         final RemoteOmShard shard = getShard(treeId.getDatastoreType(), busPath);
         final DOMDataTreeChangeListenerAdapter adapter;
         final ListenerKey listenerKey;
@@ -130,7 +131,7 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
             listenerKey = shard.addListener(new AddListenerArgument(
                     String.valueOf(Util.store2int(treeId.getDatastoreType())), "", busPath, null));
             adapter = new DOMDataTreeChangeListenerAdapter(listener, transportFactory, listenerKey.getUri(),
-                    jsonConverter, schemaContext);
+                    codecFactory, schemaContext);
         } catch (URISyntaxException e) {
             // remote shard provided us wrong URI
             throw new IllegalStateException("Invalid URI provided from remote shard", e);

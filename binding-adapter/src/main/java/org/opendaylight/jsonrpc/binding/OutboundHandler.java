@@ -9,10 +9,8 @@ package org.opendaylight.jsonrpc.binding;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.Objects;
@@ -25,7 +23,6 @@ import org.opendaylight.yangtools.yang.common.RpcError.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
-import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 import org.slf4j.Logger;
@@ -61,16 +58,16 @@ public class OutboundHandler<T extends RpcService> extends AbstractHandler<T> {
         }
     }
 
-    private Object handleInvocationInternal(Method method, Object[] args) {
+    private Object handleInvocationInternal(Method method, Object[] args) throws IOException {
         Preconditions.checkArgument(args.length < 2, "Unexpected number of arguments : %d", args.length);
         RpcDefinition rpcDef = rpcMethodMap.get(method);
         Objects.requireNonNull(rpcDef);
-        final JsonObject request;
+        final JsonElement request;
         // RPC with input
         if (args.length == 1) {
             // convert binding object into DOM
             final ContainerNode domData = adapter.codec().toNormalizedNodeRpcData((DataContainer) args[0]);
-            request = adapter.converter().get().rpcConvert(rpcDef.getInput().getPath(), domData);
+            request = adapter.converter().get().rpcInputCodec(rpcDef).serialize(domData);
             // RPC without input
         } else {
             request = null;
@@ -87,10 +84,10 @@ public class OutboundHandler<T extends RpcService> extends AbstractHandler<T> {
             if (rpcResultType.getActualTypeArguments()[0].equals(Void.class)) {
                 return Futures.immediateFuture(RpcResultBuilder.<Void>success().build());
             } else {
-                final JsonObject wrapper = new JsonObject();
-                wrapper.add("output", wrapResponse(reply.getResult(), rpcDef));
-
-                final NormalizedNode<?, ?> nn = adapter.converter().get().rpcOutputConvert(rpcDef, wrapper);
+                final NormalizedNode<?, ?> nn = adapter.converter()
+                        .get()
+                        .rpcOutputCodec(rpcDef)
+                        .deserialize(reply.getResult());
                 final DataObject result = adapter.codec()
                         .fromNormalizedNodeRpcData(Absolute.of(rpcDef.getQName(), rpcDef.getOutput().getQName()),
                                 (ContainerNode) nn);
@@ -98,31 +95,5 @@ public class OutboundHandler<T extends RpcService> extends AbstractHandler<T> {
                 return Futures.immediateFuture(RpcResultBuilder.<DataObject>success(result).build());
             }
         }
-    }
-
-    private JsonObject wrapResponse(JsonElement unwrapped, RpcDefinition def) {
-        if (unwrapped instanceof JsonPrimitive) {
-            DataSchemaNode node = def.getOutput().getChildNodes().iterator().next();
-            JsonObject ret = new JsonObject();
-            ret.add(node.getQName().getLocalName(), unwrapped);
-            return ret;
-        }
-        if (unwrapped instanceof JsonArray) {
-            if (unwrapped.getAsJsonArray().size() != def.getOutput().getChildNodes().size()) {
-                Preconditions.checkArgument(unwrapped.getAsJsonArray().size() == def.getOutput().getChildNodes().size(),
-                        "Can't wrap positional arguments. Expected %d, given %d",
-                        def.getOutput().getChildNodes().size(), unwrapped.getAsJsonArray().size());
-            }
-            final JsonObject ret = new JsonObject();
-            int counter = 0;
-            for (DataSchemaNode node : def.getOutput().getChildNodes()) {
-                ret.add(node.getQName().getLocalName(), unwrapped.getAsJsonArray().get(counter++));
-            }
-            return ret;
-        }
-        if (unwrapped instanceof JsonObject) {
-            return unwrapped.getAsJsonObject();
-        }
-        return new JsonObject();
     }
 }

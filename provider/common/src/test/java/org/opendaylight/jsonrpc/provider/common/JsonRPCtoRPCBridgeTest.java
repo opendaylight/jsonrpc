@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.provider.common;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
@@ -26,29 +25,28 @@ import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.MessageLibrary;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.dom.codec.JsonReaderAdapter;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
-import org.opendaylight.jsonrpc.impl.JsonConverter;
 import org.opendaylight.jsonrpc.impl.JsonRPCtoRPCBridge;
-import org.opendaylight.jsonrpc.model.JsonReaderAdapter;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.mdsal.dom.api.DOMRpcResult;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpointsBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.FactorialInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.FactorialOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.GetAllNumbersInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.GetAllNumbersOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.MultiplyListInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.MultiplyListOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.MultiplyLlInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.MultiplyLlOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.TestModelService;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.numbers.list.NumbersBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.base.rev201014.numbers.list.NumbersBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.FactorialInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.FactorialOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.GetAllNumbersInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.GetAllNumbersOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.MultiplyListInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.MultiplyListOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.MultiplyLlInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.MultiplyLlOutput;
 import org.opendaylight.yangtools.yang.binding.DataContainer;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.Revision;
@@ -89,9 +87,11 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         rpcResponderPort = getFreeTcpPort();
         transportFactory = new DefaultTransportFactory();
         startTransport();
-        bridge = new JsonRPCtoRPCBridge(getPeer(), schemaContext, pathMap, mock(RemoteGovernance.class),
-                transportFactory, new JsonConverter(schemaContext));
-        mod = schemaContext.findModule("test-model", Revision.of("2016-11-17")).get();
+        final Peer peer = getPeer();
+        Util.populateFromEndpointList(pathMap, peer.getRpcEndpoints().values(), DataType.RPC);
+        bridge = new JsonRPCtoRPCBridge(peer, schemaContext, pathMap, mock(RemoteGovernance.class), transportFactory,
+                new JsonRpcCodecFactory(schemaContext));
+        mod = schemaContext.findModule("test-model-rpc", Revision.of("2020-10-14")).get();
         logTestName("START");
         TimeUnit.MILLISECONDS.sleep(250);
     }
@@ -108,13 +108,11 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      * Test case : Invoke non-existent RPC method. <br />
      * Expected result : exception from RPC bridge
      */
-    @Test(timeout = 15_000)
+    @Test(timeout = 15_000, expected = ExecutionException.class)
     public void testRpcUnknownMethod() throws InterruptedException, ExecutionException {
         NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "unknown-method"));
         QName path = rpcPath(mod, "unknown-method");
-        final DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
-        logResult(result);
-        assertFalse(result.getErrors().isEmpty());
+        bridge.invokeRpc(path, rpcDef).get();
     }
 
     /**
@@ -128,14 +126,14 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
         LOG.info("Simple RPC result : {}", result);
         assertTrue(result.getErrors().isEmpty());
-        assertNull(result.getResult());
+        assertNotNull(result.getResult());
     }
 
     /**
      * Test case : Invoke RPC method with input and output parameters. details :
      * {@link TestModelService#MultiplyLlInput}. <br />
-     * Expected result : {@link DOMRpcResult} with payload filled from remote
-     * RPC service. This tests de/serialization of leaf-lists
+     * Expected result : {@link DOMRpcResult} with payload filled from remote RPC service. This tests de/serialization
+     * of leaf-lists
      */
     @Test(timeout = 15_000)
     public void testRpcMultiplyLeafList() throws Exception {
@@ -161,8 +159,8 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         final QName path = rpcPath(mod, "factorial");
 
         // BA => BI
-        final ContainerNode rpcDef = prepareRpcInput(new FactorialInputBuilder().setInNumber(Uint16.valueOf(8))
-                .build());
+        final ContainerNode rpcDef = prepareRpcInput(
+                new FactorialInputBuilder().setInNumber(Uint16.valueOf(8)).build());
 
         final DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
         logResult(result);
@@ -176,19 +174,18 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     /**
      * Test case : Invoke RPC method with input and output parameters. <br />
      * details : {@link TestModelService#MultiplyList()} <br />
-     * Expected result : {@link DOMRpcResult} with payload filled from remote
-     * RPC service. This tests de/serialization of list
+     * Expected result : {@link DOMRpcResult} with payload filled from remote RPC service. This tests de/serialization
+     * of list
      */
     @Test(timeout = 15_000)
     public void testRpcMultiplyList() throws Exception {
         final QName path = rpcPath(mod, "multiply-list");
 
         // BA => BI
-        final ContainerNode rpcDef = prepareRpcInput(
-                new MultiplyListInputBuilder().setMultiplier((short) 3)
-                        .setNumbers(compatMap(Lists.newArrayList(new NumbersBuilder().setNum(10).build(),
-                                new NumbersBuilder().setNum(15).build(), new NumbersBuilder().setNum(17).build())))
-                        .build());
+        final ContainerNode rpcDef = prepareRpcInput(new MultiplyListInputBuilder().setMultiplier((short) 3)
+                .setNumbers(compatMap(Lists.newArrayList(new NumbersBuilder().setNum(10).build(),
+                        new NumbersBuilder().setNum(15).build(), new NumbersBuilder().setNum(17).build())))
+                .build());
 
         LOG.info("Transformed RPC NormalizedNode : {}", rpcDef);
 
@@ -214,7 +211,8 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
                 .get();
         try (JsonParserStream parser = JsonParserStream.create(writer,
                 JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext), rpcDef)) {
-            parser.parse(JsonReaderAdapter.from(jsonParser.parse("{\"input\" : { }}")));
+            parser.parse(JsonReaderAdapter
+                    .from(jsonParser.parse("{\"input\" : { \"some-number\":5, \"some-data\": { \"data\" : 123}}}")));
         }
         DOMRpcResult result = bridge.invokeRpc(path, resultHolder.getResult()).get();
         logResult(result);
@@ -242,7 +240,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         assertFalse(result.getErrors().isEmpty());
     }
 
-    @Test(timeout = 15_000)
+    @Test // (timeout = 15_000)
     public void test_2LeafNodesInRpc() throws Exception {
         final QName path = rpcPath(mod, "removeCoffeePot");
         final NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "removeCoffeePot"));
@@ -266,8 +264,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
 
     @SuppressWarnings("unchecked")
     private <T> T extractRpcOutput(DOMRpcResult result, Class<T> outputType, String rpcName, Module module) {
-        Absolute path2 = Absolute.of(constructRpcQname(module, rpcName),
-                constructRpcQname(module, "output"));
+        Absolute path2 = Absolute.of(constructRpcQname(module, rpcName), constructRpcQname(module, "output"));
         return (T) getCodec().fromNormalizedNodeRpcData(path2, (ContainerNode) result.getResult());
 
     }
@@ -282,7 +279,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     }
 
     private void startTransport() {
-        messaging = ((AbstractTransportFactory)transportFactory).getMessageLibraryForTransport(TRANSPORT);
+        messaging = ((AbstractTransportFactory) transportFactory).getMessageLibraryForTransport(TRANSPORT);
         rpcResponder = messaging.responder(String.format(TRANSPORT + "://0.0.0.0:%d", rpcResponderPort),
                 new MockRpcHandler(), true);
         LOG.info("Started responder on port {}", rpcResponderPort);

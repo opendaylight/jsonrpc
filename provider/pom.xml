@@ -58,6 +58,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <artifactId>jsonrpc-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.opendaylight.jsonrpc</groupId>
+            <artifactId>dom-codec</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.opendaylight.yangtools</groupId>
             <artifactId>yang-parser-api</artifactId>
         </dependency>

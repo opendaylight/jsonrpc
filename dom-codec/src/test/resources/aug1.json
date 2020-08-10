@@ -1,0 +1,33 @@
+{
+    "test-model-data:top-container": {
+        "leaf1": "abc",
+        "level2a": {
+            "aug-container": {
+                "leaf2": "cde"
+            }
+        },
+        "segment1": {
+            "level" : 35,
+            "numbers": [
+                {
+                    "num": 1
+                },
+                {
+                    "num": 2
+                }
+            ],
+            "level2": {
+                "level3": {
+                    "inner-list": [
+                        {
+                            "item": 10
+                        },
+                        {
+                            "item": "13"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

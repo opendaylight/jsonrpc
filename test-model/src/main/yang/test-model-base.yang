@@ -1,0 +1,65 @@
+module test-model-base {
+    namespace "urn:opendaylight:jsonrpc:test-base";
+    prefix "base";
+
+    organization "OpenDayLight";
+    description "Mock model to test various aspects of JSON-RPC ODL plugin";
+    revision "2020-10-14";
+
+    typedef watermark-value {
+        description "Value of watermark";
+        type int16;
+    }
+
+    grouping numbers-ll {
+        leaf-list numbers {
+            type int32;
+        }
+    }
+
+    grouping numbers-list {
+        list numbers {
+            description "list of numbers";
+            key "num";
+            leaf "num" {
+                type int32;
+            }
+        }
+    }
+
+    grouping watermark {
+        leaf level {
+            type watermark-value;
+        }
+    }
+
+    grouping bucket {
+        description "Dummy datastructure holding some arbitrary data inside";
+        container segment1 {
+            uses numbers-list;
+            uses watermark;
+            container level2 {
+                container level3 {
+                    list inner-list {
+                        key "item";
+                        leaf item {
+                            type union {
+                                type int16;
+                                type string;
+                            }
+                        }
+                    }
+                    list multi-key-list {
+                        key "key1 key2";
+                        leaf key1 {
+                            type string;
+                        }
+                        leaf key2 {
+                            type string;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

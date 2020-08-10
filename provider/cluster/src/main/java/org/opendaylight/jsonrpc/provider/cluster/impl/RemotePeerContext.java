@@ -22,13 +22,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import org.eclipse.jdt.annotation.NonNull;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
-import org.opendaylight.jsonrpc.impl.JsonConverter;
 import org.opendaylight.jsonrpc.impl.JsonRPCDataBroker;
 import org.opendaylight.jsonrpc.impl.JsonRPCtoRPCBridge;
+import org.opendaylight.jsonrpc.impl.JsonRpcDOMSchemaService;
 import org.opendaylight.jsonrpc.model.CombinedSchemaContextProvider;
 import org.opendaylight.jsonrpc.model.MutablePeer;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
@@ -39,6 +40,7 @@ import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMMountPoint;
 import org.opendaylight.mdsal.dom.api.DOMMountPointService.DOMMountPointBuilder;
 import org.opendaylight.mdsal.dom.api.DOMRpcService;
+import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.mdsal.singleton.common.api.ClusterSingletonService;
 import org.opendaylight.mdsal.singleton.common.api.ServiceGroupIdentifier;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
@@ -154,11 +156,12 @@ class RemotePeerContext extends AbstractPeerContext implements ClusterSingletonS
         final MutablePeer newPeer = new MutablePeer().name(peer.getName());
         final HierarchicalEnumMap<JsonElement, DataType, String> pathMap = HierarchicalEnumHashMap
                 .create(DataType.class, JsonPathCodec.create());
+        populatePathMap(pathMap, peer);
 
-        final JsonConverter jsonConverter = new JsonConverter(schema);
+        final JsonRpcCodecFactory codecFactory = new JsonRpcCodecFactory(schema);
 
         final JsonRPCDataBroker rpcDataBroker = new JsonRPCDataBroker(peer, schema, pathMap,
-                dependencies.getTransportFactory(), governance, jsonConverter);
+                dependencies.getTransportFactory(), governance, codecFactory);
         builder.addService(DOMDataBroker.class, rpcDataBroker);
 
         pathMap.toMap(DataType.CONFIGURATION_DATA)
@@ -177,7 +180,7 @@ class RemotePeerContext extends AbstractPeerContext implements ClusterSingletonS
                                 .build()));
 
         JsonRPCtoRPCBridge rpcBridge = new JsonRPCtoRPCBridge(peer, schema, pathMap, governance,
-                dependencies.getTransportFactory(), jsonConverter);
+                dependencies.getTransportFactory(), codecFactory);
         builder.addService(DOMRpcService.class, rpcBridge);
         pathMap.toMap(DataType.RPC)
                 .entrySet()
@@ -186,6 +189,8 @@ class RemotePeerContext extends AbstractPeerContext implements ClusterSingletonS
                         .addRpcEndpoint(new RpcEndpointsBuilder().setPath(e.getKey().getAsJsonObject().toString())
                                 .setEndpointUri(new Uri(e.getValue()))
                                 .build()));
+        JsonRpcDOMSchemaService peerSchemaService = new JsonRpcDOMSchemaService(newPeer, schema);
+        builder.addService(DOMSchemaService.class, peerSchemaService);
         mountPointReg = builder.register();
         ask(masterActorRef, new InitMasterMountPoint(rpcDataBroker, rpcBridge), Timeout.apply(10, TimeUnit.SECONDS))
                 .onComplete(new OnComplete<>() {

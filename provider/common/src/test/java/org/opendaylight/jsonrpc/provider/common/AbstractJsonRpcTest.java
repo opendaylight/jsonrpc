@@ -24,6 +24,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.junit.Rule;
 import org.junit.rules.TestName;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.mdsal.binding.api.DataBroker;
 import org.opendaylight.mdsal.binding.dom.adapter.test.AbstractDataBrokerTest;
 import org.opendaylight.mdsal.binding.dom.adapter.test.ConcurrentDataBrokerTestCustomizer;
@@ -39,7 +40,9 @@ import org.opendaylight.mdsal.dom.broker.DOMMountPointServiceImpl;
 import org.opendaylight.mdsal.dom.broker.DOMNotificationRouter;
 import org.opendaylight.mdsal.dom.broker.DOMRpcRouter;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.TopElement;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.data.rev201014.TopContainer;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.notif.rev201014.Notification1;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.FactorialInput;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yangtools.yang.binding.Identifiable;
 import org.opendaylight.yangtools.yang.binding.Identifier;
@@ -55,6 +58,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
+    protected static final JsonParser PARSER = new JsonParser();
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractJsonRpcTest.class);
     private ConcurrentDataBrokerTestCustomizer testCustomizer;
     private final DOMMountPointService domMountPointService = new DOMMountPointServiceImpl();
@@ -64,6 +68,7 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
     private DOMRpcRouter rpcRouter;
     protected EffectiveModelContext schemaContext;
     protected final JsonParser jsonParser = new JsonParser();
+    protected JsonRpcCodecFactory codecFactory;
     @Rule
     public TestName nameRule = new TestName();
     private BindingCodecContext bnnc;
@@ -79,14 +84,16 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
         setupWithDataBroker(this.dataBroker);
         rpcRouter = DOMRpcRouter.newInstance(getSchemaService());
         bnnc = new BindingCodecContext(runtimeContext);
+        codecFactory = new JsonRpcCodecFactory(context);
     }
 
     @Override
     protected Set<YangModuleInfo> getModuleInfos() throws Exception {
         return Sets.newHashSet(BindingReflections.getModuleInfo(Config.class),
                 BindingReflections.getModuleInfo(NetworkTopology.class),
-                BindingReflections.getModuleInfo(TopElement.class), BindingReflections.getModuleInfo(
-                        org.opendaylight.yang.gen.v1.http.opendaylight.org.jsonrpc.test.rev180305.TopElement.class));
+                BindingReflections.getModuleInfo(TopContainer.class),
+                BindingReflections.getModuleInfo(Notification1.class),
+                BindingReflections.getModuleInfo(FactorialInput.class));
     }
 
     protected BindingNormalizedNodeSerializer getCodec() {

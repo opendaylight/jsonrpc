@@ -14,6 +14,7 @@ import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
 
+@Deprecated(forRemoval = true)
 public class NotificationState implements AutoCloseable {
     private final NotificationDefinition notification;
     private final SubscriberSession client;

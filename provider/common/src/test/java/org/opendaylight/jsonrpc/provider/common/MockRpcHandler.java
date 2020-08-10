@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.provider.common;
 import com.google.common.io.Resources;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
@@ -22,7 +21,6 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.RequestMessageHandler;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rev161117.TestModelService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,7 +106,9 @@ public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
     }
 
     private void processAnyXml(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
-        replyBuilder.result(JsonNull.INSTANCE);
+        final JsonObject result = params.getAsJsonObject();
+        result.remove("some-number");
+        replyBuilder.result(result);
     }
 
     private void processFactorial(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {

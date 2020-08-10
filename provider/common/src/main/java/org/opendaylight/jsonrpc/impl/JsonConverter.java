@@ -18,7 +18,6 @@ import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +26,7 @@ import java.util.Optional;
 import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcException;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.model.JSONRPCArg;
 import org.opendaylight.jsonrpc.model.JsonReaderAdapter;
 import org.opendaylight.jsonrpc.model.JsonRpcNotification;
@@ -91,7 +91,9 @@ import org.slf4j.LoggerFactory;
  * It will benefit significantly from converting these to a custom gson
  * serializer/deserializer and registering it with gson
  *
+ * @deprecated Use {@link JsonRpcCodecFactory}.
  */
+@Deprecated(forRemoval = true)
 public class JsonConverter {
     private static final String JSON_IO_ERROR = "I/O problem in JSON codec";
     private static final char COLON = ':';
@@ -161,13 +163,12 @@ public class JsonConverter {
 
     private DOMNotification extractNotification(NotificationState notificationState, JsonElement jsonResult,
             DataContainerNodeBuilder<NodeIdentifier, ContainerNode> notificationBuilder) {
-        final Date eventTime = new Date();
         try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(notificationBuilder);
                 JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
                         CODEC_SUPPLIER.getShared(schemaContext),
                         ContainerSchemaNodes.forNotification(notificationState.notification()))) {
             jsonParser.parse(JsonReaderAdapter.from(jsonResult));
-            return new JsonRpcNotification(notificationBuilder.build(), eventTime,
+            return new JsonRpcNotification(notificationBuilder.build(),
                     notificationState.notification().getQName());
         } catch (IOException e) {
             LOG.error(JSON_IO_ERROR, e);
@@ -567,7 +568,7 @@ public class JsonConverter {
                 JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
                         CODEC_SUPPLIER.getShared(schemaContext), ContainerSchemaNodes.forNotification(def))) {
             jsonParser.parse(JsonReaderAdapter.from(data));
-            return new JsonRpcNotification(builder.build(), new Date(), def.getQName());
+            return new JsonRpcNotification(builder.build(), def.getQName());
         } catch (IOException e) {
             LOG.error(JSON_IO_ERROR, e);
             return null;

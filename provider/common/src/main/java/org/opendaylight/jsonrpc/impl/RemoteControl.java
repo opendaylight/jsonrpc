@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.model.AddListenerArgument;
 import org.opendaylight.jsonrpc.model.DataOperationArgument;
 import org.opendaylight.jsonrpc.model.DeleteListenerArgument;
@@ -44,21 +45,20 @@ import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 
 public class RemoteControl implements RemoteControlComposite {
     private final EffectiveModelContext schemaContext;
-    private final JsonConverter jsonConverter;
     private final ConcurrentMap<String, DataModificationContext> txmap = new ConcurrentHashMap<>();
     private final DOMNotificationPublishService publishService;
     private final DOMRpcService rpcService;
     private final JsonRpcDatastoreAdapter datastore;
+    private final JsonRpcCodecFactory codecFactory;
 
     public RemoteControl(@NonNull final DOMDataBroker domDataBroker, @NonNull final EffectiveModelContext schemaContext,
             @NonNull TransportFactory transportFactory, @NonNull final DOMNotificationPublishService publishService,
-            @NonNull final DOMRpcService rpcService) {
+            @NonNull final DOMRpcService rpcService, @NonNull JsonRpcCodecFactory codecFactory) {
         this.schemaContext = Objects.requireNonNull(schemaContext);
-        this.jsonConverter = new JsonConverter(schemaContext);
+        this.codecFactory = Objects.requireNonNull(codecFactory);
         this.publishService = Objects.requireNonNull(publishService);
         this.rpcService = Objects.requireNonNull(rpcService);
-        this.datastore = new JsonRpcDatastoreAdapter(jsonConverter, domDataBroker, schemaContext, transportFactory,
-                true);
+        this.datastore = new JsonRpcDatastoreAdapter(codecFactory, domDataBroker, schemaContext, transportFactory);
     }
 
     @VisibleForTesting
@@ -128,17 +128,15 @@ public class RemoteControl implements RemoteControlComposite {
     public JsonElement invokeRpc(String name, JsonObject rpcInput) {
         final RpcDefinition def = findNode(schemaContext, name, Module::getRpcs)
                 .orElseThrow(() -> new IllegalArgumentException("No such method " + name));
-        final JsonObject wrapper = new JsonObject();
-        wrapper.add("input", rpcInput);
-        final NormalizedNode<?, ?> nn = jsonConverter.rpcInputConvert(def, rpcInput);
         try {
+            final NormalizedNode<?, ?> nn = codecFactory.rpcInputCodec(def).deserialize(rpcInput);
             final DOMRpcResult out = Uninterruptibles.getUninterruptibly(rpcService.invokeRpc(def.getQName(), nn));
             if (!out.getErrors().isEmpty()) {
                 throw new IllegalStateException("RPC invocation failed : " + out.getErrors());
             }
             return out.getResult() == null ? JsonNull.INSTANCE
-                    : jsonConverter.rpcConvert(def.getOutput().getPath(), (ContainerNode) out.getResult());
-        } catch (ExecutionException e) {
+                    : codecFactory.rpcOutputCodec(def).serialize((ContainerNode) out.getResult());
+        } catch (ExecutionException | IOException e) {
             throw new IllegalStateException("RPC invocation failed", e);
         }
     }
@@ -147,11 +145,13 @@ public class RemoteControl implements RemoteControlComposite {
     public void publishNotification(String name, JsonObject data) {
         final NotificationDefinition notification = findNode(schemaContext, name, Module::getNotifications)
                 .orElseThrow(() -> new IllegalArgumentException("No such notification : " + name));
-        final DOMNotification dom = jsonConverter.toNotification(notification, data);
         try {
+            final DOMNotification dom = codecFactory.notificationCodec(notification).deserialize(data);
             Uninterruptibles.getUninterruptibly(publishService.offerNotification(dom));
         } catch (ExecutionException e) {
             throw new IllegalStateException("Notification delivery failed", e);
+        } catch (IOException e) {
+            throw new IllegalStateException("Deserialization of notification failed", e);
         }
     }
 }

@@ -18,7 +18,9 @@ import org.eclipse.jdt.annotation.NonNull;
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Feb 22, 2020
+ * @deprecated use {@link org.opendaylight.jsonrpc.dom.codec.JsonReaderAdapter}.
  */
+@Deprecated(forRemoval = true)
 public final class JsonReaderAdapter extends JsonReader {
     private JsonReaderAdapter(Reader in) {
         super(in);

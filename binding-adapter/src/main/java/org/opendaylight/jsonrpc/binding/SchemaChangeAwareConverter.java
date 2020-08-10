@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import org.eclipse.jdt.annotation.NonNull;
-import org.opendaylight.jsonrpc.impl.JsonConverter;
+import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
@@ -19,14 +19,14 @@ import org.opendaylight.yangtools.yang.model.api.EffectiveModelContextListener;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
 /**
- * {@link Supplier} of {@link JsonConverter} that is up-to-date with changes in global {@link SchemaContext}.
+ * {@link Supplier} of {@link JsonRpcCodecFactory} that is up-to-date with changes in global {@link SchemaContext}.
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Aug 25, 2018
  */
 public class SchemaChangeAwareConverter
-        implements Supplier<JsonConverter>, AutoCloseable, EffectiveModelContextListener {
-    private final AtomicReference<JsonConverter> converter = new AtomicReference<>(null);
+        implements Supplier<JsonRpcCodecFactory>, AutoCloseable, EffectiveModelContextListener {
+    private final AtomicReference<JsonRpcCodecFactory> converter = new AtomicReference<>(null);
     private ListenerRegistration<EffectiveModelContextListener> registration;
 
     public SchemaChangeAwareConverter(@NonNull DOMSchemaService domSchemaService) {
@@ -36,7 +36,7 @@ public class SchemaChangeAwareConverter
     }
 
     private void refresh(EffectiveModelContext schemaContext) {
-        converter.set(new JsonConverter(schemaContext));
+        converter.set(new JsonRpcCodecFactory(schemaContext));
     }
 
     @Override
@@ -45,7 +45,7 @@ public class SchemaChangeAwareConverter
     }
 
     @Override
-    public JsonConverter get() {
+    public JsonRpcCodecFactory get() {
         return converter.get();
     }
 

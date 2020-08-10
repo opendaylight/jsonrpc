@@ -1,0 +1,32 @@
+module test-model-notification {
+    namespace "urn:opendaylight:jsonrpc:test-notif";
+    prefix "notif";
+
+    import test-model-base {
+        prefix "base";
+    }
+
+    organization "OpenDayLight";
+    description "Mock model to test various aspects of JSON-RPC ODL plugin";
+    revision "2020-10-14";
+
+    notification notification1 {
+        description "Dummy notification 1";
+        leaf current-level {
+            type base:watermark-value;
+        }
+        leaf max-level {
+            type base:watermark-value;
+        }
+    }
+
+
+    notification notification2 {
+        description "Dummy notification 2";
+        uses base:bucket;
+
+        leaf leaf1 {
+            type string;
+        }
+    }
+}
