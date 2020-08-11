@@ -13,7 +13,7 @@ target
 .idea
 .factorypath
 .fbExcludeFilterFile
-
+target-ide
 # Sphinx documentation
 .tox/
 docs/_build/
