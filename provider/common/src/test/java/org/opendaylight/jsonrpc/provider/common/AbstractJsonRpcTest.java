@@ -24,16 +24,13 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.opendaylight.binding.runtime.api.BindingRuntimeContext;
-import org.opendaylight.binding.runtime.api.BindingRuntimeTypes;
-import org.opendaylight.binding.runtime.api.ClassLoadingStrategy;
 import org.opendaylight.binding.runtime.api.DefaultBindingRuntimeContext;
-import org.opendaylight.binding.runtime.spi.GeneratedClassLoadingStrategy;
+import org.opendaylight.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.mdsal.binding.api.DataBroker;
 import org.opendaylight.mdsal.binding.dom.adapter.test.AbstractDataBrokerTest;
 import org.opendaylight.mdsal.binding.dom.adapter.test.ConcurrentDataBrokerTestCustomizer;
 import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer;
 import org.opendaylight.mdsal.binding.dom.codec.impl.BindingCodecContext;
-import org.opendaylight.mdsal.binding.generator.impl.DefaultBindingRuntimeGenerator;
 import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMMountPointService;
@@ -58,7 +55,6 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
-    private static final ClassLoadingStrategy CLS = GeneratedClassLoadingStrategy.getTCCLClassLoadingStrategy();
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractJsonRpcTest.class);
     private ConcurrentDataBrokerTestCustomizer testCustomizer;
     private final DOMMountPointService domMountPointService = new DOMMountPointServiceImpl();
@@ -82,11 +78,7 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
         this.schemaContext = context;
         setupWithDataBroker(this.dataBroker);
         rpcRouter = DOMRpcRouter.newInstance(getSchemaService());
-
-        final DefaultBindingRuntimeGenerator brg = new DefaultBindingRuntimeGenerator();
-        final BindingRuntimeTypes runtimeTypes = brg.generateTypeMapping(schemaContext);
-        runtimeContext = DefaultBindingRuntimeContext.create(runtimeTypes, CLS);
-        bnnc = new BindingCodecContext(runtimeContext);
+        bnnc = new BindingCodecContext(BindingRuntimeHelpers.createRuntimeContext());
     }
 
     @Override

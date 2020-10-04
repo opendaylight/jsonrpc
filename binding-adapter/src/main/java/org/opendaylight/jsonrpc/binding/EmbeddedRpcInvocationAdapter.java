@@ -8,16 +8,11 @@
 package org.opendaylight.jsonrpc.binding;
 
 import org.opendaylight.binding.runtime.api.BindingRuntimeContext;
-import org.opendaylight.binding.runtime.api.BindingRuntimeTypes;
-import org.opendaylight.binding.runtime.api.ClassLoadingStrategy;
-import org.opendaylight.binding.runtime.api.DefaultBindingRuntimeContext;
-import org.opendaylight.binding.runtime.spi.GeneratedClassLoadingStrategy;
-import org.opendaylight.binding.runtime.spi.ModuleInfoBackedContext;
+import org.opendaylight.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.mdsal.binding.dom.adapter.BindingDOMRpcProviderServiceAdapter;
 import org.opendaylight.mdsal.binding.dom.adapter.ConstantAdapterContext;
 import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer;
 import org.opendaylight.mdsal.binding.dom.codec.impl.BindingCodecContext;
-import org.opendaylight.mdsal.binding.generator.impl.DefaultBindingRuntimeGenerator;
 import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
 import org.opendaylight.mdsal.dom.broker.DOMRpcRouter;
 import org.opendaylight.yangtools.concepts.ObjectRegistration;
@@ -32,33 +27,23 @@ import org.opendaylight.yangtools.yang.model.api.SchemaContext;
  * @since Sep 24, 2018
  */
 public final class EmbeddedRpcInvocationAdapter implements RpcInvocationAdapter {
-    private static final ClassLoadingStrategy CLS = GeneratedClassLoadingStrategy.getTCCLClassLoadingStrategy();
-    private final BindingNormalizedNodeSerializer codec;
+    private final BindingCodecContext codec;
     private final EmbeddedSchemaService schemaService;
     private final SchemaChangeAwareConverter converter;
     private final DOMRpcRouter rpcService;
-    private final BindingRuntimeContext runtimeContext;
     private final BindingDOMRpcProviderServiceAdapter rpcAdapter;
     public static final EmbeddedRpcInvocationAdapter INSTANCE = new EmbeddedRpcInvocationAdapter();
 
     private EmbeddedRpcInvocationAdapter() {
-        final ModuleInfoBackedContext moduleContext = ModuleInfoBackedContext.create(CLS);
-        moduleContext.registerModuleInfos(BindingReflections.loadModuleInfos());
-        final EffectiveModelContext schemaContext = moduleContext.tryToCreateModelContext()
-                .orElseThrow(() -> new IllegalStateException("Failed to create SchemaContext"));
-
-        final DefaultBindingRuntimeGenerator rtg = new DefaultBindingRuntimeGenerator();
-        final BindingRuntimeTypes runtimeTypes = rtg.generateTypeMapping(schemaContext);
-        runtimeContext = DefaultBindingRuntimeContext.create(runtimeTypes, CLS);
-        codec = new BindingCodecContext(runtimeContext);
-
+        final EffectiveModelContext schemaContext = BindingRuntimeHelpers
+                .createEffectiveModel(BindingReflections.loadModuleInfos());
+        codec = new BindingCodecContext(BindingRuntimeHelpers.createRuntimeContext());
         schemaService = new EmbeddedSchemaService(schemaContext);
         converter = new SchemaChangeAwareConverter(schemaService);
         rpcService = new DOMRpcRouter();
         rpcService.onModelContextUpdated(schemaContext);
         schemaService.registerSchemaContextListener(rpcService);
-        rpcAdapter = new BindingDOMRpcProviderServiceAdapter(
-                new ConstantAdapterContext(new BindingCodecContext(runtimeContext)),
+        rpcAdapter = new BindingDOMRpcProviderServiceAdapter(new ConstantAdapterContext(codec),
                 rpcService.getRpcProviderService());
     }
 
@@ -84,6 +69,6 @@ public final class EmbeddedRpcInvocationAdapter implements RpcInvocationAdapter 
 
     @Override
     public BindingRuntimeContext getRuntimeContext() {
-        return runtimeContext;
+        return codec.getRuntimeContext();
     }
 }
