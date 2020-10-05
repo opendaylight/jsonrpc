@@ -7,6 +7,8 @@
  */
 package org.opendaylight.jsonrpc.tool.test;
 
+import static org.opendaylight.yangtools.yang.parser.rfc7950.repo.TextToIRTransformer.transformText;
+
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -37,8 +39,8 @@ import org.opendaylight.jsonrpc.model.StoreOperationArgument;
 import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
 import org.opendaylight.yangtools.yang.binding.YangModuleInfo;
 import org.opendaylight.yangtools.yang.model.repo.api.YangTextSchemaSource;
-import org.opendaylight.yangtools.yang.parser.rfc7950.repo.ASTSchemaSource;
-import org.opendaylight.yangtools.yang.parser.rfc7950.repo.TextToASTTransformer;
+import org.opendaylight.yangtools.yang.parser.rfc7950.ir.IRSchemaSource;
+import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangModelDependencyInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,9 +54,8 @@ class GovernanceImpl implements RemoteGovernance {
             .build(new CacheLoader<Path, Set<ModuleInfo>>() {
                 @Override
                 public Set<ModuleInfo> load(Path file) throws Exception {
-                    final ASTSchemaSource schemaSource = TextToASTTransformer
-                            .transformText(YangTextSchemaSource.forFile(file.toFile()));
-                    return schemaSource.getDependencyInformation()
+                    final IRSchemaSource irSource = transformText(YangTextSchemaSource.forFile(file.toFile()));
+                    return YangModelDependencyInfo.forIR(irSource)
                             .getDependencies()
                             .stream()
                             .map(m -> new ModuleInfo(m.getModuleName(), null))

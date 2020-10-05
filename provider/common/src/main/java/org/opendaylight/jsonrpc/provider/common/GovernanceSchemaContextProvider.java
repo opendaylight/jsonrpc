@@ -7,6 +7,8 @@
  */
 package org.opendaylight.jsonrpc.provider.common;
 
+import static org.opendaylight.yangtools.yang.parser.rfc7950.repo.TextToIRTransformer.transformText;
+
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -34,8 +36,7 @@ import org.opendaylight.yangtools.yang.model.api.ModuleImport;
 import org.opendaylight.yangtools.yang.model.parser.api.YangSyntaxErrorException;
 import org.opendaylight.yangtools.yang.model.repo.api.YangTextSchemaSource;
 import org.opendaylight.yangtools.yang.parser.rfc7950.reactor.RFC7950Reactors;
-import org.opendaylight.yangtools.yang.parser.rfc7950.repo.ASTSchemaSource;
-import org.opendaylight.yangtools.yang.parser.rfc7950.repo.TextToASTTransformer;
+import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangModelDependencyInfo;
 import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangStatementStreamSource;
 import org.opendaylight.yangtools.yang.parser.spi.meta.ReactorException;
 import org.opendaylight.yangtools.yang.parser.stmt.reactor.CrossSourceStatementReactor.BuildAction;
@@ -63,9 +64,9 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
                 public Set<ModuleImport> load(ModuleInfo key) throws Exception {
                     LOG.trace("Resolving imports of module '{}'", key);
                     final String content = sourceCache.getUnchecked(key);
-                    final ASTSchemaSource schemaSource = TextToASTTransformer
-                            .transformText(new StringYangTextSchemaSource(key.getModule(), content));
-                    return schemaSource.getDependencyInformation().getDependencies();
+                    return YangModelDependencyInfo
+                            .forIR(transformText(new StringYangTextSchemaSource(key.getModule(), content)))
+                            .getDependencies();
                 }
             });
 
