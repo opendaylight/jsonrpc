@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.provider.common;
 
 import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -42,7 +41,7 @@ public class MockGovernance implements RemoteGovernance {
     public String source(ModuleInfo arg) {
         try (InputStream is = Resources.getResource(getClass(), "/" + arg.getModule() + ".yang").openStream()) {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
-            ByteStreams.copy(is, os);
+            is.transferTo(os);
             return new String(os.toByteArray(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new IllegalStateException(e);

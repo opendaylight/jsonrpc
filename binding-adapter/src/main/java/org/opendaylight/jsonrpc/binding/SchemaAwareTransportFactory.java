@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.binding;
 
 import com.google.common.collect.ClassToInstanceMap;
-import com.google.common.collect.Maps;
 import com.google.common.reflect.Reflection;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -16,6 +15,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
 import org.opendaylight.jsonrpc.bus.messagelib.AbstractTransportFactory;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class SchemaAwareTransportFactory extends AbstractTransportFactory {
     private static final Logger LOG = LoggerFactory.getLogger(SchemaAwareTransportFactory.class);
-    private final Map<Object, ProxyContext<? extends RpcService>> proxyMap = Maps.newConcurrentMap();
+    private final Map<Object, ProxyContext<? extends RpcService>> proxyMap = new ConcurrentHashMap<>();
     private final RpcInvocationAdapter invocationAdapter;
 
     /**

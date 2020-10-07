@@ -34,9 +34,10 @@ import org.opendaylight.mdsal.dom.api.DefaultDOMRpcException;
 import org.opendaylight.mdsal.dom.spi.DefaultDOMRpcResult;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
+import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.RpcError;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
-import org.opendaylight.yangtools.yang.model.api.SchemaPath;
+import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.duration.Duration;
@@ -68,11 +69,11 @@ class ProxyDOMRpcService implements DOMRpcService {
     }
 
     @Override
-    public @NonNull ListenableFuture<? extends DOMRpcResult> invokeRpc(@NonNull SchemaPath type,
+    public @NonNull ListenableFuture<? extends DOMRpcResult> invokeRpc(@NonNull QName type,
             @NonNull NormalizedNode<?, ?> input) {
-        LOG.debug("[{}] invoke '{}' using {}", peer.getName(), type.getLastComponent().getLocalName(), input);
+        LOG.debug("[{}] invoke '{}' using {}", peer.getName(), type.getLocalName(), input);
         final SettableFuture<DOMRpcResult> result = SettableFuture.create();
-        final InvokeRpcRequest request = InvokeRpcRequest.create(type, input);
+        final InvokeRpcRequest request = InvokeRpcRequest.create(Absolute.of(type), input);
         LOG.debug("Sending {} to {}", request, masterActorRef);
         ask(masterActorRef, request, askTimeout).onComplete(new OnComplete<>() {
             @Override

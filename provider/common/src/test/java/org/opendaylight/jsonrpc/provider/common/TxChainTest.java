@@ -30,13 +30,13 @@ import org.opendaylight.mdsal.dom.api.DOMTransactionChainClosedException;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChainListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpointsBuilder;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 
 public class TxChainTest {
     private static final Peer DEVICE = new ConfiguredEndpointsBuilder().setName("device").build();
 
     @Mock
-    private SchemaContext schemaContext;
+    private EffectiveModelContext schemaContext;
     @Mock
     private JsonConverter jsonConverter;
     @Mock
@@ -56,7 +56,7 @@ public class TxChainTest {
 
     @Before
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
 
         writeOnlyTx1 = new JsonRPCTx(transportFactory, DEVICE, pathMap, jsonConverter, schemaContext);
         writeOnlyTx2 = new JsonRPCTx(transportFactory, DEVICE, pathMap, jsonConverter, schemaContext);

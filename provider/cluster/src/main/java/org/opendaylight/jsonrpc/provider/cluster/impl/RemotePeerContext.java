@@ -148,7 +148,6 @@ class RemotePeerContext extends AbstractPeerContext implements ClusterSingletonS
         final DOMMountPointBuilder builder = dependencies.getDomMountPointService()
                 .createMountPoint(Util.createBiPath(peer.getName()));
         final EffectiveModelContext schema = schemaFactory.createSchemaContext(peer);
-        builder.addInitialSchemaContext(schema);
 
         final RemoteGovernance governance = dependencies.getGovernanceProvider().get().orElse(null);
 
@@ -194,9 +193,7 @@ class RemotePeerContext extends AbstractPeerContext implements ClusterSingletonS
                     public void onComplete(final Throwable failure, final Object success) {
                         if (failure == null) {
                             publishState(
-                                    new ActualEndpointsBuilder(peer).setModules(mountPointReg.getInstance()
-                                            .getEffectiveModelContext()
-                                            .getModules()
+                                    new ActualEndpointsBuilder(peer).setModules(schema.getModules()
                                             .stream()
                                             .map(m -> new YangIdentifier(m.getName()))
                                             .collect(Collectors.toList())),

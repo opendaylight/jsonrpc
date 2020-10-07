@@ -25,6 +25,7 @@ import org.opendaylight.mdsal.dom.api.DOMNotificationListener;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
+import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +56,7 @@ public class RemoteNotificationPublisherTest extends AbstractJsonRpcTest {
                 LOG.info("Got notification : {}", notification);
                 latch.countDown();
             }
-        }, path.getPath());
+        }, Absolute.of(path.getQName()));
         logTestName("START");
     }
 

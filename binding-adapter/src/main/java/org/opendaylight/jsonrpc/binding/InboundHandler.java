@@ -34,6 +34,7 @@ import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
+import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,8 +135,8 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
                 wrapper.add(INPUT, new JsonObject());
             }
             final NormalizedNode<?, ?> nn = adapter.converter().get().rpcOutputConvert(rpcDefEntry.getKey(), wrapper);
-            final DataObject dataObject = adapter.codec()
-                    .fromNormalizedNodeRpcData(rpcDefEntry.getKey().getInput().getPath(), (ContainerNode) nn);
+            final DataObject dataObject = adapter.codec().fromNormalizedNodeRpcData(Absolute.of(
+                    rpcDefEntry.getKey().getQName(), rpcDefEntry.getKey().getInput().getQName()),(ContainerNode) nn);
             LOG.debug("Input : {}", dataObject);
             args = new Object[] { dataObject };
         } else {

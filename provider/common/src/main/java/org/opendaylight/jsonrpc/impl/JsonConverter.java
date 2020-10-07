@@ -30,7 +30,6 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;
 import org.opendaylight.jsonrpc.model.JSONRPCArg;
 import org.opendaylight.jsonrpc.model.JsonReaderAdapter;
 import org.opendaylight.jsonrpc.model.JsonRpcNotification;
-import org.opendaylight.jsonrpc.model.NotificationContainerProxy;
 import org.opendaylight.jsonrpc.model.NotificationState;
 import org.opendaylight.mdsal.dom.api.DOMNotification;
 import org.opendaylight.yangtools.yang.common.QName;
@@ -61,11 +60,11 @@ import org.opendaylight.yangtools.yang.data.util.DataSchemaContextNode;
 import org.opendaylight.yangtools.yang.data.util.DataSchemaContextTree;
 import org.opendaylight.yangtools.yang.model.api.ContainerSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.ListSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.opendaylight.yangtools.yang.model.api.SchemaNode;
 import org.opendaylight.yangtools.yang.model.api.SchemaPath;
 import org.opendaylight.yangtools.yang.model.util.SchemaContextUtil;
@@ -101,14 +100,14 @@ public class JsonConverter {
     private static final JsonParser PARSER = new JsonParser();
     private static final JSONCodecFactorySupplier CODEC_SUPPLIER =
             JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02;
-    private final SchemaContext schemaContext;
+    private final EffectiveModelContext schemaContext;
 
     /**
      * Instantiates a new json converter.
      *
      * @param schemaContext the schema context
      */
-    public JsonConverter(SchemaContext schemaContext) {
+    public JsonConverter(EffectiveModelContext schemaContext) {
         this.schemaContext = schemaContext;
     }
 
@@ -166,10 +165,10 @@ public class JsonConverter {
         try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(notificationBuilder);
                 JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
                         CODEC_SUPPLIER.getShared(schemaContext),
-                        new NotificationContainerProxy(notificationState.notification()))) {
+                        ContainerSchemaNodes.forNotification(notificationState.notification()))) {
             jsonParser.parse(JsonReaderAdapter.from(jsonResult));
             return new JsonRpcNotification(notificationBuilder.build(), eventTime,
-                    notificationState.notification().getPath());
+                    notificationState.notification().getQName());
         } catch (IOException e) {
             LOG.error(JSON_IO_ERROR, e);
             return null;
@@ -178,7 +177,7 @@ public class JsonConverter {
 
     public NormalizedNode<?, ?> rpcInputConvert(RpcDefinition def, JsonObject input) {
         final DataContainerNodeBuilder<NodeIdentifier, ContainerNode> builder = ImmutableContainerNodeBuilder
-                .create().withNodeIdentifier(NodeIdentifier.create(def.getQName()));
+                .create().withNodeIdentifier(NodeIdentifier.create(QName.create(def.getQName(), "input")));
         try (NormalizedNodeStreamWriter streamWriter = ImmutableNormalizedNodeStreamWriter.from(builder);
                 JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
                         CODEC_SUPPLIER.getShared(schemaContext), def)) {
@@ -568,7 +567,7 @@ public class JsonConverter {
                 JsonParserStream jsonParser = JsonParserStream.create(streamWriter,
                         CODEC_SUPPLIER.getShared(schemaContext), ContainerSchemaNodes.forNotification(def))) {
             jsonParser.parse(JsonReaderAdapter.from(data));
-            return new JsonRpcNotification(builder.build(), new Date(), def.getPath());
+            return new JsonRpcNotification(builder.build(), new Date(), def.getQName());
         } catch (IOException e) {
             LOG.error(JSON_IO_ERROR, e);
             return null;

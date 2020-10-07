@@ -43,7 +43,7 @@ import org.opendaylight.yangtools.yang.common.RpcError.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +69,7 @@ public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFac
      */
     public JsonRPCTx(@NonNull TransportFactory transportFactory, @NonNull Peer peer,
             @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @NonNull JsonConverter jsonConverter,
-            @NonNull SchemaContext schemaContext) {
+            @NonNull EffectiveModelContext schemaContext) {
         super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
         Preconditions.checkArgument(!Strings.isNullOrEmpty(peer.getName()), "Peer name is missing");
         this.txIdMap = new HashMap<>();

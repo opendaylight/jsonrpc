@@ -7,7 +7,6 @@
  */
 package org.opendaylight.jsonrpc.provider.common;
 
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -44,8 +43,8 @@ public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
         try {
             try (InputStream is = Resources.getResource(MockRpcHandler.class, "/get-all-numbers-response.json")
                     .openStream()) {
-                ByteStreams.copy(is, baos);
-                MOCK_RESP_JSON = (JsonObject) PARSER.parse(baos.toString(StandardCharsets.UTF_8.name()));
+                is.transferTo(baos);
+                MOCK_RESP_JSON = (JsonObject) PARSER.parse(baos.toString(StandardCharsets.UTF_8));
             }
         } catch (IOException e) {
             throw new ExceptionInInitializerError(e);

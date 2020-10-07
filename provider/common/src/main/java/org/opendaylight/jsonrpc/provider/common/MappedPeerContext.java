@@ -82,7 +82,6 @@ public class MappedPeerContext extends AbstractPeerContext {
 
         final DOMMountPointService.DOMMountPointBuilder mountBuilder = mountService.createMountPoint(biPath);
         jsonConverter = new JsonConverter(schema);
-        mountBuilder.addInitialSchemaContext(schema);
 
         /*
          * DataBroker

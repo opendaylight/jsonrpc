@@ -17,8 +17,8 @@ import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.yang.common.QName;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.Module;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,13 +31,14 @@ import org.slf4j.LoggerFactory;
  */
 abstract class AbstractJsonRPCComponent {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractJsonRPCComponent.class);
-    protected final SchemaContext schemaContext;
+    protected final EffectiveModelContext schemaContext;
     protected final JsonConverter jsonConverter;
     protected final TransportFactory transportFactory;
     protected final HierarchicalEnumMap<JsonElement, DataType, String> pathMap;
     protected final Peer peer;
 
-    AbstractJsonRPCComponent(@NonNull final SchemaContext schemaContext, @NonNull TransportFactory transportFactory,
+    AbstractJsonRPCComponent(@NonNull final EffectiveModelContext schemaContext,
+            @NonNull TransportFactory transportFactory,
             @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @NonNull JsonConverter jsonConverter,
             @NonNull Peer peer) {
         this.schemaContext = Objects.requireNonNull(schemaContext);

@@ -7,15 +7,17 @@
  */
 package org.opendaylight.jsonrpc.provider.cluster.messages;
 
-import com.google.common.collect.Iterables;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.Externalizable;
 import java.io.IOException;
+import java.io.InvalidObjectException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.Serializable;
+import java.util.List;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.model.api.SchemaPath;
+import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 
 /**
  * Message that conveys {@link SchemaPath}.
@@ -29,13 +31,13 @@ public class SchemaPathMsg implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @SuppressFBWarnings("SE_BAD_FIELD")
-    private final SchemaPath schemaPath;
+    private final Absolute schemaPath;
 
-    public SchemaPathMsg(final SchemaPath schemaPath) {
+    public SchemaPathMsg(final Absolute schemaPath) {
         this.schemaPath = schemaPath;
     }
 
-    public SchemaPath getSchemaPath() {
+    public Absolute getSchemaPath() {
         return schemaPath;
     }
 
@@ -64,12 +66,12 @@ public class SchemaPathMsg implements Serializable {
 
         @Override
         public void writeExternal(final ObjectOutput out) throws IOException {
-            final Iterable<QName> path = schemaPathMsg.getSchemaPath().getPathFromRoot();
-            out.writeInt(Iterables.size(path));
+            final List<QName> path = schemaPathMsg.getSchemaPath().getNodeIdentifiers();
+            out.writeInt(path.size());
             for (final QName qualifiedName : path) {
                 out.writeObject(qualifiedName);
             }
-            out.writeBoolean(schemaPathMsg.getSchemaPath().isAbsolute());
+            out.writeBoolean(true);
         }
 
         @Override
@@ -80,7 +82,10 @@ public class SchemaPathMsg implements Serializable {
                 paths[i] = (QName) in.readObject();
             }
             final boolean absolute = in.readBoolean();
-            schemaPathMsg = new SchemaPathMsg(SchemaPath.create(absolute, paths));
+            if (!absolute) {
+                throw new InvalidObjectException("Non-absolute path");
+            }
+            schemaPathMsg = new SchemaPathMsg(Absolute.of(paths));
         }
 
         private Object readResolve() {

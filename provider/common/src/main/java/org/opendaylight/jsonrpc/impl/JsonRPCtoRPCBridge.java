@@ -51,11 +51,10 @@ import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.data.impl.schema.builder.api.DataContainerNodeBuilder;
 import org.opendaylight.yangtools.yang.data.impl.schema.builder.impl.ImmutableContainerNodeBuilder;
-import org.opendaylight.yangtools.yang.model.api.ContainerSchemaNode;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.Module;
+import org.opendaylight.yangtools.yang.model.api.OutputSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
-import org.opendaylight.yangtools.yang.model.api.SchemaPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +74,7 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent implement
      * @param governance additional json rpc service to query for endpoints
      * @param transportFactory - JSON RPC 2.0 transport factory
      */
-    public JsonRPCtoRPCBridge(@NonNull Peer peer, @NonNull SchemaContext schemaContext,
+    public JsonRPCtoRPCBridge(@NonNull Peer peer, @NonNull EffectiveModelContext schemaContext,
             @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nullable RemoteGovernance governance,
             @NonNull TransportFactory transportFactory, @NonNull JsonConverter jsonConverter) {
         super(schemaContext, transportFactory, pathMap, jsonConverter, peer);
@@ -106,20 +105,20 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent implement
         if (endpoint != null) {
             LOG.info("RPC '{}' mapped to {}", localName, endpoint);
             mapped.put(def.getQName().getLocalName(), new RpcState(localName, def, endpoint, transportFactory));
-            available.add(DOMRpcIdentifier.create(def.getPath()));
+            available.add(DOMRpcIdentifier.create(def.getQName()));
         } else {
             LOG.warn("RPC '{}' cannot be mapped, no known endpoint", localName);
         }
     }
 
-    private boolean isNotEmpty(ContainerSchemaNode arg) {
+    private boolean isNotEmpty(OutputSchemaNode arg) {
         return !arg.getChildNodes().isEmpty();
     }
 
     /* RPC Bridge functionality */
     @NonNull
     @Override
-    public ListenableFuture<DOMRpcResult> invokeRpc(@NonNull final SchemaPath type,
+    public ListenableFuture<DOMRpcResult> invokeRpc(@NonNull final QName type,
             @Nullable final NormalizedNode<?, ?> input) {
         if (shuttingDown) {
             return bridgeNotAvailable();
@@ -128,11 +127,10 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent implement
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
-    private DOMRpcResult doInvokeRpc(SchemaPath type, NormalizedNode<?, ?> input) {
-        final QName rpcQName = type.getLastComponent();
+    private DOMRpcResult doInvokeRpc(QName type, NormalizedNode<?, ?> input) {
         try {
-            final RpcState rpcState = mappedRpcs.get(rpcQName.getLocalName());
-            Preconditions.checkArgument(rpcState != null, "Unknown rpc %s, available rpcs: %s", rpcQName,
+            final RpcState rpcState = mappedRpcs.get(type.getLocalName());
+            Preconditions.checkArgument(rpcState != null, "Unknown rpc %s, available rpcs: %s", type,
                     mappedRpcs.keySet());
             final JsonObject jsonForm = input != null
                     ? jsonConverter.rpcConvert(rpcState.rpc().getInput().getPath(), (ContainerNode) input)
@@ -149,7 +147,7 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent implement
                         rpcState.lastError().getMessage(), null, null, null));
             }
         } catch (Exception e) {
-            LOG.warn("Invocation of RPC '{}' failed", rpcQName.getLocalName(), e);
+            LOG.warn("Invocation of RPC '{}' failed", type.getLocalName(), e);
             return new DefaultDOMRpcResult(
                     RpcResultBuilder.newError(ErrorType.APPLICATION, null, e.getMessage(), null, null, e.getCause()));
         }

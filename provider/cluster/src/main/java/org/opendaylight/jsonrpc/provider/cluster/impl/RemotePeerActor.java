@@ -19,7 +19,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.opendaylight.controller.cluster.common.actor.AbstractUntypedActor;
-import org.opendaylight.jsonrpc.model.CombinedSchemaContextProvider;
 import org.opendaylight.jsonrpc.provider.cluster.messages.InitCompleted;
 import org.opendaylight.jsonrpc.provider.cluster.messages.InitMasterMountPoint;
 import org.opendaylight.jsonrpc.provider.cluster.messages.MountPointRequest;
@@ -40,7 +39,7 @@ import org.opendaylight.mdsal.dom.api.DOMRpcResult;
 import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.concepts.ObjectRegistration;
-import org.opendaylight.yangtools.yang.model.api.SchemaPath;
+import org.opendaylight.yangtools.yang.common.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.duration.Duration;
@@ -123,12 +122,8 @@ class RemotePeerActor extends AbstractUntypedActor {
 
     private void registerMountpoint(ActorRef masterActorRef) {
         unregisterMountPoint();
-        final CombinedSchemaContextProvider schemaFactory = new CombinedSchemaContextProvider(
-                dependencies.getGovernanceProvider(), dependencies);
-
         final DOMMountPointBuilder builder = dependencies.getDomMountPointService()
                 .createMountPoint(Util.createBiPath(peer.getName()));
-        builder.addInitialSchemaContext(schemaFactory.createSchemaContext(peer));
         builder.addService(DOMDataBroker.class, new ProxyDOMDataBroker(peer, masterActorRef, dependencies));
         builder.addService(DOMRpcService.class, new ProxyDOMRpcService(peer, masterActorRef, dependencies));
         mountPointReg = builder.register();
@@ -146,16 +141,16 @@ class RemotePeerActor extends AbstractUntypedActor {
     }
 
     private void invokeSlaveRpc(final InvokeRpcRequest request, final ActorRef sender) {
-        final SchemaPath schemaPath = request.getSchemaPath().getSchemaPath();
+        final QName qname = request.getSchemaPath().getSchemaPath().lastNodeIdentifier();
         final PathAndDataMsg data = request.getData();
 
-        final ListenableFuture<? extends DOMRpcResult> rpcResult = domRpcService.invokeRpc(schemaPath,
+        final ListenableFuture<? extends DOMRpcResult> rpcResult = domRpcService.invokeRpc(qname,
                 data != null ? data.getData() : null);
 
         Futures.addCallback(rpcResult, new FutureCallback<DOMRpcResult>() {
             @Override
             public void onSuccess(final DOMRpcResult domResult) {
-                LOG.debug("[{}] RPC result for {}, domRpcResult: {}", peer.getName(), schemaPath, domResult);
+                LOG.debug("[{}] RPC result for {}, domRpcResult: {}", peer.getName(), qname, domResult);
 
                 if (domResult == null) {
                     sender.tell(new EmptyRpcResponse(), self());

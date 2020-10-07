@@ -16,7 +16,7 @@ import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 
 /**
  * This class holds common code for getting {@link RemoteOmShard} instances used
@@ -30,7 +30,7 @@ abstract class RemoteShardAware extends AbstractJsonRPCComponent implements Auto
             + "for store '%s'at path '%s'.Make sure that requested path is within configured data endpoints "
             + "or governance is aware of such path.";
 
-    RemoteShardAware(SchemaContext schemaContext, TransportFactory transportFactory,
+    RemoteShardAware(EffectiveModelContext schemaContext, TransportFactory transportFactory,
             HierarchicalEnumMap<JsonElement, DataType, String> pathMap, JsonConverter jsonConverter, Peer peer) {
         super(schemaContext, transportFactory, pathMap, jsonConverter ,peer);
     }

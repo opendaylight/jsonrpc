@@ -35,7 +35,7 @@ public class SchemaChangeAwareConverter
         refresh(domSchemaService.getGlobalContext());
     }
 
-    private void refresh(SchemaContext schemaContext) {
+    private void refresh(EffectiveModelContext schemaContext) {
         converter.set(new JsonConverter(schemaContext));
     }
 

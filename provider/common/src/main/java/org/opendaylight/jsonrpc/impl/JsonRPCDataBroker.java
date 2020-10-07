@@ -39,7 +39,7 @@ import org.opendaylight.mdsal.dom.api.DOMTransactionChainListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.concepts.AbstractListenerRegistration;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +59,7 @@ public class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker
      * @param jsonConverter shared {@link JsonConverter}
      * @see DOMDataBroker
      */
-    public JsonRPCDataBroker(@NonNull Peer peer, @NonNull SchemaContext schemaContext,
+    public JsonRPCDataBroker(@NonNull Peer peer, @NonNull EffectiveModelContext schemaContext,
             @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
             @NonNull TransportFactory transportFactory, @Nullable RemoteGovernance governance,
             @NonNull JsonConverter jsonConverter) {

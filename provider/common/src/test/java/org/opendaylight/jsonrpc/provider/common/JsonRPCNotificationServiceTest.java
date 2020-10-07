@@ -46,7 +46,7 @@ import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.Revision;
 import org.opendaylight.yangtools.yang.model.api.Module;
-import org.opendaylight.yangtools.yang.model.api.SchemaPath;
+import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -140,6 +140,7 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
     private Peer getPeer() {
         //@formatter:off
         return new ConfiguredEndpointsBuilder()
+                .setName("test")
                 .setModules(Lists.newArrayList(
                         new YangIdentifier("test-model")
                         ))
@@ -151,8 +152,8 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
         //@formatter:on
     }
 
-    private static SchemaPath notificationPath(Module mod, String methodName) {
-        return SchemaPath.create(true,
-                QName.create(mod.getQNameModule().getNamespace(), mod.getQNameModule().getRevision(), methodName));
+    private static Absolute notificationPath(Module mod, String methodName) {
+        return Absolute.of(QName.create(mod.getQNameModule().getNamespace(),
+                mod.getQNameModule().getRevision(), methodName));
     }
 }

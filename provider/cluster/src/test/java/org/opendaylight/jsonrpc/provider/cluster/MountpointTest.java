@@ -8,7 +8,7 @@
 package org.opendaylight.jsonrpc.provider.cluster;
 
 import static org.awaitility.Awaitility.await;
-import static org.awaitility.Duration.TEN_SECONDS;
+import static org.awaitility.Durations.TEN_SECONDS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -125,7 +125,7 @@ public class MountpointTest {
 
     @Before
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
         clusterSingletonServiceProvider = new DOMClusterSingletonServiceProviderImpl(
                 new SimpleDOMEntityOwnershipService());
         clusterSingletonServiceProvider.initializeProvider();
@@ -247,7 +247,7 @@ public class MountpointTest {
                 .findNode(masterTestCustomizer.getSchemaService().getGlobalContext(), "test-model:removeCoffeePot",
                         Module::getRpcs)
                 .get();
-        ListenableFuture<? extends DOMRpcResult> rpcResult = rpcService.invokeRpc(rpc.getPath(), null);
+        ListenableFuture<? extends DOMRpcResult> rpcResult = rpcService.invokeRpc(rpc.getQName(), null);
 
         assertNotNull(rpcResult.get().getResult());
 
@@ -307,7 +307,7 @@ public class MountpointTest {
                 .findNode(slaveTestCustomizer.getSchemaService().getGlobalContext(), "test-model:removeCoffeePot",
                         Module::getRpcs)
                 .get();
-        ListenableFuture<? extends DOMRpcResult> rpcResult = rpcService.invokeRpc(rpc.getPath(), null);
+        ListenableFuture<? extends DOMRpcResult> rpcResult = rpcService.invokeRpc(rpc.getQName(), null);
         assertNotNull(rpcResult.get().getResult());
 
     }

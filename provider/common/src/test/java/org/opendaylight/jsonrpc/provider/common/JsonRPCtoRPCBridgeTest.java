@@ -63,7 +63,7 @@ import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeS
 import org.opendaylight.yangtools.yang.data.impl.schema.NormalizedNodeResult;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
-import org.opendaylight.yangtools.yang.model.api.SchemaPath;
+import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,7 +111,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     @Test(timeout = 15_000)
     public void testRpcUnknownMethod() throws InterruptedException, ExecutionException {
         NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "unknown-method"));
-        SchemaPath path = rpcPath(mod, "unknown-method");
+        QName path = rpcPath(mod, "unknown-method");
         final DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
         logResult(result);
         assertFalse(result.getErrors().isEmpty());
@@ -124,7 +124,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     @Test(timeout = 15_000)
     public void testRpcSimpleMethod() throws Exception {
         NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "simple-method"));
-        SchemaPath path = rpcPath(mod, "simple-method");
+        QName path = rpcPath(mod, "simple-method");
         DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
         LOG.info("Simple RPC result : {}", result);
         assertTrue(result.getErrors().isEmpty());
@@ -139,7 +139,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      */
     @Test(timeout = 15_000)
     public void testRpcMultiplyLeafList() throws Exception {
-        final SchemaPath path = rpcPath(mod, "multiply-ll");
+        final QName path = rpcPath(mod, "multiply-ll");
         // BA => BI
         final ContainerNode rpcDef = prepareRpcInput(
                 new MultiplyLlInputBuilder().setMultiplier((short) 3).setNumbers(Lists.newArrayList(2, 5, 7)).build());
@@ -158,7 +158,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
 
     @Test(timeout = 15_000)
     public void testRpcFactorial() throws Exception {
-        final SchemaPath path = rpcPath(mod, "factorial");
+        final QName path = rpcPath(mod, "factorial");
 
         // BA => BI
         final ContainerNode rpcDef = prepareRpcInput(new FactorialInputBuilder().setInNumber(Uint16.valueOf(8))
@@ -181,7 +181,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      */
     @Test(timeout = 15_000)
     public void testRpcMultiplyList() throws Exception {
-        final SchemaPath path = rpcPath(mod, "multiply-list");
+        final QName path = rpcPath(mod, "multiply-list");
 
         // BA => BI
         final ContainerNode rpcDef = prepareRpcInput(
@@ -204,7 +204,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
 
     @Test(timeout = 15_000)
     public void testMethodWithAnyXmlNoData() throws Exception {
-        final SchemaPath path = rpcPath(mod, "method-with-anyxml");
+        final QName path = rpcPath(mod, "method-with-anyxml");
         final NormalizedNodeResult resultHolder = new NormalizedNodeResult();
         final NormalizedNodeStreamWriter writer = ImmutableNormalizedNodeStreamWriter.from(resultHolder);
         final RpcDefinition rpcDef = mod.getRpcs()
@@ -223,7 +223,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
 
     @Test(timeout = 15_000)
     public void testRpcComplexResponse() throws Exception {
-        final SchemaPath path = rpcPath(mod, "get-all-numbers");
+        final QName path = rpcPath(mod, "get-all-numbers");
         final DOMRpcResult result = bridge.invokeRpc(path, prepareRpcInput(new GetAllNumbersInputBuilder().build()))
                 .get();
         GetAllNumbersOutput out = extractRpcOutput(result, GetAllNumbersOutput.class, "get-all-numbers", mod);
@@ -244,7 +244,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
 
     @Test(timeout = 15_000)
     public void test_2LeafNodesInRpc() throws Exception {
-        final SchemaPath path = rpcPath(mod, "removeCoffeePot");
+        final QName path = rpcPath(mod, "removeCoffeePot");
         final NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "removeCoffeePot"));
         DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
         logResult(result);
@@ -266,7 +266,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
 
     @SuppressWarnings("unchecked")
     private <T> T extractRpcOutput(DOMRpcResult result, Class<T> outputType, String rpcName, Module module) {
-        SchemaPath path2 = SchemaPath.create(false, constructRpcQname(module, rpcName),
+        Absolute path2 = Absolute.of(constructRpcQname(module, rpcName),
                 constructRpcQname(module, "output"));
         return (T) getCodec().fromNormalizedNodeRpcData(path2, (ContainerNode) result.getResult());
 
@@ -298,7 +298,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         return QName.create(mod.getQNameModule().getNamespace(), mod.getQNameModule().getRevision(), methodName);
     }
 
-    private static SchemaPath rpcPath(Module mod, String methodName) {
-        return SchemaPath.create(true, constructRpcQname(mod, methodName));
+    private static QName rpcPath(Module mod, String methodName) {
+        return constructRpcQname(mod, methodName);
     }
 }

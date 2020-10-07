@@ -14,7 +14,7 @@ import java.lang.reflect.Method;
 import java.util.AbstractMap;
 import java.util.Objects;
 import java.util.stream.Collector;
-import org.opendaylight.binding.runtime.api.BindingRuntimeContext;
+import org.opendaylight.mdsal.binding.runtime.api.BindingRuntimeContext;
 import org.opendaylight.mdsal.binding.spec.naming.BindingMapping;
 import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
 import org.opendaylight.yangtools.yang.binding.RpcService;

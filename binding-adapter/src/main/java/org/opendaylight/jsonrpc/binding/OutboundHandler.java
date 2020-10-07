@@ -15,6 +15,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.util.Objects;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.yangtools.yang.binding.DataContainer;
@@ -26,6 +27,7 @@ import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
+import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +64,7 @@ public class OutboundHandler<T extends RpcService> extends AbstractHandler<T> {
     private Object handleInvocationInternal(Method method, Object[] args) {
         Preconditions.checkArgument(args.length < 2, "Unexpected number of arguments : %d", args.length);
         RpcDefinition rpcDef = rpcMethodMap.get(method);
-        Preconditions.checkNotNull(rpcDef);
+        Objects.requireNonNull(rpcDef);
         final JsonObject request;
         // RPC with input
         if (args.length == 1) {
@@ -89,8 +91,9 @@ public class OutboundHandler<T extends RpcService> extends AbstractHandler<T> {
                 wrapper.add("output", wrapResponse(reply.getResult(), rpcDef));
 
                 final NormalizedNode<?, ?> nn = adapter.converter().get().rpcOutputConvert(rpcDef, wrapper);
-                final DataObject result = adapter.codec().fromNormalizedNodeRpcData(rpcDef.getOutput().getPath(),
-                        (ContainerNode) nn);
+                final DataObject result = adapter.codec()
+                        .fromNormalizedNodeRpcData(Absolute.of(rpcDef.getQName(), rpcDef.getOutput().getQName()),
+                                (ContainerNode) nn);
                 LOG.debug("Deserialized : {}", result);
                 return Futures.immediateFuture(RpcResultBuilder.<DataObject>success(result).build());
             }

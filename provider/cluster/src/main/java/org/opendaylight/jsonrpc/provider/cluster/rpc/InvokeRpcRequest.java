@@ -12,14 +12,14 @@ import org.opendaylight.jsonrpc.provider.cluster.messages.PathAndDataMsg;
 import org.opendaylight.jsonrpc.provider.cluster.messages.SchemaPathMsg;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
-import org.opendaylight.yangtools.yang.model.api.SchemaPath;
+import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 
 public class InvokeRpcRequest implements Serializable {
     private static final long serialVersionUID = 1L;
     private SchemaPathMsg schemaPath;
     private PathAndDataMsg data;
 
-    public static InvokeRpcRequest create(SchemaPath path, NormalizedNode<?, ?> input) {
+    public static InvokeRpcRequest create(Absolute path, NormalizedNode<?, ?> input) {
         final PathAndDataMsg data;
         if (input != null) {
             data = new PathAndDataMsg(YangInstanceIdentifier.empty(), input);

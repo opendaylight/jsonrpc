@@ -37,20 +37,20 @@ import org.opendaylight.mdsal.dom.api.DOMRpcResult;
 import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
 public class RemoteControl implements RemoteControlComposite {
-    private final SchemaContext schemaContext;
+    private final EffectiveModelContext schemaContext;
     private final JsonConverter jsonConverter;
     private final ConcurrentMap<String, DataModificationContext> txmap = new ConcurrentHashMap<>();
     private final DOMNotificationPublishService publishService;
     private final DOMRpcService rpcService;
     private final JsonRpcDatastoreAdapter datastore;
 
-    public RemoteControl(@NonNull final DOMDataBroker domDataBroker, @NonNull final SchemaContext schemaContext,
+    public RemoteControl(@NonNull final DOMDataBroker domDataBroker, @NonNull final EffectiveModelContext schemaContext,
             @NonNull TransportFactory transportFactory, @NonNull final DOMNotificationPublishService publishService,
             @NonNull final DOMRpcService rpcService) {
         this.schemaContext = Objects.requireNonNull(schemaContext);
@@ -130,9 +130,9 @@ public class RemoteControl implements RemoteControlComposite {
                 .orElseThrow(() -> new IllegalArgumentException("No such method " + name));
         final JsonObject wrapper = new JsonObject();
         wrapper.add("input", rpcInput);
-        final NormalizedNode<?, ?> nn = jsonConverter.rpcInputConvert(def, wrapper);
+        final NormalizedNode<?, ?> nn = jsonConverter.rpcInputConvert(def, rpcInput);
         try {
-            final DOMRpcResult out = Uninterruptibles.getUninterruptibly(rpcService.invokeRpc(def.getPath(), nn));
+            final DOMRpcResult out = Uninterruptibles.getUninterruptibly(rpcService.invokeRpc(def.getQName(), nn));
             if (!out.getErrors().isEmpty()) {
                 throw new IllegalStateException("RPC invocation failed : " + out.getErrors());
             }

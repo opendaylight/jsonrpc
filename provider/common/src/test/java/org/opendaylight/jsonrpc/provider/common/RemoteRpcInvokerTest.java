@@ -14,7 +14,6 @@ import com.google.gson.JsonObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.opendaylight.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.jsonrpc.bus.messagelib.DefaultTransportFactory;
 import org.opendaylight.jsonrpc.impl.RemoteControl;
 import org.opendaylight.jsonrpc.model.RemoteRpcInvoker;
@@ -39,7 +38,7 @@ public class RemoteRpcInvokerTest extends AbstractJsonRpcTest {
     @Before
     public void setUp() throws Exception {
         final BindingDOMRpcProviderServiceAdapter rpcAdapter = new BindingDOMRpcProviderServiceAdapter(
-                new ConstantAdapterContext(new BindingCodecContext(BindingRuntimeHelpers.createRuntimeContext())),
+                new ConstantAdapterContext(new BindingCodecContext(getBindingRuntimeContext())),
                 getDOMRpcRouter().getRpcProviderService());
         rpcReg = rpcAdapter.registerRpcImplementation(TestModelService.class, new TestModelServiceImpl());
         getDOMRpcRouter().onModelContextUpdated(schemaContext);

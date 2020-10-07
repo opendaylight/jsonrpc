@@ -20,17 +20,17 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import junit.framework.AssertionFailedError;
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.junit.Rule;
 import org.junit.rules.TestName;
-import org.opendaylight.binding.runtime.api.BindingRuntimeContext;
-import org.opendaylight.binding.runtime.api.DefaultBindingRuntimeContext;
-import org.opendaylight.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.mdsal.binding.api.DataBroker;
 import org.opendaylight.mdsal.binding.dom.adapter.test.AbstractDataBrokerTest;
 import org.opendaylight.mdsal.binding.dom.adapter.test.ConcurrentDataBrokerTestCustomizer;
 import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer;
 import org.opendaylight.mdsal.binding.dom.codec.impl.BindingCodecContext;
+import org.opendaylight.mdsal.binding.runtime.api.BindingRuntimeContext;
+import org.opendaylight.mdsal.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMMountPointService;
@@ -58,7 +58,7 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractJsonRpcTest.class);
     private ConcurrentDataBrokerTestCustomizer testCustomizer;
     private final DOMMountPointService domMountPointService = new DOMMountPointServiceImpl();
-    private DOMNotificationRouter notificationRouter = DOMNotificationRouter.create(4);
+    private final DOMNotificationRouter notificationRouter = DOMNotificationRouter.create(4);
     private DataBroker dataBroker;
     private DOMDataBroker domBroker;
     private DOMRpcRouter rpcRouter;
@@ -67,18 +67,18 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
     @Rule
     public TestName nameRule = new TestName();
     private BindingCodecContext bnnc;
-    private DefaultBindingRuntimeContext runtimeContext;
+    private @NonNull BindingRuntimeContext runtimeContext = BindingRuntimeHelpers.createRuntimeContext();
 
     @Override
-    protected void setupWithSchema(EffectiveModelContext context) {
+    protected void setupWithSchema(final EffectiveModelContext context) {
         this.testCustomizer = new ConcurrentDataBrokerTestCustomizer(true);
         this.dataBroker = this.testCustomizer.createDataBroker();
         this.domBroker = this.testCustomizer.createDOMDataBroker();
-        this.testCustomizer.updateSchema(context);
+        this.testCustomizer.updateSchema(runtimeContext);
         this.schemaContext = context;
         setupWithDataBroker(this.dataBroker);
         rpcRouter = DOMRpcRouter.newInstance(getSchemaService());
-        bnnc = new BindingCodecContext(BindingRuntimeHelpers.createRuntimeContext());
+        bnnc = new BindingCodecContext(runtimeContext);
     }
 
     @Override
@@ -97,13 +97,16 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
         return this.testCustomizer.getSchemaService();
     }
 
-    protected void setupWithDataBroker(DataBroker broker) {
+    @Override
+    protected void setupWithDataBroker(final DataBroker broker) {
     }
 
+    @Override
     public DataBroker getDataBroker() {
         return this.dataBroker;
     }
 
+    @Override
     public DOMDataBroker getDomBroker() {
         return this.domBroker;
     }
@@ -124,7 +127,7 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
         return runtimeContext;
     }
 
-    protected void logTestName(String stage) {
+    protected void logTestName(final String stage) {
         LOG.info("{}", Strings.repeat("=", 80));
         LOG.info("[{}]{}", stage, nameRule.getMethodName());
         LOG.info("{}", Strings.repeat("=", 80));

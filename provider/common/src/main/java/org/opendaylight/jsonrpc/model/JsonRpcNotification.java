@@ -12,23 +12,24 @@ import java.util.Date;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.mdsal.dom.api.DOMEvent;
 import org.opendaylight.mdsal.dom.api.DOMNotification;
+import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
-import org.opendaylight.yangtools.yang.model.api.SchemaPath;
+import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 
 public class JsonRpcNotification implements DOMNotification, DOMEvent {
     private final ContainerNode content;
-    private final SchemaPath schemaPath;
+    private final Absolute schemaPath;
     private final Date eventTime;
 
-    public JsonRpcNotification(final ContainerNode content, final Date eventTime, final SchemaPath schemaPath) {
+    public JsonRpcNotification(final ContainerNode content, final Date eventTime, final QName schemaPath) {
         this.content = content;
         this.eventTime = (Date) eventTime.clone();
-        this.schemaPath = schemaPath;
+        this.schemaPath = Absolute.of(schemaPath);
     }
 
     @NonNull
     @Override
-    public SchemaPath getType() {
+    public Absolute getType() {
         return schemaPath;
 
     }

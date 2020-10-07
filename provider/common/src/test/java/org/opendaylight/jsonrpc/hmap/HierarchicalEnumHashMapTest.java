@@ -12,11 +12,11 @@ import static org.junit.Assert.assertNull;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +96,9 @@ public class HierarchicalEnumHashMapTest {
 
     private String getData(String name) throws IOException {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ByteStreams.copy(getClass().getResourceAsStream("/" + name + ".json"), baos);
-        return baos.toString(StandardCharsets.UTF_8.name());
+        try (InputStream is = getClass().getResourceAsStream("/" + name + ".json")) {
+            is.transferTo(baos);
+        }
+        return baos.toString(StandardCharsets.UTF_8);
     }
 }

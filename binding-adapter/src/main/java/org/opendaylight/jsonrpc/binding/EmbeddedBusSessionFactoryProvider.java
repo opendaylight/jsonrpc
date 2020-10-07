@@ -52,7 +52,7 @@ public class EmbeddedBusSessionFactoryProvider implements BusSessionFactoryProvi
                 LOG.debug("Loading BusSessionFactories from {}", current);
                 final ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 Resources.copy(current, baos);
-                final List<String> classes = LINE_SPLITTER.splitToList(baos.toString(StandardCharsets.UTF_8.name()))
+                final List<String> classes = LINE_SPLITTER.splitToList(baos.toString(StandardCharsets.UTF_8))
                         .stream()
                         .filter(s -> !"".equals(s.trim()))
                         .filter(s -> !s.trim().startsWith("#"))
