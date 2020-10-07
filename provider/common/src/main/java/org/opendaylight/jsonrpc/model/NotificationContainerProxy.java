@@ -23,12 +23,13 @@ import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.GroupingDefinition;
 import org.opendaylight.yangtools.yang.model.api.MustDefinition;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
-import org.opendaylight.yangtools.yang.model.api.RevisionAwareXPath;
 import org.opendaylight.yangtools.yang.model.api.SchemaPath;
 import org.opendaylight.yangtools.yang.model.api.Status;
 import org.opendaylight.yangtools.yang.model.api.TypeDefinition;
 import org.opendaylight.yangtools.yang.model.api.UnknownSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.UsesNode;
+import org.opendaylight.yangtools.yang.model.api.stmt.ContainerEffectiveStatement;
+import org.opendaylight.yangtools.yang.xpath.api.YangXPathExpression.QualifiedBound;
 
 /**
  * Simple proxy for container like schema nodes, where user provides a collection of children schema nodes.
@@ -119,7 +120,7 @@ public final class NotificationContainerProxy implements ContainerSchemaNode {
     }
 
     @Override
-    public Optional<DataSchemaNode> findDataChildByName(QName name) {
+    public Optional<DataSchemaNode> findDataChildByName(final QName name) {
         return Optional.empty();
     }
 
@@ -134,7 +135,7 @@ public final class NotificationContainerProxy implements ContainerSchemaNode {
     }
 
     @Override
-    public Optional<RevisionAwareXPath> getWhenCondition() {
+    public Optional<? extends QualifiedBound> getWhenCondition() {
         return Optional.empty();
     }
 
@@ -151,5 +152,10 @@ public final class NotificationContainerProxy implements ContainerSchemaNode {
     @Override
     public Collection<MustDefinition> getMustConstraints() {
         return Collections.emptyList();
+    }
+
+    @Override
+    public ContainerEffectiveStatement asEffectiveStatement() {
+        throw new UnsupportedOperationException();
     }
 }
