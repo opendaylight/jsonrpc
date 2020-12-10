@@ -66,7 +66,6 @@ import org.opendaylight.mdsal.dom.api.DOMMountPoint;
 import org.opendaylight.mdsal.dom.api.DOMMountPointService;
 import org.opendaylight.mdsal.dom.api.DOMRpcResult;
 import org.opendaylight.mdsal.dom.api.DOMRpcService;
-import org.opendaylight.mdsal.eos.dom.simple.SimpleDOMEntityOwnershipService;
 import org.opendaylight.mdsal.singleton.common.api.ClusterSingletonServiceProvider;
 import org.opendaylight.mdsal.singleton.common.api.ClusterSingletonServiceRegistration;
 import org.opendaylight.mdsal.singleton.dom.impl.DOMClusterSingletonServiceProviderImpl;
@@ -128,8 +127,7 @@ public class MountpointTest {
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
-        clusterSingletonServiceProvider = new DOMClusterSingletonServiceProviderImpl(
-                new SimpleDOMEntityOwnershipService());
+        clusterSingletonServiceProvider = new DOMClusterSingletonServiceProviderImpl();
         clusterSingletonServiceProvider.initializeProvider();
 
         final YangXPathParserFactory yangXPathParserFactory = ServiceLoader
