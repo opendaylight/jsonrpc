@@ -27,10 +27,10 @@ import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.opendaylight.jsonrpc.bus.messagelib.AbstractTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.MockTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
-import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.impl.AbstractInbandModelsService;
 import org.opendaylight.jsonrpc.model.GovernanceProvider;
 import org.opendaylight.jsonrpc.model.InbandModelsService;
@@ -73,11 +73,11 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     private static final RemoteGovernance GOVERNANCE_MOCK = new MockGovernance();
     private int governancePort;
     private int dummyPort;
-    private TransportFactory tf;
+    private AbstractTransportFactory tf;
 
     @Before
     public void setUp() throws URISyntaxException, InterruptedException, ExecutionException {
-        tf = mock(TransportFactory.class);
+        tf = mock(AbstractTransportFactory.class);
 
         when(tf.createRequesterProxy(eq(InbandModelsService.class), anyString(), anyBoolean()))
                 .thenReturn(new AbstractInbandModelsService() {

@@ -27,8 +27,8 @@ import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.opendaylight.jsonrpc.bus.messagelib.AbstractTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.MockTransportFactory;
-import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
@@ -65,13 +65,13 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     private MutablePeer peer;
     private RemoteGovernance governance;
     private RemoteOmShard shard;
-    private TransportFactory transportFactory;
+    private AbstractTransportFactory transportFactory;
     private final HierarchicalEnumMap<JsonElement, DataType, String> pathMap = HierarchicalEnumHashMap
             .create(DataType.class, JsonPathCodec.create());
 
     @Before
     public void setUp() throws URISyntaxException {
-        transportFactory = mock(TransportFactory.class);
+        transportFactory = mock(AbstractTransportFactory.class);
         shard = new RemoteControl(getDomBroker(), schemaContext, transportFactory,
                 mock(DOMNotificationPublishService.class), mock(DOMRpcService.class), codecFactory);
         peer = new MutablePeer();

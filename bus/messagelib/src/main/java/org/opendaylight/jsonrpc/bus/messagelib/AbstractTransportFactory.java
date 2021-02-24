@@ -57,14 +57,12 @@ public abstract class AbstractTransportFactory implements TransportFactory {
         return proxy.createPublisherProxy(uri.toString(), clazz, skipCache);
     }
 
-    @Override
-    public <T extends AutoCloseable> T createPublisherProxy(Class<T> clazz, String rawUri)
+    protected <T extends AutoCloseable> T createPublisherProxy(Class<T> clazz, String rawUri)
             throws URISyntaxException {
         return createPublisherProxy(clazz, rawUri, true);
     }
 
-    @Override
-    public <T extends AutoCloseable> T createRequesterProxy(Class<T> clazz, String rawUri)
+    protected <T extends AutoCloseable> T createRequesterProxy(Class<T> clazz, String rawUri)
             throws URISyntaxException {
         return createRequesterProxy(clazz, rawUri, true);
     }
@@ -79,8 +77,7 @@ public abstract class AbstractTransportFactory implements TransportFactory {
         return proxy.createRequesterProxy(uri.toString(), clazz, skipCache);
     }
 
-    @Override
-    public <T extends AutoCloseable> ResponderSession createResponder(String rawUri, T handler)
+    protected <T extends AutoCloseable> ResponderSession createResponder(String rawUri, T handler)
             throws URISyntaxException {
         return createResponder(rawUri, handler, true);
     }
@@ -94,8 +91,7 @@ public abstract class AbstractTransportFactory implements TransportFactory {
                 skipCache);
     }
 
-    @Override
-    public <T extends AutoCloseable> SubscriberSession createSubscriber(String rawUri, T handler)
+    protected <T extends AutoCloseable> SubscriberSession createSubscriber(String rawUri, T handler)
             throws URISyntaxException {
         return createSubscriber(rawUri, handler, true);
     }
@@ -109,8 +105,7 @@ public abstract class AbstractTransportFactory implements TransportFactory {
                 skipCache);
     }
 
-    @Override
-    public RequesterSession createRequester(String rawUri, ReplyMessageHandler handler) throws URISyntaxException {
+    protected RequesterSession createRequester(String rawUri, ReplyMessageHandler handler) throws URISyntaxException {
         return createRequester(rawUri, handler, true);
     }
 

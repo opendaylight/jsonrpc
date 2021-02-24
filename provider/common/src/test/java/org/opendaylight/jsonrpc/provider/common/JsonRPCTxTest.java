@@ -40,8 +40,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.opendaylight.jsonrpc.bus.messagelib.AbstractTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.MockTransportFactory;
-import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumHashMap;
@@ -84,7 +84,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
     private JsonRPCTx trx;
     private JsonRpcCodecFactory codec;
     private RemoteOmShard om;
-    private TransportFactory transportFactory;
+    private AbstractTransportFactory transportFactory;
     private HierarchicalEnumMap<JsonElement, DataType, String> pathMap;
 
     @Before
@@ -92,7 +92,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         pathMap = HierarchicalEnumHashMap.create(DataType.class, JsonPathCodec.create());
         pathMap.put(new JsonObject(), DataType.CONFIGURATION_DATA, ENDPOINT);
         pathMap.put(new JsonObject(), DataType.OPERATIONAL_DATA, ENDPOINT);
-        transportFactory = mock(TransportFactory.class);
+        transportFactory = mock(AbstractTransportFactory.class);
         om = mock(RemoteOmShard.class);
         doReturn(om).when(transportFactory).createRequesterProxy(any(), anyString(), anyBoolean());
         codec = new JsonRpcCodecFactory(schemaContext);

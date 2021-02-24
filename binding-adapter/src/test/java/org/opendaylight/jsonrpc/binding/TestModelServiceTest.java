@@ -65,7 +65,7 @@ public class TestModelServiceTest {
                 TestHelper.getBindUri("ws", port));
         proxy = transportFactory.createBindingRequesterProxy(TestModelRpcService.class,
                 TestHelper.getConnectUri("ws", port));
-        requester = transportFactory.createRequester(TestHelper.getConnectUri("ws", port),
+        requester = transportFactory.endpointBuilder().requester().create(TestHelper.getConnectUri("ws", port),
                 NoopReplyMessageHandler.INSTANCE);
         TimeUnit.MILLISECONDS.sleep(150);
     }

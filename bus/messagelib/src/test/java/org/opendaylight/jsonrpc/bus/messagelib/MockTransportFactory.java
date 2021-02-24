@@ -17,11 +17,10 @@ import java.net.URISyntaxException;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jan 20, 2019
  */
-@SuppressWarnings("deprecation")
 public class MockTransportFactory extends AbstractTransportFactory {
-    protected final TransportFactory delegate;
+    protected final AbstractTransportFactory delegate;
 
-    public MockTransportFactory(TransportFactory delegate) {
+    public MockTransportFactory(AbstractTransportFactory delegate) {
         super(TcclBusSessionFactoryProvider.getInstance());
         this.delegate = delegate;
     }

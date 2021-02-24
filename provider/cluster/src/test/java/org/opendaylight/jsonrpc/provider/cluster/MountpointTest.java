@@ -41,10 +41,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.opendaylight.controller.cluster.ActorSystemProvider;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
+import org.opendaylight.jsonrpc.bus.messagelib.AbstractTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.MockTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.ReplyMessageHandler;
 import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
-import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.impl.JsonRpcDatastoreAdapter;
 import org.opendaylight.jsonrpc.model.GovernanceProvider;
@@ -108,7 +108,7 @@ public class MountpointTest {
             .build();
     private static final DataTreeIdentifier<ActualEndpoints> PEER_OP_DTI = DataTreeIdentifier
             .create(LogicalDatastoreType.OPERATIONAL, MOCK_PEER_OP_ID);
-    private @Mock TransportFactory transportFactory;
+    private @Mock AbstractTransportFactory transportFactory;
     private DOMClusterSingletonServiceProviderImpl clusterSingletonServiceProvider;
     private @Mock ClusterSingletonServiceProvider mockClusterSingletonServiceProvider;
     private @Mock ActorSystemProvider masterActorSystemProvider;
