@@ -68,10 +68,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-common</artifactId>
             <scope>provided</scope>
@@ -85,10 +81,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.jsonrpc.bus</groupId>
