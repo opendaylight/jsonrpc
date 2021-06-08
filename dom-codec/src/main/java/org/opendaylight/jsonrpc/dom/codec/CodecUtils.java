@@ -43,9 +43,8 @@ public final class CodecUtils {
      * @param data actual data to serialize into {@link JsonElement}
      * @return serialized data, possibly <code>null</code>
      */
-    @Nullable
-    public static JsonElement encodeUnchecked(JsonRpcCodecFactory codecFactory, YangInstanceIdentifier path,
-            NormalizedNode<?, ?> data) {
+    public static @Nullable JsonElement encodeUnchecked(JsonRpcCodecFactory codecFactory, YangInstanceIdentifier path,
+            NormalizedNode data) {
         try {
             return codecFactory.dataCodec(path).serialize(data);
         } catch (IOException e) {
@@ -61,8 +60,8 @@ public final class CodecUtils {
      * @param data actual data to deserialize into {@link NormalizedNode}
      * @return deserialized data, possibly <code>null</code>
      */
-    @Nullable
-    public static NormalizedNode<?, ?> decodeUnchecked(JsonRpcCodecFactory codecFactory,
+
+    public static @Nullable NormalizedNode decodeUnchecked(JsonRpcCodecFactory codecFactory,
             YangInstanceIdentifier path, JsonElement data) {
         try {
             return codecFactory.dataCodec(path).deserialize(data);
