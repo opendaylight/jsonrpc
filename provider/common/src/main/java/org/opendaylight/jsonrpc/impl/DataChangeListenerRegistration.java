@@ -48,7 +48,7 @@ public class DataChangeListenerRegistration
     private final ListenerRegistration<DataChangeListenerRegistration> delegate;
     private final JsonRpcCodecFactory codecFactory;
     private final Consumer<ListenerKey> closeCallback;
-    private ListenerKey listenerKey;
+    private final ListenerKey listenerKey;
 
     public DataChangeListenerRegistration(@NonNull YangInstanceIdentifier path,
             @NonNull Consumer<ListenerKey> closeCallback, @NonNull final DOMDataBroker domDataBroker,
@@ -81,6 +81,11 @@ public class DataChangeListenerRegistration
     @Override
     public DOMDataTreeChangeListener getInstance() {
         return this;
+    }
+
+    @Override
+    public void onInitialData() {
+        // TODO: do something?
     }
 
     @Override

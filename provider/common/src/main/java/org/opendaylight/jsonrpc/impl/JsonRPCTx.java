@@ -52,7 +52,7 @@ public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFac
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCTx.class);
     private static final Function<String, RpcError> ERROR_MAPPER = msg -> RpcResultBuilder
             .newError(ErrorType.APPLICATION, "commit", msg);
-    private static final FluentFuture<Optional<NormalizedNode<?, ?>>> NO_DATA = FluentFutures
+    private static final FluentFuture<Optional<NormalizedNode>> NO_DATA = FluentFutures
             .immediateFluentFuture(Optional.empty());
     /* Keep track of TX id to given endpoint (key is endpoint, value is TX ID) */
     private final Map<String, String> txIdMap;
@@ -92,31 +92,28 @@ public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFac
     }
 
     @Override
-    public FluentFuture<Optional<NormalizedNode<?, ?>>> read(final LogicalDatastoreType store,
+    public FluentFuture<Optional<NormalizedNode>> read(final LogicalDatastoreType store,
             final YangInstanceIdentifier path) {
         LOG.debug("[{}][read] store={}, path={}", peer.getName(), store, path);
         if (path.getPathArguments().isEmpty()) {
             return NO_DATA;
         }
         final JsonObject jsonPath = pathCodec.serialize(path);
-        return withRemoteShard(store, jsonPath, shard -> {
-            return immediateFluentFuture(Optional.ofNullable(CodecUtils.decodeUnchecked(codecFactory, path,
-                    shard.read(store2str(store2int(store)), peer.getName(), jsonPath))));
-        });
+        return withRemoteShard(store, jsonPath,
+                shard -> immediateFluentFuture(Optional.ofNullable(CodecUtils.decodeUnchecked(codecFactory, path,
+                            shard.read(store2str(store2int(store)), peer.getName(), jsonPath)))));
     }
 
     @Override
     public FluentFuture<Boolean> exists(LogicalDatastoreType store, YangInstanceIdentifier path) {
         LOG.debug("[{}][exists] store={}, path={}", peer.getName(), store, path);
         final JsonObject jsonPath = pathCodec.serialize(path);
-        return withRemoteShard(store, jsonPath, shard -> {
-            return immediateFluentFuture(shard.exists(store2str(store2int(store)), peer.getName(), jsonPath));
-        });
+        return withRemoteShard(store, jsonPath,
+                shard -> immediateFluentFuture(shard.exists(store2str(store2int(store)), peer.getName(), jsonPath)));
     }
 
     @Override
-    public void put(final LogicalDatastoreType store, final YangInstanceIdentifier path,
-            final NormalizedNode<?, ?> data) {
+    public void put(final LogicalDatastoreType store, final YangInstanceIdentifier path, final NormalizedNode data) {
         LOG.debug("[{}][put] store={}, path={}, data={}", peer.getName(), store, path, data);
         final JsonObject jsonPath = pathCodec.serialize(path);
         final JsonElement jsonData = CodecUtils.encodeUnchecked(codecFactory, path, data);
@@ -128,8 +125,7 @@ public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFac
     }
 
     @Override
-    public void merge(final LogicalDatastoreType store, final YangInstanceIdentifier path,
-            final NormalizedNode<?, ?> data) {
+    public void merge(final LogicalDatastoreType store, final YangInstanceIdentifier path, final NormalizedNode data) {
         LOG.debug("[{}][merge] store={}, path={}, data={}", peer.getName(), store, path, data);
         final JsonObject jsonPath = pathCodec.serialize(path);
         final JsonElement jsonData = CodecUtils.encodeUnchecked(codecFactory, path, data);

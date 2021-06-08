@@ -23,7 +23,7 @@ import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.opendaylight.yangtools.yang.model.api.stmt.ModuleEffectiveStatement;
-import org.opendaylight.yangtools.yang.model.util.SimpleSchemaContext;
+import org.opendaylight.yangtools.yang.model.spi.SimpleSchemaContext;
 
 /**
  * {@link SchemaContextProvider} which uses global {@link SchemaContext}. This implementation only validates that

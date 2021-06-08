@@ -95,8 +95,7 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent implement
     }
 
     @Override
-    public ListenableFuture<DOMRpcResult> invokeRpc(@NonNull final QName type,
-            @Nullable final NormalizedNode<?, ?> input) {
+    public ListenableFuture<DOMRpcResult> invokeRpc(@NonNull final QName type, @Nullable final NormalizedNode input) {
         if (closed.get()) {
             return bridgeNotAvailable();
         }

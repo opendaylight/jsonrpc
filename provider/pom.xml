@@ -104,7 +104,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         </dependency>
         <dependency>
             <groupId>org.opendaylight.mdsal</groupId>
-            <artifactId>mdsal-binding-generator-impl</artifactId>
+            <artifactId>mdsal-binding-generator</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -199,10 +199,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <artifactId>bus-messagelib</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.jsonrpc</groupId>

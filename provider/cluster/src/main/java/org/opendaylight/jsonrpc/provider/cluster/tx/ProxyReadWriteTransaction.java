@@ -72,10 +72,10 @@ public class ProxyReadWriteTransaction implements DOMDataTreeReadWriteTransactio
     }
 
     @Override
-    public FluentFuture<Optional<NormalizedNode<?, ?>>> read(final LogicalDatastoreType store,
+    public FluentFuture<Optional<NormalizedNode>> read(final LogicalDatastoreType store,
             final YangInstanceIdentifier path) {
         LOG.debug("[{}] Read {} {}", name, store, path);
-        final SettableFuture<Optional<NormalizedNode<?, ?>>> returnFuture = SettableFuture.create();
+        final SettableFuture<Optional<NormalizedNode>> returnFuture = SettableFuture.create();
         performAction(facade -> returnFuture.setFuture(facade.read(store, path)), "read");
         return FluentFuture.from(returnFuture);
     }
@@ -96,16 +96,14 @@ public class ProxyReadWriteTransaction implements DOMDataTreeReadWriteTransactio
     }
 
     @Override
-    public void put(final LogicalDatastoreType store, final YangInstanceIdentifier path,
-            final NormalizedNode<?, ?> data) {
+    public void put(final LogicalDatastoreType store, final YangInstanceIdentifier path, final NormalizedNode data) {
         checkOpen();
         LOG.debug("[{}] Put {} {}", name, store, path);
         performAction(facade -> facade.put(store, path, data), "put");
     }
 
     @Override
-    public void merge(final LogicalDatastoreType store, final YangInstanceIdentifier path,
-            final NormalizedNode<?, ?> data) {
+    public void merge(final LogicalDatastoreType store, final YangInstanceIdentifier path, final NormalizedNode data) {
         checkOpen();
         LOG.debug("[{}] Merge {} {}", name, store, path);
         performAction(facade -> facade.merge(store, path, data), "merge");

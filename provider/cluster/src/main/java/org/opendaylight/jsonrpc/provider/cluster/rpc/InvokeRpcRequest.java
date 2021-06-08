@@ -19,7 +19,7 @@ public class InvokeRpcRequest implements Serializable {
     private SchemaPathMsg schemaPath;
     private PathAndDataMsg data;
 
-    public static InvokeRpcRequest create(Absolute path, NormalizedNode<?, ?> input) {
+    public static InvokeRpcRequest create(Absolute path, NormalizedNode input) {
         final PathAndDataMsg data;
         if (input != null) {
             data = new PathAndDataMsg(YangInstanceIdentifier.empty(), input);

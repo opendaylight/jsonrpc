@@ -35,7 +35,7 @@ public class DataCodecTest extends AbstractCodecTest {
         final YangInstanceIdentifier path = factory.pathCodec()
                 .deserialize(JsonRpcPathBuilder.newBuilder("network-topology:network-topology").build());
 
-        final NormalizedNode<?, ?> data = factory.dataCodec(path).deserialize(parsed);
+        final NormalizedNode data = factory.dataCodec(path).deserialize(parsed);
         dumpNormalizedNode(data);
 
         JsonElement encoded = factory.dataCodec(path).serialize(data);
@@ -67,7 +67,7 @@ public class DataCodecTest extends AbstractCodecTest {
                         .build());
 
         dumpYangPath(path);
-        final NormalizedNode<?, ?> data = factory.dataCodec(path).deserialize(parsed);
+        final NormalizedNode data = factory.dataCodec(path).deserialize(parsed);
         dumpNormalizedNode(data);
 
         JsonElement encoded = factory.dataCodec(path).serialize(data);
@@ -78,7 +78,7 @@ public class DataCodecTest extends AbstractCodecTest {
     public void testEncodeContainer() throws IOException {
         YangInstanceIdentifier path = YangInstanceIdentifier.of(NetworkTopology.QNAME);
         dumpYangPath(path);
-        NormalizedNode<?, ?> data = loadDomData("topo2.json", path);
+        NormalizedNode data = loadDomData("topo2.json", path);
         // Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = mockTopology();
 
         final JsonObject jsonPath = factory.pathCodec().serialize(path);
