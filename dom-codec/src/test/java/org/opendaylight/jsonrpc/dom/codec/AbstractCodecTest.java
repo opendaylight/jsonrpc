@@ -64,7 +64,7 @@ public abstract class AbstractCodecTest extends AbstractDataBrokerTest {
         }
     }
 
-    protected NormalizedNode<?, ?> loadDomData(String name, YangInstanceIdentifier path) throws IOException {
+    protected NormalizedNode loadDomData(String name, YangInstanceIdentifier path) throws IOException {
 
         final DataSchemaContextNode<?> dataSchemaContextNode = DataSchemaContextTree.from(schemaContext)
                 .findChild(path)
@@ -109,21 +109,21 @@ public abstract class AbstractCodecTest extends AbstractDataBrokerTest {
 
     }
 
-    protected static void dumpNormalizedNode(NormalizedNode<?, ?> node) {
+    protected static void dumpNormalizedNode(NormalizedNode node) {
         StringWriter sw = new StringWriter();
         dumpNormalizedNode(node, sw, 1);
         LOG.info("Normalized node content : \n{}", sw.toString());
     }
 
-    protected static void dumpNormalizedNode(NormalizedNode<?, ?> nn, StringWriter sw, int level) {
+    protected static void dumpNormalizedNode(NormalizedNode nn, StringWriter sw, int level) {
         sw.write(Strings.repeat(" ", (level - 1) * 2));
-        sw.write(nn.getValue().getClass().getSimpleName());
+        sw.write(nn.body().getClass().getSimpleName());
         sw.write(" : ");
         sw.write(nn.getIdentifier().toString());
         sw.write("\n");
-        if (nn.getValue() instanceof Collection) {
-            for (Object e : (Collection<?>) nn.getValue()) {
-                dumpNormalizedNode((NormalizedNode<?, ?>) e, sw, level + 1);
+        if (nn.body() instanceof Collection) {
+            for (Object e : (Collection<?>) nn.body()) {
+                dumpNormalizedNode((NormalizedNode) e, sw, level + 1);
             }
         }
     }

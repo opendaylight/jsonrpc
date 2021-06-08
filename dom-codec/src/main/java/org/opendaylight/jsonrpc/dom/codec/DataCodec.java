@@ -46,7 +46,7 @@ import org.opendaylight.yangtools.yang.model.util.SchemaContextUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class DataCodec extends AbstractCodec implements Codec<JsonElement, NormalizedNode<?, ?>, IOException> {
+class DataCodec extends AbstractCodec implements Codec<JsonElement, NormalizedNode, IOException> {
     private static final Logger LOG = LoggerFactory.getLogger(DataCodec.class);
     private final YangInstanceIdentifier path;
     private final DataSchemaNode dataSchemaNode;
@@ -96,7 +96,7 @@ class DataCodec extends AbstractCodec implements Codec<JsonElement, NormalizedNo
 
     @Nullable
     @Override
-    public NormalizedNode<?, ?> deserialize(JsonElement input) throws IOException {
+    public NormalizedNode deserialize(JsonElement input) throws IOException {
         LOG.trace("[Decode] input : {}", input);
         if (input == null || input.isJsonNull()) {
             return returnResult(null);
@@ -104,20 +104,20 @@ class DataCodec extends AbstractCodec implements Codec<JsonElement, NormalizedNo
         return returnResult(deserializeWrapped(new DecoderPathWalker(context, path, input).walk()));
     }
 
-    private NormalizedNode<?, ?> returnResult(NormalizedNode<?, ?> result) {
+    private NormalizedNode returnResult(NormalizedNode result) {
         LOG.trace("[Decode] result : {}", result);
         return result;
     }
 
-    private NormalizedNode<?, ?> deserializeWrapped(JsonObject input) throws IOException {
+    private NormalizedNode deserializeWrapped(JsonObject input) throws IOException {
         final NormalizedNodeResult resultHolder = new NormalizedNodeResult();
         final NormalizedNodeStreamWriter writer = ImmutableNormalizedNodeStreamWriter.from(resultHolder);
         try (JsonParserStream jsonParser = JsonParserStream.create(writer, jsonCodec(), parentSchemaNode)) {
             jsonParser.parse(JsonReaderAdapter.from(input));
         }
-        NormalizedNode<?, ?> result = resultHolder.getResult();
-        if (result instanceof MapNode && !((MapNode) result).getValue().isEmpty()) {
-            result = Iterables.getOnlyElement(((MapNode) result).getValue());
+        NormalizedNode result = resultHolder.getResult();
+        if (result instanceof MapNode && !((MapNode) result).isEmpty()) {
+            result = Iterables.getOnlyElement(((MapNode) result).body());
         }
         return result;
     }
@@ -151,7 +151,7 @@ class DataCodec extends AbstractCodec implements Codec<JsonElement, NormalizedNo
 
     @Nullable
     @Override
-    public JsonElement serialize(NormalizedNode<?, ?> input) throws IOException {
+    public JsonElement serialize(NormalizedNode input) throws IOException {
         LOG.trace("[Decode] input : {}", input);
         if (input == null) {
             return null;
@@ -186,7 +186,7 @@ class DataCodec extends AbstractCodec implements Codec<JsonElement, NormalizedNo
      * @return data converted as a JsonObject
      * @throws IOException if underlying JSON codec raises error
      */
-    private JsonObject encode(NormalizedNode<?, ?> data) throws IOException {
+    private JsonObject encode(NormalizedNode data) throws IOException {
         try (StringWriter writer = new StringWriter();
                 JsonWriter jsonWriter = JsonWriterFactory.createJsonWriter(writer)) {
             final JSONCodecFactory codecFactory = jsonCodec();
@@ -195,7 +195,9 @@ class DataCodec extends AbstractCodec implements Codec<JsonElement, NormalizedNo
             try (NormalizedNodeWriter nodeWriter = NormalizedNodeWriter.forStreamWriter(jsonStream)) {
                 jsonWriter.beginObject();
                 if (data instanceof MapEntryNode) {
-                    nodeWriter.write(mapNodeBuilder(data.getNodeType()).withChild((MapEntryNode) data).build());
+                    nodeWriter.write(mapNodeBuilder(data.getIdentifier().getNodeType())
+                        .withChild((MapEntryNode) data)
+                        .build());
                 } else {
                     nodeWriter.write(data);
                 }
