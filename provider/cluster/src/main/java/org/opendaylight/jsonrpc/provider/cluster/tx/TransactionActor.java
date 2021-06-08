@@ -90,9 +90,9 @@ public final class TransactionActor extends UntypedAbstractActor {
     }
 
     private void read(final YangInstanceIdentifier path, final LogicalDatastoreType store) {
-        tx.read(store, path).addCallback(new FutureCallback<Optional<NormalizedNode<?, ?>>>() {
+        tx.read(store, path).addCallback(new FutureCallback<Optional<NormalizedNode>>() {
             @Override
-            public void onSuccess(final Optional<NormalizedNode<?, ?>> result) {
+            public void onSuccess(final Optional<NormalizedNode> result) {
                 if (!result.isPresent()) {
                     sender().tell(new EmptyReadResponse(), self());
                 } else {

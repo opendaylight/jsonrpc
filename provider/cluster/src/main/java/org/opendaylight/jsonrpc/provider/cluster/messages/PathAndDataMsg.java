@@ -18,17 +18,17 @@ import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 
 public class PathAndDataMsg implements Externalizable {
     private YangInstanceIdentifier path;
-    private NormalizedNode<?, ?> data;
+    private NormalizedNode data;
 
     public PathAndDataMsg() {
         // default ctor is required
     }
 
-    public PathAndDataMsg(NormalizedNode<?, ?> data) {
+    public PathAndDataMsg(NormalizedNode data) {
         this(YangInstanceIdentifier.empty(), data);
     }
 
-    public PathAndDataMsg(@NonNull YangInstanceIdentifier path, @NonNull NormalizedNode<?, ?> data) {
+    public PathAndDataMsg(@NonNull YangInstanceIdentifier path, @NonNull NormalizedNode data) {
         this.path = path;
         this.data = data;
     }
@@ -37,7 +37,7 @@ public class PathAndDataMsg implements Externalizable {
         return path;
     }
 
-    public NormalizedNode<?, ?> getData() {
+    public NormalizedNode getData() {
         return data;
     }
 

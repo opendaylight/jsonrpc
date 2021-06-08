@@ -14,16 +14,17 @@ import java.util.function.Supplier;
 import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.NodeIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
+import org.opendaylight.yangtools.yang.data.api.schema.builder.DataContainerNodeBuilder;
 import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNodes;
-import org.opendaylight.yangtools.yang.data.impl.schema.builder.api.DataContainerNodeBuilder;
 import org.opendaylight.yangtools.yang.model.api.ContainerLike;
 import org.opendaylight.yangtools.yang.model.api.DataNodeContainer;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 import org.opendaylight.yangtools.yang.model.api.SchemaNode;
 import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
+import org.opendaylight.yangtools.yang.model.util.SchemaInferenceStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +65,8 @@ class RpcCodec extends RpcNotificationBaseCodec<ContainerNode> {
         final DataContainerNodeBuilder<NodeIdentifier, ContainerNode> builder = createNodeBuilder(
                 path.lastNodeIdentifier());
         try (NormalizedNodeStreamWriter writer = createWriter(builder);
-                JsonParserStream jsonParser = JsonParserStream.create(writer, jsonCodec(), (SchemaNode) schema)) {
+                JsonParserStream jsonParser = JsonParserStream.create(writer, jsonCodec(),
+                    SchemaInferenceStack.ofSchemaPath(context, ((SchemaNode) schema).getPath()).toInference())) {
             jsonParser.parse(JsonReaderAdapter.from(input));
             return builder.build();
         }

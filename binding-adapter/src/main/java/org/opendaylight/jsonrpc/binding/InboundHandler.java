@@ -120,7 +120,7 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
             final Method method) throws IOException {
         final Object[] args;
         if (method.getParameterCount() == 1) {
-            final NormalizedNode<?, ?> nn = adapter.converter()
+            final NormalizedNode nn = adapter.converter()
                     .get()
                     .rpcInputCodec(rpcDefEntry.getKey())
                     .deserialize(wrapper);

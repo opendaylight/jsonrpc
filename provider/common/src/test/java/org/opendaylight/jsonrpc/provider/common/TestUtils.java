@@ -8,8 +8,6 @@
 package org.opendaylight.jsonrpc.provider.common;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map.Entry;
@@ -19,15 +17,12 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TpId;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.TopologyBuilder;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.NodeBuilder;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPoint;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPointBuilder;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPointKey;
-import org.opendaylight.yangtools.yang.binding.Identifiable;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yangtools.yang.binding.util.BindingMap;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 
@@ -47,27 +42,27 @@ public final class TestUtils {
     public static NetworkTopology getMockTopology() {
         //@formatter:off
         return new NetworkTopologyBuilder()
-            .setTopology(Maps.uniqueIndex(Lists.<Topology>newArrayList(
+            .setTopology(BindingMap.of(
                     new TopologyBuilder()
                         .setServerProvided(true)
                         .setTopologyId(new TopologyId("topo1"))
-                        .setNode(Maps.uniqueIndex(Lists.<Node>newArrayList(
+                        .setNode(BindingMap.of(
                             new NodeBuilder()
                                 .setNodeId(new NodeId("node1"))
-                                .setTerminationPoint(Maps.uniqueIndex(Lists.<TerminationPoint>newArrayList(
+                                .setTerminationPoint(BindingMap.of(
                                         new TerminationPointBuilder()
                                         .withKey(new TerminationPointKey(new TpId("eth0")))
                                         .build()
-                                        ), Identifiable::key))
+                                        ))
                                 .build()
-                            ), Identifiable::key))
+                            ))
                         .build()
-                    ), Identifiable::key))
+                    ))
             .build();
         //@formatter:on
     }
 
-    public static Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> getMockTopologyAsDom(
+    public static Entry<YangInstanceIdentifier, NormalizedNode> getMockTopologyAsDom(
             BindingNormalizedNodeSerializer codec) {
         final NetworkTopology nt = getMockTopology();
         return codec.toNormalizedNode(InstanceIdentifier.create(NetworkTopology.class), nt);

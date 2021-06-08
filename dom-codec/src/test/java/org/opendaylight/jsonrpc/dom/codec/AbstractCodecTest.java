@@ -32,11 +32,8 @@ import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeS
 import org.opendaylight.yangtools.yang.data.impl.schema.NormalizedNodeResult;
 import org.opendaylight.yangtools.yang.data.util.DataSchemaContextNode;
 import org.opendaylight.yangtools.yang.data.util.DataSchemaContextTree;
-import org.opendaylight.yangtools.yang.model.api.DataSchemaNode;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
-import org.opendaylight.yangtools.yang.model.api.SchemaNode;
-import org.opendaylight.yangtools.yang.model.api.SchemaPath;
-import org.opendaylight.yangtools.yang.model.util.SchemaContextUtil;
+import org.opendaylight.yangtools.yang.model.util.SchemaInferenceStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,20 +61,17 @@ public abstract class AbstractCodecTest extends AbstractDataBrokerTest {
         }
     }
 
-    protected NormalizedNode<?, ?> loadDomData(String name, YangInstanceIdentifier path) throws IOException {
-
+    protected NormalizedNode loadDomData(String name, YangInstanceIdentifier path) throws IOException {
         final DataSchemaContextNode<?> dataSchemaContextNode = DataSchemaContextTree.from(schemaContext)
                 .findChild(path)
                 .orElseThrow(() -> new IllegalStateException("No such child : " + path));
 
-        DataSchemaNode dataSchemaNode = dataSchemaContextNode.getDataSchemaNode();
-        SchemaNode parentSchemaNode = SchemaPath.ROOT.equals(dataSchemaNode.getPath().getParent()) ? schemaContext
-                : SchemaContextUtil.findDataSchemaNode(schemaContext, dataSchemaNode.getPath().getParent());
-
         final NormalizedNodeResult resultHolder = new NormalizedNodeResult();
         final NormalizedNodeStreamWriter writer = ImmutableNormalizedNodeStreamWriter.from(resultHolder);
         try (JsonParserStream jsonParser = JsonParserStream.create(writer,
-                JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext), parentSchemaNode)) {
+                JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext),
+                SchemaInferenceStack.ofSchemaPath(schemaContext,
+                    dataSchemaContextNode.getDataSchemaNode().getPath().getParent()).toInference())) {
             jsonParser.parse(JsonReaderAdapter.from(loadJsonData(name)));
             return resultHolder.getResult();
         }
@@ -109,21 +103,21 @@ public abstract class AbstractCodecTest extends AbstractDataBrokerTest {
 
     }
 
-    protected static void dumpNormalizedNode(NormalizedNode<?, ?> node) {
+    protected static void dumpNormalizedNode(NormalizedNode node) {
         StringWriter sw = new StringWriter();
         dumpNormalizedNode(node, sw, 1);
         LOG.info("Normalized node content : \n{}", sw.toString());
     }
 
-    protected static void dumpNormalizedNode(NormalizedNode<?, ?> nn, StringWriter sw, int level) {
+    protected static void dumpNormalizedNode(NormalizedNode nn, StringWriter sw, int level) {
         sw.write(Strings.repeat(" ", (level - 1) * 2));
-        sw.write(nn.getValue().getClass().getSimpleName());
+        sw.write(nn.body().getClass().getSimpleName());
         sw.write(" : ");
         sw.write(nn.getIdentifier().toString());
         sw.write("\n");
-        if (nn.getValue() instanceof Collection) {
-            for (Object e : (Collection<?>) nn.getValue()) {
-                dumpNormalizedNode((NormalizedNode<?, ?>) e, sw, level + 1);
+        if (nn.body() instanceof Collection) {
+            for (Object e : (Collection<?>) nn.body()) {
+                dumpNormalizedNode((NormalizedNode) e, sw, level + 1);
             }
         }
     }

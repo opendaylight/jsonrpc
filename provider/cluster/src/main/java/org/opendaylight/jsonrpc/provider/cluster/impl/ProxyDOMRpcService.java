@@ -70,7 +70,7 @@ class ProxyDOMRpcService implements DOMRpcService {
 
     @Override
     public @NonNull ListenableFuture<? extends DOMRpcResult> invokeRpc(@NonNull QName type,
-            @NonNull NormalizedNode<?, ?> input) {
+            @NonNull NormalizedNode input) {
         LOG.debug("[{}] invoke '{}' using {}", peer.getName(), type.getLocalName(), input);
         final SettableFuture<DOMRpcResult> result = SettableFuture.create();
         final InvokeRpcRequest request = InvokeRpcRequest.create(Absolute.of(type), input);

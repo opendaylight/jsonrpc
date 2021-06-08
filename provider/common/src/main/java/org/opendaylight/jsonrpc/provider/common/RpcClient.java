@@ -58,7 +58,7 @@ public class RpcClient implements AutoCloseable {
 
     @SuppressWarnings("checkstyle:IllegalCatch")
     @SuppressFBWarnings("REC_CATCH_EXCEPTION")
-    public ListenableFuture<DOMRpcResult> invoke(NormalizedNode<?, ?> input) {
+    public ListenableFuture<DOMRpcResult> invoke(NormalizedNode input) {
         LOG.debug("Invoking RPC '{}' using endpoint {}", def.getQName().getLocalName(), endpoint);
         try (AutoCloseable client = factory.endpointBuilder().requester().createProxy(type, endpoint)) {
             final Object output;

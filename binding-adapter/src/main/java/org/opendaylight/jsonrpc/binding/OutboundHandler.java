@@ -84,7 +84,7 @@ public class OutboundHandler<T extends RpcService> extends AbstractHandler<T> {
             if (rpcResultType.getActualTypeArguments()[0].equals(Void.class)) {
                 return Futures.immediateFuture(RpcResultBuilder.<Void>success().build());
             } else {
-                final NormalizedNode<?, ?> nn = adapter.converter()
+                final NormalizedNode nn = adapter.converter()
                         .get()
                         .rpcOutputCodec(rpcDef)
                         .deserialize(reply.getResult());
