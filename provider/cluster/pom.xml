@@ -131,7 +131,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <artifactId>sal-clustering-commons</artifactId>
         </dependency>
         <dependency>
-            <groupId>javax.inject</groupId>
+            <groupId>com.guicedee.services</groupId>
             <artifactId>javax.inject</artifactId>
         </dependency>
         <dependency>

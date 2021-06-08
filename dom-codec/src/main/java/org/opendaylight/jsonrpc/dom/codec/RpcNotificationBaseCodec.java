@@ -88,7 +88,7 @@ abstract class RpcNotificationBaseCodec<T> extends AbstractCodec implements Code
         try (NormalizedNodeStreamWriter streamWriter = createNestedWriter(jsonCodec(), path, null, jsonWriter);
                 NormalizedNodeWriter nodeWriter = forStreamWriter(streamWriter)) {
             jsonWriter.beginObject();
-            for (final DataContainerChild<?, ?> child : input.getValue()) {
+            for (final DataContainerChild child : input.body()) {
                 nodeWriter.write(child);
             }
             jsonWriter.endObject();
