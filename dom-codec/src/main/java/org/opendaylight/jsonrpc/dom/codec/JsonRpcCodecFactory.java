@@ -117,7 +117,7 @@ public final class JsonRpcCodecFactory {
      * @param path path within data tree
      * @return data codec
      */
-    public Codec<JsonElement, NormalizedNode<?, ?>, IOException> dataCodec(@NonNull YangInstanceIdentifier path) {
+    public Codec<JsonElement, NormalizedNode, IOException> dataCodec(@NonNull YangInstanceIdentifier path) {
         Objects.requireNonNull(path);
         if (YangInstanceIdentifier.empty().equals(path)) {
             throw new IllegalArgumentException("Empty path is not supported by data codec");

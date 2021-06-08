@@ -33,8 +33,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContextProvider;
 import org.opendaylight.yangtools.yang.model.api.ModuleImport;
-import org.opendaylight.yangtools.yang.model.parser.api.YangSyntaxErrorException;
 import org.opendaylight.yangtools.yang.model.repo.api.YangTextSchemaSource;
+import org.opendaylight.yangtools.yang.parser.api.YangSyntaxErrorException;
 import org.opendaylight.yangtools.yang.parser.rfc7950.reactor.RFC7950Reactors;
 import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangModelDependencyInfo;
 import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangStatementStreamSource;
@@ -151,7 +151,7 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
         try {
             reactor.addSource(YangStatementStreamSource.create(YangTextSchemaSource.delegateForByteSource(
                     name + ".yang", ByteSource.wrap(yangSource.getBytes(StandardCharsets.UTF_8)))));
-        } catch (YangSyntaxErrorException | IOException e) {
+        } catch (IOException | YangSyntaxErrorException e) {
             throw new IllegalStateException("Unable to add source of '" + name + "' into reactor", e);
         }
     }

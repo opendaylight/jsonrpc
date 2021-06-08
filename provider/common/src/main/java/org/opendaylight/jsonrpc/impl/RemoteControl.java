@@ -129,7 +129,7 @@ public class RemoteControl implements RemoteControlComposite {
         final RpcDefinition def = findNode(schemaContext, name, Module::getRpcs)
                 .orElseThrow(() -> new IllegalArgumentException("No such method " + name));
         try {
-            final NormalizedNode<?, ?> nn = codecFactory.rpcInputCodec(def).deserialize(rpcInput);
+            final NormalizedNode nn = codecFactory.rpcInputCodec(def).deserialize(rpcInput);
             final DOMRpcResult out = Uninterruptibles.getUninterruptibly(rpcService.invokeRpc(def.getQName(), nn));
             if (!out.getErrors().isEmpty()) {
                 throw new IllegalStateException("RPC invocation failed : " + out.getErrors());

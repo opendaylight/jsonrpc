@@ -62,6 +62,7 @@ import org.opendaylight.yangtools.yang.data.impl.schema.NormalizedNodeResult;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
+import org.opendaylight.yangtools.yang.model.util.SchemaInferenceStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,7 +111,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      */
     @Test(timeout = 15_000, expected = ExecutionException.class)
     public void testRpcUnknownMethod() throws InterruptedException, ExecutionException {
-        NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "unknown-method"));
+        NormalizedNode rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "unknown-method"));
         QName path = rpcPath(mod, "unknown-method");
         bridge.invokeRpc(path, rpcDef).get();
     }
@@ -121,7 +122,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      */
     @Test(timeout = 15_000)
     public void testRpcSimpleMethod() throws Exception {
-        NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "simple-method"));
+        NormalizedNode rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "simple-method"));
         QName path = rpcPath(mod, "simple-method");
         DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
         LOG.info("Simple RPC result : {}", result);
@@ -210,7 +211,8 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
                 .findFirst()
                 .get();
         try (JsonParserStream parser = JsonParserStream.create(writer,
-                JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext), rpcDef)) {
+                JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext),
+                SchemaInferenceStack.ofInstantiatedPath(schemaContext, rpcDef.getPath()).toInference())) {
             parser.parse(JsonReaderAdapter
                     .from(jsonParser.parse("{\"input\" : { \"some-number\":5, \"some-data\": { \"data\" : 123}}}")));
         }
@@ -234,7 +236,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
      */
     @Test(timeout = 15_000)
     public void testRpcError() throws Exception {
-        NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "error-method"));
+        NormalizedNode rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "error-method"));
         DOMRpcResult result = bridge.invokeRpc(rpcPath(mod, "error-method"), rpcDef).get();
         logResult(result);
         assertFalse(result.getErrors().isEmpty());
@@ -243,7 +245,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     @Test // (timeout = 15_000)
     public void test_2LeafNodesInRpc() throws Exception {
         final QName path = rpcPath(mod, "removeCoffeePot");
-        final NormalizedNode<?, ?> rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "removeCoffeePot"));
+        final NormalizedNode rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "removeCoffeePot"));
         DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
         logResult(result);
         assertTrue(result.getErrors().isEmpty());

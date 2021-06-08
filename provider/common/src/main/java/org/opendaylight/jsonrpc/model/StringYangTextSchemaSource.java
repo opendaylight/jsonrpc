@@ -13,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import org.opendaylight.yangtools.yang.model.repo.api.RevisionSourceIdentifier;
 import org.opendaylight.yangtools.yang.model.repo.api.YangTextSchemaSource;
 
@@ -38,5 +39,10 @@ public final class StringYangTextSchemaSource extends YangTextSchemaSource {
     @Override
     public InputStream openStream() throws IOException {
         return new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Override
+    public Optional<String> getSymbolicName() {
+        return Optional.empty();
     }
 }

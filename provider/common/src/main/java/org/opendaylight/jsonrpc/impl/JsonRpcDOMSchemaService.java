@@ -20,7 +20,7 @@ import org.opendaylight.yangtools.yang.common.QNameModule;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContextListener;
 import org.opendaylight.yangtools.yang.model.api.stmt.ModuleEffectiveStatement;
-import org.opendaylight.yangtools.yang.model.util.SimpleSchemaContext;
+import org.opendaylight.yangtools.yang.model.spi.SimpleSchemaContext;
 
 @Beta
 public class JsonRpcDOMSchemaService extends AbstractDOMSchemaService implements AutoCloseable {

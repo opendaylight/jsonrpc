@@ -25,7 +25,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <groupId>org.opendaylight.controller</groupId>
                 <!-- Unusual import to get the akka-testkit declaration -->
                 <artifactId>bundle-parent</artifactId>
-                <version>3.0.7</version>
+                <version>4.0.0-SNAPSHOT</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -131,7 +131,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <artifactId>sal-clustering-commons</artifactId>
         </dependency>
         <dependency>
-            <groupId>javax.inject</groupId>
+            <groupId>com.guicedee.services</groupId>
             <artifactId>javax.inject</artifactId>
         </dependency>
         <dependency>
@@ -174,11 +174,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <groupId>org.opendaylight.jsonrpc.bus</groupId>
             <artifactId>bus-messagelib</artifactId>
             <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

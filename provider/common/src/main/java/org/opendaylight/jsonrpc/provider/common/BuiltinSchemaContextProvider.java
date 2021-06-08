@@ -8,7 +8,6 @@
 package org.opendaylight.jsonrpc.provider.common;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -23,7 +22,7 @@ import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.opendaylight.yangtools.yang.model.api.stmt.ModuleEffectiveStatement;
-import org.opendaylight.yangtools.yang.model.util.SimpleSchemaContext;
+import org.opendaylight.yangtools.yang.model.spi.SimpleSchemaContext;
 
 /**
  * {@link SchemaContextProvider} which uses global {@link SchemaContext}. This implementation only validates that
@@ -62,17 +61,21 @@ public class BuiltinSchemaContextProvider implements SchemaContextProvider {
                         .stream()
                         .map(mi -> schemaContext.findModule(mi.getModuleName(), mi.getRevision()).get())
                         .collect(Collectors.toSet())));
-        return new EffectiveModelContextAdapter(resolved);
+        return new EffectiveModelContextAdapter(resolved, schemaContext);
     }
 
     private static class EffectiveModelContextAdapter extends SimpleSchemaContext implements EffectiveModelContext {
-        protected EffectiveModelContextAdapter(Collection<? extends Module> modules) {
+        private final EffectiveModelContext globalContext;
+
+        protected EffectiveModelContextAdapter(Collection<? extends Module> modules,
+                EffectiveModelContext globalContext) {
             super(modules);
+            this.globalContext = globalContext;
         }
 
         @Override
         public Map<QNameModule, ModuleEffectiveStatement> getModuleStatements() {
-            return Collections.emptyMap();
+            return globalContext.getModuleStatements();
         }
     }
 }

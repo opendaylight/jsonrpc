@@ -43,7 +43,7 @@ class EnsureParentTransactionFactory implements TransactionFactory {
         final DOMDataTreeWriteTransaction delegateTx = domDataBroker.newWriteOnlyTransaction();
         return new ForwardingDOMDataWriteTransaction() {
             @Override
-            public void merge(LogicalDatastoreType store, YangInstanceIdentifier path, NormalizedNode<?, ?> data) {
+            public void merge(LogicalDatastoreType store, YangInstanceIdentifier path, NormalizedNode data) {
                 final List<PathArgument> normalizedPathWithoutChildArgs = new ArrayList<>();
                 YangInstanceIdentifier rootNormalizedPath = null;
                 final Iterator<PathArgument> it = path.getPathArguments().iterator();
@@ -60,7 +60,7 @@ class EnsureParentTransactionFactory implements TransactionFactory {
                     return;
                 }
                 Preconditions.checkArgument(rootNormalizedPath != null, "Empty path received");
-                final NormalizedNode<?, ?> parentStructure = ImmutableNodes.fromInstanceId(schemaContext,
+                final NormalizedNode parentStructure = ImmutableNodes.fromInstanceId(schemaContext,
                         YangInstanceIdentifier.create(normalizedPathWithoutChildArgs));
                 delegate().merge(store, rootNormalizedPath, parentStructure);
             }

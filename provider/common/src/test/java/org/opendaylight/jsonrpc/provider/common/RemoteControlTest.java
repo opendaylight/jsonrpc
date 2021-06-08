@@ -139,7 +139,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
      */
     @Test
     public void testReadTopologyData() throws Exception {
-        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e = TestUtils.getMockTopologyAsDom(getCodec());
+        final Entry<YangInstanceIdentifier, NormalizedNode> e = TestUtils.getMockTopologyAsDom(getCodec());
         final DOMDataTreeWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
         wtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
         wtx.commit().get();
@@ -237,7 +237,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         Config c1 = new ConfigBuilder().setWhoAmI(new Uri("urn:bla"))
                 .setConfiguredEndpoints(Collections.emptyMap()).build();
 
-        Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e1 = getCodec()
+        Entry<YangInstanceIdentifier, NormalizedNode> e1 = getCodec()
                 .toNormalizedNode(InstanceIdentifier.create(Config.class), c1);
 
         wtx.put(LogicalDatastoreType.CONFIGURATION, e1.getKey(), e1.getValue());
@@ -245,7 +245,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         ConfiguredEndpoints c2 = new ConfiguredEndpointsBuilder().setName("name-1")
                 .setModules(Lists.newArrayList(new YangIdentifier("ietf-inet-types"))).build();
 
-        Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> e2 = getCodec().toNormalizedNode(InstanceIdentifier
+        Entry<YangInstanceIdentifier, NormalizedNode> e2 = getCodec().toNormalizedNode(InstanceIdentifier
                 .builder(Config.class).child(ConfiguredEndpoints.class, new ConfiguredEndpointsKey("name-1")).build(),
                 c2);
 

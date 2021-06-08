@@ -65,7 +65,7 @@ public class DOMDataTreeChangeListenerAdapter implements DataChangeNotificationP
         for (final JSONRPCArg c : change.getChanges()) {
             final YangInstanceIdentifier yii = codecFactory.pathCodec().deserialize(c.getPath().getAsJsonObject());
             try {
-                final NormalizedNode<?, ?> data = codecFactory.dataCodec(yii).deserialize(c.getData());
+                final NormalizedNode data = codecFactory.dataCodec(yii).deserialize(c.getData());
                 changes.add(DataTreeCandidates.fromNormalizedNode(yii, data));
             } catch (IOException e) {
                 LOG.error("Unable to deserialize DCN {}", c.getData(), e);

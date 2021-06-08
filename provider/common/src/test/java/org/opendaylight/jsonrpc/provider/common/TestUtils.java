@@ -67,7 +67,7 @@ public final class TestUtils {
         //@formatter:on
     }
 
-    public static Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> getMockTopologyAsDom(
+    public static Entry<YangInstanceIdentifier, NormalizedNode> getMockTopologyAsDom(
             BindingNormalizedNodeSerializer codec) {
         final NetworkTopology nt = getMockTopology();
         return codec.toNormalizedNode(InstanceIdentifier.create(NetworkTopology.class), nt);

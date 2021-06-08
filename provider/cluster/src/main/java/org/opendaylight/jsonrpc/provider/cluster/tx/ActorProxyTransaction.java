@@ -79,11 +79,11 @@ class ActorProxyTransaction implements ProxyTransactionFacade {
     }
 
     @Override
-    public FluentFuture<Optional<NormalizedNode<?, ?>>> read(final LogicalDatastoreType store,
+    public FluentFuture<Optional<NormalizedNode>> read(final LogicalDatastoreType store,
             final YangInstanceIdentifier path) {
         LOG.debug("[{}] Read {} {} via actor {}", name, store, path, actorRef);
         final Future<Object> future = Patterns.ask(actorRef, new TxRead(store, path, false), askTimeout);
-        final SettableFuture<Optional<NormalizedNode<?, ?>>> settableFuture = SettableFuture.create();
+        final SettableFuture<Optional<NormalizedNode>> settableFuture = SettableFuture.create();
         future.onComplete(new OnComplete<>() {
             @Override
             public void onComplete(final Throwable failure, final Object response) {
@@ -146,14 +146,14 @@ class ActorProxyTransaction implements ProxyTransactionFacade {
 
     @Override
     public void put(final LogicalDatastoreType store, final YangInstanceIdentifier path,
-            final NormalizedNode<?, ?> data) {
+            final NormalizedNode data) {
         LOG.debug("[{}] Put {} {} via actor {}", name, store, path, actorRef);
         actorRef.tell(new TxPut(store, new PathAndDataMsg(path, data)), ActorRef.noSender());
     }
 
     @Override
     public void merge(final LogicalDatastoreType store, final YangInstanceIdentifier path,
-            final NormalizedNode<?, ?> data) {
+            final NormalizedNode data) {
         LOG.debug("[{}] Merge {} {} via actor {}", name, store, path, actorRef);
         actorRef.tell(new TxMerge(store, new PathAndDataMsg(path, data)), ActorRef.noSender());
     }

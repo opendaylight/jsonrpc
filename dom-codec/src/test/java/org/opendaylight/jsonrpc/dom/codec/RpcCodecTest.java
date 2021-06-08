@@ -42,10 +42,10 @@ public class RpcCodecTest extends AbstractCodecTest {
         final Codec<JsonElement, ContainerNode, IOException> codec = factory.rpcInputCodec(getRpc("factorial"));
         ContainerNode result = codec.deserialize(null);
         assertNotNull(result);
-        assertTrue(result.getValue().isEmpty());
+        assertTrue(result.body().isEmpty());
         result = codec.deserialize(JsonNull.INSTANCE);
         assertNotNull(result);
-        assertTrue(result.getValue().isEmpty());
+        assertTrue(result.body().isEmpty());
     }
 
     @Test
@@ -73,7 +73,7 @@ public class RpcCodecTest extends AbstractCodecTest {
         final Codec<JsonElement, ContainerNode, IOException> codec = factory.rpcOutputCodec(getRpc("factorial"));
         ContainerNode result = codec.deserialize(null);
         assertNotNull(result);
-        assertTrue(result.getValue().isEmpty());
+        assertTrue(result.body().isEmpty());
     }
 
     @Test

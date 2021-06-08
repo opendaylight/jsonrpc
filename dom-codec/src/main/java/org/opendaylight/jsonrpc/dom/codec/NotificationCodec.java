@@ -19,14 +19,14 @@ import org.opendaylight.mdsal.dom.api.DOMEvent;
 import org.opendaylight.mdsal.dom.api.DOMNotification;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.NodeIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
+import org.opendaylight.yangtools.yang.data.api.schema.builder.DataContainerNodeBuilder;
 import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
-import org.opendaylight.yangtools.yang.data.impl.schema.builder.api.DataContainerNodeBuilder;
 import org.opendaylight.yangtools.yang.data.impl.schema.builder.impl.ImmutableContainerNodeBuilder;
-import org.opendaylight.yangtools.yang.data.util.ContainerSchemaNodes;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
 import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
+import org.opendaylight.yangtools.yang.model.util.SchemaInferenceStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +56,7 @@ class NotificationCodec extends RpcNotificationBaseCodec<DOMNotification> {
                     path.lastNodeIdentifier());
             try (NormalizedNodeStreamWriter streamWriter = createWriter(builder);
                     JsonParserStream jsonParser = JsonParserStream.create(streamWriter, jsonCodec(),
-                            ContainerSchemaNodes.forNotification(definition))) {
+                            SchemaInferenceStack.ofInstantiatedPath(context, path.asSchemaPath()).toInference())) {
                 jsonParser.parse(JsonReaderAdapter.from(fixed));
                 result = new JsonRpcNotification(builder.build(), path);
             }

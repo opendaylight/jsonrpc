@@ -255,7 +255,7 @@ public class MountpointTest {
                 .getService(DOMDataBroker.class)
                 .get();
 
-        NormalizedNode<?, ?> data = masterConverter
+        NormalizedNode data = masterConverter
                 .dataCodec(YangInstanceIdentifier.builder().node(NetworkTopology.QNAME).build())
                 .deserialize(PARSER.parse("{\"topology\": [{\"topology-id\": \"topology-1\"}]}"));
         final DOMDataTreeReadWriteTransaction wtx = domDataBroker.newReadWriteTransaction();

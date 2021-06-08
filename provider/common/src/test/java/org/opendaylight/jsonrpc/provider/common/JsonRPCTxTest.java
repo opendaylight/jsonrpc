@@ -110,20 +110,21 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         final JsonElement elem = new JsonObject();
         doReturn(elem).when(om).read(eq(Util.store2str(Util.store2int(LogicalDatastoreType.OPERATIONAL))),
                 eq(DEVICE_NAME), any(JsonElement.class));
-        final FluentFuture<Optional<NormalizedNode<?, ?>>> fopt = trx
+        final FluentFuture<Optional<NormalizedNode>> fopt = trx
                 .read(LogicalDatastoreType.OPERATIONAL, YangInstanceIdentifier.of(NetworkTopology.QNAME));
 
-        final NormalizedNode<?, ?> nn = fopt.get(5, TimeUnit.SECONDS).get();
+        final NormalizedNode nn = fopt.get(5, TimeUnit.SECONDS).get();
         LOG.info("Read output : {}", nn);
-        assertEquals(NetworkTopology.QNAME.getNamespace().toString(), nn.getNodeType().getNamespace().toString());
-        assertNotNull(nn.getValue());
+        assertEquals(NetworkTopology.QNAME.getNamespace().toString(), nn.getIdentifier().getNodeType()
+                .getNamespace().toString());
+        assertNotNull(nn.body());
     }
 
     @Test
     public void testReadNull() throws Exception {
         final JsonElement elem = null;
         doReturn(elem).when(om).read(any());
-        final ListenableFuture<Optional<NormalizedNode<?, ?>>> fopt = trx
+        final ListenableFuture<Optional<NormalizedNode>> fopt = trx
                 .read(LogicalDatastoreType.OPERATIONAL, YangInstanceIdentifier.of(NetworkTopology.QNAME));
 
         assertFalse(fopt.get(5, TimeUnit.SECONDS).isPresent());
@@ -145,7 +146,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
 
     @Test
     public void testPut() throws InterruptedException, ExecutionException, TimeoutException {
-        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = createContainerNodeData(getCodec());
+        final Entry<YangInstanceIdentifier, NormalizedNode> data = createContainerNodeData(getCodec());
         trx.put(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
         doReturn(true).when(om).commit((String)eq(null));
         trx.commit().get(5, TimeUnit.SECONDS);
@@ -174,7 +175,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
 
     @Test
     public void testCommitFailed() throws InterruptedException, ExecutionException {
-        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = createContainerNodeData(getCodec());
+        final Entry<YangInstanceIdentifier, NormalizedNode> data = createContainerNodeData(getCodec());
         final String txid = UUID.randomUUID().toString();
         doReturn(txid).when(om).txid();
         doReturn(false).when(om).commit((String)eq(null));
@@ -201,7 +202,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
 
     @Test
     public void testMerge() throws InterruptedException, ExecutionException, TimeoutException {
-        final Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> data = createContainerNodeData(getCodec());
+        final Entry<YangInstanceIdentifier, NormalizedNode> data = createContainerNodeData(getCodec());
         doReturn(true).when(om).commit((String)eq(null));
         trx.merge(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
         trx.commit().get(5, TimeUnit.SECONDS);
@@ -226,7 +227,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         }
     }
 
-    static Entry<YangInstanceIdentifier, NormalizedNode<?, ?>> createContainerNodeData(
+    static Entry<YangInstanceIdentifier, NormalizedNode> createContainerNodeData(
             BindingNormalizedNodeSerializer codec) {
         //@formatter:off
         final InstanceIdentifier<NetworkTopology> ii = InstanceIdentifier.create(NetworkTopology.class);

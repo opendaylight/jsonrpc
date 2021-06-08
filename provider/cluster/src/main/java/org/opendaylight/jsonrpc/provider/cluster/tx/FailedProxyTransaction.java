@@ -37,7 +37,7 @@ class FailedProxyTransaction implements ProxyTransactionFacade {
     }
 
     @Override
-    public FluentFuture<Optional<NormalizedNode<?, ?>>> read(final LogicalDatastoreType store,
+    public FluentFuture<Optional<NormalizedNode>> read(final LogicalDatastoreType store,
             final YangInstanceIdentifier path) {
         LOG.debug("[{}][FAILED] Read {} {}", name, store, path, failure);
         return FluentFutures.immediateFailedFluentFuture(ReadFailedException.MAPPER
@@ -58,13 +58,13 @@ class FailedProxyTransaction implements ProxyTransactionFacade {
 
     @Override
     public void put(final LogicalDatastoreType store, final YangInstanceIdentifier path,
-            final NormalizedNode<?, ?> data) {
+            final NormalizedNode data) {
         LOG.debug("[{}][FAILED] Put {} {} - failure", name, store, path, failure);
     }
 
     @Override
     public void merge(final LogicalDatastoreType store, final YangInstanceIdentifier path,
-            final NormalizedNode<?, ?> data) {
+            final NormalizedNode data) {
         LOG.debug("[{}][FAILED] Merge {} {}", name, store, path, failure);
     }
 
