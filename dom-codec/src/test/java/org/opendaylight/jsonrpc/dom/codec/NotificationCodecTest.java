@@ -13,7 +13,6 @@ import com.google.gson.JsonElement;
 import java.io.IOException;
 import org.junit.Test;
 import org.opendaylight.mdsal.dom.api.DOMNotification;
-import org.opendaylight.yangtools.concepts.Codec;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
 
 public class NotificationCodecTest extends AbstractCodecTest {
