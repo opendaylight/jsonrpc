@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.dom.codec;
 
 import com.google.gson.JsonElement;
 import java.io.IOException;
-import org.opendaylight.yangtools.concepts.Codec;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;

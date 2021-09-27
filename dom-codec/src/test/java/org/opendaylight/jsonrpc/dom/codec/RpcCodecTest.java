@@ -20,7 +20,6 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import org.junit.Test;
-import org.opendaylight.yangtools.concepts.Codec;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 
