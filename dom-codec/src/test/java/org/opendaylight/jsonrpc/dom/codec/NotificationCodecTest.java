@@ -10,6 +10,7 @@ package org.opendaylight.jsonrpc.dom.codec;
 import static org.junit.Assert.assertEquals;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import java.io.IOException;
 import org.junit.Test;
 import org.opendaylight.mdsal.dom.api.DOMNotification;
@@ -18,7 +19,7 @@ import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
 public class NotificationCodecTest extends AbstractCodecTest {
     @Test
     public void testDecode() throws IOException {
-        JsonElement input = PARSER.parse("{ \"current-level\": 10, \"max-level\" : 20}");
+        JsonElement input = JsonParser.parseString("{ \"current-level\": 10, \"max-level\" : 20}");
         Codec<JsonElement, DOMNotification, IOException> codec = factory
                 .notificationCodec(getNotification("notification1"));
 

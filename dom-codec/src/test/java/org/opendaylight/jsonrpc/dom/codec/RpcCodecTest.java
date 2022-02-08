@@ -18,13 +18,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.io.IOException;
 import org.junit.Test;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 
 public class RpcCodecTest extends AbstractCodecTest {
-    private static final JsonElement F_INPUT = PARSER.parse("{ \"in-number\": 5 }");
+    private static final JsonElement F_INPUT = JsonParser.parseString("{ \"in-number\": 5 }");
 
     @Test
     public void testInputBasic() throws IOException {
@@ -77,7 +78,7 @@ public class RpcCodecTest extends AbstractCodecTest {
 
     @Test
     public void testInputPrimitive() throws IOException {
-        JsonElement input = PARSER.parse("5");
+        JsonElement input = JsonParser.parseString("5");
         final Codec<JsonElement, ContainerNode, IOException> codec = factory.rpcInputCodec(getRpc("factorial"));
         ContainerNode decoded = codec.deserialize(input);
         JsonElement encoded = codec.serialize(decoded);

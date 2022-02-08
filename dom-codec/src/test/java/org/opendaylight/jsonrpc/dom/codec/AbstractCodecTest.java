@@ -42,7 +42,6 @@ public abstract class AbstractCodecTest extends AbstractDataBrokerTest {
     protected JsonRpcCodecFactory factory;
     protected static final BindingCodecContext BCC = new BindingCodecContext(
             BindingRuntimeHelpers.createRuntimeContext());
-    protected static final JsonParser PARSER = new JsonParser();
 
     @Rule
     public TestName nameRule = new TestName();
@@ -57,7 +56,7 @@ public abstract class AbstractCodecTest extends AbstractDataBrokerTest {
 
     protected JsonElement loadJsonData(String name) throws IOException {
         try (InputStream is = Resources.getResource(name).openStream()) {
-            return PARSER.parse(new InputStreamReader(is));
+            return JsonParser.parseReader(new InputStreamReader(is));
         }
     }
 

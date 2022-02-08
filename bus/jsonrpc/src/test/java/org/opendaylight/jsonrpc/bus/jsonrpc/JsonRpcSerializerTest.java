@@ -111,7 +111,7 @@ public class JsonRpcSerializerTest {
         JsonRpcRequestMessage request = JsonRpcRequestMessage.builder()
                 .idFromIntValue(1)
                 .method("test")
-                .paramsFromObject(new TestDto(new JsonParser().parse(msg)))
+                .paramsFromObject(new TestDto(JsonParser.parseString(msg)))
                 .build();
         logger.info("Request : {}", request);
         assertTrue(request.getParams()

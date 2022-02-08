@@ -29,7 +29,6 @@ public class HierarchicalEnumHashMapTest {
     private static final Logger LOG = LoggerFactory.getLogger(HierarchicalEnumHashMapTest.class);
     private static final String PATH1 = "{ \"level1\" : { \"level2\" : { \"level3b\" : {}}}}";
     private static final String PATH2 = "{ \"level1\" : { \"level2\" : { \"level3a\" : {}}}}";
-    private static final JsonParser PARSER = new JsonParser();
     private static final JsonPathCodec CODEC = JsonPathCodec.create();
 
     private enum Types {
@@ -41,7 +40,7 @@ public class HierarchicalEnumHashMapTest {
         final HierarchicalEnumMap<JsonElement, Types, String> map = HierarchicalEnumHashMap.create(Types.class, CODEC);
         map.put(parse("{}"), Types.A, "uri://localhost");
         map.put(parse(PATH1), Types.A, "xyz");
-        assertEquals("uri://localhost", map.lookup(new JsonParser().parse(PATH2), Types.A).get());
+        assertEquals("uri://localhost", map.lookup(JsonParser.parseString(PATH2), Types.A).get());
         assertNull(map.put(parse(getData("path3")), Types.A, "HERE"));
         assertNull(map.put(parse(getData("path4")), Types.A, "another"));
         assertNull(map.put(parse(getData("path5")), Types.A, "123456"));
@@ -90,8 +89,8 @@ public class HierarchicalEnumHashMapTest {
         assertEquals(parse(getData("path4")).toString(), json.toString());
     }
 
-    private JsonElement parse(String str) {
-        return PARSER.parse(str);
+    private static JsonElement parse(String str) {
+        return JsonParser.parseString(str);
     }
 
     private String getData(String name) throws IOException {

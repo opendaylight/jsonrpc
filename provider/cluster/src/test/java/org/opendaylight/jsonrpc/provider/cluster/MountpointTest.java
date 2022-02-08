@@ -97,7 +97,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class MountpointTest {
-    private static final JsonParser PARSER = new JsonParser();
     private static final Logger LOG = LoggerFactory.getLogger(MountpointTest.class);
     private static final InstanceIdentifier<ActualEndpoints> MOCK_PEER_OP_ID = InstanceIdentifier.builder(Config.class)
             .child(ActualEndpoints.class, new ActualEndpointsKey("device-1"))
@@ -257,7 +256,7 @@ public class MountpointTest {
 
         NormalizedNode data = masterConverter
                 .dataCodec(YangInstanceIdentifier.builder().node(NetworkTopology.QNAME).build())
-                .deserialize(PARSER.parse("{\"topology\": [{\"topology-id\": \"topology-1\"}]}"));
+                .deserialize(JsonParser.parseString("{\"topology\": [{\"topology-id\": \"topology-1\"}]}"));
         final DOMDataTreeReadWriteTransaction wtx = domDataBroker.newReadWriteTransaction();
         wtx.put(LogicalDatastoreType.CONFIGURATION, YangInstanceIdentifier.of(NetworkTopology.QNAME), data);
         wtx.commit().get();

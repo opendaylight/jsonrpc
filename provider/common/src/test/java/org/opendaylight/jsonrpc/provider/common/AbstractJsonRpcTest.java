@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.provider.common;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Collections;
@@ -58,7 +57,6 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
-    protected static final JsonParser PARSER = new JsonParser();
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractJsonRpcTest.class);
     private ConcurrentDataBrokerTestCustomizer testCustomizer;
     private final DOMMountPointService domMountPointService = new DOMMountPointServiceImpl();
@@ -67,7 +65,6 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
     private DOMDataBroker domBroker;
     private DOMRpcRouter rpcRouter;
     protected EffectiveModelContext schemaContext;
-    protected final JsonParser jsonParser = new JsonParser();
     protected JsonRpcCodecFactory codecFactory;
     @Rule
     public TestName nameRule = new TestName();

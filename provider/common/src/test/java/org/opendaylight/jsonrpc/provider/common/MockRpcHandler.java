@@ -34,7 +34,6 @@ import org.slf4j.LoggerFactory;
 public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(MockRpcHandler.class);
     private static final JsonObject MOCK_RESP_JSON;
-    private static final JsonParser PARSER = new JsonParser();
 
     static {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -42,7 +41,7 @@ public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
             try (InputStream is = Resources.getResource(MockRpcHandler.class, "/get-all-numbers-response.json")
                     .openStream()) {
                 is.transferTo(baos);
-                MOCK_RESP_JSON = (JsonObject) PARSER.parse(baos.toString(StandardCharsets.UTF_8));
+                MOCK_RESP_JSON = (JsonObject) JsonParser.parseString(baos.toString(StandardCharsets.UTF_8));
             }
         } catch (IOException e) {
             throw new ExceptionInInitializerError(e);
@@ -98,11 +97,11 @@ public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
     }
 
     private void processRemoveCoffeePot(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
-        replyBuilder.result(PARSER.parse("{\"drink\": \"coffee\", \"cups-brewed\": 3}"));
+        replyBuilder.result(JsonParser.parseString("{\"drink\": \"coffee\", \"cups-brewed\": 3}"));
     }
 
     private void processGetAnyXml(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
-        replyBuilder.result(PARSER.parse("{\"outdata\": { \"data\" : 42 }}"));
+        replyBuilder.result(JsonParser.parseString("{\"outdata\": { \"data\" : 42 }}"));
     }
 
     private void processAnyXml(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {

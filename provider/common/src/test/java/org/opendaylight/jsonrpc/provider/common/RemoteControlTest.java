@@ -79,7 +79,6 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     private static final String ENTITY = "test-model";
     private static final Logger LOG = LoggerFactory.getLogger(RemoteControlTest.class);
     private RemoteControl ctrl;
-    private JsonParser parser;
     private TransportFactory transportFactory;
 
     @Before
@@ -89,7 +88,6 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory, getDOMNotificationRouter(),
                 getDOMRpcRouter().getRpcService(), codecFactory);
 
-        parser = new JsonParser();
         logTestName("START");
     }
 
@@ -101,9 +99,9 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
 
     @Test
     public void testCRUD() throws Exception {
-        JsonElement path = parser.parse(TEST_MODEL_PATH);
+        JsonElement path = JsonParser.parseString(TEST_MODEL_PATH);
         String txId = ctrl.txid();
-        ctrl.put(new DataOperationArgument(txId, "1", ENTITY, path, parser.parse("{ \"level2a\" : {}}")));
+        ctrl.put(new DataOperationArgument(txId, "1", ENTITY, path, JsonParser.parseString("{ \"level2a\" : {}}")));
         assertTrue(ctrl.commit(new TxArgument(txId)));
         assertTrue(ctrl.exists(new StoreOperationArgument("1", ENTITY, path)));
         txId = ctrl.txid();
@@ -114,10 +112,10 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
 
     @Test
     public void testCRUD2() throws Exception {
-        JsonElement path = parser.parse(TEST_MODEL_PATH);
+        JsonElement path = JsonParser.parseString(TEST_MODEL_PATH);
         String txId = ctrl.txid();
         ctrl.put(new DataOperationArgument(txId, "1", ENTITY, path,
-                parser.parse("{ \"level2a\" : { \"abc\" : \"123\"}}")));
+            JsonParser.parseString("{ \"level2a\" : { \"abc\" : \"123\"}}")));
         assertFalse(ctrl.exists(new StoreOperationArgument("1", ENTITY, path)));
         assertTrue(ctrl.commit(new TxArgument(txId)));
         assertTrue(ctrl.exists(new StoreOperationArgument("1", ENTITY, path)));
@@ -173,8 +171,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
                 .build();
         LOG.info("YII : {}", yii);
         final YangInstanceIdentifier ii = codecFactory.pathCodec()
-                .deserialize(parser
-                        .parse("{\"network-topology:network-topology\": "
+                .deserialize(JsonParser.parseString("{\"network-topology:network-topology\": "
                                 + "{\"topology\": [{\"topology-id\": \"topology1\",\"server-provided\": {}}]}}")
                         .getAsJsonObject());
         assertEquals(yii, ii);
@@ -196,7 +193,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
                 .build();
         LOG.info("YII : {}", yii);
         final YangInstanceIdentifier ii = codecFactory.pathCodec()
-                .deserialize(parser.parse(TOPO_TP_DATA).getAsJsonObject());
+                .deserialize(JsonParser.parseString(TOPO_TP_DATA).getAsJsonObject());
         assertEquals(yii, ii);
     }
 
@@ -213,7 +210,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         //@formatter:off
         for (final String p : paths) {
             try {
-                codecFactory.pathCodec().deserialize(parser.parse(p).getAsJsonObject());
+                codecFactory.pathCodec().deserialize(JsonParser.parseString(p).getAsJsonObject());
                 fail("This path should not be parseable !  : " + p);
             } catch (RuntimeException e) {
                 LOG.info("This was expected : " + e.getMessage());
@@ -257,9 +254,9 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
 
     @Test
     public void testReducedData() throws IOException {
-        YangInstanceIdentifier yii = codecFactory.pathCodec().deserialize(parser.parse(MLX_JSON_PATH)
+        YangInstanceIdentifier yii = codecFactory.pathCodec().deserialize(JsonParser.parseString(MLX_JSON_PATH)
                 .getAsJsonObject());
-        assertNotNull(codecFactory.dataCodec(yii).deserialize(parser.parse(MLX_CONFIG_DATA)));
+        assertNotNull(codecFactory.dataCodec(yii).deserialize(JsonParser.parseString(MLX_CONFIG_DATA)));
     }
 
     /**
@@ -269,8 +266,8 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     public void testMergeListItemNonExistentList() throws InterruptedException {
         String txId = ctrl.txid();
         ctrl.merge(new DataOperationArgument(txId, store2str(store2int(LogicalDatastoreType.CONFIGURATION)), "",
-                parser.parse(MLX_JSON_PATH),
-                parser.parse(MLX_CONFIG_DATA)));
+                JsonParser.parseString(MLX_JSON_PATH),
+                JsonParser.parseString(MLX_CONFIG_DATA)));
         assertTrue(ctrl.commit(new TxArgument(txId)));
     }
 
@@ -282,8 +279,8 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         ctrl.put(new DataOperationArgument(uuid.toString(),
                 store2str(store2int(LogicalDatastoreType.OPERATIONAL)),
                 "test-model", // entity
-                parser.parse(TEST_MODEL_PATH), // path
-                parser.parse("{\"level2a\":{}}"))); // data
+                JsonParser.parseString(TEST_MODEL_PATH), // path
+                JsonParser.parseString("{\"level2a\":{}}"))); // data
 
         ctrl.commit(new TxArgument(uuid.toString()));
 
@@ -291,27 +288,27 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         ctrl.put(new DataOperationArgument(uuid.toString(),
                 store2str(store2int(LogicalDatastoreType.CONFIGURATION)),
                 "something",
-                parser.parse("{\"jsonrpc:config\":{}}"),
-                parser.parse("{\"configured-endpoints\":[]}")));
+                JsonParser.parseString("{\"jsonrpc:config\":{}}"),
+                JsonParser.parseString("{\"configured-endpoints\":[]}")));
         ctrl.commit(new TxArgument(uuid.toString()));
 
         uuid = UUID.randomUUID();
         ctrl.merge(new DataOperationArgument(uuid.toString(),
                 store2str(store2int(LogicalDatastoreType.CONFIGURATION)),
                 "something",
-                parser.parse(MLX_JSON_PATH),
-                parser.parse(MLX_CONFIG_DATA)));
+                JsonParser.parseString(MLX_JSON_PATH),
+                JsonParser.parseString(MLX_CONFIG_DATA)));
         ctrl.commit(new TxArgument(uuid.toString()));
 
         assertTrue(ctrl.exists(new StoreOperationArgument(store2str(store2int(LogicalDatastoreType.OPERATIONAL)),
                 "test-model", // entity
-                parser.parse(TEST_MODEL_PATH)))); // path
+                JsonParser.parseString(TEST_MODEL_PATH)))); // path
 
         uuid = UUID.randomUUID();
         ctrl.delete(new TxOperationArgument(uuid.toString(),
                 store2str(store2int(LogicalDatastoreType.OPERATIONAL)),
                 "test-model", // entity
-                parser.parse(TEST_MODEL_PATH))); // path
+                JsonParser.parseString(TEST_MODEL_PATH))); // path
 
         ctrl.commit(new TxArgument(uuid.toString()));
 
@@ -319,7 +316,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
 
         assertFalse(ctrl.exists(new StoreOperationArgument(store2str(store2int(LogicalDatastoreType.OPERATIONAL)),
                 "test-model", // entity
-                parser.parse(TEST_MODEL_PATH) // path
+                JsonParser.parseString(TEST_MODEL_PATH) // path
                 )));
         //@formatter:on
     }
@@ -327,15 +324,15 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     @Test
     public void testPutWithoutTx() {
         ctrl.put(new DataOperationArgument(UUID.randomUUID().toString(),
-                store2str(store2int(LogicalDatastoreType.OPERATIONAL)), "test-model", parser.parse(TEST_MODEL_PATH),
-                parser.parse("{ \"level2a\" : {}}")));
+                store2str(store2int(LogicalDatastoreType.OPERATIONAL)), "test-model",
+                JsonParser.parseString(TEST_MODEL_PATH), JsonParser.parseString("{ \"level2a\" : {}}")));
     }
 
     @Test
     public void testPutReducedDataForm() {
         final String uuid = UUID.randomUUID().toString();
         ctrl.put(new DataOperationArgument(uuid, store2str(store2int(LogicalDatastoreType.CONFIGURATION)), "test-model",
-                parser.parse("{\"test-model-data:grillconf\":{}}"), parser.parse("{\"gasKnob\":10}")));
+            JsonParser.parseString("{\"test-model-data:grillconf\":{}}"), JsonParser.parseString("{\"gasKnob\":10}")));
         assertTrue(ctrl.commit(new TxArgument(uuid)));
     }
 
@@ -343,7 +340,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     @SuppressWarnings("checkstyle:VariableDeclarationUsageDistance")
     public void testDcn() throws URISyntaxException, InterruptedException, IOException {
         final CountDownLatch latch = new CountDownLatch(1);
-        final JsonElement path = parser.parse(TEST_MODEL_PATH);
+        final JsonElement path = JsonParser.parseString(TEST_MODEL_PATH);
         final int port = TestHelper.getFreeTcpPort();
         // expose RemoteControl
         final ResponderSession resp = transportFactory.createResponder(TestHelper.getBindUri("zmq", port), ctrl, true);
@@ -357,7 +354,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
                 new DcnPublisherImpl(latch), true);
         String txId = ctrl.txid();
         ctrl.put(new DataOperationArgument(txId, "0", ENTITY, path,
-                parser.parse("{ \"level2a\" : { \"abc\" : \"123\"}}")));
+                JsonParser.parseString("{ \"level2a\" : { \"abc\" : \"123\"}}")));
         ctrl.commit(new TxArgument(txId));
         txId = ctrl.txid();
         ctrl.delete(new TxOperationArgument(txId, "0", ENTITY, path));

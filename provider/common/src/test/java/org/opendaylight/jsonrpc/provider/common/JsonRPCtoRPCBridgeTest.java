@@ -15,6 +15,7 @@ import static org.mockito.Mockito.mock;
 
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.junit.After;
@@ -212,8 +213,8 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         try (JsonParserStream parser = JsonParserStream.create(writer,
                 JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext),
                 SchemaInferenceStack.ofSchemaPath(schemaContext, rpcDef.getPath()).toInference())) {
-            parser.parse(JsonReaderAdapter
-                    .from(jsonParser.parse("{\"input\" : { \"some-number\":5, \"some-data\": { \"data\" : 123}}}")));
+            parser.parse(JsonReaderAdapter.from(
+                JsonParser.parseString("{\"input\" : { \"some-number\":5, \"some-data\": { \"data\" : 123}}}")));
         }
         DOMRpcResult result = bridge.invokeRpc(path, resultHolder.getResult()).get();
         logResult(result);

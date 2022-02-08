@@ -29,7 +29,6 @@ import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.Module;
 
 abstract class AbstractCodec {
-    protected static final JsonParser PARSER = new JsonParser();
     protected static final String COLON = ":";
     protected final EffectiveModelContext context;
 
@@ -90,7 +89,7 @@ abstract class AbstractCodec {
      * @return parsed {@link JsonObject}
      */
     protected static JsonObject parseFromWriter(StringWriter writer) {
-        return PARSER.parse(writer.toString()).getAsJsonObject();
+        return JsonParser.parseString(writer.toString()).getAsJsonObject();
     }
 
     protected JSONCodecFactory jsonCodec() {

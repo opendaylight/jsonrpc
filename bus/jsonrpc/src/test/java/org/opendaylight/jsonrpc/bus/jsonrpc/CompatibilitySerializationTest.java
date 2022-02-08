@@ -55,8 +55,6 @@ import org.junit.Test;
  * @since Feb 29, 2020
  */
 public class CompatibilitySerializationTest {
-    private static final JsonParser PARSER = new JsonParser();
-
     public final class ModuleInfo {
         String module;
         String revision;
@@ -122,7 +120,7 @@ public class CompatibilitySerializationTest {
     public void testObjectToGenericList() throws JsonRpcException {
         String json = "{\"modules\":[{\"module\":\"ietf-inet-types\",\"revision\""
                 + ":\"2013-07-15\"},{\"module\":\"abc-model\"}]}";
-        JsonRpcReplyMessage reply = JsonRpcReplyMessage.builder().result(PARSER.parse(json)).build();
+        JsonRpcReplyMessage reply = JsonRpcReplyMessage.builder().result(JsonParser.parseString(json)).build();
         List<ModuleInfo> list = reply.getResultAsObject(new TypeToken<List<ModuleInfo>>() {
         }.getType());
         assertEquals(2, list.size());

@@ -18,6 +18,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import java.net.URISyntaxException;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -81,7 +82,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         // ignore close() as this is special case handled by transport
         doNothing().when(shardMock).close();
         doReturn(shardMock).when(transportFactory).createRequesterProxy(any(), anyString(), anyBoolean());
-        pathMap.put(jsonParser.parse("{\"network-topology:network-topology\":{}}"), DataType.OPERATIONAL_DATA,
+        pathMap.put(JsonParser.parseString("{\"network-topology:network-topology\":{}}"), DataType.OPERATIONAL_DATA,
                 "zmq://localhost");
 
         jrbroker = new JsonRPCDataBroker(peer, schemaContext, pathMap, new MockTransportFactory(transportFactory),
@@ -183,6 +184,6 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     }
 
     private YangInstanceIdentifier yiiFromJson(String json) {
-        return codecFactory.pathCodec().deserialize(jsonParser.parse(json).getAsJsonObject());
+        return codecFactory.pathCodec().deserialize(JsonParser.parseString(json).getAsJsonObject());
     }
 }
