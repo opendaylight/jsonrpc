@@ -58,14 +58,14 @@ public class JsonRpcPathCodec implements Codec<JsonObject, YangInstanceIdentifie
     }
 
     @Override
-    public YangInstanceIdentifier deserialize(@NonNull JsonObject input) {
+    public YangInstanceIdentifier deserialize(JsonObject input) {
         final InstanceIdentifierBuilder builder = YangInstanceIdentifier.builder();
         decodeObject(builder, Objects.requireNonNull(input), null, null);
         return builder.build();
     }
 
     @Override
-    public JsonObject serialize(@NonNull YangInstanceIdentifier input) {
+    public JsonObject serialize(YangInstanceIdentifier input) {
         Objects.requireNonNull(input);
         final Iterator<PathArgument> it = input.getPathArguments().iterator();
         final JsonRpcPathBuilder builder = JsonRpcPathBuilder.newBuilder();
