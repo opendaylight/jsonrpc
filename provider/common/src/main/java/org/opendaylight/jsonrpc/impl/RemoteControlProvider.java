@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jul 2, 2020
  */
-public class RemoteControlProvider
+public final class RemoteControlProvider
         implements AutoCloseable, ClusteredDataTreeChangeListener<Config>, GovernanceProvider {
     private static final Logger LOG = LoggerFactory.getLogger(RemoteControlProvider.class);
     private final ListenerRegistration<RemoteControlProvider> registration;

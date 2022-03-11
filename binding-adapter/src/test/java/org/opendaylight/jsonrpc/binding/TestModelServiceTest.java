@@ -39,8 +39,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.SimpleMethodInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.TestModelRpcService;
 import org.opendaylight.yangtools.yang.binding.Identifiable;
+import org.opendaylight.yangtools.yang.common.ErrorSeverity;
 import org.opendaylight.yangtools.yang.common.RpcError;
-import org.opendaylight.yangtools.yang.common.RpcError.ErrorSeverity;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.Uint16;
 
@@ -81,7 +81,7 @@ public class TestModelServiceTest {
     public void testFactorial() throws Exception {
         final Future<RpcResult<FactorialOutput>> result = proxy.getProxy()
                 .factorial(new FactorialInputBuilder().setInNumber(Uint16.valueOf(6)).build());
-        assertEquals(720L, (long) result.get().getResult().getOutNumber().longValue());
+        assertEquals(720L, result.get().getResult().getOutNumber().longValue());
     }
 
     @Test

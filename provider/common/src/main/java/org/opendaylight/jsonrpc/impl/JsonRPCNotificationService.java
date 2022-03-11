@@ -44,7 +44,7 @@ import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absol
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JsonRPCNotificationService extends AbstractJsonRPCComponent
+public final class JsonRPCNotificationService extends AbstractJsonRPCComponent
         implements DOMNotificationService, NotificationMessageHandler, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCNotificationService.class);
     private final Multimap<Absolute, DOMNotificationListener> listeners = HashMultimap.create();

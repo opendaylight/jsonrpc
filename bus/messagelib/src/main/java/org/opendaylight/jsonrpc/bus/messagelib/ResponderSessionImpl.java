@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Mar 24, 2018
  */
-public class ResponderSessionImpl extends AbstractSession implements MessageListener, ResponderSession {
+public final class ResponderSessionImpl extends AbstractSession implements MessageListener, ResponderSession {
     private static final Logger LOG = LoggerFactory.getLogger(ResponderSessionImpl.class);
     private final RequestMessageHandler handler;
 

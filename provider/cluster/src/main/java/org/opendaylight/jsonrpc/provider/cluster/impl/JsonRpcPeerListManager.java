@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jul 1, 2020
  */
-public class JsonRpcPeerListManager implements ClusteredDataTreeChangeListener<ConfiguredEndpoints>,
+public final class JsonRpcPeerListManager implements ClusteredDataTreeChangeListener<ConfiguredEndpoints>,
         JsonRpcPeerSingletonService, JsonrpcService, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRpcPeerListManager.class);
     private final ListenerRegistration<JsonRpcPeerListManager> dtcListener;

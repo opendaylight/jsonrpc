@@ -29,7 +29,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.typesafe.config.ConfigFactory;
 import java.io.IOException;
-import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -187,7 +186,7 @@ public class MountpointTest {
         TestKit.shutdownActorSystem(slaveActorSystem, true);
     }
 
-    private TestCustomizer newDataBrokerTest() throws Exception {
+    private static TestCustomizer newDataBrokerTest() throws Exception {
         final TestCustomizer dataBrokerTest = new TestCustomizer() {
             @Override
             protected Set<YangModuleInfo> getModuleInfos() throws Exception {
@@ -203,11 +202,11 @@ public class MountpointTest {
         return dataBrokerTest;
     }
 
-    private void createPeer(DataBroker dataBroker) throws InterruptedException, ExecutionException {
+    private static void createPeer(DataBroker dataBroker) throws InterruptedException, ExecutionException {
         final WriteTransaction wtx = dataBroker.newWriteOnlyTransaction();
         wtx.put(LogicalDatastoreType.CONFIGURATION, MOCK_PEER_CFG_ID, new ConfiguredEndpointsBuilder()
                 .setName("device-1")
-                .setModules(List.of(new YangIdentifier("network-topology"), new YangIdentifier("test-model-data"),
+                .setModules(Set.of(new YangIdentifier("network-topology"), new YangIdentifier("test-model-data"),
                         new YangIdentifier("test-model-rpc")))
                 .setDataConfigEndpoints(ImmutableMap.of(new DataConfigEndpointsKey("{}"),
                         new DataConfigEndpointsBuilder().setPath("{}")
@@ -221,7 +220,7 @@ public class MountpointTest {
         wtx.commit().get();
     }
 
-    private Optional<ActualEndpoints> getOpState(DataBroker dataBroker) {
+    private static Optional<ActualEndpoints> getOpState(DataBroker dataBroker) {
         try (ReadTransaction rtx = dataBroker.newReadOnlyTransaction()) {
             return Futures.getUnchecked(rtx.read(LogicalDatastoreType.OPERATIONAL, MOCK_PEER_OP_ID));
         }
@@ -311,7 +310,7 @@ public class MountpointTest {
 
     }
 
-    private Optional<DOMMountPoint> getMountPoint(DOMMountPointService mountService) {
+    private static Optional<DOMMountPoint> getMountPoint(DOMMountPointService mountService) {
         return mountService.getMountPoint(Util.createBiPath("device-1"));
     }
 

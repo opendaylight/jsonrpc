@@ -16,7 +16,6 @@ import static org.opendaylight.jsonrpc.provider.common.Util.store2int;
 import static org.opendaylight.jsonrpc.provider.common.Util.store2str;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import java.io.IOException;
@@ -24,6 +23,7 @@ import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -240,7 +240,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         wtx.put(LogicalDatastoreType.CONFIGURATION, e1.getKey(), e1.getValue());
         wtx.commit().get();
         ConfiguredEndpoints c2 = new ConfiguredEndpointsBuilder().setName("name-1")
-                .setModules(Lists.newArrayList(new YangIdentifier("ietf-inet-types"))).build();
+                .setModules(Set.of(new YangIdentifier("ietf-inet-types"))).build();
 
         Entry<YangInstanceIdentifier, NormalizedNode> e2 = getCodec().toNormalizedNode(InstanceIdentifier
                 .builder(Config.class).child(ConfiguredEndpoints.class, new ConfiguredEndpointsKey("name-1")).build(),

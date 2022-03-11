@@ -102,7 +102,7 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
         }
     }
 
-    private void mapRpcError(Builder replyBuilder, final RpcResult<Object> rpcResult) {
+    private static void mapRpcError(Builder replyBuilder, final RpcResult<Object> rpcResult) {
         final Collection<RpcError> errors = rpcResult.getErrors();
         if (errors.isEmpty()) {
             replyBuilder.error(new JsonRpcErrorObject(new JsonPrimitive("No error info available")));
@@ -111,7 +111,7 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
             replyBuilder.error(new JsonRpcErrorObject(mapError(error)));
         } else {
             final JsonArray arr = new JsonArray(errors.size());
-            errors.stream().map(this::mapError).forEach(arr::add);
+            errors.stream().map(InboundHandler::mapError).forEach(arr::add);
             replyBuilder.error(new JsonRpcErrorObject(arr));
         }
     }
@@ -136,11 +136,11 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
         return args;
     }
 
-    private void logRpcInvocationFailure(Throwable cause) {
+    private static void logRpcInvocationFailure(Throwable cause) {
         LOG.error("RPC invocation failed", cause);
     }
 
-    private JsonElement mapError(RpcError rpcError) {
+    private static JsonElement mapError(RpcError rpcError) {
         final JsonObject wrapper = new JsonObject();
         final JsonObject data = new JsonObject();
         wrapper.add("data", data);

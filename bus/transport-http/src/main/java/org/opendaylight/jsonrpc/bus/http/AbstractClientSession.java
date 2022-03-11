@@ -25,6 +25,5 @@ abstract class AbstractClientSession extends AbstractReconnectingClient {
             AbstractChannelInitializer channelInitializer, boolean isWebsocket, SessionType sessionType) {
         super(uri, defaultPort, clientBootstrap, channelInitializer, sessionType);
         this.isWebsocket = isWebsocket;
-        connectInternal();
     }
 }

@@ -43,7 +43,7 @@ import scala.concurrent.duration.Duration;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jul 11, 2020
  */
-class ProxyDOMDataBroker implements PingPongMergingDOMDataBroker {
+final class ProxyDOMDataBroker implements PingPongMergingDOMDataBroker {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyDOMDataBroker.class);
     private final Peer peer;
     private final Timeout askTimeout;

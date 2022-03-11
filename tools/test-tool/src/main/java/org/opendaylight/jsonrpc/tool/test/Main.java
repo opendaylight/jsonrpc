@@ -71,7 +71,7 @@ public final class Main {
         }
     }
 
-    private void waitForever() {
+    private static void waitForever() {
         Uninterruptibles.awaitUninterruptibly(new CountDownLatch(1));
     }
 }

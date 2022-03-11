@@ -36,15 +36,14 @@ import org.opendaylight.mdsal.dom.store.inmemory.InMemoryDOMDataStoreFactory;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContextProvider;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class DatastoreImpl extends JsonRpcDatastoreAdapter {
+final class DatastoreImpl extends JsonRpcDatastoreAdapter {
     private static final Logger LOG = LoggerFactory.getLogger(DatastoreImpl.class);
     private final ResponderSession session;
 
-    DatastoreImpl(JsonRpcCodecFactory codecFactory, DOMDataBroker domDataBroker, SchemaContext schemaContext,
+    DatastoreImpl(JsonRpcCodecFactory codecFactory, DOMDataBroker domDataBroker, EffectiveModelContext schemaContext,
             TransportFactory transportFactory, String endpoint) throws URISyntaxException {
         super(codecFactory, domDataBroker, schemaContext, transportFactory);
         session = transportFactory.endpointBuilder().responder().create(endpoint, this);

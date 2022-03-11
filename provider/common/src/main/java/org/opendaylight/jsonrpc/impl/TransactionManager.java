@@ -21,7 +21,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.opendaylight.jsonrpc.model.TransactionFactory;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 
 /**
  * Helper to deal with transaction lifecycle.
@@ -41,7 +41,7 @@ public class TransactionManager implements AutoCloseable {
                 }
             });
 
-    public TransactionManager(final DOMDataBroker dataBroker, final SchemaContext schemaContext) {
+    public TransactionManager(final DOMDataBroker dataBroker, final EffectiveModelContext schemaContext) {
         txFactory = new EnsureParentTransactionFactory(dataBroker, schemaContext);
     }
 

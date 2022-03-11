@@ -21,7 +21,7 @@ import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgument;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNodes;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 
 /**
  * Implementation of {@link TransactionFactory} which follows semantics of {@link AbstractWriteTransaction}.
@@ -30,10 +30,10 @@ import org.opendaylight.yangtools.yang.model.api.SchemaContext;
  *
  */
 class EnsureParentTransactionFactory implements TransactionFactory {
-    private final SchemaContext schemaContext;
+    private final EffectiveModelContext schemaContext;
     protected final DOMDataBroker domDataBroker;
 
-    EnsureParentTransactionFactory(final DOMDataBroker domDataBroker, final SchemaContext schemaContext) {
+    EnsureParentTransactionFactory(final DOMDataBroker domDataBroker, final EffectiveModelContext schemaContext) {
         this.domDataBroker = domDataBroker;
         this.schemaContext = schemaContext;
     }

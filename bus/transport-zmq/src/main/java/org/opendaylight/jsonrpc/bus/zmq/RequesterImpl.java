@@ -25,7 +25,7 @@ import org.opendaylight.jsonrpc.bus.spi.CommonConstants;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Mar 7, 2018
  */
-class RequesterImpl extends AbstractReconnectingClient implements Requester {
+final class RequesterImpl extends AbstractReconnectingClient implements Requester {
     RequesterImpl(String uri, Bootstrap bootstrap, MessageListener listener, EventExecutorGroup handlerExecutor) {
         super(uri, 10000, bootstrap, new ClientInitializer(SessionType.REQ, handlerExecutor, listener),
                 SessionType.REQ);

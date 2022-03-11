@@ -9,10 +9,8 @@ package org.opendaylight.jsonrpc.dom.codec;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Objects;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.opendaylight.mdsal.dom.api.DOMEvent;
@@ -32,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 class NotificationCodec extends RpcNotificationBaseCodec<DOMNotification> {
     private static final Logger LOG = LoggerFactory.getLogger(NotificationCodec.class);
-    private final NotificationDefinition definition;
 
     static NotificationCodec create(EffectiveModelContext context, NotificationDefinition definition) {
         final Absolute path = Absolute.of(definition.getQName());
@@ -41,7 +38,6 @@ class NotificationCodec extends RpcNotificationBaseCodec<DOMNotification> {
 
     NotificationCodec(@NonNull EffectiveModelContext context, Absolute path, NotificationDefinition definition) {
         super(context, definition.getQName().getLocalName(), path, definition.getChildNodes().isEmpty(), definition);
-        this.definition = Objects.requireNonNull(definition);
     }
 
     @Override
@@ -56,7 +52,7 @@ class NotificationCodec extends RpcNotificationBaseCodec<DOMNotification> {
                     path.lastNodeIdentifier());
             try (NormalizedNodeStreamWriter streamWriter = createWriter(builder);
                     JsonParserStream jsonParser = JsonParserStream.create(streamWriter, jsonCodec(),
-                            SchemaInferenceStack.ofSchemaPath(context, definition.getPath()).toInference())) {
+                            SchemaInferenceStack.of(context, path()).toInference())) {
                 jsonParser.parse(JsonReaderAdapter.from(fixed));
                 result = new JsonRpcNotification(builder.build(), path);
             }
@@ -98,7 +94,6 @@ class NotificationCodec extends RpcNotificationBaseCodec<DOMNotification> {
             return schemaPath;
         }
 
-        @Nullable
         @Override
         public ContainerNode getBody() {
             return content;

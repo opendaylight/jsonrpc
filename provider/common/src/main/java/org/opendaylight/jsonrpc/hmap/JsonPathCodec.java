@@ -63,7 +63,7 @@ public final class JsonPathCodec implements PathCodec<JsonElement, String> {
         }
     }
 
-    private void serializeLeaf(String currentNode, JsonElement path, LinkedList<String> list) {
+    private static void serializeLeaf(String currentNode, JsonElement path, LinkedList<String> list) {
         LOG.trace("Current node [LEAF  ]: {}", path);
         list.addLast(currentNode + "=" + path.getAsJsonPrimitive().getAsString());
     }
@@ -81,7 +81,7 @@ public final class JsonPathCodec implements PathCodec<JsonElement, String> {
         }
     }
 
-    private void throwJsonPathError(JsonElement je) {
+    private static void throwJsonPathError(JsonElement je) {
         throw new IllegalStateException("Unexpected JSON element " + je);
     }
 

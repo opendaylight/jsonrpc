@@ -96,21 +96,21 @@ public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
         LOG.info("Sending response : {}", replyBuilder);
     }
 
-    private void processRemoveCoffeePot(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
+    private static void processRemoveCoffeePot(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
         replyBuilder.result(JsonParser.parseString("{\"drink\": \"coffee\", \"cups-brewed\": 3}"));
     }
 
-    private void processGetAnyXml(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
+    private static void processGetAnyXml(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
         replyBuilder.result(JsonParser.parseString("{\"outdata\": { \"data\" : 42 }}"));
     }
 
-    private void processAnyXml(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
+    private static void processAnyXml(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
         final JsonObject result = params.getAsJsonObject();
         result.remove("some-number");
         replyBuilder.result(result);
     }
 
-    private void processFactorial(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
+    private static void processFactorial(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
         int in = params.getAsJsonObject().get("in-number").getAsInt();
         int out = 1;
         for (int i = 2; i <= in; i++) {
@@ -121,11 +121,11 @@ public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
         replyBuilder.result(obj);
     }
 
-    private void processGetAllNumbers(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
+    private static void processGetAllNumbers(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
         replyBuilder.result(MOCK_RESP_JSON);
     }
 
-    private void processMultiplyList(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
+    private static void processMultiplyList(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
         JsonObject in = params.getAsJsonObject();
         int multiplier = in.get("multiplier").getAsInt();
         int[] numbers = intArrayfromJsonArray(in.get("numbers").getAsJsonArray());
@@ -140,7 +140,7 @@ public class MockRpcHandler implements RequestMessageHandler, AutoCloseable {
         replyBuilder.result(obj);
     }
 
-    private void processMultiplyLeafList(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
+    private static void processMultiplyLeafList(JsonElement params, JsonRpcReplyMessage.Builder replyBuilder) {
         JsonObject in = params.getAsJsonObject();
         int multiplier = in.get("multiplier").getAsInt();
         int[] numbers = intArrayfromJsonArray(in.get("numbers").getAsJsonArray());

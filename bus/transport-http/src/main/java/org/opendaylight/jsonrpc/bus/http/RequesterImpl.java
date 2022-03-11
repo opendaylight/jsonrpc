@@ -23,7 +23,7 @@ import org.opendaylight.jsonrpc.bus.spi.CommonConstants;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Mar 12, 2018
  */
-class RequesterImpl extends AbstractClientSession implements Requester {
+final class RequesterImpl extends AbstractClientSession implements Requester {
     RequesterImpl(String uri, int defaultPort, Bootstrap clientBootstrap, AbstractChannelInitializer channelInitializer,
             boolean isWebsocket) {
         super(uri, defaultPort, clientBootstrap, channelInitializer, isWebsocket, SessionType.REQ);

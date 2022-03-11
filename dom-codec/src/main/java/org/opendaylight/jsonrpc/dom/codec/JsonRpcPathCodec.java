@@ -93,7 +93,7 @@ public class JsonRpcPathCodec implements Codec<JsonObject, YangInstanceIdentifie
         return builder.build();
     }
 
-    private String prefixElement(QName name, String currentModule, String previous) {
+    private static String prefixElement(QName name, String currentModule, String previous) {
         if (previous == null || !currentModule.equals(previous)) {
             return currentModule + ':' + name.getLocalName();
         }
@@ -139,7 +139,7 @@ public class JsonRpcPathCodec implements Codec<JsonObject, YangInstanceIdentifie
         return builder.build();
     }
 
-    private void decodeLeaf(InstanceIdentifierBuilder builder, QName nodeNs, QName localNs, JsonPrimitive leaf) {
+    private static void decodeLeaf(InstanceIdentifierBuilder builder, QName nodeNs, QName localNs, JsonPrimitive leaf) {
         LOG.trace("[Decode][Leaf  ]: {}", leaf);
         builder.nodeWithKey(nodeNs, localNs, leaf.getAsString());
     }
@@ -155,7 +155,7 @@ public class JsonRpcPathCodec implements Codec<JsonObject, YangInstanceIdentifie
         }
     }
 
-    private Module ensureModuleFound(Optional<? extends Module> module, String name) {
+    private static Module ensureModuleFound(Optional<? extends Module> module, String name) {
         return module.orElseThrow(
             () -> new IllegalArgumentException(String.format("Module '%s' not found in schema", name)));
     }
@@ -168,7 +168,7 @@ public class JsonRpcPathCodec implements Codec<JsonObject, YangInstanceIdentifie
         return QName.create(findModule(localName).getQNameModule(), localName);
     }
 
-    private void throwJsonPathError(JsonElement ex) {
+    private static void throwJsonPathError(JsonElement ex) {
         throw new IllegalStateException(
                 String.format("Unexpected JsonElement : %s => %s", ex.getClass().getSimpleName(), ex));
     }

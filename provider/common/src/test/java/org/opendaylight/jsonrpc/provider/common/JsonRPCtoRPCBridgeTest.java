@@ -13,6 +13,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -141,7 +142,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         final QName path = rpcPath(mod, "multiply-ll");
         // BA => BI
         final ContainerNode rpcDef = prepareRpcInput(
-                new MultiplyLlInputBuilder().setMultiplier((short) 3).setNumbers(Lists.newArrayList(2, 5, 7)).build());
+                new MultiplyLlInputBuilder().setMultiplier((short) 3).setNumbers(ImmutableSet.of(2, 5, 7)).build());
 
         final DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
         LOG.info("DOM RPC result : {}", result);
@@ -212,7 +213,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
                 .get();
         try (JsonParserStream parser = JsonParserStream.create(writer,
                 JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext),
-                SchemaInferenceStack.ofSchemaPath(schemaContext, rpcDef.getPath()).toInference())) {
+                SchemaInferenceStack.of(schemaContext, Absolute.of(rpcDef.getQName())).toInference())) {
             parser.parse(JsonReaderAdapter.from(
                 JsonParser.parseString("{\"input\" : { \"some-number\":5, \"some-data\": { \"data\" : 123}}}")));
         }
@@ -255,7 +256,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     ///////////////////////////////////////////////////////////////////////////
     // Helper methods
     ///////////////////////////////////////////////////////////////////////////
-    private void logResult(DOMRpcResult result) {
+    private static void logResult(DOMRpcResult result) {
         LOG.info("Result : {}", result.getResult());
         LOG.info("Errors : {}", result.getErrors());
     }

@@ -83,7 +83,7 @@ public class DataChangeListenerRegistry implements AutoCloseable {
     /*
      * Allocate URI for notification publisher.
      */
-    private String allocateUri(String transport) throws IOException {
+    private static String allocateUri(String transport) throws IOException {
         try (Socket socket = new Socket()) {
             socket.bind(null);
             final PeerContext peer = PeerContextHolder.get();
