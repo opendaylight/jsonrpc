@@ -19,7 +19,7 @@ import org.opendaylight.jsonrpc.bus.spi.AbstractReconnectingClient;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Mar 9, 2018
  */
-class SubscriberImpl extends AbstractReconnectingClient implements Subscriber {
+final class SubscriberImpl extends AbstractReconnectingClient implements Subscriber {
     SubscriberImpl(String uri, int defaultPort, Bootstrap clientBootstrap,
             AbstractChannelInitializer channelInitializer) {
         super(uri, defaultPort, clientBootstrap, channelInitializer, SessionType.SUB);

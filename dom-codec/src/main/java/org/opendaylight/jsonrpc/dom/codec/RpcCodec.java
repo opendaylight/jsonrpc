@@ -22,7 +22,6 @@ import org.opendaylight.yangtools.yang.model.api.ContainerLike;
 import org.opendaylight.yangtools.yang.model.api.DataNodeContainer;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
-import org.opendaylight.yangtools.yang.model.api.SchemaNode;
 import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 import org.opendaylight.yangtools.yang.model.util.SchemaInferenceStack;
 import org.slf4j.Logger;
@@ -30,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 class RpcCodec extends RpcNotificationBaseCodec<ContainerNode> {
     private static final Logger LOG = LoggerFactory.getLogger(RpcCodec.class);
-    private final DataNodeContainer schema;
+
     private final String type;
 
     static RpcCodec create(EffectiveModelContext context, RpcDefinition definition, String type,
@@ -43,7 +42,6 @@ class RpcCodec extends RpcNotificationBaseCodec<ContainerNode> {
     RpcCodec(EffectiveModelContext context, Absolute path, RpcDefinition definition, String type,
             DataNodeContainer schema) {
         super(context, definition.getQName().getLocalName(), path, schema.getChildNodes().isEmpty(), schema);
-        this.schema = schema;
         this.type = type;
     }
 
@@ -66,7 +64,7 @@ class RpcCodec extends RpcNotificationBaseCodec<ContainerNode> {
                 path.lastNodeIdentifier());
         try (NormalizedNodeStreamWriter writer = createWriter(builder);
                 JsonParserStream jsonParser = JsonParserStream.create(writer, jsonCodec(),
-                    SchemaInferenceStack.ofSchemaPath(context, ((SchemaNode) schema).getPath()).toInference())) {
+                    SchemaInferenceStack.of(context, path).toInference())) {
             jsonParser.parse(JsonReaderAdapter.from(input));
             return builder.build();
         }

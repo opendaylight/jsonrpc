@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.duration.Duration;
 
-class SlavePeerContext
+final class SlavePeerContext
         implements ClusteredDataTreeChangeListener<ActualEndpoints>, JsonRpcPeerSingletonService, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(SlavePeerContext.class);
     private final AtomicBoolean closed = new AtomicBoolean(false);

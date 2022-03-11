@@ -39,8 +39,9 @@ import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.common.api.TransactionCommitFailedException;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.util.concurrent.FluentFutures;
+import org.opendaylight.yangtools.yang.common.ErrorTag;
+import org.opendaylight.yangtools.yang.common.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcError;
-import org.opendaylight.yangtools.yang.common.RpcError.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
@@ -51,7 +52,7 @@ import org.slf4j.LoggerFactory;
 public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFacade {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCTx.class);
     private static final Function<String, RpcError> ERROR_MAPPER = msg -> RpcResultBuilder
-            .newError(ErrorType.APPLICATION, "commit", msg);
+            .newError(ErrorType.APPLICATION, new ErrorTag("commit"), msg);
     private static final FluentFuture<Optional<NormalizedNode>> NO_DATA = FluentFutures
             .immediateFluentFuture(Optional.empty());
     /* Keep track of TX id to given endpoint (key is endpoint, value is TX ID) */

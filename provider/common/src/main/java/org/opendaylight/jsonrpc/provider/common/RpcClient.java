@@ -22,8 +22,9 @@ import org.opendaylight.jsonrpc.dom.codec.Codec;
 import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.mdsal.dom.api.DOMRpcResult;
 import org.opendaylight.mdsal.dom.spi.DefaultDOMRpcResult;
+import org.opendaylight.yangtools.yang.common.ErrorTag;
+import org.opendaylight.yangtools.yang.common.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcError;
-import org.opendaylight.yangtools.yang.common.RpcError.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
@@ -69,7 +70,7 @@ public class RpcClient implements AutoCloseable {
             }
             return immediateFluentFuture(new DefaultDOMRpcResult(outputCodec.deserialize((JsonObject) output)));
         } catch (Exception e) {
-            final RpcError error = RpcResultBuilder.newError(ErrorType.RPC, "jsonrpc",
+            final RpcError error = RpcResultBuilder.newError(ErrorType.RPC, new ErrorTag("jsonrpc"),
                     String.format("Invocation of method '%s' failed", def.getQName().getLocalName()), null, endpoint,
                     e);
             return immediateFluentFuture(new DefaultDOMRpcResult(error));

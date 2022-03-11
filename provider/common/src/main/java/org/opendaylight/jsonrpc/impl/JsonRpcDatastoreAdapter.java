@@ -34,7 +34,7 @@ import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,7 +53,7 @@ public class JsonRpcDatastoreAdapter implements RemoteOmShard {
     private Codec<JsonObject, YangInstanceIdentifier, RuntimeException> pathCodec;
 
     public JsonRpcDatastoreAdapter(@NonNull JsonRpcCodecFactory codecFactory, @NonNull DOMDataBroker domDataBroker,
-            @NonNull SchemaContext schemaContext, @NonNull TransportFactory transportFactory) {
+            @NonNull EffectiveModelContext schemaContext, @NonNull TransportFactory transportFactory) {
         Objects.requireNonNull(schemaContext);
         Objects.requireNonNull(transportFactory);
         this.domDataBroker = Objects.requireNonNull(domDataBroker);

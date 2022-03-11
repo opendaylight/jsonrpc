@@ -34,7 +34,6 @@ import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonWriterFactory;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.data.impl.schema.NormalizedNodeResult;
-import org.opendaylight.yangtools.yang.data.util.DataSchemaContextNode;
 import org.opendaylight.yangtools.yang.data.util.DataSchemaContextTree;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.Module;
@@ -51,11 +50,14 @@ class DataCodec extends AbstractCodec implements Codec<JsonElement, NormalizedNo
     DataCodec(@NonNull EffectiveModelContext context, @NonNull YangInstanceIdentifier path) {
         super(context);
         this.path = Objects.requireNonNull(path);
-        final DataSchemaContextNode<?> dataSchemaContextNode = DataSchemaContextTree.from(context)
-                .findChild(path)
-                .orElseThrow(() -> new IllegalStateException("No such child : " + path));
-        parentSchemaNode = SchemaInferenceStack.ofSchemaPath(context,
-            dataSchemaContextNode.getDataSchemaNode().getPath().getParent()).toInference();
+        final SchemaInferenceStack stack = DataSchemaContextTree.from(context)
+                .enterPath(path)
+                .orElseThrow()
+                .stack();
+        if (!stack.isEmpty()) {
+            stack.exit();
+        }
+        parentSchemaNode = stack.toInference();
     }
 
     private static class DecoderPathWalker extends PathWalker<JsonObject> {
@@ -99,7 +101,7 @@ class DataCodec extends AbstractCodec implements Codec<JsonElement, NormalizedNo
         return returnResult(deserializeWrapped(new DecoderPathWalker(context, path, input).walk()));
     }
 
-    private NormalizedNode returnResult(NormalizedNode result) {
+    private static NormalizedNode returnResult(NormalizedNode result) {
         LOG.trace("[Decode] result : {}", result);
         return result;
     }
@@ -165,7 +167,7 @@ class DataCodec extends AbstractCodec implements Codec<JsonElement, NormalizedNo
      * @param outerElement name of outer element composed from module name and local name
      * @return unwrapped {@link JsonObject}
      */
-    private JsonElement unwrap(JsonObject input, String outerElement) {
+    private static JsonElement unwrap(JsonObject input, String outerElement) {
         final JsonElement el = input.get(outerElement);
         if (el.isJsonArray()) {
             return el.getAsJsonArray().get(0).getAsJsonObject();

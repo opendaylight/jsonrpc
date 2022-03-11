@@ -14,7 +14,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.net.URISyntaxException;
@@ -141,7 +140,7 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
         //@formatter:off
         return new ConfiguredEndpointsBuilder()
                 .setName("test")
-                .setModules(Lists.newArrayList(
+                .setModules(Set.of(
                         new YangIdentifier("test-model-notification")
                         ))
                 .setNotificationEndpoints(compatItem(new NotificationEndpointsBuilder()

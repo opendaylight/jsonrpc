@@ -16,11 +16,10 @@ import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.List;
 import org.opendaylight.yangtools.yang.common.QName;
-import org.opendaylight.yangtools.yang.model.api.SchemaPath;
 import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 
 /**
- * Message that conveys {@link SchemaPath}.
+ * Message that conveys {@link Absolute}.
  *
  * <p>
  * Acknowledgement : this code is inspired by implementation of netconf-topology-singleton.

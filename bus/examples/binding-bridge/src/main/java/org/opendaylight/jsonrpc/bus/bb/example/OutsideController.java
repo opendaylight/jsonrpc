@@ -7,7 +7,6 @@
  */
 package org.opendaylight.jsonrpc.bus.bb.example;
 
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.net.URISyntaxException;
 import java.util.concurrent.CountDownLatch;
@@ -82,7 +81,7 @@ public class OutsideController implements BbExampleService, AutoCloseable {
     @Override
     public ListenableFuture<RpcResult<Method1Output>> method1(Method1Input input) {
         shutdownLock.countDown();
-        return Futures.immediateFuture(RpcResultBuilder
-                .<Method1Output>success(new Method1OutputBuilder().setOutParam(input.getInParam())).build());
+        return RpcResultBuilder.success(new Method1OutputBuilder().setOutParam(input.getInParam()).build())
+            .buildFuture();
     }
 }

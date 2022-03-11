@@ -17,7 +17,6 @@ import com.google.common.io.ByteSource;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.Objects;
@@ -105,7 +104,7 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
         final Deque<ModuleInfo> toResolve = Queues.newArrayDeque();
         try {
             Optional.ofNullable(peer.getModules())
-                    .orElse(Collections.emptyList())
+                    .orElse(Set.of())
                     .stream()
                     .filter(Objects::nonNull)
                     .forEach(mod -> {
@@ -147,7 +146,7 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
         return reactor.buildEffective();
     }
 
-    private void addSourceToReactor(BuildAction reactor, String name, String yangSource) {
+    private static void addSourceToReactor(BuildAction reactor, String name, String yangSource) {
         try {
             reactor.addSource(YangStatementStreamSource.create(YangTextSchemaSource.delegateForByteSource(
                     name + ".yang", ByteSource.wrap(yangSource.getBytes(StandardCharsets.UTF_8)))));

@@ -201,7 +201,7 @@ class RemotePeerContext extends AbstractPeerContext implements ClusterSingletonS
                                     new ActualEndpointsBuilder(peer).setModules(schema.getModules()
                                             .stream()
                                             .map(m -> new YangIdentifier(m.getName()))
-                                            .collect(Collectors.toList())),
+                                            .collect(Collectors.toSet())),
                                     MountStatus.Mounted, Optional.empty(), selfAddress);
                         } else {
                             publishState(new ActualEndpointsBuilder(peer), MountStatus.Failed, Optional.of(failure),

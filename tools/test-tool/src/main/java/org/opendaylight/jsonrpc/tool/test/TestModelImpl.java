@@ -17,7 +17,7 @@ import org.opendaylight.jsonrpc.test.FactorialOutput;
 import org.opendaylight.jsonrpc.test.RemovecoffeepotOutput;
 import org.opendaylight.jsonrpc.test.TestModelRpcService;
 
-public class TestModelImpl implements TestModelRpcService {
+public final class TestModelImpl implements TestModelRpcService {
     private final ResponderSession session;
 
     public TestModelImpl(TransportFactory transportFactory, String endpoint) throws URISyntaxException {

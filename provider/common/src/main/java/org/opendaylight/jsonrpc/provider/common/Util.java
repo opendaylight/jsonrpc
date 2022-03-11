@@ -264,6 +264,6 @@ public final class Util {
 
     public static boolean supportInbandModels(Peer peer) {
         return (peer.getModules() != null && peer.getModules().size() == 1
-                && peer.getModules().get(0).getValue().startsWith("jsonrpc-inband-models"));
+                && peer.getModules().iterator().next().getValue().startsWith("jsonrpc-inband-models"));
     }
 }

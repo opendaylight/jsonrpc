@@ -18,7 +18,7 @@ import org.opendaylight.mdsal.dom.broker.DOMRpcRouter;
 public class TestCustomizer extends AbstractConcurrentDataBrokerTest {
     private final DOMMountPointServiceImpl mountPointService = new DOMMountPointServiceImpl();
     private final DOMRpcRouter rpcRouter = new DOMRpcRouter();
-    private final DOMNotificationRouter notificationRouter = DOMNotificationRouter.create(1);
+    private final DOMNotificationRouter notificationRouter = new DOMNotificationRouter(1);
 
     public TestCustomizer() {
         super(true);

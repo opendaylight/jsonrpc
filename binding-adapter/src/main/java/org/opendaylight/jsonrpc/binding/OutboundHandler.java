@@ -10,6 +10,7 @@ package org.opendaylight.jsonrpc.binding;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import com.google.gson.JsonElement;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -19,7 +20,7 @@ import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.yangtools.yang.binding.DataContainer;
 import org.opendaylight.yangtools.yang.binding.DataObject;
 import org.opendaylight.yangtools.yang.binding.RpcService;
-import org.opendaylight.yangtools.yang.common.RpcError.ErrorType;
+import org.opendaylight.yangtools.yang.common.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
@@ -44,6 +45,7 @@ public class OutboundHandler<T extends RpcService> extends AbstractHandler<T> {
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
+    @SuppressFBWarnings("DCN_NULLPOINTER_EXCEPTION")
     @Override
     protected Object handleInvocation(Object proxy, Method method, Object[] args) throws Throwable {
         try {

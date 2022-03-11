@@ -9,9 +9,9 @@ package org.opendaylight.jsonrpc.impl;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.LinkedHashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.SubscriberSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
@@ -22,21 +22,21 @@ import org.opendaylight.jsonrpc.model.JSONRPCArg;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeChangeListener;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
-import org.opendaylight.yangtools.yang.data.api.schema.tree.DataTreeCandidate;
-import org.opendaylight.yangtools.yang.data.api.schema.tree.DataTreeCandidates;
+import org.opendaylight.yangtools.yang.data.tree.api.DataTreeCandidate;
+import org.opendaylight.yangtools.yang.data.tree.spi.DataTreeCandidates;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Adapter for {@link DOMDataTreeChangeListener} which subscribes to remote
- * event producer and call {@link DOMDataTreeChangeListener#onDataTreeChanged(java.util.Collection)} on
+ * event producer and call {@link DOMDataTreeChangeListener#onDataTreeChanged(java.util.List)} on
  * event reception.
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since May 6, 2018
  */
-public class DOMDataTreeChangeListenerAdapter implements DataChangeNotificationPublisher, AutoCloseable {
+public final class DOMDataTreeChangeListenerAdapter implements DataChangeNotificationPublisher, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(DOMDataTreeChangeListenerAdapter.class);
     private final DOMDataTreeChangeListener listener;
     private final SubscriberSession session;
@@ -61,7 +61,7 @@ public class DOMDataTreeChangeListenerAdapter implements DataChangeNotificationP
 
     @Override
     public void notifyListener(DataChangeNotification change) {
-        final Set<DataTreeCandidate> changes = new LinkedHashSet<>();
+        final List<DataTreeCandidate> changes = new ArrayList<>();
         for (final JSONRPCArg c : change.getChanges()) {
             final YangInstanceIdentifier yii = codecFactory.pathCodec().deserialize(c.getPath().getAsJsonObject());
             try {

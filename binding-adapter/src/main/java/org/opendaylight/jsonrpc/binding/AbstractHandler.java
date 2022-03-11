@@ -18,10 +18,10 @@ import org.opendaylight.mdsal.binding.runtime.api.BindingRuntimeContext;
 import org.opendaylight.mdsal.binding.spec.naming.BindingMapping;
 import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
 import org.opendaylight.yangtools.yang.binding.RpcService;
+import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.QNameModule;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
-import org.opendaylight.yangtools.yang.model.api.SchemaPath;
 
 /**
  * Abstract class that hold common fields for in/out handlers.
@@ -41,7 +41,7 @@ abstract class AbstractHandler<T extends RpcService> extends AbstractInvocationH
                         adapter.schemaContext()
                                 .getOperations()
                                 .stream()
-                                .filter(r -> r.getPath().equals(e.getValue()))
+                                .filter(r -> r.getQName().equals(e.getValue()))
                                 .findFirst()
                                 .get()))
                 .collect(Collector.of(ImmutableBiMap::<Method, RpcDefinition>builder,
@@ -49,13 +49,13 @@ abstract class AbstractHandler<T extends RpcService> extends AbstractInvocationH
                     (k, v) -> k.putAll(v.build()), ImmutableBiMap.Builder<Method, RpcDefinition>::build));
     }
 
-    ImmutableBiMap<Method, SchemaPath> getRpcMethodToSchemaPath(final Class<? extends RpcService> key) {
+    ImmutableBiMap<Method, QName> getRpcMethodToSchemaPath(final Class<? extends RpcService> key) {
         final Module module = getModule(key);
-        final ImmutableBiMap.Builder<Method, SchemaPath> ret = ImmutableBiMap.builder();
+        final ImmutableBiMap.Builder<Method, QName> ret = ImmutableBiMap.builder();
         try {
             for (final RpcDefinition rpcDef : module.getRpcs()) {
                 final Method method = findRpcMethod(key, rpcDef);
-                ret.put(method, rpcDef.getPath());
+                ret.put(method, rpcDef.getQName());
             }
         } catch (final NoSuchMethodException e) {
             throw new IllegalStateException("Rpc defined in model does not have representation in generated class.", e);
@@ -66,7 +66,7 @@ abstract class AbstractHandler<T extends RpcService> extends AbstractInvocationH
     private Method findRpcMethod(final Class<? extends RpcService> key, final RpcDefinition rpcDef)
             throws NoSuchMethodException {
         final String methodName = BindingMapping.getRpcMethodName(rpcDef.getQName());
-        final Class<?> inputClz = adapter.getRuntimeContext().getClassForSchema(rpcDef.getInput());
+        final Class<?> inputClz = adapter.getRuntimeContext().getRpcInput(rpcDef.getQName());
         return key.getMethod(methodName, inputClz);
     }
 

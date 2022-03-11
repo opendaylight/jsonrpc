@@ -109,7 +109,7 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent implement
 
     }
 
-    private FluentFuture<DOMRpcResult> bridgeNotAvailable() {
+    private static FluentFuture<DOMRpcResult> bridgeNotAvailable() {
         return FluentFutures
                 .immediateFailedFluentFuture(new DOMRpcImplementationNotAvailableException("RPC Bridge shutting down"));
     }

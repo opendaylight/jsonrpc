@@ -153,7 +153,7 @@ public class MappedPeerContext extends AbstractPeerContext {
                 .stream()
                 .map(Module::getName)
                 .map(YangIdentifier::new)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toSet()));
         publishState(endpoint, MountStatus.Mounted);
     }
 

@@ -13,7 +13,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -81,9 +80,9 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         }
     }
 
-    private Map<String, Peer> generateCache(Collection<? extends Peer> arg) {
+    private static Map<String, Peer> generateCache(Collection<? extends Peer> arg) {
         return Optional.ofNullable(arg)
-                .orElse(Collections.emptyList())
+                .orElse(List.of())
                 .stream()
                 .collect(Collectors.toMap(Peer::getName, Function.identity()));
     }
@@ -99,7 +98,7 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         if (!peersConfState.isPresent()) {
             // in case entire config was wiped, we still need to unconfigure
             // existing peers, hence supply empty list
-            unmountPeers(new ConfigBuilder().setConfiguredEndpoints(Collections.emptyMap()).build());
+            unmountPeers(new ConfigBuilder().setConfiguredEndpoints(Map.of()).build());
             LOG.info("{} configuration absent", ME);
             return false;
         }

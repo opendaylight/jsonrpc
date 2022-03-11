@@ -24,7 +24,7 @@ import org.opendaylight.yangtools.yang.model.api.SchemaContext;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Aug 25, 2018
  */
-public class SchemaChangeAwareConverter
+public final class SchemaChangeAwareConverter
         implements Supplier<JsonRpcCodecFactory>, AutoCloseable, EffectiveModelContextListener {
     private final AtomicReference<JsonRpcCodecFactory> converter = new AtomicReference<>(null);
     private ListenerRegistration<EffectiveModelContextListener> registration;

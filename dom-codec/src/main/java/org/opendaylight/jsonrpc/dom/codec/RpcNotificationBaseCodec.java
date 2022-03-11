@@ -53,6 +53,10 @@ abstract class RpcNotificationBaseCodec<T> extends AbstractCodec implements Code
         this.schema = schema;
     }
 
+    protected Absolute path() {
+        return path;
+    }
+
     protected JsonObject wrapInputIfNecessary(JsonElement input) {
         if (input.isJsonPrimitive()) {
             return wrapPrimitive(input.getAsJsonPrimitive());

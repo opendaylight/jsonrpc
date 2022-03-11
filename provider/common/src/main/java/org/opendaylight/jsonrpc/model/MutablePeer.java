@@ -9,8 +9,10 @@ package org.opendaylight.jsonrpc.model;
 
 import com.google.common.collect.Maps;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
@@ -30,7 +32,7 @@ public class MutablePeer implements Peer {
     private final List<DataOperationalEndpoints> dataOperationalEndpoints = new ArrayList<>();
     private final List<DataConfigEndpoints> endpoints = new ArrayList<>();
     private final List<NotificationEndpoints> notificationEndpoints = new ArrayList<>();
-    private final List<YangIdentifier> models = new ArrayList<>();
+    private final Set<YangIdentifier> models = new HashSet<>();
 
     // Builder-friendly methods
     public MutablePeer name(String newName) {
@@ -74,7 +76,7 @@ public class MutablePeer implements Peer {
     }
 
     @Override
-    public List<YangIdentifier> getModules() {
+    public Set<YangIdentifier> getModules() {
         return models;
     }
 

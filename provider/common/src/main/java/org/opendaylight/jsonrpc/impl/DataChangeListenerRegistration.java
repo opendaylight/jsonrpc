@@ -10,7 +10,7 @@ package org.opendaylight.jsonrpc.impl;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.io.IOException;
-import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -29,7 +29,7 @@ import org.opendaylight.mdsal.dom.api.DOMDataTreeChangeService;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeIdentifier;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
-import org.opendaylight.yangtools.yang.data.api.schema.tree.DataTreeCandidate;
+import org.opendaylight.yangtools.yang.data.tree.api.DataTreeCandidate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since May 8, 2018
  */
-public class DataChangeListenerRegistration
+public final class DataChangeListenerRegistration
         implements ListenerRegistration<DOMDataTreeChangeListener>, DOMDataTreeChangeListener {
     private static final Logger LOG = LoggerFactory.getLogger(DataChangeListenerRegistration.class);
     private final DataChangeNotificationPublisher publisher;
@@ -89,7 +89,7 @@ public class DataChangeListenerRegistration
     }
 
     @Override
-    public void onDataTreeChanged(Collection<DataTreeCandidate> treeChanges) {
+    public void onDataTreeChanged(List<DataTreeCandidate> treeChanges) {
         final DataChangeNotification dcn = new DataChangeNotification(
                 treeChanges.stream().map(this::mapDtc).collect(Collectors.toSet()));
         LOG.debug("Sending notification {}", dcn);

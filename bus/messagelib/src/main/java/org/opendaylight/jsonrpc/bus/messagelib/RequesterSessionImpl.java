@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Mar 24, 2018
  */
-public class RequesterSessionImpl extends AbstractSession implements MessageListener, RequesterSession {
+public final class RequesterSessionImpl extends AbstractSession implements MessageListener, RequesterSession {
     private static final Logger LOG = LoggerFactory.getLogger(RequesterSessionImpl.class);
     private final Requester requester;
     private final ReplyMessageHandler handler;

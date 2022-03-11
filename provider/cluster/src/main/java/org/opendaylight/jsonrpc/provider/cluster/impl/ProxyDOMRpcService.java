@@ -51,7 +51,7 @@ import scala.concurrent.duration.Duration;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jul 7, 2020
  */
-class ProxyDOMRpcService implements DOMRpcService {
+final class ProxyDOMRpcService implements DOMRpcService {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyDOMRpcService.class);
     private final ActorRef masterActorRef;
     private final Timeout askTimeout;

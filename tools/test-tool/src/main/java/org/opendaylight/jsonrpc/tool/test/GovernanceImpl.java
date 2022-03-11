@@ -44,7 +44,7 @@ import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangModelDependencyIn
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class GovernanceImpl implements RemoteGovernance {
+final class GovernanceImpl implements RemoteGovernance {
     private static final Logger LOG = LoggerFactory.getLogger(GovernanceImpl.class);
     private static final Set<YangModuleInfo> BUNDLED_MODULES = BindingReflections.loadModuleInfos();
     private static final Pattern YANG_MODULE_RE = Pattern
@@ -54,7 +54,7 @@ class GovernanceImpl implements RemoteGovernance {
             .build(new CacheLoader<Path, Set<ModuleInfo>>() {
                 @Override
                 public Set<ModuleInfo> load(Path file) throws Exception {
-                    final IRSchemaSource irSource = transformText(YangTextSchemaSource.forFile(file.toFile()));
+                    final IRSchemaSource irSource = transformText(YangTextSchemaSource.forPath(file));
                     return YangModelDependencyInfo.forIR(irSource)
                             .getDependencies()
                             .stream()
@@ -120,7 +120,7 @@ class GovernanceImpl implements RemoteGovernance {
         return new ArrayList<>(resolved);
     }
 
-    private Set<ModuleInfo> parseDependencies(YangModuleInfo ymi) {
+    private static Set<ModuleInfo> parseDependencies(YangModuleInfo ymi) {
         return ymi.getImportedModules()
                 .stream()
                 .map(mi -> new ModuleInfo(mi.getName().getLocalName(), null))
@@ -133,7 +133,7 @@ class GovernanceImpl implements RemoteGovernance {
         return result.getResult();
     }
 
-    private Optional<YangModuleInfo> findBundledModule(ModuleInfo mi) {
+    private static Optional<YangModuleInfo> findBundledModule(ModuleInfo mi) {
         return BUNDLED_MODULES.stream().filter(ymi -> ymi.getName().getLocalName().equals(mi.getModule())).findFirst();
     }
 

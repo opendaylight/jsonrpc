@@ -60,7 +60,7 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractJsonRpcTest.class);
     private ConcurrentDataBrokerTestCustomizer testCustomizer;
     private final DOMMountPointService domMountPointService = new DOMMountPointServiceImpl();
-    private final DOMNotificationRouter notificationRouter = DOMNotificationRouter.create(4);
+    private final DOMNotificationRouter notificationRouter = new DOMNotificationRouter(4);
     private DataBroker dataBroker;
     private DOMDataBroker domBroker;
     private DOMRpcRouter rpcRouter;
@@ -79,7 +79,7 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
         this.testCustomizer.updateSchema(runtimeContext);
         this.schemaContext = context;
         setupWithDataBroker(this.dataBroker);
-        rpcRouter = DOMRpcRouter.newInstance(getSchemaService());
+        rpcRouter = new DOMRpcRouter(getSchemaService());
         bnnc = new BindingCodecContext(runtimeContext);
         codecFactory = new JsonRpcCodecFactory(context);
     }
