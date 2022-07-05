@@ -11,7 +11,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ClassToInstanceMap;
 import com.google.common.collect.ImmutableClassToInstanceMap;
 import com.google.common.collect.MutableClassToInstanceMap;
-import org.opendaylight.yangtools.concepts.Builder;
 import org.opendaylight.yangtools.yang.binding.RpcService;
 
 /**
@@ -20,7 +19,7 @@ import org.opendaylight.yangtools.yang.binding.RpcService;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Oct 16, 2018
  */
-public final class MultiModelBuilder implements Builder<ClassToInstanceMap<RpcService>> {
+public final class MultiModelBuilder {
     private final ClassToInstanceMap<RpcService> services = MutableClassToInstanceMap.create();
 
     private MultiModelBuilder() {
@@ -36,7 +35,6 @@ public final class MultiModelBuilder implements Builder<ClassToInstanceMap<RpcSe
         return this;
     }
 
-    @Override
     public ClassToInstanceMap<RpcService> build() {
         Preconditions.checkState(!services.isEmpty(), "No services defined");
         return ImmutableClassToInstanceMap.copyOf(services);

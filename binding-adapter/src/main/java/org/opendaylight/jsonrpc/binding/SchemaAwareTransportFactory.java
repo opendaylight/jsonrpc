@@ -67,7 +67,7 @@ public final class SchemaAwareTransportFactory extends AbstractTransportFactory 
     }
 
     @SuppressWarnings({ "checkstyle:HiddenField", "squid:S2176" })
-    public static class Builder implements org.opendaylight.yangtools.concepts.Builder<SchemaAwareTransportFactory> {
+    public static class Builder {
         private EventLoopConfiguration eventLoopConfiguration;
         private RpcInvocationAdapter rpcInvocationAdapter;
 
@@ -81,7 +81,6 @@ public final class SchemaAwareTransportFactory extends AbstractTransportFactory 
             return this;
         }
 
-        @Override
         public SchemaAwareTransportFactory build() {
             if (eventLoopConfiguration == null) {
                 eventLoopConfiguration = EventLoopGroupProvider.config();
