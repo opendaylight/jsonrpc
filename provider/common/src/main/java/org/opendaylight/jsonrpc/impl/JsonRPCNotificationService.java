@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -34,7 +35,9 @@ import org.opendaylight.mdsal.dom.api.DOMNotificationListener;
 import org.opendaylight.mdsal.dom.api.DOMNotificationService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.concepts.AbstractListenerRegistration;
+import org.opendaylight.yangtools.concepts.AbstractRegistration;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
+import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.QNameModule;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
@@ -50,10 +53,10 @@ public final class JsonRPCNotificationService extends AbstractJsonRPCComponent
     private final Multimap<Absolute, DOMNotificationListener> listeners = HashMultimap.create();
     private final Map<QName, SubscriberSession> mapped;
 
-    public JsonRPCNotificationService(@NonNull Peer peer, @NonNull EffectiveModelContext schemaContext,
-            @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
-            @NonNull JsonRpcCodecFactory codecFactory, @NonNull TransportFactory transportFactory,
-            @Nullable RemoteGovernance governance) throws URISyntaxException {
+    public JsonRPCNotificationService(final @NonNull Peer peer, final @NonNull EffectiveModelContext schemaContext,
+            final @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
+            final @NonNull JsonRpcCodecFactory codecFactory, final @NonNull TransportFactory transportFactory,
+            final @Nullable RemoteGovernance governance) throws URISyntaxException {
         super(schemaContext, transportFactory, pathMap, codecFactory, peer);
 
         final ImmutableMap.Builder<QName, SubscriberSession> builder = ImmutableMap.builder();
@@ -94,7 +97,7 @@ public final class JsonRPCNotificationService extends AbstractJsonRPCComponent
 
     @Override
     public synchronized <T extends DOMNotificationListener> ListenerRegistration<T> registerNotificationListener(
-            @NonNull final T listener, @NonNull final Collection<Absolute> types) {
+            final T listener, final Collection<Absolute> types) {
         for (final Absolute type : types) {
             listeners.put(type, listener);
         }
@@ -109,7 +112,22 @@ public final class JsonRPCNotificationService extends AbstractJsonRPCComponent
     }
 
     @Override
-    public void handleNotification(JsonRpcNotificationMessage notification) {
+    public Registration registerNotificationListeners(final Map<Absolute, DOMNotificationListener> typeToListener) {
+        for (final Entry<Absolute, DOMNotificationListener> entry : typeToListener.entrySet()) {
+            listeners.put(entry.getKey(), entry.getValue());
+        }
+        return new AbstractRegistration() {
+            @Override
+            protected void removeRegistration() {
+                for (final Entry<Absolute, DOMNotificationListener> entry : typeToListener.entrySet()) {
+                    listeners.remove(entry.getKey(), entry.getValue());
+                }
+            }
+        };
+    }
+
+    @Override
+    public void handleNotification(final JsonRpcNotificationMessage notification) {
         try {
             final NotificationDefinition def = findNode(schemaContext, notification.getMethod(),
                     Module::getNotifications)

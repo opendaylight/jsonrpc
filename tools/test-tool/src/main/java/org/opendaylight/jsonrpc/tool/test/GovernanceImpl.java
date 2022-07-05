@@ -58,7 +58,7 @@ final class GovernanceImpl implements RemoteGovernance {
                     return YangModelDependencyInfo.forIR(irSource)
                             .getDependencies()
                             .stream()
-                            .map(m -> new ModuleInfo(m.getModuleName(), null))
+                            .map(m -> new ModuleInfo(m.getModuleName().getLocalName(), null))
                             .collect(Collectors.toSet());
                 }
             });

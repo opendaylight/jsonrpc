@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
-import org.opendaylight.yangtools.yang.model.repo.api.RevisionSourceIdentifier;
+import org.opendaylight.yangtools.yang.model.repo.api.SourceIdentifier;
 import org.opendaylight.yangtools.yang.model.repo.api.YangTextSchemaSource;
 
 /**
@@ -27,7 +27,7 @@ public final class StringYangTextSchemaSource extends YangTextSchemaSource {
     private final String content;
 
     public StringYangTextSchemaSource(String module, String moduleContent) {
-        super(RevisionSourceIdentifier.create(module));
+        super(new SourceIdentifier(module));
         this.content = moduleContent;
     }
 
@@ -43,7 +43,7 @@ public final class StringYangTextSchemaSource extends YangTextSchemaSource {
 
     @Override
     public Optional<String> getSymbolicName() {
-        // FIXME: can we return soemthing more reasonable?
+        // FIXME: can we return something more reasonable?
         return Optional.empty();
     }
 }
