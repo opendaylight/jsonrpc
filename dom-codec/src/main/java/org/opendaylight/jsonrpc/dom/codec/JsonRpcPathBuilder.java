@@ -23,15 +23,14 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import org.eclipse.jdt.annotation.NonNull;
-import org.opendaylight.yangtools.concepts.Builder;
 
 /**
- * Fluent {@link Builder} of JSONRPC path.
+ * Fluent builder of JSONRPC path.
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  */
 @Beta
-public class JsonRpcPathBuilder implements Builder<JsonObject> {
+public class JsonRpcPathBuilder {
     private static class PathArgument {
         private final Optional<String> name;
         private final List<Entry<String, String>> keys = new ArrayList<>(2);
@@ -73,7 +72,6 @@ public class JsonRpcPathBuilder implements Builder<JsonObject> {
         return new JsonRpcPathBuilder();
     }
 
-    @Override
     public JsonObject build() {
         JsonElement parent = new JsonObject();
         final JsonObject root = parent.getAsJsonObject();
