@@ -126,8 +126,8 @@ public class TestModelServiceTest {
                 .removeCoffeePot(new RemoveCoffeePotInputBuilder().build())
                 .get()
                 .getResult();
-        assertEquals(result.getCupsBrewed().longValue(), (long) 6);
-        assertEquals(result.getDrink(), Coffee.class);
+        assertEquals(6, result.getCupsBrewed().longValue());
+        assertEquals(Coffee.VALUE, result.getDrink());
     }
 
     @Test

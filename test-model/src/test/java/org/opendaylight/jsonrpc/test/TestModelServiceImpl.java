@@ -12,7 +12,6 @@ import static org.opendaylight.yangtools.yang.common.RpcResultBuilder.success;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.AbstractMap;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -54,7 +53,7 @@ public class TestModelServiceImpl implements TestModelRpcService {
     public ListenableFuture<RpcResult<MultiplyListOutput>> multiplyList(MultiplyListInput input) {
         final short multiplier = input.getMultiplier();
         final Map<NumbersKey, Numbers> map = Optional.ofNullable(input.getNumbers())
-                .orElse(Collections.emptyMap())
+                .orElse(Map.of())
                 .entrySet()
                 .stream()
                 .map(e -> new AbstractMap.SimpleEntry<>(e.getKey(),
@@ -93,7 +92,7 @@ public class TestModelServiceImpl implements TestModelRpcService {
     @Override
     public ListenableFuture<RpcResult<RemoveCoffeePotOutput>> removeCoffeePot(RemoveCoffeePotInput input) {
         return immediateFuture(success(
-                new RemoveCoffeePotOutputBuilder().setCupsBrewed(Uint32.valueOf(6)).setDrink(Coffee.class).build())
+                new RemoveCoffeePotOutputBuilder().setCupsBrewed(Uint32.valueOf(6)).setDrink(Coffee.VALUE).build())
                         .build());
     }
 

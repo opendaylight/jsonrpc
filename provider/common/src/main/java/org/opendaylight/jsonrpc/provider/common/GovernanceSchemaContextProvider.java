@@ -129,7 +129,7 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
                 final ModuleInfo mi = toResolve.pop();
                 final Set<ModuleInfo> imports = moduleImportCache.getUnchecked(mi)
                         .stream()
-                        .map(imp -> new ModuleInfo(imp.getModuleName(), null))
+                        .map(imp -> new ModuleInfo(imp.getModuleName().getLocalName(), null))
                         .filter(m -> !resolved.contains(m))
                         .filter(m -> !toResolve.contains(m))
                         .collect(Collectors.toSet());
