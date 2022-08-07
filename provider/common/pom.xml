@@ -19,6 +19,17 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <artifactId>jsonrpc-provider-common</artifactId>
     <packaging>bundle</packaging>
     <name>JSON-RPC :: Provider :: Common</name>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.opendaylight.mdsal</groupId>
+                <artifactId>dom-parent</artifactId>
+                <version>10.0.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <build>
         <plugins>
             <plugin>
@@ -49,7 +60,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
-            <version>1.12.9</version>
         </dependency>
     </dependencies>
 </project>
