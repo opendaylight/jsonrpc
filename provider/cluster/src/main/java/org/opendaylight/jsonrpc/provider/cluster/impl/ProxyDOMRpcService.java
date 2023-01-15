@@ -21,7 +21,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
-import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.provider.cluster.messages.PathAndDataMsg;
 import org.opendaylight.jsonrpc.provider.cluster.rpc.EmptyRpcResponse;
 import org.opendaylight.jsonrpc.provider.cluster.rpc.InvokeRpcRequest;
@@ -36,7 +35,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.RpcError;
-import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
+import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,8 +68,7 @@ final class ProxyDOMRpcService implements DOMRpcService {
     }
 
     @Override
-    public @NonNull ListenableFuture<? extends DOMRpcResult> invokeRpc(@NonNull QName type,
-            @NonNull NormalizedNode input) {
+    public ListenableFuture<? extends DOMRpcResult> invokeRpc(QName type, ContainerNode input) {
         LOG.debug("[{}] invoke '{}' using {}", peer.getName(), type.getLocalName(), input);
         final SettableFuture<DOMRpcResult> result = SettableFuture.create();
         final InvokeRpcRequest request = InvokeRpcRequest.create(Absolute.of(type), input);
@@ -99,7 +97,7 @@ final class ProxyDOMRpcService implements DOMRpcService {
                 if (responseData == null) {
                     rpcResult = new DefaultDOMRpcResult(ImmutableList.copyOf(errors));
                 } else {
-                    rpcResult = new DefaultDOMRpcResult(responseData.getData(), errors);
+                    rpcResult = new DefaultDOMRpcResult((ContainerNode) responseData.getData(), errors);
                 }
                 result.set(rpcResult);
             }
@@ -110,8 +108,7 @@ final class ProxyDOMRpcService implements DOMRpcService {
     }
 
     @Override
-    public <T extends DOMRpcAvailabilityListener> @NonNull ListenerRegistration<T> registerRpcListener(
-            @NonNull T listener) {
+    public <T extends DOMRpcAvailabilityListener> ListenerRegistration<T> registerRpcListener(T listener) {
         throw new UnsupportedOperationException("registerRpcListener is not supported in cluster");
     }
 

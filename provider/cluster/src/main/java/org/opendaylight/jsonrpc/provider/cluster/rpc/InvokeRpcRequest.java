@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.opendaylight.jsonrpc.provider.cluster.messages.PathAndDataMsg;
 import org.opendaylight.jsonrpc.provider.cluster.messages.SchemaPathMsg;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
-import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
+import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 
 public class InvokeRpcRequest implements Serializable {
@@ -19,7 +19,7 @@ public class InvokeRpcRequest implements Serializable {
     private SchemaPathMsg schemaPath;
     private PathAndDataMsg data;
 
-    public static InvokeRpcRequest create(Absolute path, NormalizedNode input) {
+    public static InvokeRpcRequest create(Absolute path, ContainerNode input) {
         final PathAndDataMsg data;
         if (input != null) {
             data = new PathAndDataMsg(YangInstanceIdentifier.empty(), input);

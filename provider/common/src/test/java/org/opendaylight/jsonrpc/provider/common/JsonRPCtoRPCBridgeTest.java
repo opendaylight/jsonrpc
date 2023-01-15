@@ -217,7 +217,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
             parser.parse(JsonReaderAdapter.from(
                 JsonParser.parseString("{\"input\" : { \"some-number\":5, \"some-data\": { \"data\" : 123}}}")));
         }
-        DOMRpcResult result = bridge.invokeRpc(path, resultHolder.getResult()).get();
+        DOMRpcResult result = bridge.invokeRpc(path, (ContainerNode) resultHolder.getResult()).get();
         logResult(result);
         assertTrue(result.getErrors().isEmpty());
     }

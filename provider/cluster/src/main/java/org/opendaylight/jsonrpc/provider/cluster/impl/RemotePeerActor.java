@@ -40,6 +40,7 @@ import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.concepts.ObjectRegistration;
 import org.opendaylight.yangtools.yang.common.QName;
+import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.duration.Duration;
@@ -145,7 +146,7 @@ class RemotePeerActor extends AbstractUntypedActor {
         final PathAndDataMsg data = request.getData();
 
         final ListenableFuture<? extends DOMRpcResult> rpcResult = domRpcService.invokeRpc(qname,
-                data != null ? data.getData() : null);
+                data != null ? (ContainerNode) data.getData() : null);
 
         Futures.addCallback(rpcResult, new FutureCallback<DOMRpcResult>() {
             @Override
@@ -157,11 +158,11 @@ class RemotePeerActor extends AbstractUntypedActor {
                     return;
                 }
                 PathAndDataMsg nodeMessageReply = null;
-                if (domResult.getResult() != null) {
-                    nodeMessageReply = new PathAndDataMsg(domResult.getResult());
+                if (domResult.value() != null) {
+                    nodeMessageReply = new PathAndDataMsg(domResult.value());
                 }
-                final InvokeRpcResponse response = new InvokeRpcResponse(nodeMessageReply, domResult.getErrors());
-                LOG.debug("[{}] DOM result : {} sending response {} to {}", peer.getName(), domResult.getResult(),
+                final InvokeRpcResponse response = new InvokeRpcResponse(nodeMessageReply, domResult.errors());
+                LOG.debug("[{}] DOM result : {} sending response {} to {}", peer.getName(), domResult.value(),
                         response, sender);
                 sender.tell(response, self());
             }
