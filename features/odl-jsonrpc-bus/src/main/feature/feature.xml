@@ -11,9 +11,9 @@
         <configfile finalname="etc/org.opendaylight.jsonrpc.bus.cfg">
             mvn:org.opendaylight.jsonrpc.bus/bus-config/${project.version}/cfg/config
         </configfile>
-        <feature version="[11,12)">odl-netty-4</feature>
-        <feature version="[10,11)">odl-mdsal-model-rfc6991</feature>
-        <feature version="[0.16,1)">odl-aaa-shiro</feature>
+        <feature version="[12,13)">odl-netty-4</feature>
+        <feature version="[11,12)">odl-mdsal-model-rfc6991</feature>
+        <feature version="[0.17,1)">odl-aaa-shiro</feature>
     </feature>
 </features>
 

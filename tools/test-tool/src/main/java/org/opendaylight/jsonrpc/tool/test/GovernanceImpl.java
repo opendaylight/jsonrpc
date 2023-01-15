@@ -38,8 +38,8 @@ import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.StoreOperationArgument;
 import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
 import org.opendaylight.yangtools.yang.binding.YangModuleInfo;
+import org.opendaylight.yangtools.yang.model.repo.api.YangIRSchemaSource;
 import org.opendaylight.yangtools.yang.model.repo.api.YangTextSchemaSource;
-import org.opendaylight.yangtools.yang.parser.rfc7950.ir.IRSchemaSource;
 import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangModelDependencyInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +54,7 @@ final class GovernanceImpl implements RemoteGovernance {
             .build(new CacheLoader<Path, Set<ModuleInfo>>() {
                 @Override
                 public Set<ModuleInfo> load(Path file) throws Exception {
-                    final IRSchemaSource irSource = transformText(YangTextSchemaSource.forPath(file));
+                    final YangIRSchemaSource irSource = transformText(YangTextSchemaSource.forPath(file));
                     return YangModelDependencyInfo.forIR(irSource)
                             .getDependencies()
                             .stream()

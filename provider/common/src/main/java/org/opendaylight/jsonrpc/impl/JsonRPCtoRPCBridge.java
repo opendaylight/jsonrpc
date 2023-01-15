@@ -37,7 +37,7 @@ import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.util.concurrent.FluentFutures;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.QNameModule;
-import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
+import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
@@ -95,7 +95,7 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent implement
     }
 
     @Override
-    public ListenableFuture<DOMRpcResult> invokeRpc(@NonNull final QName type, @Nullable final NormalizedNode input) {
+    public ListenableFuture<DOMRpcResult> invokeRpc(final QName type, final ContainerNode input) {
         if (closed.get()) {
             return bridgeNotAvailable();
         }

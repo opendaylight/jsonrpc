@@ -14,6 +14,7 @@ import java.io.ObjectOutput;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.controller.cluster.datastore.node.utils.stream.SerializationUtils;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
+import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 
 public class PathAndDataMsg implements Externalizable {
@@ -24,7 +25,7 @@ public class PathAndDataMsg implements Externalizable {
         // default ctor is required
     }
 
-    public PathAndDataMsg(NormalizedNode data) {
+    public PathAndDataMsg(ContainerNode data) {
         this(YangInstanceIdentifier.empty(), data);
     }
 

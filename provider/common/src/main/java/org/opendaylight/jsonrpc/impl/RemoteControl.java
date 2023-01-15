@@ -37,7 +37,6 @@ import org.opendaylight.mdsal.dom.api.DOMNotificationPublishService;
 import org.opendaylight.mdsal.dom.api.DOMRpcResult;
 import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
-import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
@@ -131,13 +130,12 @@ public class RemoteControl implements RemoteControlComposite {
         final RpcDefinition def = findNode(schemaContext, name, Module::getRpcs)
                 .orElseThrow(() -> new IllegalArgumentException("No such method " + name));
         try {
-            final NormalizedNode nn = codecFactory.rpcInputCodec(def).deserialize(rpcInput);
+            final ContainerNode nn = codecFactory.rpcInputCodec(def).deserialize(rpcInput);
             final DOMRpcResult out = Uninterruptibles.getUninterruptibly(rpcService.invokeRpc(def.getQName(), nn));
-            if (!out.getErrors().isEmpty()) {
-                throw new IllegalStateException("RPC invocation failed : " + out.getErrors());
+            if (!out.errors().isEmpty()) {
+                throw new IllegalStateException("RPC invocation failed : " + out.errors());
             }
-            return out.getResult() == null ? JsonNull.INSTANCE
-                    : codecFactory.rpcOutputCodec(def).serialize((ContainerNode) out.getResult());
+            return out.value() == null ? JsonNull.INSTANCE : codecFactory.rpcOutputCodec(def).serialize(out.value());
         } catch (ExecutionException | IOException e) {
             throw new IllegalStateException("RPC invocation failed", e);
         }
