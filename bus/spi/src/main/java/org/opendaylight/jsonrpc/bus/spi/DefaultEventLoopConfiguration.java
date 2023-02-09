@@ -10,6 +10,9 @@ package org.opendaylight.jsonrpc.bus.spi;
 import io.netty.channel.EventLoopGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 import java.util.Objects;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Default implementation of {@link EventLoopConfiguration}.
@@ -17,6 +20,7 @@ import java.util.Objects;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Sep 23, 2018
  */
+@Component(property = "name=jsonrpc")
 public class DefaultEventLoopConfiguration implements EventLoopConfiguration {
     // event loop group used to dispatch newly accepted connection
     private final EventLoopGroup bossGroup;
@@ -25,8 +29,11 @@ public class DefaultEventLoopConfiguration implements EventLoopConfiguration {
     // event executor used to invoke final handler in pipeline, user code can use blocking
     private final EventExecutorGroup handlerGroup;
 
-    public DefaultEventLoopConfiguration(final EventLoopGroup bossGroup, final EventLoopGroup workerGroup,
-            final EventExecutorGroup handlerGroup) {
+    @Activate
+    public DefaultEventLoopConfiguration(
+            @Reference(target = "(&(name=jsonrpc)(type=boss))") final EventLoopGroup bossGroup,
+            @Reference(target = "(&(name=jsonrpc)(type=worker))") final EventLoopGroup workerGroup,
+            @Reference(target = "(&(name=jsonrpc)(type=handler))") final EventExecutorGroup handlerGroup) {
         this.bossGroup = Objects.requireNonNull(bossGroup);
         this.workerGroup = Objects.requireNonNull(workerGroup);
         this.handlerGroup = Objects.requireNonNull(handlerGroup);
