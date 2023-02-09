@@ -96,7 +96,6 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
                 return Optional.of(GOVERNANCE_MOCK);
             }
         });
-        provider.init();
         logTestName("START");
     }
 

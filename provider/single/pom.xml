@@ -115,6 +115,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <artifactId>gson</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component.annotations</artifactId>
+        </dependency>
 
         <!-- Testing Dependencies -->
         <dependency>
