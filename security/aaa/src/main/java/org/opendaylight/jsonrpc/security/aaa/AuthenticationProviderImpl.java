@@ -10,11 +10,13 @@ package org.opendaylight.jsonrpc.security.aaa;
 import java.util.Objects;
 import java.util.Optional;
 import org.opendaylight.aaa.api.AuthenticationException;
-import org.opendaylight.aaa.api.CredentialAuth;
 import org.opendaylight.aaa.api.IDMStoreException;
 import org.opendaylight.aaa.api.IIDMStore;
-import org.opendaylight.aaa.api.PasswordCredentials;
+import org.opendaylight.aaa.api.PasswordCredentialAuth;
 import org.opendaylight.jsonrpc.security.api.AuthenticationProvider;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,12 +26,14 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since May 24, 2018
  */
-public class AuthenticationProviderImpl implements AuthenticationProvider {
+@Component(property = "type=aaa")
+public final class AuthenticationProviderImpl implements AuthenticationProvider {
     private static final Logger LOG = LoggerFactory.getLogger(AuthenticationProviderImpl.class);
-    private final CredentialAuth<PasswordCredentials> credentialAuth;
+    private final PasswordCredentialAuth credentialAuth;
     private final IIDMStore iidmStore;
 
-    public AuthenticationProviderImpl(CredentialAuth<PasswordCredentials> credService, IIDMStore iidmStore) {
+    @Activate
+    public AuthenticationProviderImpl(@Reference PasswordCredentialAuth credService, @Reference IIDMStore iidmStore) {
         this.credentialAuth = Objects.requireNonNull(credService);
         this.iidmStore = Objects.requireNonNull(iidmStore);
     }
@@ -52,13 +56,13 @@ public class AuthenticationProviderImpl implements AuthenticationProvider {
 
     @Override
     public boolean validate(String username, String password) {
+        LOG.debug("Validating credentials for user {}", username);
         try {
-            LOG.debug("Validating credentials for user {}", username);
             credentialAuth.authenticate(new PasswordCredentialsContainer(username, password));
-            return true;
         } catch (AuthenticationException e) {
             LOG.warn("Authentication of user '{}' failed", username, e);
             return false;
         }
+        return true;
     }
 }
