@@ -61,5 +61,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.service.component.annotations</artifactId>
+        </dependency>
     </dependencies>
 </project>
