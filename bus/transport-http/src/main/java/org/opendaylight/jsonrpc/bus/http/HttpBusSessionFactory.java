@@ -12,6 +12,10 @@ import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
 import org.opendaylight.jsonrpc.security.api.SecurityService;
 import org.opendaylight.jsonrpc.security.noop.NoopSecurityService;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 
 
 /**
@@ -21,16 +25,24 @@ import org.opendaylight.jsonrpc.security.noop.NoopSecurityService;
  * @since Mar 9, 2018
  */
 @MetaInfServices(value = BusSessionFactory.class)
+@Component(service = BusSessionFactory.class, property = "scheme=http")
 public class HttpBusSessionFactory extends AbstractWebBusSessionFactory {
     public HttpBusSessionFactory() {
         super("http", false, false, 80);
     }
 
-    public HttpBusSessionFactory(EventLoopConfiguration config, SecurityService securityService) {
+    @Activate
+    public HttpBusSessionFactory(@Reference(target = "(name=jsonrpc)") EventLoopConfiguration config,
+            @Reference SecurityService securityService) {
         super("http", false, false, 80, config, securityService);
     }
 
     public HttpBusSessionFactory(EventLoopConfiguration config) {
         this(config, NoopSecurityService.INSTANCE);
+    }
+
+    @Deactivate
+    public void deactivate() {
+        close();
     }
 }
