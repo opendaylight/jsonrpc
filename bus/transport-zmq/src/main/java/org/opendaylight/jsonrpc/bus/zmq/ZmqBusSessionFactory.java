@@ -20,6 +20,10 @@ import org.opendaylight.jsonrpc.bus.api.Subscriber;
 import org.opendaylight.jsonrpc.bus.spi.AbstractBusSessionFactory;
 import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
 import org.opendaylight.jsonrpc.security.noop.NoopSecurityService;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 
 
 /**
@@ -29,13 +33,20 @@ import org.opendaylight.jsonrpc.security.noop.NoopSecurityService;
  * @since Mar 6, 2018
  */
 @MetaInfServices(value = BusSessionFactory.class)
+@Component(service = BusSessionFactory.class, property = "scheme=zmq")
 public class ZmqBusSessionFactory extends AbstractBusSessionFactory {
     public ZmqBusSessionFactory() {
         super(Constants.TRANSPORT_NAME);
     }
 
-    public ZmqBusSessionFactory(EventLoopConfiguration config) {
+    @Activate
+    public ZmqBusSessionFactory(@Reference(target = "(name=jsonrpc)") EventLoopConfiguration config) {
         super(Constants.TRANSPORT_NAME, config, NoopSecurityService.INSTANCE);
+    }
+
+    @Deactivate
+    public void deactivate() {
+        close();
     }
 
     @Override
