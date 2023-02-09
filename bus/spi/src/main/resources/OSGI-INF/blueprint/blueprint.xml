@@ -19,31 +19,31 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         </cm:default-properties>
     </cm:property-placeholder>
 
-    <bean id="bossFactory" class="org.opendaylight.jsonrpc.bus.spi.ThreadFactoryProvider" factory-method="create">
-        <argument value="boss" />
-    </bean>
-
-    <bean id="workerFactory" class="org.opendaylight.jsonrpc.bus.spi.ThreadFactoryProvider" factory-method="create">
-        <argument value="worker" />
-    </bean>
-
-    <bean id="handlerFactory" class="org.opendaylight.jsonrpc.bus.spi.ThreadFactoryProvider" factory-method="create">
-        <argument value="handler" />
-    </bean>
-
     <bean id="bossGroup" class="io.netty.channel.nio.NioEventLoopGroup" destroy-method="shutdown">
         <argument value="${boss.group.size}" />
-        <argument ref="bossFactory" />
+        <argument>
+            <bean class="org.opendaylight.jsonrpc.bus.spi.ThreadFactoryProvider" factory-method="create">
+                <argument value="boss" />
+            </bean>
+        </argument>
     </bean>
 
     <bean id="workerGroup" class="io.netty.channel.nio.NioEventLoopGroup" destroy-method="shutdown">
         <argument value="${worker.group.size}" />
-        <argument ref="workerFactory" />
+        <argument>
+            <bean class="org.opendaylight.jsonrpc.bus.spi.ThreadFactoryProvider" factory-method="create">
+                <argument value="worker" />
+            </bean>
+        </argument>
     </bean>
 
     <bean id="handlerExecutor" class="io.netty.util.concurrent.DefaultEventExecutorGroup" destroy-method="shutdown">
         <argument value="${handler.group.size}" />
-        <argument ref="handlerFactory" />
+        <argument>
+            <bean class="org.opendaylight.jsonrpc.bus.spi.ThreadFactoryProvider" factory-method="create">
+                <argument value="handler" />
+            </bean>
+        </argument>
     </bean>
 
     <bean id="eventLoopConfiguration" class="org.opendaylight.jsonrpc.bus.spi.DefaultEventLoopConfiguration">
