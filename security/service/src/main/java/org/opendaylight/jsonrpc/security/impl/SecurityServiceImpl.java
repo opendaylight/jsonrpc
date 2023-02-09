@@ -10,6 +10,9 @@ package org.opendaylight.jsonrpc.security.impl;
 import java.util.Objects;
 import org.opendaylight.jsonrpc.security.api.AuthenticationProvider;
 import org.opendaylight.jsonrpc.security.api.SecurityService;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Default implementation of {@link SecurityService}.
@@ -17,10 +20,12 @@ import org.opendaylight.jsonrpc.security.api.SecurityService;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jun 10, 2018
  */
-public class SecurityServiceImpl implements SecurityService {
+@Component(property = "type=default")
+public final class SecurityServiceImpl implements SecurityService {
     private final AuthenticationProvider authenticationProvider;
 
-    public SecurityServiceImpl(final AuthenticationProvider authenticationProvider) {
+    @Activate
+    public SecurityServiceImpl(@Reference(target = "(type=aaa)") final AuthenticationProvider authenticationProvider) {
         this.authenticationProvider = Objects.requireNonNull(authenticationProvider);
     }
 
