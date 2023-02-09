@@ -13,21 +13,32 @@ import java.util.Objects;
 import java.util.Optional;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
+import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.model.GovernanceProvider;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.provider.common.ProviderDependencies;
 import org.opendaylight.jsonrpc.provider.common.Util;
 import org.opendaylight.mdsal.binding.api.ClusteredDataTreeChangeListener;
+import org.opendaylight.mdsal.binding.api.DataBroker;
 import org.opendaylight.mdsal.binding.api.DataObjectModification;
 import org.opendaylight.mdsal.binding.api.DataObjectModification.ModificationType;
 import org.opendaylight.mdsal.binding.api.DataTreeIdentifier;
 import org.opendaylight.mdsal.binding.api.DataTreeModification;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.mdsal.dom.api.DOMDataBroker;
+import org.opendaylight.mdsal.dom.api.DOMMountPointService;
+import org.opendaylight.mdsal.dom.api.DOMNotificationPublishService;
+import org.opendaylight.mdsal.dom.api.DOMRpcService;
+import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,6 +48,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jul 2, 2020
  */
+@Component(service = GovernanceProvider.class)
 public final class RemoteControlProvider
         implements AutoCloseable, ClusteredDataTreeChangeListener<Config>, GovernanceProvider {
     private static final Logger LOG = LoggerFactory.getLogger(RemoteControlProvider.class);
@@ -48,12 +60,23 @@ public final class RemoteControlProvider
     private RemoteGovernance governance;
     private ResponderSession remoteControl;
 
+    @Activate
+    public RemoteControlProvider(@Reference YangXPathParserFactory yangXPathParserFactory,
+            @Reference DataBroker dataBroker, @Reference DOMDataBroker domDataBroker,
+            @Reference DOMMountPointService domMountPointService, @Reference DOMSchemaService schemaService,
+            @Reference DOMRpcService domRpcService,
+            @Reference DOMNotificationPublishService domNotificationPublishService,
+            @Reference TransportFactory transportFactory) {
+        this(new ProviderDependencies(transportFactory, dataBroker, domMountPointService, domDataBroker, schemaService,
+            domNotificationPublishService, domRpcService, yangXPathParserFactory));
+    }
+
     public RemoteControlProvider(@NonNull ProviderDependencies dependencies) {
-        registration = dependencies.getDataBroker()
-                .registerDataTreeChangeListener(DataTreeIdentifier.create(LogicalDatastoreType.CONFIGURATION,
-                        InstanceIdentifier.builder(Config.class).build()), this);
         this.dependencies = Objects.requireNonNull(dependencies);
         this.codecFactory = new JsonRpcCodecFactory(dependencies.getSchemaService().getGlobalContext());
+        registration = dependencies.getDataBroker()
+                .registerDataTreeChangeListener(DataTreeIdentifier.create(LogicalDatastoreType.CONFIGURATION,
+                        InstanceIdentifier.create(Config.class)), this);
     }
 
     @Override
