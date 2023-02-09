@@ -13,7 +13,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -25,17 +24,24 @@ import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.checkerframework.checker.lock.qual.GuardedBy;
+import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.CombinedSchemaContextProvider;
 import org.opendaylight.jsonrpc.model.GovernanceProvider;
 import org.opendaylight.jsonrpc.provider.common.AbstractPeerContext;
 import org.opendaylight.jsonrpc.provider.common.FailedPeerContext;
 import org.opendaylight.jsonrpc.provider.common.MappedPeerContext;
 import org.opendaylight.jsonrpc.provider.common.ProviderDependencies;
-import org.opendaylight.jsonrpc.provider.common.Util;
 import org.opendaylight.mdsal.binding.api.ClusteredDataTreeChangeListener;
+import org.opendaylight.mdsal.binding.api.DataBroker;
 import org.opendaylight.mdsal.binding.api.DataTreeIdentifier;
 import org.opendaylight.mdsal.binding.api.ReadTransaction;
+import org.opendaylight.mdsal.binding.api.RpcProviderService;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.mdsal.dom.api.DOMDataBroker;
+import org.opendaylight.mdsal.dom.api.DOMMountPointService;
+import org.opendaylight.mdsal.dom.api.DOMNotificationPublishService;
+import org.opendaylight.mdsal.dom.api.DOMRpcService;
+import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ConfigBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshInput;
@@ -46,28 +52,51 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRelo
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReloadOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.JsonrpcService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
+import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
+import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Component(service = { })
 public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     private static final String ME = "JSON RPC Provider";
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCProvider.class);
     private static final InstanceIdentifier<Config> GLOBAL_CFG_II = InstanceIdentifier.create(Config.class);
-    private static final DataTreeIdentifier<Config> CFG_DTI = DataTreeIdentifier
-            .create(LogicalDatastoreType.CONFIGURATION, GLOBAL_CFG_II);
+    private static final DataTreeIdentifier<Config> CFG_DTI =
+        DataTreeIdentifier.create(LogicalDatastoreType.CONFIGURATION, GLOBAL_CFG_II);
     private final Map<String, AbstractPeerContext> peerState = new ConcurrentHashMap<>();
-    private final List<AutoCloseable> toClose = new LinkedList<>();
     private final ReentrantReadWriteLock changeLock = new ReentrantReadWriteLock();
-    private volatile boolean closed = false;
     private final ProviderDependencies dependencies;
     private final GovernanceProvider governance;
+    private final Registration dtclReg;
+    private Registration rpcReg;
+    private volatile boolean closed = false;
+
+    @Activate
+    public JsonRPCProvider(@Reference YangXPathParserFactory yangXPathParserFactory,
+            @Reference DataBroker dataBroker, @Reference RpcProviderService rpcProviderService,
+            @Reference DOMDataBroker domDataBroker, @Reference DOMMountPointService domMountPointService,
+            @Reference DOMSchemaService schemaService, @Reference DOMRpcService domRpcService,
+            @Reference DOMNotificationPublishService domNotificationPublishService,
+            @Reference TransportFactory transportFactory, @Reference GovernanceProvider governance) {
+        this(new ProviderDependencies(transportFactory, dataBroker, domMountPointService, domDataBroker, schemaService,
+            domNotificationPublishService, domRpcService, yangXPathParserFactory), governance);
+        rpcReg = rpcProviderService.registerRpcImplementation(JsonrpcService.class, this);
+    }
 
     public JsonRPCProvider(ProviderDependencies dependencies, GovernanceProvider governance) {
         this.dependencies = Objects.requireNonNull(dependencies);
         this.governance = Objects.requireNonNull(governance);
+        dtclReg = dependencies.getDataBroker().registerDataTreeChangeListener(CFG_DTI,
+                    (ClusteredDataTreeChangeListener<Config>) changes -> processNotification());
+        processNotification();
     }
 
     /**
@@ -151,19 +180,18 @@ public class JsonRPCProvider implements JsonrpcService, AutoCloseable {
         }
     }
 
-    public void init() {
-        toClose.add(dependencies.getDataBroker()
-                .registerDataTreeChangeListener(CFG_DTI,
-                        (ClusteredDataTreeChangeListener<Config>) changes -> processNotification()));
-        processNotification();
-    }
-
+    @Deactivate
     @Override
     public void close() {
-        closed = true;
-        peerState.values().forEach(AbstractPeerContext::close);
-        peerState.clear();
-        toClose.forEach(Util::closeAndLogOnError);
+        if (!closed) {
+            closed = true;
+            if (rpcReg != null) {
+                rpcReg.close();
+            }
+            dtclReg.close();
+            peerState.values().forEach(AbstractPeerContext::close);
+            peerState.clear();
+        }
     }
 
     /*
