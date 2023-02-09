@@ -1,4 +1,0 @@
-org.opendaylight.jsonrpc.bus.http.HttpBusSessionFactory
-org.opendaylight.jsonrpc.bus.http.HttpsBusSessionFactory
-org.opendaylight.jsonrpc.bus.http.WsBusSessionFactory
-org.opendaylight.jsonrpc.bus.http.WssBusSessionFactory

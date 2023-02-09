@@ -65,6 +65,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <artifactId>netty-handler</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.kohsuke.metainf-services</groupId>
+            <artifactId>metainf-services</artifactId>
+        </dependency>
         <!-- test stuff -->
         <dependency>
             <groupId>org.opendaylight.jsonrpc.bus</groupId>
