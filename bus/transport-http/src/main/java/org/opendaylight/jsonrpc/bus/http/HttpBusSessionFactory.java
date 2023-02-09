@@ -7,6 +7,7 @@
  */
 package org.opendaylight.jsonrpc.bus.http;
 
+import org.kohsuke.MetaInfServices;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
 import org.opendaylight.jsonrpc.security.api.SecurityService;
@@ -19,6 +20,7 @@ import org.opendaylight.jsonrpc.security.noop.NoopSecurityService;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Mar 9, 2018
  */
+@MetaInfServices(value = BusSessionFactory.class)
 public class HttpBusSessionFactory extends AbstractWebBusSessionFactory {
     public HttpBusSessionFactory() {
         super("http", false, false, 80);
