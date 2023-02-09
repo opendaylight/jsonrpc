@@ -46,12 +46,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         </argument>
     </bean>
 
-    <bean id="eventLoopConfiguration" class="org.opendaylight.jsonrpc.bus.spi.DefaultEventLoopConfiguration">
-        <argument ref="bossGroup" />
-        <argument ref="workerGroup" />
-        <argument ref="handlerExecutor" />
-    </bean>
-
     <service interface="io.netty.channel.EventLoopGroup" ref="bossGroup">
         <service-properties>
             <entry key="type" value="boss" />
@@ -73,12 +67,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     </service>
 
     <service interface="java.util.concurrent.ScheduledExecutorService" ref="handlerExecutor">
-        <service-properties>
-            <entry key="name" value="jsonrpc" />
-        </service-properties>
-    </service>
-
-    <service interface="org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration" ref="eventLoopConfiguration">
         <service-properties>
             <entry key="name" value="jsonrpc" />
         </service-properties>
