@@ -11,6 +11,9 @@ import java.util.Iterator;
 import java.util.List;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * Implementation of {@link BusSessionFactoryProvider} used in OSGi environment.
@@ -19,11 +22,18 @@ import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
+@Component
 public class OsgiBusSessionFactoryProvider implements BusSessionFactoryProvider {
     private final List<BusSessionFactory> sessionFactories;
 
-    public OsgiBusSessionFactoryProvider(List<BusSessionFactory> sessionFactories) {
-        this.sessionFactories = sessionFactories;
+    @Activate
+    public OsgiBusSessionFactoryProvider(
+            @Reference(target = "(scheme=http)") BusSessionFactory http,
+            @Reference(target = "(scheme=https)") BusSessionFactory https,
+            @Reference(target = "(scheme=ws)") BusSessionFactory ws,
+            @Reference(target = "(scheme=wss)") BusSessionFactory wss,
+            @Reference(target = "(scheme=zmq)") BusSessionFactory zmq) {
+        this.sessionFactories = List.of(http, https, ws, wss, zmq);
     }
 
     @Override
