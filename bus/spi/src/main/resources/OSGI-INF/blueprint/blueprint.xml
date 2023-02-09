@@ -52,8 +52,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <argument ref="handlerExecutor" />
     </bean>
 
-    <service interface="org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration" ref="eventLoopConfiguration" />
-
     <service interface="io.netty.channel.EventLoopGroup" ref="bossGroup">
         <service-properties>
             <entry key="type" value="boss" />
