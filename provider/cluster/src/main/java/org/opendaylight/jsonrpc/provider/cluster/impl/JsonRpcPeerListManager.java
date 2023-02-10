@@ -148,12 +148,12 @@ public final class JsonRpcPeerListManager implements ClusteredDataTreeChangeList
     @Override
     public synchronized ListenableFuture<RpcResult<ForceReloadOutput>> forceReload(ForceReloadInput input) {
         //take snapshot of configured peers
-        final Set<Peer> configured = peerMap.values()
-                .stream()
+        peerMap.values().stream()
                 .map(AbstractPeerContext::getPeer)
-                .collect(Collectors.toSet());
-        //cast is safe here, we populated peers from ConfiguredEndpoints objects
-        configured.stream().map(ConfiguredEndpoints.class::cast).forEach(this::updatePeerContext);
+                .distinct()
+                //cast is safe here, we populated peers from ConfiguredEndpoints objects
+                .map(ConfiguredEndpoints.class::cast)
+                .forEach(this::updatePeerContext);
         return Futures.immediateFuture(RpcResultBuilder.success(new ForceReloadOutputBuilder().build()).build());
     }
 }
