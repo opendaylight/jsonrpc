@@ -41,6 +41,7 @@ import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
+import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +52,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jul 1, 2020
  */
+@Component(service = { })
 public final class JsonRpcPeerListManager implements ClusteredDataTreeChangeListener<ConfiguredEndpoints>,
         JsonRpcPeerSingletonService, JsonrpcService, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRpcPeerListManager.class);
