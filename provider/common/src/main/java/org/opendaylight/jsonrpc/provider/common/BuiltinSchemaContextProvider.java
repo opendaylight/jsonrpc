@@ -60,7 +60,8 @@ public class BuiltinSchemaContextProvider implements SchemaContextProvider {
         modules.stream()
                 .forEach(m -> resolved.addAll(m.getImports()
                         .stream()
-                        .map(mi -> schemaContext.findModule(mi.getModuleName().getLocalName(), mi.getRevision()).get())
+                        .map(mi -> schemaContext.findModule(mi.getModuleName().getLocalName(), mi.getRevision())
+                                .orElseThrow())
                         .collect(Collectors.toSet())));
         return new EffectiveModelContextAdapter(resolved);
     }

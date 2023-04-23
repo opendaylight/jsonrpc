@@ -43,7 +43,7 @@ abstract class AbstractHandler<T extends RpcService> extends AbstractInvocationH
                                 .stream()
                                 .filter(r -> r.getQName().equals(e.getValue()))
                                 .findFirst()
-                                .get()))
+                                .orElseThrow()))
                 .collect(Collector.of(ImmutableBiMap::<Method, RpcDefinition>builder,
                     (builder, entry) -> builder.put(entry.getKey(), entry.getValue()),
                     (k, v) -> k.putAll(v.build()), ImmutableBiMap.Builder<Method, RpcDefinition>::build));

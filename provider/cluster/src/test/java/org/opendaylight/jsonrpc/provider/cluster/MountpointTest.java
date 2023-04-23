@@ -233,25 +233,24 @@ public class MountpointTest {
 
         await().atMost(TEN_SECONDS).until(() -> getOpState(masterTestCustomizer.getDataBroker()).isPresent());
 
-        final Optional<ActualEndpoints> opState = getOpState(masterTestCustomizer.getDataBroker());
-        assertTrue(opState.isPresent());
-        assertEquals(MountStatus.Mounted, opState.get().getMountStatus());
-        assertNotNull(opState.get().getManagedBy());
+        final ActualEndpoints opState = getOpState(masterTestCustomizer.getDataBroker()).orElseThrow();
+        assertEquals(MountStatus.Mounted, opState.getMountStatus());
+        assertNotNull(opState.getManagedBy());
 
-        DOMRpcService rpcService = getMountPoint(masterTestCustomizer.getDOMMountPointService()).get()
+        DOMRpcService rpcService = getMountPoint(masterTestCustomizer.getDOMMountPointService()).orElseThrow()
                 .getService(DOMRpcService.class)
-                .get();
+                .orElseThrow();
 
         RpcDefinition rpc = Util.findNode(masterTestCustomizer.getSchemaService().getGlobalContext(),
                 "test-model-rpc:removeCoffeePot", Module::getRpcs)
-                .get();
+                .orElseThrow();
         ListenableFuture<? extends DOMRpcResult> rpcResult = rpcService.invokeRpc(rpc.getQName(), null);
 
         assertNotNull(rpcResult.get());
 
-        DOMDataBroker domDataBroker = getMountPoint(masterTestCustomizer.getDOMMountPointService()).get()
+        DOMDataBroker domDataBroker = getMountPoint(masterTestCustomizer.getDOMMountPointService()).orElseThrow()
                 .getService(DOMDataBroker.class)
-                .get();
+                .orElseThrow();
 
         NormalizedNode data = masterConverter
                 .dataCodec(YangInstanceIdentifier.builder().node(NetworkTopology.QNAME).build())
@@ -297,14 +296,14 @@ public class MountpointTest {
         await().atMost(TEN_SECONDS)
                 .until(() -> getMountPoint(slaveTestCustomizer.getDOMMountPointService()).isPresent());
 
-        DOMRpcService rpcService = getMountPoint(slaveTestCustomizer.getDOMMountPointService()).get()
+        DOMRpcService rpcService = getMountPoint(slaveTestCustomizer.getDOMMountPointService()).orElseThrow()
                 .getService(DOMRpcService.class)
-                .get();
+                .orElseThrow();
 
         RpcDefinition rpc = Util
                 .findNode(slaveTestCustomizer.getSchemaService().getGlobalContext(), "test-model-rpc:removeCoffeePot",
                         Module::getRpcs)
-                .get();
+                .orElseThrow();
         ListenableFuture<? extends DOMRpcResult> rpcResult = rpcService.invokeRpc(rpc.getQName(), null);
         assertNotNull(rpcResult.get());
 

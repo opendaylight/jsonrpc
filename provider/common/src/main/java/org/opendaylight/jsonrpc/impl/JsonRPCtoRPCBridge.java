@@ -84,7 +84,7 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent implement
         final QNameModule qm = def.getQName().getModule();
         final String localName = def.getQName().getLocalName();
         final Optional<Module> possibleModule = schemaContext.findModule(qm.getNamespace(), qm.getRevision());
-        final JsonObject path = createRootPath(possibleModule.get(), def.getQName());
+        final JsonObject path = createRootPath(possibleModule.orElseThrow(), def.getQName());
         final String endpoint = getEndpoint(DataType.RPC, governance, path);
         if (endpoint != null) {
             LOG.info("[{}] RPC '{}' mapped to {}", localName, endpoint, peer.getName());

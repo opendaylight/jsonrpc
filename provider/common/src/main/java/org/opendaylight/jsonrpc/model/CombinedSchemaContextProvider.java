@@ -33,7 +33,7 @@ public class CombinedSchemaContextProvider implements SchemaContextProvider {
                     dependencies.getYangXPathParserFactory());
         }
         if (governanceProvider.get().isPresent()) {
-            return new GovernanceSchemaContextProvider(governanceProvider.get().get(),
+            return new GovernanceSchemaContextProvider(governanceProvider.get().orElseThrow(),
                     dependencies.getYangXPathParserFactory());
         }
         return new BuiltinSchemaContextProvider(dependencies.getSchemaService().getGlobalContext());

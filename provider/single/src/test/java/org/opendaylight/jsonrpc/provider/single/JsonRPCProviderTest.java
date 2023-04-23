@@ -249,7 +249,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
                         .build());
 
         retryAction(TimeUnit.SECONDS, 2, () -> getPeerOpState("test-model-op-only").isPresent()
-                && getPeerOpState("test-model-op-only").get().getMountStatus().equals(MountStatus.Failed));
+                && getPeerOpState("test-model-op-only").orElseThrow().getMountStatus().equals(MountStatus.Failed));
 
         updateConfig(new ConfigBuilder().build());
         // wait until nothing there

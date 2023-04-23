@@ -69,7 +69,7 @@ public class DataModificationContext implements AutoCloseable {
                 return false;
             }
             errors = txs.stream().map(DataModificationContext::extractError)
-                    .flatMap(o -> o.isPresent() ? Stream.of(o.get()) : Stream.empty()).collect(Collectors.toList());
+                    .flatMap(o -> o.map(Stream::of).orElse(Stream.empty())).collect(Collectors.toList());
             return errors.isEmpty();
         } finally {
             completed.set(System.currentTimeMillis());
@@ -111,8 +111,7 @@ public class DataModificationContext implements AutoCloseable {
      *
      * @return immutable copy of errors, if no errors occurred, list is empty (never NULL).
      */
-    @NonNull
-    public List<Throwable> getErrors() {
+    public @NonNull List<Throwable> getErrors() {
         return ImmutableList.copyOf(errors);
     }
 

@@ -93,7 +93,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         Util.populateFromEndpointList(pathMap, peer.getRpcEndpoints().values(), DataType.RPC);
         bridge = new JsonRPCtoRPCBridge(peer, schemaContext, pathMap, mock(RemoteGovernance.class), transportFactory,
                 new JsonRpcCodecFactory(schemaContext));
-        mod = schemaContext.findModule("test-model-rpc", Revision.of("2020-10-14")).get();
+        mod = schemaContext.findModule("test-model-rpc", Revision.of("2020-10-14")).orElseThrow();
         logTestName("START");
         TimeUnit.MILLISECONDS.sleep(250);
     }
@@ -210,7 +210,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
                 .stream()
                 .filter(r -> "method-with-anyxml".equals(r.getQName().getLocalName()))
                 .findFirst()
-                .get();
+                .orElseThrow();
         try (JsonParserStream parser = JsonParserStream.create(writer,
                 JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext),
                 SchemaInferenceStack.of(schemaContext, Absolute.of(rpcDef.getQName())).toInference())) {

@@ -48,7 +48,7 @@ public class RemoteNotificationPublisherTest extends AbstractJsonRpcTest {
         ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory, getDOMNotificationRouter(),
                 getDOMRpcRouter().getRpcService(), codecFactory);
         NotificationDefinition path = findNode(schemaContext, "test-model-notification:notification1",
-                Module::getNotifications).get();
+                Module::getNotifications).orElseThrow();
         latch = new CountDownLatch(1);
         reg = getDOMNotificationRouter().registerNotificationListener(new DOMNotificationListener() {
             @Override
