@@ -34,7 +34,7 @@ public class MultiModelRequestDispatcher implements RequestMessageHandler {
                 .filter(h -> h.hasMethod(request.getMethod()))
                 .findFirst();
         if (handler.isPresent()) {
-            handler.get().handleRequest(request, replyBuilder);
+            handler.orElseThrow().handleRequest(request, replyBuilder);
         } else {
             replyBuilder.error(new JsonRpcErrorObject(-32601, "No such method : " + request.getMethod(), null));
         }

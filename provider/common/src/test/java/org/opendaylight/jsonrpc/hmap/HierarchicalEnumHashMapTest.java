@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,7 @@ public class HierarchicalEnumHashMapTest {
         final HierarchicalEnumMap<JsonElement, Types, String> map = HierarchicalEnumHashMap.create(Types.class, CODEC);
         map.put(parse("{}"), Types.A, "uri://localhost");
         map.put(parse(PATH1), Types.A, "xyz");
-        assertEquals("uri://localhost", map.lookup(JsonParser.parseString(PATH2), Types.A).get());
+        assertEquals(Optional.of("uri://localhost"), map.lookup(JsonParser.parseString(PATH2), Types.A));
         assertNull(map.put(parse(getData("path3")), Types.A, "HERE"));
         assertNull(map.put(parse(getData("path4")), Types.A, "another"));
         assertNull(map.put(parse(getData("path5")), Types.A, "123456"));
@@ -48,8 +49,8 @@ public class HierarchicalEnumHashMapTest {
         assertNull(map.put(parse(getData("path5")), Types.C, "123456"));
         assertEquals("123456", map.put(parse(getData("path5")), Types.A, "987654"));
         assertEquals("123456", map.put(parse(getData("path5")), Types.C, "987654"));
-        assertEquals("987654", map.lookup(parse(getData("path5")), Types.A).get());
-        assertEquals("another", map.lookup(parse(getData("path4")), Types.A).get());
+        assertEquals(Optional.of("987654"), map.lookup(parse(getData("path5")), Types.A));
+        assertEquals(Optional.of("another"), map.lookup(parse(getData("path4")), Types.A));
         LOG.info(map.dump());
         Map<JsonElement, String> map2 = map.toMap(Types.A);
         LOG.info("{}", map2);

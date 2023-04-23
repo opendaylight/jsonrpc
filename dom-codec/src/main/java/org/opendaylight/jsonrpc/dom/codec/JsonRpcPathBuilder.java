@@ -91,7 +91,7 @@ public class JsonRpcPathBuilder {
                 parent = next;
             } else {
                 final JsonElement next = isNextKeyed(copy) ? new JsonArray() : new JsonObject();
-                parent.getAsJsonObject().add(current.name.get(), next);
+                parent.getAsJsonObject().add(current.name.orElseThrow(), next);
                 parent = next;
             }
         }

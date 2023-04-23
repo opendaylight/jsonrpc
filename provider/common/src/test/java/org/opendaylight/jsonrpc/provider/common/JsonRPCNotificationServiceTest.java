@@ -72,7 +72,7 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
         port = getFreeTcpPort();
         governance = mock(RemoteGovernance.class);
         when(governance.governance(anyInt(), anyString(), any())).thenReturn(getPath());
-        mod = schemaContext.findModule("test-model-notification", Revision.of("2020-10-14")).get();
+        mod = schemaContext.findModule("test-model-notification", Revision.of("2020-10-14")).orElseThrow();
 
         transportFactory = new DefaultTransportFactory();
         svc = new JsonRPCNotificationService(getPeer(),

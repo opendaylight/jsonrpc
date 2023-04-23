@@ -15,7 +15,6 @@ import com.google.common.cache.LoadingCache;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -86,12 +85,11 @@ final class GovernanceImpl implements RemoteGovernance {
         try {
             final Optional<YangModuleInfo> bundled = findBundledModule(arg);
             if (bundled.isPresent()) {
-                return bundled.get().getYangTextCharSource().read();
+                return bundled.orElseThrow().getYangTextCharSource().read();
             }
             final Optional<Path> opt = findYangFile(arg);
             if (opt.isPresent()) {
-                // TODO : java11 has Files.readString(), for now use Files.readAllBytes() for backward compatibility
-                return new String(Files.readAllBytes(opt.get()), StandardCharsets.UTF_8);
+                return Files.readString(opt.orElseThrow());
             }
         } catch (IOException e) {
             throw new IllegalStateException(e);
@@ -167,12 +165,12 @@ final class GovernanceImpl implements RemoteGovernance {
     private Set<ModuleInfo> dependsInternal(ModuleInfo module) {
         final Optional<YangModuleInfo> bundledOpt = findBundledModule(module);
         if (bundledOpt.isPresent()) {
-            return parseDependencies(bundledOpt.get());
+            return parseDependencies(bundledOpt.orElseThrow());
         }
         try {
             final Optional<Path> optFile = findYangFile(module);
             if (optFile.isPresent()) {
-                return yangFileImportCache.getUnchecked(optFile.get());
+                return yangFileImportCache.getUnchecked(optFile.orElseThrow());
             }
         } catch (IOException e) {
             throw new IllegalStateException(e);

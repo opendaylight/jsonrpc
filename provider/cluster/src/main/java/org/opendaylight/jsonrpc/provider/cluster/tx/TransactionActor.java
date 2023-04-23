@@ -96,7 +96,7 @@ public final class TransactionActor extends UntypedAbstractActor {
                 if (!result.isPresent()) {
                     sender().tell(new EmptyReadResponse(), self());
                 } else {
-                    sender().tell(new PathAndDataMsg(path, result.get()), self());
+                    sender().tell(new PathAndDataMsg(path, result.orElseThrow()), self());
                 }
             }
 

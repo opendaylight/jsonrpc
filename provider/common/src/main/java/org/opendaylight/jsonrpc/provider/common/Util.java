@@ -236,10 +236,10 @@ public final class Util {
         if (name.indexOf(':') != -1) {
             final String[] parts = name.split(":");
             final Optional<? extends Module> modOpt = findModule(schemaContext, parts[0]);
-            if (!modOpt.isPresent()) {
+            if (modOpt.isEmpty()) {
                 return Optional.empty();
             } else {
-                return findNode(mapper.apply(modOpt.get()).stream(), parts[1]);
+                return findNode(mapper.apply(modOpt.orElseThrow()).stream(), parts[1]);
             }
         } else {
             return findNode(schemaContext.getModules().stream().flatMap(m -> mapper.apply(m).stream()), name);
