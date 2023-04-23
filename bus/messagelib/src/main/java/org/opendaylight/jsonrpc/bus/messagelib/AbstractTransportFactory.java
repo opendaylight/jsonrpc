@@ -137,17 +137,17 @@ public abstract class AbstractTransportFactory implements TransportFactory {
     @Override
     public boolean isClientConnected(Object proxyOrSession) {
         if (Proxy.isProxyClass(proxyOrSession.getClass())) {
-            final Optional<BaseSession> session = proxyCache.asMap()
+            return proxyCache.asMap()
                     .values()
                     .stream()
                     .map(x -> x.getProxySession(proxyOrSession))
                     .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .findFirst();
-            return session.isPresent() && (session.get() instanceof ClientSession)
-                    && ((ClientSession) session.get()).isConnectionReady();
+                    .map(Optional::orElseThrow)
+                    .findFirst()
+                    .filter(session -> session instanceof ClientSession client && client.isConnectionReady())
+                    .isPresent();
         } else {
-            return (proxyOrSession instanceof ClientSession) && ((ClientSession) proxyOrSession).isConnectionReady();
+            return proxyOrSession instanceof ClientSession clientSession && clientSession.isConnectionReady();
         }
     }
 

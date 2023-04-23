@@ -56,7 +56,7 @@ public final class HierarchicalEnumHashMap<P, K extends Enum<K>, D, I> implement
             }
             final Optional<EnumTreeNode<I, K, D>> candidate = current.lookupChild(id);
             if (candidate.isPresent()) {
-                current = candidate.get();
+                current = candidate.orElseThrow();
                 if (current.value(key) != null) {
                     value = current.value(key);
                 }
@@ -74,7 +74,7 @@ public final class HierarchicalEnumHashMap<P, K extends Enum<K>, D, I> implement
         while (iterator.hasNext()) {
             final I id = iterator.next();
             final Optional<EnumTreeNode<I, K, D>> candidate = current.lookupChild(id);
-            current = candidate.isPresent() ? candidate.get() : current.appendChild(id);
+            current = candidate.isPresent() ? candidate.orElseThrow() : current.appendChild(id);
         }
         final D previousValue = current.value(key);
         current.setValue(key, data);

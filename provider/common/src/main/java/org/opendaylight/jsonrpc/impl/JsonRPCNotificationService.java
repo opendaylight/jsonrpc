@@ -65,7 +65,7 @@ public final class JsonRPCNotificationService extends AbstractJsonRPCComponent
             final QNameModule qm = def.getQName().getModule();
             final String localName = def.getQName().getLocalName();
             final Optional<Module> possibleModule = schemaContext.findModule(qm.getNamespace(), qm.getRevision());
-            final JsonObject path = createRootPath(possibleModule.get(), def.getQName());
+            final JsonObject path = createRootPath(possibleModule.orElseThrow(), def.getQName());
             final String endpoint = getEndpoint(DataType.NOTIFICATION, governance, path);
             if (endpoint != null) {
                 LOG.debug("Notification '{}' mapped to {}", localName, endpoint);

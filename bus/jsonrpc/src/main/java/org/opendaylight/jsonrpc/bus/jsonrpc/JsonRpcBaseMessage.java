@@ -99,8 +99,8 @@ public abstract class JsonRpcBaseMessage {
         try {
             final Optional<Class<?>> knownType = getClassType(type);
             if (elem != null && knownType.isPresent()
-                    && !(JsonElement.class.isAssignableFrom((Class<?>) knownType.get()))) {
-                final Class<?> clazz = knownType.get();
+                    && !(JsonElement.class.isAssignableFrom((Class<?>) knownType.orElseThrow()))) {
+                final Class<?> clazz = knownType.orElseThrow();
                 if (elem.isJsonPrimitive() && !canRepresentJsonPrimitive(clazz) && !isArrayLikeType(clazz)) {
                     fixed = wrap(elem.getAsJsonPrimitive(), clazz, field -> field.getType().isPrimitive());
                 } else if (elem.isJsonObject() && isArrayLikeType(clazz)) {

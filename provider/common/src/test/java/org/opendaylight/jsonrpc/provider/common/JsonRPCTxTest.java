@@ -113,7 +113,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         final FluentFuture<Optional<NormalizedNode>> fopt = trx
                 .read(LogicalDatastoreType.OPERATIONAL, YangInstanceIdentifier.of(NetworkTopology.QNAME));
 
-        final NormalizedNode nn = fopt.get(5, TimeUnit.SECONDS).get();
+        final NormalizedNode nn = fopt.get(5, TimeUnit.SECONDS).orElseThrow();
         LOG.info("Read output : {}", nn);
         assertEquals(NetworkTopology.QNAME.getNamespace(), nn.getIdentifier().getNodeType().getNamespace());
         assertNotNull(nn.body());

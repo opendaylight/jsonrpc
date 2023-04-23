@@ -123,16 +123,17 @@ public final class JsonRPCProvider implements JsonrpcService, AutoCloseable {
             return false;
         }
 
-        final Optional<Config> peersConfState = getConfig(LogicalDatastoreType.CONFIGURATION);
-        if (!peersConfState.isPresent()) {
+        final Optional<Config> optPeersConfState = getConfig(LogicalDatastoreType.CONFIGURATION);
+        if (optPeersConfState.isEmpty()) {
             // in case entire config was wiped, we still need to unconfigure
             // existing peers, hence supply empty list
             unmountPeers(new ConfigBuilder().setConfiguredEndpoints(Map.of()).build());
             LOG.info("{} configuration absent", ME);
             return false;
         }
-        boolean result = mountPeers(peersConfState.get());
-        result &= unmountPeers(peersConfState.get());
+        final Config peersConfState = optPeersConfState.orElseThrow();
+        boolean result = mountPeers(peersConfState);
+        result &= unmountPeers(peersConfState);
         return result;
     }
 

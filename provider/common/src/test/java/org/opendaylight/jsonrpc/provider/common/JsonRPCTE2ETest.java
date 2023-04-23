@@ -7,7 +7,6 @@
  */
 package org.opendaylight.jsonrpc.provider.common;
 
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -109,7 +108,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         // Read using JSON-RPC databroker
         final DOMDataTreeReadTransaction rtx = jrbroker.newReadOnlyTransaction();
         final Optional<NormalizedNode> result = rtx.read(LogicalDatastoreType.OPERATIONAL, e.getKey()).get();
-        assertNotNull(result.get());
+        assertTrue(result.isPresent());
     }
 
     @Test
@@ -123,7 +122,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         // Read using DOM databroker
         final DOMDataTreeReadTransaction rtx = getDomBroker().newReadOnlyTransaction();
         final Optional<NormalizedNode> result = rtx.read(LogicalDatastoreType.OPERATIONAL, e.getKey()).get();
-        assertNotNull(result.get());
+        assertTrue(result.isPresent());
     }
 
     @Test
@@ -134,7 +133,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         rwtx.commit().get();
         final DOMDataTreeReadWriteTransaction rwtx2 = jrbroker.newReadWriteTransaction();
         Optional<NormalizedNode> result = rwtx2.read(LogicalDatastoreType.OPERATIONAL, e.getKey()).get();
-        assertNotNull(result.get());
+        assertTrue(result.isPresent());
     }
 
     /*

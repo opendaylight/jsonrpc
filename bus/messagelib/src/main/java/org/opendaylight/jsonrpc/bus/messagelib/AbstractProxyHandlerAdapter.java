@@ -118,7 +118,7 @@ abstract class AbstractProxyHandlerAdapter {
                 .concat(candidates.stream().filter(c -> c.getPostInvokeFailure() != null),
                         candidates.stream().filter(c -> c.getPreInvokeFailure() != null))
                 .findFirst()
-                .get()
+                .orElseThrow()
                 .getFailure();
     }
 
