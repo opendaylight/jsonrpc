@@ -99,8 +99,7 @@ public final class DataChangeListenerRegistration
     private JSONRPCArg mapDtc(DataTreeCandidate dtc) {
         final JsonObject jsonpath = codecFactory.pathCodec().serialize(dtc.getRootPath());
         try {
-            final JsonElement data = codecFactory.dataCodec(dtc.getRootPath())
-                    .serialize(dtc.getRootNode().getDataAfter().orElse(null));
+            final JsonElement data = codecFactory.dataCodec(dtc.getRootPath()).serialize(dtc.getRootNode().dataAfter());
             return new JSONRPCArg(jsonpath, data);
         } catch (IOException e) {
             throw new IllegalStateException(e);

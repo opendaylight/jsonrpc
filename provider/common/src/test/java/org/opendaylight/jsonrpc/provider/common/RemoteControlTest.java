@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -45,6 +44,7 @@ import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.jsonrpc.model.StoreOperationArgument;
 import org.opendaylight.jsonrpc.model.TxArgument;
 import org.opendaylight.jsonrpc.model.TxOperationArgument;
+import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer.NodeResult;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
@@ -63,7 +63,6 @@ import org.opendaylight.yangtools.yang.common.OperationFailedException;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgument;
-import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -137,9 +136,9 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
      */
     @Test
     public void testReadTopologyData() throws Exception {
-        final Entry<YangInstanceIdentifier, NormalizedNode> e = TestUtils.getMockTopologyAsDom(getCodec());
+        final NodeResult e = TestUtils.getMockTopologyAsDom(getCodec());
         final DOMDataTreeWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
-        wtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
+        wtx.put(LogicalDatastoreType.OPERATIONAL, e.path(), e.node());
         wtx.commit().get();
 
         InstanceIdentifier<NetworkTopology> nii = InstanceIdentifier.create(NetworkTopology.class);
@@ -234,21 +233,21 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         Config c1 = new ConfigBuilder().setWhoAmI(new Uri("urn:bla"))
                 .setConfiguredEndpoints(Collections.emptyMap()).build();
 
-        Entry<YangInstanceIdentifier, NormalizedNode> e1 = getCodec()
-                .toNormalizedNode(InstanceIdentifier.create(Config.class), c1);
+        NodeResult e1 = getCodec()
+                .toNormalizedDataObject(InstanceIdentifier.create(Config.class), c1);
 
-        wtx.put(LogicalDatastoreType.CONFIGURATION, e1.getKey(), e1.getValue());
+        wtx.put(LogicalDatastoreType.CONFIGURATION, e1.path(), e1.node());
         wtx.commit().get();
         ConfiguredEndpoints c2 = new ConfiguredEndpointsBuilder().setName("name-1")
                 .setModules(Set.of(new YangIdentifier("ietf-inet-types"))).build();
 
-        Entry<YangInstanceIdentifier, NormalizedNode> e2 = getCodec().toNormalizedNode(InstanceIdentifier
+        NodeResult e2 = getCodec().toNormalizedDataObject(InstanceIdentifier
                 .builder(Config.class).child(ConfiguredEndpoints.class, new ConfiguredEndpointsKey("name-1")).build(),
                 c2);
 
         wtx = getDomBroker().newWriteOnlyTransaction();
-        LOG.info("Merging data {} at path {}", e2.getValue(), e2.getKey());
-        wtx.merge(LogicalDatastoreType.CONFIGURATION, e2.getKey(), e2.getValue());
+        LOG.info("Merging data {} at path {}", e2.path(), e2.node());
+        wtx.merge(LogicalDatastoreType.CONFIGURATION, e2.path(), e2.node());
         wtx.commit().get();
     }
 

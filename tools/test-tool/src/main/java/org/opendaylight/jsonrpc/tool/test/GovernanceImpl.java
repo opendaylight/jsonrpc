@@ -35,7 +35,7 @@ import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.ModuleInfo;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.StoreOperationArgument;
-import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
+import org.opendaylight.mdsal.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.yangtools.yang.binding.YangModuleInfo;
 import org.opendaylight.yangtools.yang.model.repo.api.YangIRSchemaSource;
 import org.opendaylight.yangtools.yang.model.repo.api.YangTextSchemaSource;
@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 
 final class GovernanceImpl implements RemoteGovernance {
     private static final Logger LOG = LoggerFactory.getLogger(GovernanceImpl.class);
-    private static final Set<YangModuleInfo> BUNDLED_MODULES = BindingReflections.loadModuleInfos();
+    private static final Set<YangModuleInfo> BUNDLED_MODULES = BindingRuntimeHelpers.loadModuleInfos();
     private static final Pattern YANG_MODULE_RE = Pattern
             .compile("(?<name>[a-zA-Z_]?[\\w.-]+)(?<revision>@\\d{4}-\\d{2}-\\d{2})?\\.yang");
 
