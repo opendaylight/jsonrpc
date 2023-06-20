@@ -22,7 +22,6 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -30,13 +29,13 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.net.URISyntaxException;
-import java.util.Map.Entry;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.eclipse.jdt.annotation.Nullable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,6 +49,7 @@ import org.opendaylight.jsonrpc.hmap.JsonPathCodec;
 import org.opendaylight.jsonrpc.impl.JsonRPCTx;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer;
+import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer.NodeResult;
 import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.common.api.TransactionCommitFailedException;
@@ -64,6 +64,7 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.NodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPointBuilder;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yangtools.yang.binding.util.BindingMap;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.slf4j.Logger;
@@ -145,8 +146,8 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
 
     @Test
     public void testPut() throws InterruptedException, ExecutionException, TimeoutException {
-        final Entry<YangInstanceIdentifier, NormalizedNode> data = createContainerNodeData(getCodec());
-        trx.put(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
+        final NodeResult data = createContainerNodeData(getCodec());
+        trx.put(LogicalDatastoreType.CONFIGURATION, data.path(), data.node());
         doReturn(true).when(om).commit((String)eq(null));
         trx.commit().get(5, TimeUnit.SECONDS);
         verify(om, times(1)).put(eq(null), eq("config"), anyString(),
@@ -174,12 +175,12 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
 
     @Test
     public void testCommitFailed() throws InterruptedException, ExecutionException {
-        final Entry<YangInstanceIdentifier, NormalizedNode> data = createContainerNodeData(getCodec());
+        final NodeResult data = createContainerNodeData(getCodec());
         final String txid = UUID.randomUUID().toString();
         doReturn(txid).when(om).txid();
         doReturn(false).when(om).commit((String)eq(null));
-        doReturn(Lists.newArrayList("err1", "err2")).when(om).error(anyString());
-        trx.put(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
+        doReturn(List.of("err1", "err2")).when(om).error(anyString());
+        trx.put(LogicalDatastoreType.CONFIGURATION, data.path(), data.node());
         FluentFuture<? extends CommitInfo> result = trx.commit();
         result.addCallback(new FutureCallback<CommitInfo>() {
             @Override
@@ -201,9 +202,9 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
 
     @Test
     public void testMerge() throws InterruptedException, ExecutionException, TimeoutException {
-        final Entry<YangInstanceIdentifier, NormalizedNode> data = createContainerNodeData(getCodec());
+        final NodeResult data = createContainerNodeData(getCodec());
         doReturn(true).when(om).commit((String)eq(null));
-        trx.merge(LogicalDatastoreType.CONFIGURATION, data.getKey(), data.getValue());
+        trx.merge(LogicalDatastoreType.CONFIGURATION, data.path(), data.node());
         trx.commit().get(5, TimeUnit.SECONDS);
         verify(om, times(1)).merge(eq(null), eq("config"), anyString(),
                 any(JsonElement.class), any(JsonElement.class));
@@ -226,27 +227,23 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         }
     }
 
-    static Entry<YangInstanceIdentifier, NormalizedNode> createContainerNodeData(
-            BindingNormalizedNodeSerializer codec) {
+    static NodeResult createContainerNodeData(BindingNormalizedNodeSerializer codec) {
         //@formatter:off
         final InstanceIdentifier<NetworkTopology> ii = InstanceIdentifier.create(NetworkTopology.class);
         final NetworkTopology dObj = new NetworkTopologyBuilder()
-                .setTopology(compatItem(new TopologyBuilder()
-                        .setNode(compatMap(Lists.newArrayList(
+                .setTopology(BindingMap.of(new TopologyBuilder()
+                        .setNode(BindingMap.of(List.of(
+                                new NodeBuilder().setNodeId(new NodeId("node-id-1")).build(),
                                 new NodeBuilder()
-                                .setNodeId(new NodeId("node-id-1"))
-                            .build(),
-                            new NodeBuilder()
-                                .setTerminationPoint(compatItem(new TerminationPointBuilder()
-                                            .setTpId(new TpId("eth0"))
+                                    .setTerminationPoint(BindingMap.of(new TerminationPointBuilder()
+                                        .setTpId(new TpId("eth0"))
                                         .build()))
-                                .setNodeId(new NodeId("node-id-2"))
-                        .build()
-                            )))
+                                    .setNodeId(new NodeId("node-id-2"))
+                                    .build())))
                         .setTopologyId(new TopologyId("topo-id"))
                         .build()))
                 .build();
-        return codec.toNormalizedNode(ii, dObj);
+        return codec.toNormalizedDataObject(ii, dObj);
         //@formatter:on
     }
 }
