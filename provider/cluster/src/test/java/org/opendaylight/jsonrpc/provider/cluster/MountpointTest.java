@@ -56,7 +56,7 @@ import org.opendaylight.mdsal.binding.api.DataTreeIdentifier;
 import org.opendaylight.mdsal.binding.api.DataTreeModification;
 import org.opendaylight.mdsal.binding.api.ReadTransaction;
 import org.opendaylight.mdsal.binding.api.WriteTransaction;
-import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
+import org.opendaylight.mdsal.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
@@ -190,11 +190,12 @@ public class MountpointTest {
         final TestCustomizer dataBrokerTest = new TestCustomizer() {
             @Override
             protected Set<YangModuleInfo> getModuleInfos() throws Exception {
-                return ImmutableSet.of(BindingReflections.getModuleInfo(NetworkTopology.class),
-                        BindingReflections.getModuleInfo(Topology.class),
-                        BindingReflections.getModuleInfo(TopContainer.class),
-                        BindingReflections.getModuleInfo(Config.class),
-                        BindingReflections.getModuleInfo(FactorialInput.class));
+                return ImmutableSet.of(
+                    BindingRuntimeHelpers.getYangModuleInfo(NetworkTopology.class),
+                    BindingRuntimeHelpers.getYangModuleInfo(Topology.class),
+                    BindingRuntimeHelpers.getYangModuleInfo(TopContainer.class),
+                    BindingRuntimeHelpers.getYangModuleInfo(Config.class),
+                    BindingRuntimeHelpers.getYangModuleInfo(FactorialInput.class));
             }
         };
 

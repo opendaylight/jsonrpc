@@ -72,9 +72,6 @@ public class JsonRpcPathCodec implements Codec<JsonObject, YangInstanceIdentifie
         String module = null;
         while (it.hasNext()) {
             final PathArgument current = it.next();
-            if (current instanceof YangInstanceIdentifier.AugmentationIdentifier) {
-                continue;
-            }
             final String currentModule = ensureModuleFound(schemaContext.findModule(current.getNodeType().getModule()),
                     current.getNodeType().toString()).getName();
             if (current instanceof NodeIdentifierWithPredicates) {

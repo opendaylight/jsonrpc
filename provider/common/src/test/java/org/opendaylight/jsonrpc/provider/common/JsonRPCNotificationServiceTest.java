@@ -42,6 +42,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.NotificationEndpointsBuilder;
 import org.opendaylight.yangtools.concepts.ListenerRegistration;
+import org.opendaylight.yangtools.yang.binding.util.BindingMap;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.Revision;
 import org.opendaylight.yangtools.yang.model.api.Module;
@@ -143,7 +144,7 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
                 .setModules(Set.of(
                         new YangIdentifier("test-model-notification")
                         ))
-                .setNotificationEndpoints(compatItem(new NotificationEndpointsBuilder()
+                .setNotificationEndpoints(BindingMap.of(new NotificationEndpointsBuilder()
                         .setPath("{}")
                         .setEndpointUri(new Uri(getPath()))
                         .build()))

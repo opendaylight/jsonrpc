@@ -14,7 +14,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import java.util.concurrent.ExecutionException;
@@ -50,6 +49,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.MultiplyLlInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.MultiplyLlOutput;
 import org.opendaylight.yangtools.yang.binding.DataContainer;
+import org.opendaylight.yangtools.yang.binding.util.BindingMap;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.Revision;
 import org.opendaylight.yangtools.yang.common.Uint16;
@@ -59,7 +59,7 @@ import org.opendaylight.yangtools.yang.data.codec.gson.JSONCodecFactorySupplier;
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNodes;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeStreamWriter;
-import org.opendaylight.yangtools.yang.data.impl.schema.NormalizedNodeResult;
+import org.opendaylight.yangtools.yang.data.impl.schema.NormalizationResultHolder;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
@@ -185,8 +185,10 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
 
         // BA => BI
         final ContainerNode rpcDef = prepareRpcInput(new MultiplyListInputBuilder().setMultiplier((short) 3)
-                .setNumbers(compatMap(Lists.newArrayList(new NumbersBuilder().setNum(10).build(),
-                        new NumbersBuilder().setNum(15).build(), new NumbersBuilder().setNum(17).build())))
+                .setNumbers(BindingMap.ordered(
+                    new NumbersBuilder().setNum(10).build(),
+                    new NumbersBuilder().setNum(15).build(),
+                    new NumbersBuilder().setNum(17).build()))
                 .build());
 
         LOG.info("Transformed RPC NormalizedNode : {}", rpcDef);
@@ -204,7 +206,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     @Test(timeout = 15_000)
     public void testMethodWithAnyXmlNoData() throws Exception {
         final QName path = rpcPath(mod, "method-with-anyxml");
-        final NormalizedNodeResult resultHolder = new NormalizedNodeResult();
+        final NormalizationResultHolder resultHolder = new NormalizationResultHolder();
         final NormalizedNodeStreamWriter writer = ImmutableNormalizedNodeStreamWriter.from(resultHolder);
         final RpcDefinition rpcDef = mod.getRpcs()
                 .stream()
@@ -217,9 +219,9 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
             parser.parse(JsonReaderAdapter.from(
                 JsonParser.parseString("{\"input\" : { \"some-number\":5, \"some-data\": { \"data\" : 123}}}")));
         }
-        DOMRpcResult result = bridge.invokeRpc(path, (ContainerNode) resultHolder.getResult()).get();
+        DOMRpcResult result = bridge.invokeRpc(path, (ContainerNode) resultHolder.getResult().data()).get();
         logResult(result);
-        assertTrue(result.getErrors().isEmpty());
+        assertTrue(result.errors().isEmpty());
     }
 
     @Test(timeout = 15_000)
@@ -277,7 +279,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         builder.setEndpointUri(new Uri(String.format(TRANSPORT + "://localhost:%d", rpcResponderPort)));
         builder.setPath("{}");
         return new ConfiguredEndpointsBuilder().setName("BlahBlah")
-                .setRpcEndpoints(compatItem(builder.build()))
+                .setRpcEndpoints(BindingMap.of(builder.build()))
                 .build();
     }
 

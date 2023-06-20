@@ -26,7 +26,7 @@ public class PathAndDataMsg implements Externalizable {
     }
 
     public PathAndDataMsg(ContainerNode data) {
-        this(YangInstanceIdentifier.empty(), data);
+        this(YangInstanceIdentifier.of(), data);
     }
 
     public PathAndDataMsg(@NonNull YangInstanceIdentifier path, @NonNull NormalizedNode data) {

@@ -8,19 +8,13 @@
 package org.opendaylight.jsonrpc.provider.common;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import junit.framework.AssertionFailedError;
 import org.eclipse.jdt.annotation.NonNull;
-import org.eclipse.jdt.annotation.Nullable;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
@@ -31,7 +25,6 @@ import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSeriali
 import org.opendaylight.mdsal.binding.dom.codec.impl.BindingCodecContext;
 import org.opendaylight.mdsal.binding.runtime.api.BindingRuntimeContext;
 import org.opendaylight.mdsal.binding.runtime.spi.BindingRuntimeHelpers;
-import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMMountPointService;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
@@ -43,8 +36,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.data.rev201014
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.notif.rev201014.Notification1;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.FactorialInput;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
-import org.opendaylight.yangtools.yang.binding.Identifiable;
-import org.opendaylight.yangtools.yang.binding.Identifier;
 import org.opendaylight.yangtools.yang.binding.YangModuleInfo;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
@@ -86,11 +77,12 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
 
     @Override
     protected Set<YangModuleInfo> getModuleInfos() throws Exception {
-        return Sets.newHashSet(BindingReflections.getModuleInfo(Config.class),
-                BindingReflections.getModuleInfo(NetworkTopology.class),
-                BindingReflections.getModuleInfo(TopContainer.class),
-                BindingReflections.getModuleInfo(Notification1.class),
-                BindingReflections.getModuleInfo(FactorialInput.class));
+        return Set.of(
+            BindingRuntimeHelpers.getYangModuleInfo(Config.class),
+            BindingRuntimeHelpers.getYangModuleInfo(NetworkTopology.class),
+            BindingRuntimeHelpers.getYangModuleInfo(TopContainer.class),
+            BindingRuntimeHelpers.getYangModuleInfo(Notification1.class),
+            BindingRuntimeHelpers.getYangModuleInfo(FactorialInput.class));
     }
 
     protected BindingNormalizedNodeSerializer getCodec() {
@@ -159,25 +151,11 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
     }
 
     protected static int getFreeTcpPort() {
-        int port = -1;
-        try {
-            Socket socket = new Socket();
+        try (var socket = new Socket()) {
             socket.bind(null);
-            port = socket.getLocalPort();
-            socket.close();
-            return port;
+            return socket.getLocalPort();
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
-    }
-
-    protected static <K extends Identifier<V>, V extends Identifiable<K>> @Nullable Map<K, V> compatMap(
-            final @Nullable List<V> list) {
-        return Maps.uniqueIndex(list, Identifiable::key);
-    }
-
-    protected static <K extends Identifier<V>, V extends Identifiable<K>> @Nullable Map<K, V> compatItem(
-            final @Nullable V item) {
-        return compatMap(Collections.singletonList(item));
     }
 }

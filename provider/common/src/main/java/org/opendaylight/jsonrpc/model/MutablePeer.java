@@ -7,13 +7,11 @@
  */
 package org.opendaylight.jsonrpc.model;
 
-import com.google.common.collect.Maps;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.DataConfigEndpoints;
@@ -24,7 +22,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.Noti
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.NotificationEndpointsKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpoints;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpointsKey;
-import org.opendaylight.yangtools.yang.binding.Identifiable;
+import org.opendaylight.yangtools.yang.binding.util.BindingMap;
 
 public class MutablePeer implements Peer {
     private String name;
@@ -81,22 +79,22 @@ public class MutablePeer implements Peer {
     }
 
     @Override
-    public @Nullable Map<DataConfigEndpointsKey, DataConfigEndpoints> getDataConfigEndpoints() {
-        return Maps.uniqueIndex(endpoints, Identifiable::key);
+    public Map<DataConfigEndpointsKey, DataConfigEndpoints> getDataConfigEndpoints() {
+        return BindingMap.ordered(endpoints);
     }
 
     @Override
-    public @Nullable Map<DataOperationalEndpointsKey, DataOperationalEndpoints> getDataOperationalEndpoints() {
-        return Maps.uniqueIndex(dataOperationalEndpoints, Identifiable::key);
+    public Map<DataOperationalEndpointsKey, DataOperationalEndpoints> getDataOperationalEndpoints() {
+        return BindingMap.ordered(dataOperationalEndpoints);
     }
 
     @Override
-    public @Nullable Map<RpcEndpointsKey, RpcEndpoints> getRpcEndpoints() {
-        return Maps.uniqueIndex(rpcEndpoints, Identifiable::key);
+    public Map<RpcEndpointsKey, RpcEndpoints> getRpcEndpoints() {
+        return BindingMap.ordered(rpcEndpoints);
     }
 
     @Override
-    public @Nullable Map<NotificationEndpointsKey, NotificationEndpoints> getNotificationEndpoints() {
-        return Maps.uniqueIndex(notificationEndpoints, Identifiable::key);
+    public Map<NotificationEndpointsKey, NotificationEndpoints> getNotificationEndpoints() {
+        return BindingMap.ordered(notificationEndpoints);
     }
 }
