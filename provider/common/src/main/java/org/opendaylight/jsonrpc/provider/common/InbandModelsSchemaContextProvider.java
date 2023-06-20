@@ -7,10 +7,9 @@
  */
 package org.opendaylight.jsonrpc.provider.common;
 
-import com.google.common.io.ByteSource;
+import com.google.common.io.CharSource;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.InbandModelsService;
@@ -67,8 +66,8 @@ public final class InbandModelsSchemaContextProvider implements SchemaContextPro
 
             requester.getModules().forEach(m -> {
                 try {
-                    reactor.addSource(YangStatementStreamSource.create(YangTextSchemaSource.delegateForByteSource(
-                            m.getName() + ".yang", ByteSource.wrap(m.getContent().getBytes(StandardCharsets.UTF_8)))));
+                    reactor.addSource(YangStatementStreamSource.create(YangTextSchemaSource.delegateForCharSource(
+                            m.getName() + ".yang", CharSource.wrap(m.getContent()))));
                 } catch (YangSyntaxErrorException | IOException e) {
                     throw new IllegalStateException("Failed to add YANG source for " + m.getName(), e);
                 }

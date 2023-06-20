@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- Copyright (c) 2020 PANTHEON.tech, s.r.o. and others.
+ Copyright (c) 2023 PANTHEON.tech, s.r.o.  and others.
 
  This program and the accompanying materials are made available under the
  terms of the Eclipse Public License v1.0 which accompanies this distribution,
  and is available at http://www.eclipse.org/legal/epl-v10.html
  -->
-<features name="odl-jsonrpc-provider-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0">
-    <feature name="odl-jsonrpc-provider" version="${project.version}">
+<features name="odl-jsonrpc-cluster-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0">
+    <feature name="odl-jsonrpc-cluster" version="${project.version}">
         <feature version="[12,13)">odl-mdsal-binding-dom-adapter</feature>
+        <feature version="[6,7)">odl-restconf-openapi</feature>
     </feature>
 </features>
 

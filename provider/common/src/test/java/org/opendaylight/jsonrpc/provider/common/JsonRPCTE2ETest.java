@@ -19,7 +19,6 @@ import static org.mockito.Mockito.spy;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import java.net.URISyntaxException;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -39,6 +38,7 @@ import org.opendaylight.jsonrpc.impl.RemoteControl;
 import org.opendaylight.jsonrpc.model.MutablePeer;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.RemoteOmShard;
+import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer.NodeResult;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
@@ -100,39 +100,39 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     @Test
     public void testRead() throws Exception {
         // Write data to DOM DS
-        final Entry<YangInstanceIdentifier, NormalizedNode> e = TestUtils.getMockTopologyAsDom(getCodec());
+        final NodeResult e = TestUtils.getMockTopologyAsDom(getCodec());
         final DOMDataTreeWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
-        wtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
+        wtx.put(LogicalDatastoreType.OPERATIONAL, e.path(), e.node());
         wtx.commit().get();
 
         // Read using JSON-RPC databroker
         final DOMDataTreeReadTransaction rtx = jrbroker.newReadOnlyTransaction();
-        final Optional<NormalizedNode> result = rtx.read(LogicalDatastoreType.OPERATIONAL, e.getKey()).get();
+        final Optional<NormalizedNode> result = rtx.read(LogicalDatastoreType.OPERATIONAL, e.path()).get();
         assertTrue(result.isPresent());
     }
 
     @Test
     public void testWrite() throws Exception {
         // Write using JSON-RPC databroker
-        final Entry<YangInstanceIdentifier, NormalizedNode> e = TestUtils.getMockTopologyAsDom(getCodec());
+        final NodeResult e = TestUtils.getMockTopologyAsDom(getCodec());
         final DOMDataTreeWriteTransaction wtx = jrbroker.newWriteOnlyTransaction();
-        wtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
+        wtx.put(LogicalDatastoreType.OPERATIONAL, e.path(), e.node());
         wtx.commit().get();
 
         // Read using DOM databroker
         final DOMDataTreeReadTransaction rtx = getDomBroker().newReadOnlyTransaction();
-        final Optional<NormalizedNode> result = rtx.read(LogicalDatastoreType.OPERATIONAL, e.getKey()).get();
+        final Optional<NormalizedNode> result = rtx.read(LogicalDatastoreType.OPERATIONAL, e.path()).get();
         assertTrue(result.isPresent());
     }
 
     @Test
     public void testReadWriteTransaction() throws Exception {
-        final Entry<YangInstanceIdentifier, NormalizedNode> e = TestUtils.getMockTopologyAsDom(getCodec());
+        final NodeResult e = TestUtils.getMockTopologyAsDom(getCodec());
         final DOMDataTreeReadWriteTransaction rwtx = jrbroker.newReadWriteTransaction();
-        rwtx.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
+        rwtx.put(LogicalDatastoreType.OPERATIONAL, e.path(), e.node());
         rwtx.commit().get();
         final DOMDataTreeReadWriteTransaction rwtx2 = jrbroker.newReadWriteTransaction();
-        Optional<NormalizedNode> result = rwtx2.read(LogicalDatastoreType.OPERATIONAL, e.getKey()).get();
+        Optional<NormalizedNode> result = rwtx2.read(LogicalDatastoreType.OPERATIONAL, e.path()).get();
         assertTrue(result.isPresent());
     }
 
@@ -160,7 +160,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     @Test
     public void testTxChain() throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
-        final Entry<YangInstanceIdentifier, NormalizedNode> e = TestUtils.getMockTopologyAsDom(getCodec());
+        final NodeResult e = TestUtils.getMockTopologyAsDom(getCodec());
         final DOMTransactionChain chain = jrbroker.createTransactionChain(new DOMTransactionChainListener() {
             @Override
             public void onTransactionChainSuccessful(DOMTransactionChain chain) {
@@ -173,10 +173,10 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
             }
         });
         final DOMDataTreeWriteTransaction tx1 = chain.newWriteOnlyTransaction();
-        tx1.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
+        tx1.put(LogicalDatastoreType.OPERATIONAL, e.path(), e.node());
         tx1.commit();
         final DOMDataTreeWriteTransaction tx2 = chain.newWriteOnlyTransaction();
-        tx2.put(LogicalDatastoreType.OPERATIONAL, e.getKey(), e.getValue());
+        tx2.put(LogicalDatastoreType.OPERATIONAL, e.path(), e.node());
         tx2.commit();
         chain.close();
         assertTrue(latch.await(10, TimeUnit.SECONDS));

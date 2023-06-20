@@ -15,9 +15,9 @@ import java.util.AbstractMap;
 import java.util.Objects;
 import java.util.stream.Collector;
 import org.opendaylight.mdsal.binding.runtime.api.BindingRuntimeContext;
-import org.opendaylight.mdsal.binding.spec.naming.BindingMapping;
 import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
 import org.opendaylight.yangtools.yang.binding.RpcService;
+import org.opendaylight.yangtools.yang.binding.contract.Naming;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.QNameModule;
 import org.opendaylight.yangtools.yang.model.api.Module;
@@ -65,7 +65,7 @@ abstract class AbstractHandler<T extends RpcService> extends AbstractInvocationH
 
     private Method findRpcMethod(final Class<? extends RpcService> key, final RpcDefinition rpcDef)
             throws NoSuchMethodException {
-        final String methodName = BindingMapping.getRpcMethodName(rpcDef.getQName());
+        final String methodName = Naming.getRpcMethodName(rpcDef.getQName());
         final Class<?> inputClz = adapter.getRuntimeContext().getRpcInput(rpcDef.getQName());
         return key.getMethod(methodName, inputClz);
     }

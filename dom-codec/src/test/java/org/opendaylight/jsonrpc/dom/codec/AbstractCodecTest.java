@@ -29,7 +29,7 @@ import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStre
 import org.opendaylight.yangtools.yang.data.codec.gson.JSONCodecFactorySupplier;
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeStreamWriter;
-import org.opendaylight.yangtools.yang.data.impl.schema.NormalizedNodeResult;
+import org.opendaylight.yangtools.yang.data.impl.schema.NormalizationResultHolder;
 import org.opendaylight.yangtools.yang.data.util.DataSchemaContextTree;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.util.SchemaInferenceStack;
@@ -68,13 +68,13 @@ public abstract class AbstractCodecTest extends AbstractDataBrokerTest {
             stack.exit();
         }
 
-        final NormalizedNodeResult resultHolder = new NormalizedNodeResult();
+        final NormalizationResultHolder resultHolder = new NormalizationResultHolder();
         final NormalizedNodeStreamWriter writer = ImmutableNormalizedNodeStreamWriter.from(resultHolder);
         try (JsonParserStream jsonParser = JsonParserStream.create(writer,
                 JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext),
                 stack.toInference())) {
             jsonParser.parse(JsonReaderAdapter.from(loadJsonData(name)));
-            return resultHolder.getResult();
+            return resultHolder.getResult().data();
         }
     }
 
