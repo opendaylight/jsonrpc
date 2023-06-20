@@ -11,8 +11,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.Future;
@@ -38,7 +36,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.RemoveCoffeePotOutput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.SimpleMethodInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.TestModelRpcService;
-import org.opendaylight.yangtools.yang.binding.Identifiable;
+import org.opendaylight.yangtools.yang.binding.util.BindingMap;
 import org.opendaylight.yangtools.yang.common.ErrorSeverity;
 import org.opendaylight.yangtools.yang.common.RpcError;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -88,8 +86,9 @@ public class TestModelServiceTest {
     public void testMultiplyList() throws Exception {
         final Collection<Numbers> resp = proxy.getProxy()
                 .multiplyList(new MultiplyListInputBuilder().setMultiplier((short) 10)
-                        .setNumbers(Maps.uniqueIndex(Lists.newArrayList(new NumbersBuilder().setNum(10).build(),
-                                new NumbersBuilder().setNum(20).build()), Identifiable::key))
+                        .setNumbers(BindingMap.ordered(
+                            new NumbersBuilder().setNum(10).build(),
+                            new NumbersBuilder().setNum(20).build()))
                         .build())
                 .get()
                 .getResult()

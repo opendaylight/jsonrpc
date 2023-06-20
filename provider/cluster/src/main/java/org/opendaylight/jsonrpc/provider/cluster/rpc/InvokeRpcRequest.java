@@ -22,7 +22,7 @@ public class InvokeRpcRequest implements Serializable {
     public static InvokeRpcRequest create(Absolute path, ContainerNode input) {
         final PathAndDataMsg data;
         if (input != null) {
-            data = new PathAndDataMsg(YangInstanceIdentifier.empty(), input);
+            data = new PathAndDataMsg(YangInstanceIdentifier.of(), input);
         } else {
             data = null;
         }

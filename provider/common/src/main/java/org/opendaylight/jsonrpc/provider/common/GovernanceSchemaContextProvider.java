@@ -13,9 +13,8 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Queues;
-import com.google.common.io.ByteSource;
+import com.google.common.io.CharSource;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Deque;
 import java.util.HashSet;
@@ -148,8 +147,8 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
 
     private static void addSourceToReactor(BuildAction reactor, String name, String yangSource) {
         try {
-            reactor.addSource(YangStatementStreamSource.create(YangTextSchemaSource.delegateForByteSource(
-                    name + ".yang", ByteSource.wrap(yangSource.getBytes(StandardCharsets.UTF_8)))));
+            reactor.addSource(YangStatementStreamSource.create(YangTextSchemaSource.delegateForCharSource(
+                    name + ".yang", CharSource.wrap(yangSource))));
         } catch (YangSyntaxErrorException | IOException e) {
             throw new IllegalStateException("Unable to add source of '" + name + "' into reactor", e);
         }
