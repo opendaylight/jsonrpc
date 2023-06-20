@@ -20,7 +20,6 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
-import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.AugmentationIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.NodeIdentifierWithPredicates;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgument;
 import org.opendaylight.yangtools.yang.data.api.schema.MapEntryNode;
@@ -33,7 +32,7 @@ import org.opendaylight.yangtools.yang.data.codec.gson.JSONNormalizedNodeStreamW
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonWriterFactory;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeStreamWriter;
-import org.opendaylight.yangtools.yang.data.impl.schema.NormalizedNodeResult;
+import org.opendaylight.yangtools.yang.data.impl.schema.NormalizationResultHolder;
 import org.opendaylight.yangtools.yang.data.util.DataSchemaContextTree;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.Module;
@@ -107,12 +106,12 @@ class DataCodec extends AbstractCodec implements Codec<JsonElement, NormalizedNo
     }
 
     private NormalizedNode deserializeWrapped(JsonObject input) throws IOException {
-        final NormalizedNodeResult resultHolder = new NormalizedNodeResult();
+        final NormalizationResultHolder resultHolder = new NormalizationResultHolder();
         final NormalizedNodeStreamWriter writer = ImmutableNormalizedNodeStreamWriter.from(resultHolder);
         try (JsonParserStream jsonParser = JsonParserStream.create(writer, jsonCodec(), parentSchemaNode)) {
             jsonParser.parse(JsonReaderAdapter.from(input));
         }
-        NormalizedNode result = resultHolder.getResult();
+        NormalizedNode result = resultHolder.getResult().data();
         if (result instanceof MapNode && !((MapNode) result).isEmpty()) {
             result = Iterables.getOnlyElement(((MapNode) result).body());
         }
@@ -130,9 +129,6 @@ class DataCodec extends AbstractCodec implements Codec<JsonElement, NormalizedNo
 
         @Override
         protected void visitPathArgument(PathArgument arg) {
-            if (arg instanceof AugmentationIdentifier) {
-                return;
-            }
             if (arg instanceof NodeIdentifierWithPredicates) {
                 return;
             }

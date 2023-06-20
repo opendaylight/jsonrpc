@@ -59,7 +59,7 @@ import org.opendaylight.yangtools.yang.data.codec.gson.JSONCodecFactorySupplier;
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNodes;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeStreamWriter;
-import org.opendaylight.yangtools.yang.data.impl.schema.NormalizedNodeResult;
+import org.opendaylight.yangtools.yang.data.impl.schema.NormalizationResultHolder;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
@@ -204,7 +204,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     @Test(timeout = 15_000)
     public void testMethodWithAnyXmlNoData() throws Exception {
         final QName path = rpcPath(mod, "method-with-anyxml");
-        final NormalizedNodeResult resultHolder = new NormalizedNodeResult();
+        final NormalizationResultHolder resultHolder = new NormalizationResultHolder();
         final NormalizedNodeStreamWriter writer = ImmutableNormalizedNodeStreamWriter.from(resultHolder);
         final RpcDefinition rpcDef = mod.getRpcs()
                 .stream()
@@ -217,9 +217,9 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
             parser.parse(JsonReaderAdapter.from(
                 JsonParser.parseString("{\"input\" : { \"some-number\":5, \"some-data\": { \"data\" : 123}}}")));
         }
-        DOMRpcResult result = bridge.invokeRpc(path, (ContainerNode) resultHolder.getResult()).get();
+        DOMRpcResult result = bridge.invokeRpc(path, (ContainerNode) resultHolder.getResult().data()).get();
         logResult(result);
-        assertTrue(result.getErrors().isEmpty());
+        assertTrue(result.errors().isEmpty());
     }
 
     @Test(timeout = 15_000)

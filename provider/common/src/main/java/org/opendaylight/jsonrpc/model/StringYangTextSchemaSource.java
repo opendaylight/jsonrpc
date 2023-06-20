@@ -9,10 +9,9 @@ package org.opendaylight.jsonrpc.model;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.Optional;
 import org.opendaylight.yangtools.yang.model.repo.api.SourceIdentifier;
 import org.opendaylight.yangtools.yang.model.repo.api.YangTextSchemaSource;
@@ -37,8 +36,8 @@ public final class StringYangTextSchemaSource extends YangTextSchemaSource {
     }
 
     @Override
-    public InputStream openStream() throws IOException {
-        return new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
+    public Reader openStream() throws IOException {
+        return new StringReader(content);
     }
 
     @Override

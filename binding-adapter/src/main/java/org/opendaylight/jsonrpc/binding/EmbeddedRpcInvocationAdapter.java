@@ -13,7 +13,6 @@ import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSeriali
 import org.opendaylight.mdsal.binding.dom.codec.impl.BindingCodecContext;
 import org.opendaylight.mdsal.binding.runtime.api.BindingRuntimeContext;
 import org.opendaylight.mdsal.binding.runtime.spi.BindingRuntimeHelpers;
-import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
 import org.opendaylight.mdsal.dom.broker.DOMRpcRouter;
 import org.opendaylight.yangtools.concepts.ObjectRegistration;
 import org.opendaylight.yangtools.yang.binding.RpcService;
@@ -36,7 +35,7 @@ public final class EmbeddedRpcInvocationAdapter implements RpcInvocationAdapter 
 
     private EmbeddedRpcInvocationAdapter() {
         final EffectiveModelContext schemaContext = BindingRuntimeHelpers
-                .createEffectiveModel(BindingReflections.loadModuleInfos());
+                .createEffectiveModel(BindingRuntimeHelpers.loadModuleInfos());
         codec = new BindingCodecContext(BindingRuntimeHelpers.createRuntimeContext());
         schemaService = new EmbeddedSchemaService(schemaContext);
         converter = new SchemaChangeAwareConverter(schemaService);
