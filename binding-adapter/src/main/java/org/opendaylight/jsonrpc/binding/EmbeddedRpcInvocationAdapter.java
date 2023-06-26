@@ -13,12 +13,11 @@ import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSeriali
 import org.opendaylight.mdsal.binding.dom.codec.impl.BindingCodecContext;
 import org.opendaylight.mdsal.binding.runtime.api.BindingRuntimeContext;
 import org.opendaylight.mdsal.binding.runtime.spi.BindingRuntimeHelpers;
-import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
 import org.opendaylight.mdsal.dom.broker.DOMRpcRouter;
+import org.opendaylight.mdsal.dom.spi.FixedDOMSchemaService;
 import org.opendaylight.yangtools.concepts.ObjectRegistration;
 import org.opendaylight.yangtools.yang.binding.RpcService;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
 /**
  * Implementation of {@link RpcInvocationAdapter} that is used in embedded applications.
@@ -27,22 +26,19 @@ import org.opendaylight.yangtools.yang.model.api.SchemaContext;
  * @since Sep 24, 2018
  */
 public final class EmbeddedRpcInvocationAdapter implements RpcInvocationAdapter {
+    public static final EmbeddedRpcInvocationAdapter INSTANCE = new EmbeddedRpcInvocationAdapter();
+
     private final BindingCodecContext codec;
-    private final EmbeddedSchemaService schemaService;
     private final SchemaChangeAwareConverter converter;
     private final DOMRpcRouter rpcService;
     private final BindingDOMRpcProviderServiceAdapter rpcAdapter;
-    public static final EmbeddedRpcInvocationAdapter INSTANCE = new EmbeddedRpcInvocationAdapter();
 
     private EmbeddedRpcInvocationAdapter() {
-        final EffectiveModelContext schemaContext = BindingRuntimeHelpers
-                .createEffectiveModel(BindingReflections.loadModuleInfos());
-        codec = new BindingCodecContext(BindingRuntimeHelpers.createRuntimeContext());
-        schemaService = new EmbeddedSchemaService(schemaContext);
+        final var runtimeContext = BindingRuntimeHelpers.createRuntimeContext();
+        codec = new BindingCodecContext(runtimeContext);
+        final var schemaService = FixedDOMSchemaService.of(runtimeContext.getEffectiveModelContext());
         converter = new SchemaChangeAwareConverter(schemaService);
-        rpcService = new DOMRpcRouter();
-        rpcService.onModelContextUpdated(schemaContext);
-        schemaService.registerSchemaContextListener(rpcService);
+        rpcService = new DOMRpcRouter(schemaService);
         rpcAdapter = new BindingDOMRpcProviderServiceAdapter(new ConstantAdapterContext(codec),
                 rpcService.getRpcProviderService());
     }
@@ -63,8 +59,8 @@ public final class EmbeddedRpcInvocationAdapter implements RpcInvocationAdapter 
     }
 
     @Override
-    public SchemaContext schemaContext() {
-        return schemaService.getGlobalContext();
+    public EffectiveModelContext schemaContext() {
+        return getRuntimeContext().getEffectiveModelContext();
     }
 
     @Override
