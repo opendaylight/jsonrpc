@@ -86,7 +86,7 @@ public abstract class AbstractReconnectingClient extends AbstractSession impleme
     /**
      * Invoked when {@link Channel} is closed.
      */
-    private class CloseListener implements ChannelFutureListener {
+    private final class CloseListener implements ChannelFutureListener {
         @Override
         public void operationComplete(ChannelFuture future) throws Exception {
             if (!RECONNECT_STATES.contains(state)) {
@@ -107,7 +107,7 @@ public abstract class AbstractReconnectingClient extends AbstractSession impleme
      * @see Bootstrap#connect(java.net.SocketAddress)
      * @see ChannelFuture#addListener(io.netty.util.concurrent.GenericFutureListener)
      */
-    private class ConnectListener implements ChannelFutureListener {
+    private final class ConnectListener implements ChannelFutureListener {
         @Override
         public void operationComplete(ChannelFuture future) throws Exception {
             if (future.isSuccess()) {

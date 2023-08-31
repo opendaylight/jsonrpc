@@ -46,7 +46,7 @@ public class ReturnTypeTest {
     private JsonRpcReplyMessage resp;
     private GenericService proxy;
 
-    private class GenericServiceImpl implements GenericService {
+    private static final class GenericServiceImpl implements GenericService {
 
         @Override
         public void close() {
@@ -130,7 +130,7 @@ public class ReturnTypeTest {
         resp = requester.sendRequestAndReadReply("primitive1", null);
         assertEquals(10, (int) resp.getResultAsObject(int.class));
         resp = requester.sendRequestAndReadReply("primitive2", null);
-        assertEquals("abc", (String) resp.getResultAsObject(String.class));
+        assertEquals("abc", resp.getResultAsObject(String.class));
         resp = requester.sendRequestAndReadReply("jsonPrimitive", null);
         assertEquals(10, ((JsonPrimitive) resp.getResultAsObject(JsonPrimitive.class)).getAsInt());
     }
