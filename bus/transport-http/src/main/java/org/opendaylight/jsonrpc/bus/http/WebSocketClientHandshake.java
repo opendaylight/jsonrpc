@@ -26,8 +26,9 @@ import org.slf4j.LoggerFactory;
  */
 public class WebSocketClientHandshake extends SimpleChannelInboundHandler<Object> {
     private static final Logger LOG = LoggerFactory.getLogger(WebSocketClientHandshake.class);
+
     private final WebSocketClientHandshaker handshaker;
-    private ChannelPromise handshakeFuture;
+    private ChannelPromise handshakeFuture = null;
 
     public WebSocketClientHandshake(WebSocketClientHandshaker handshaker) {
         this.handshaker = handshaker;
