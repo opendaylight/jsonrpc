@@ -14,10 +14,9 @@ import java.util.function.Supplier;
 import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.NodeIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
-import org.opendaylight.yangtools.yang.data.api.schema.builder.DataContainerNodeBuilder;
 import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
-import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNodes;
+import org.opendaylight.yangtools.yang.data.spi.node.ImmutableNodes;
 import org.opendaylight.yangtools.yang.model.api.ContainerLike;
 import org.opendaylight.yangtools.yang.model.api.DataNodeContainer;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
@@ -51,7 +50,9 @@ class RpcCodec extends RpcNotificationBaseCodec<ContainerNode> {
         LOG.trace("[decode][{}][{}] input : {}", shortName, type, input);
         final ContainerNode result;
         if (isEmpty || input == null || input.isJsonNull()) {
-            result = ImmutableNodes.containerNode(path.lastNodeIdentifier());
+            result = ImmutableNodes.newContainerBuilder()
+                .withNodeIdentifier(new NodeIdentifier(path.lastNodeIdentifier()))
+                .build();
         } else {
             result = decode(wrapInputIfNecessary(input));
         }
@@ -60,8 +61,7 @@ class RpcCodec extends RpcNotificationBaseCodec<ContainerNode> {
     }
 
     private ContainerNode decode(JsonElement input) throws IOException {
-        final DataContainerNodeBuilder<NodeIdentifier, ContainerNode> builder = createNodeBuilder(
-                path.lastNodeIdentifier());
+        final var builder = createNodeBuilder(path.lastNodeIdentifier());
         try (NormalizedNodeStreamWriter writer = createWriter(builder);
                 JsonParserStream jsonParser = JsonParserStream.create(writer, jsonCodec(),
                     SchemaInferenceStack.of(context, path).toInference())) {
