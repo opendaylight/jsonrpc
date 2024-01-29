@@ -18,13 +18,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <reference id="domNotificationPublishService" interface="org.opendaylight.mdsal.dom.api.DOMNotificationPublishService" />
     <reference id="yangXPathParserFactory" interface="org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory" />
     <reference id="clusterSingletonServiceProvider" interface="org.opendaylight.mdsal.singleton.common.api.ClusterSingletonServiceProvider" />
+    <reference id="rpcProviderService" interface="org.opendaylight.mdsal.binding.api.RpcProviderService" />
     <reference id="actorSystemProvider" interface="org.opendaylight.controller.cluster.ActorSystemProvider" />
     <reference id="governanceProvider" interface="org.opendaylight.jsonrpc.model.GovernanceProvider" />
 
-    <odl:clustered-app-config
-            id="singletonConfig"
-            binding-class="org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.cluster.provider.config.rev200708.Config"
-    />
+    <odl:clustered-app-config id="singletonConfig"
+        binding-class="org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.cluster.provider.config.rev200708.Config" />
 
     <bean id="actorSystem" factory-ref="actorSystemProvider" factory-method="getActorSystem" />
 
@@ -40,13 +39,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <argument ref="actorSystem" />
         <argument ref="clusterSingletonServiceProvider" />
         <argument ref="governanceProvider" />
+        <argument ref="rpcProviderService" />
         <argument ref="singletonConfig" />
     </bean>
 
     <bean id="provider" class="org.opendaylight.jsonrpc.provider.cluster.impl.JsonRpcPeerListManager">
         <argument ref="dependencies" />
     </bean>
-
-    <odl:rpc-implementation ref="provider" />
-
 </blueprint>

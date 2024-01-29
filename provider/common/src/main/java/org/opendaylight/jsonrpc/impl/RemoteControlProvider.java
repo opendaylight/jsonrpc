@@ -8,7 +8,7 @@
 package org.opendaylight.jsonrpc.impl;
 
 import java.net.URISyntaxException;
-import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.eclipse.jdt.annotation.NonNull;
@@ -19,10 +19,10 @@ import org.opendaylight.jsonrpc.model.GovernanceProvider;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.provider.common.ProviderDependencies;
 import org.opendaylight.jsonrpc.provider.common.Util;
-import org.opendaylight.mdsal.binding.api.ClusteredDataTreeChangeListener;
 import org.opendaylight.mdsal.binding.api.DataBroker;
 import org.opendaylight.mdsal.binding.api.DataObjectModification;
 import org.opendaylight.mdsal.binding.api.DataObjectModification.ModificationType;
+import org.opendaylight.mdsal.binding.api.DataTreeChangeListener;
 import org.opendaylight.mdsal.binding.api.DataTreeIdentifier;
 import org.opendaylight.mdsal.binding.api.DataTreeModification;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
@@ -33,7 +33,7 @@ import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
-import org.opendaylight.yangtools.concepts.ListenerRegistration;
+import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
 import org.osgi.service.component.annotations.Activate;
@@ -50,9 +50,9 @@ import org.slf4j.LoggerFactory;
  */
 @Component(service = GovernanceProvider.class)
 public final class RemoteControlProvider
-        implements AutoCloseable, ClusteredDataTreeChangeListener<Config>, GovernanceProvider {
+        implements AutoCloseable, DataTreeChangeListener<Config>, GovernanceProvider {
     private static final Logger LOG = LoggerFactory.getLogger(RemoteControlProvider.class);
-    private final ListenerRegistration<RemoteControlProvider> registration;
+    private final Registration registration;
     private final ProviderDependencies dependencies;
     private final JsonRpcCodecFactory codecFactory;
     private String remoteControlUri;
@@ -75,28 +75,29 @@ public final class RemoteControlProvider
         this.dependencies = Objects.requireNonNull(dependencies);
         this.codecFactory = new JsonRpcCodecFactory(dependencies.getSchemaService().getGlobalContext());
         registration = dependencies.getDataBroker()
-                .registerDataTreeChangeListener(DataTreeIdentifier.create(LogicalDatastoreType.CONFIGURATION,
+                .registerTreeChangeListener(DataTreeIdentifier.of(LogicalDatastoreType.CONFIGURATION,
                         InstanceIdentifier.create(Config.class)), this);
     }
 
     @Override
-    public void onDataTreeChanged(@NonNull Collection<DataTreeModification<Config>> changes) {
+    public void onDataTreeChanged(List<DataTreeModification<Config>> changes) {
         for (DataTreeModification<Config> change : changes) {
             final DataObjectModification<Config> root = change.getRootNode();
-            final ModificationType type = root.getModificationType();
+            final ModificationType type = root.modificationType();
             switch (type) {
                 case DELETE:
-                    if (root.getDataAfter() == null || root.getDataAfter().getGovernanceRoot() == null) {
+                    final var dataAfter = root.dataAfter();
+                    if (dataAfter == null || dataAfter.getGovernanceRoot() == null) {
                         stopGovernance();
                     }
-                    if (root.getDataAfter() == null || root.getDataAfter().getWhoAmI() == null) {
+                    if (dataAfter == null || dataAfter.getWhoAmI() == null) {
                         stopRemoteControl();
                     }
                     break;
 
                 case WRITE:
                 case SUBTREE_MODIFIED:
-                    reconfigureServices(root.getDataAfter());
+                    reconfigureServices(root.dataAfter());
                     break;
 
                 default:

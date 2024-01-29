@@ -14,6 +14,7 @@ import static org.opendaylight.yangtools.util.concurrent.FluentFutures.immediate
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.util.ArrayList;
@@ -55,8 +56,11 @@ public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFac
             .newError(ErrorType.APPLICATION, new ErrorTag("commit"), msg);
     private static final FluentFuture<Optional<NormalizedNode>> NO_DATA = FluentFutures
             .immediateFluentFuture(Optional.empty());
+
+    private final @NonNull SettableFuture<CommitInfo> settableFuture = SettableFuture.create();
+    private final @NonNull FluentFuture<CommitInfo> completionFuture = FluentFuture.from(settableFuture);
     /* Keep track of TX id to given endpoint (key is endpoint, value is TX ID) */
-    private final Map<String, String> txIdMap;
+    private final Map<String, String> txIdMap = new HashMap<>();
     private final List<TransactionListener> listeners = new CopyOnWriteArrayList<>();
     private final Codec<JsonObject, YangInstanceIdentifier, RuntimeException> pathCodec;
 
@@ -74,7 +78,6 @@ public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFac
             @NonNull JsonRpcCodecFactory codecFactory, @NonNull EffectiveModelContext schemaContext) {
         super(schemaContext, transportFactory, pathMap, codecFactory, peer);
         Preconditions.checkArgument(!Strings.isNullOrEmpty(peer.getName()), "Peer name is missing");
-        this.txIdMap = new HashMap<>();
         this.pathCodec = codecFactory.pathCodec();
     }
 
@@ -90,6 +93,11 @@ public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFac
     private String getTxId(LogicalDatastoreType store, JsonElement path) {
         return txIdMap.computeIfAbsent(lookupEndPoint(store, path),
             k -> withRemoteShard(store, path, RemoteOmShard::txid));
+    }
+
+    @Override
+    public FluentFuture<?> completionFuture() {
+        return completionFuture;
     }
 
     @Override
@@ -164,6 +172,7 @@ public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFac
             }
             txIdMap.clear();
             listeners.forEach(listener -> listener.onCancel(this));
+            settableFuture.cancel(false);
             return result;
         } catch (Exception e) {
             LOG.error("Unable to cancel transaction", e);
@@ -190,14 +199,15 @@ public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFac
         txIdMap.clear();
         if (result) {
             listeners.forEach(txListener -> txListener.onSuccess(this));
-            return CommitInfo.emptyFluentFuture();
+            settableFuture.set(CommitInfo.empty());
         } else {
             final Throwable failure = new TransactionCommitFailedException(
                     "Commit of transaction " + getIdentifier() + " failed",
                     errors.stream().map(ERROR_MAPPER).toArray(size -> new RpcError[size]));
             listeners.forEach(txListener -> txListener.onFailure(this, failure));
-            return FluentFutures.immediateFailedFluentFuture(failure);
+            settableFuture.setException(failure);
         }
+        return completionFuture;
     }
 
     @Override

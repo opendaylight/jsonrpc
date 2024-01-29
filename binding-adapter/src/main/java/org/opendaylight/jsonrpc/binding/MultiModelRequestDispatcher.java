@@ -7,13 +7,11 @@
  */
 package org.opendaylight.jsonrpc.binding;
 
-import java.util.Optional;
 import java.util.Set;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage.Builder;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.RequestMessageHandler;
-import org.opendaylight.yangtools.yang.binding.RpcService;
 
 /**
  * {@link RequestMessageHandler} which dispatch incoming RPC request to correct implementation.
@@ -22,15 +20,15 @@ import org.opendaylight.yangtools.yang.binding.RpcService;
  * @since Oct 16, 2018
  */
 public class MultiModelRequestDispatcher implements RequestMessageHandler {
-    private final Set<InboundHandler<RpcService>> handlers;
+    private final Set<InboundHandler<?>> handlers;
 
-    MultiModelRequestDispatcher(Set<InboundHandler<RpcService>> handlers) {
+    MultiModelRequestDispatcher(Set<InboundHandler<?>> handlers) {
         this.handlers = handlers;
     }
 
     @Override
     public void handleRequest(JsonRpcRequestMessage request, Builder replyBuilder) {
-        final Optional<InboundHandler<RpcService>> handler = handlers.stream()
+        final var handler = handlers.stream()
                 .filter(h -> h.hasMethod(request.getMethod()))
                 .findFirst();
         if (handler.isPresent()) {

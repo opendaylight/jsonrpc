@@ -19,29 +19,28 @@ import akka.actor.ActorSelection;
 import akka.actor.PoisonPill;
 import akka.dispatch.OnComplete;
 import akka.util.Timeout;
-import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.provider.cluster.api.JsonRpcPeerSingletonService;
 import org.opendaylight.jsonrpc.provider.cluster.messages.MountPointRequest;
 import org.opendaylight.jsonrpc.provider.cluster.messages.UnregisterMountPoint;
-import org.opendaylight.mdsal.binding.api.ClusteredDataTreeChangeListener;
 import org.opendaylight.mdsal.binding.api.DataObjectModification;
+import org.opendaylight.mdsal.binding.api.DataTreeChangeListener;
 import org.opendaylight.mdsal.binding.api.DataTreeModification;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.MountStatus;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ActualEndpoints;
-import org.opendaylight.yangtools.concepts.ListenerRegistration;
+import org.opendaylight.yangtools.concepts.Registration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.concurrent.duration.Duration;
 
 final class SlavePeerContext
-        implements ClusteredDataTreeChangeListener<ActualEndpoints>, JsonRpcPeerSingletonService, AutoCloseable {
+        implements DataTreeChangeListener<ActualEndpoints>, JsonRpcPeerSingletonService, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(SlavePeerContext.class);
     private final AtomicBoolean closed = new AtomicBoolean(false);
-    private final ListenerRegistration<SlavePeerContext> dtclRegistration;
+    private final Registration dtclRegistration;
     private ActorRef slaveActorRef;
     private final Timeout askTimeout;
     private final Peer peer;
@@ -51,7 +50,7 @@ final class SlavePeerContext
         this.peer = peer;
         this.dependencies = dependencies;
         dtclRegistration = dependencies.getDataBroker()
-                .registerDataTreeChangeListener(getPeerOpstateIdentifier(peer.getName()), this);
+                .registerTreeChangeListener(getPeerOpstateIdentifier(peer.getName()), this);
         final Duration askDuration = dependencies.getConfig() == null ? DEFAULT_ASK_TIMEOUT
                 : durationFromUint16seconds(dependencies.getConfig().getActorResponseWaitTime(), DEFAULT_ASK_TIMEOUT);
         askTimeout = Timeout.apply(askDuration.toSeconds(), TimeUnit.SECONDS);
@@ -59,21 +58,21 @@ final class SlavePeerContext
     }
 
     @Override
-    public void onDataTreeChanged(@NonNull Collection<DataTreeModification<ActualEndpoints>> changes) {
+    public void onDataTreeChanged(List<DataTreeModification<ActualEndpoints>> changes) {
         for (final DataTreeModification<ActualEndpoints> change : changes) {
             final DataObjectModification<ActualEndpoints> rootNode = change.getRootNode();
-            LOG.debug("[{}] OP DTC [{}] : {} => {}", peer.getName(), rootNode.getModificationType(),
-                    rootNode.getDataBefore(), rootNode.getDataAfter());
-            switch (rootNode.getModificationType()) {
+            LOG.debug("[{}] OP DTC [{}] : {} => {}", peer.getName(), rootNode.modificationType(),
+                    rootNode.dataBefore(), rootNode.dataAfter());
+            switch (rootNode.modificationType()) {
                 case SUBTREE_MODIFIED:
                 case WRITE:
-                    onMountpointUpdated(rootNode.getDataAfter());
+                    onMountpointUpdated(rootNode.dataAfter());
                     break;
                 case DELETE:
                     deleteMountpoint();
                     break;
                 default:
-                    LOG.warn("[{}] Unhandled modification {}", peer.getName(), rootNode.getModificationType());
+                    LOG.warn("[{}] Unhandled modification {}", peer.getName(), rootNode.modificationType());
             }
         }
     }

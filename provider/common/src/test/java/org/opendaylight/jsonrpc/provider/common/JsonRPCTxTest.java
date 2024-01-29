@@ -116,7 +116,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
 
         final NormalizedNode nn = fopt.get(5, TimeUnit.SECONDS).orElseThrow();
         LOG.info("Read output : {}", nn);
-        assertEquals(NetworkTopology.QNAME.getNamespace(), nn.getIdentifier().getNodeType().getNamespace());
+        assertEquals(NetworkTopology.QNAME.getNamespace(), nn.name().getNodeType().getNamespace());
         assertNotNull(nn.body());
     }
 
@@ -133,7 +133,7 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
     @Test
     public void testReadEmpty() throws InterruptedException, ExecutionException {
         doReturn(null).when(om).read(any());
-        assertFalse(trx.read(LogicalDatastoreType.OPERATIONAL, YangInstanceIdentifier.empty()).get().isPresent());
+        assertFalse(trx.read(LogicalDatastoreType.OPERATIONAL, YangInstanceIdentifier.of()).get().isPresent());
     }
 
     @Test

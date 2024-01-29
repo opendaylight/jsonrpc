@@ -114,10 +114,10 @@ public abstract class AbstractCodecTest extends AbstractDataBrokerTest {
         sw.write(Strings.repeat(" ", (level - 1) * 2));
         sw.write(nn.body().getClass().getSimpleName());
         sw.write(" : ");
-        sw.write(nn.getIdentifier().toString());
+        sw.write(nn.name().toString());
         sw.write("\n");
-        if (nn.body() instanceof Collection) {
-            for (Object e : (Collection<?>) nn.body()) {
+        if (nn.body() instanceof Collection<?> coll) {
+            for (Object e : coll) {
                 dumpNormalizedNode((NormalizedNode) e, sw, level + 1);
             }
         }

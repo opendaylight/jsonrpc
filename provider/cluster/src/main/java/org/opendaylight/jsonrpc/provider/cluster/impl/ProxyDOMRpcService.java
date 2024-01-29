@@ -32,7 +32,7 @@ import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.mdsal.dom.api.DefaultDOMRpcException;
 import org.opendaylight.mdsal.dom.spi.DefaultDOMRpcResult;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
-import org.opendaylight.yangtools.concepts.ListenerRegistration;
+import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.RpcError;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
@@ -108,7 +108,7 @@ final class ProxyDOMRpcService implements DOMRpcService {
     }
 
     @Override
-    public <T extends DOMRpcAvailabilityListener> ListenerRegistration<T> registerRpcListener(T listener) {
+    public Registration registerRpcListener(DOMRpcAvailabilityListener listener) {
         throw new UnsupportedOperationException("registerRpcListener is not supported in cluster");
     }
 
