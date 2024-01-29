@@ -13,19 +13,15 @@ import static org.opendaylight.jsonrpc.provider.cluster.impl.ClusterUtil.duratio
 import akka.actor.ActorRef;
 import akka.pattern.Patterns;
 import akka.util.Timeout;
-import com.google.common.collect.ClassToInstanceMap;
-import com.google.common.collect.ImmutableClassToInstanceMap;
 import java.util.concurrent.TimeUnit;
 import org.opendaylight.jsonrpc.provider.cluster.tx.ProxyReadTransaction;
 import org.opendaylight.jsonrpc.provider.cluster.tx.ProxyReadWriteTransaction;
 import org.opendaylight.jsonrpc.provider.cluster.tx.TxRequest;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
-import org.opendaylight.mdsal.dom.api.DOMDataBrokerExtension;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChain;
-import org.opendaylight.mdsal.dom.api.DOMTransactionChainListener;
 import org.opendaylight.mdsal.dom.spi.PingPongMergingDOMDataBroker;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.slf4j.Logger;
@@ -83,14 +79,9 @@ final class ProxyDOMDataBroker implements PingPongMergingDOMDataBroker {
 
     // TODO : How about this?
     @Override
-    public DOMTransactionChain createTransactionChain(final DOMTransactionChainListener listener) {
-        LOG.debug("[{}] new transaction chain with listener {}", peer.getName(), listener);
+    public DOMTransactionChain createTransactionChain() {
+        LOG.debug("[{}] new transaction chain", peer.getName());
         throw new UnsupportedOperationException("Transaction chains not supported for JSONRPC mount point");
-    }
-
-    @Override
-    public ClassToInstanceMap<DOMDataBrokerExtension> getExtensions() {
-        return ImmutableClassToInstanceMap.of();
     }
 
     @Override

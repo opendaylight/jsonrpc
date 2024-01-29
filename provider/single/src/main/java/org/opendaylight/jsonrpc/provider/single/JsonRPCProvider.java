@@ -7,7 +7,9 @@
  */
 package org.opendaylight.jsonrpc.provider.single;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableClassToInstanceMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.net.URISyntaxException;
@@ -31,7 +33,6 @@ import org.opendaylight.jsonrpc.provider.common.AbstractPeerContext;
 import org.opendaylight.jsonrpc.provider.common.FailedPeerContext;
 import org.opendaylight.jsonrpc.provider.common.MappedPeerContext;
 import org.opendaylight.jsonrpc.provider.common.ProviderDependencies;
-import org.opendaylight.mdsal.binding.api.ClusteredDataTreeChangeListener;
 import org.opendaylight.mdsal.binding.api.DataBroker;
 import org.opendaylight.mdsal.binding.api.DataTreeIdentifier;
 import org.opendaylight.mdsal.binding.api.ReadTransaction;
@@ -44,16 +45,18 @@ import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ConfigBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefresh;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshOutput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReload;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReloadInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReloadOutput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReloadOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.JsonrpcService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yangtools.yang.binding.Rpc;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
@@ -65,12 +68,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(service = { })
-public final class JsonRPCProvider implements JsonrpcService, AutoCloseable {
+public final class JsonRPCProvider implements AutoCloseable {
     private static final String ME = "JSON RPC Provider";
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCProvider.class);
     private static final InstanceIdentifier<Config> GLOBAL_CFG_II = InstanceIdentifier.create(Config.class);
     private static final DataTreeIdentifier<Config> CFG_DTI =
-        DataTreeIdentifier.create(LogicalDatastoreType.CONFIGURATION, GLOBAL_CFG_II);
+        DataTreeIdentifier.of(LogicalDatastoreType.CONFIGURATION, GLOBAL_CFG_II);
     private final Map<String, AbstractPeerContext> peerState = new ConcurrentHashMap<>();
     private final ReentrantReadWriteLock changeLock = new ReentrantReadWriteLock();
     private final ProviderDependencies dependencies;
@@ -88,14 +91,16 @@ public final class JsonRPCProvider implements JsonrpcService, AutoCloseable {
             @Reference TransportFactory transportFactory, @Reference GovernanceProvider governance) {
         this(new ProviderDependencies(transportFactory, dataBroker, domMountPointService, domDataBroker, schemaService,
             domNotificationPublishService, domRpcService, yangXPathParserFactory), governance);
-        rpcReg = rpcProviderService.registerRpcImplementation(JsonrpcService.class, this);
+        rpcReg = rpcProviderService.registerRpcImplementations(ImmutableClassToInstanceMap.<Rpc<?, ?>>builder()
+            .put(ForceRefresh.class, this::forceRefresh)
+            .put(ForceReload.class, this::forceReload)
+            .build());
     }
 
     public JsonRPCProvider(ProviderDependencies dependencies, GovernanceProvider governance) {
         this.dependencies = Objects.requireNonNull(dependencies);
         this.governance = Objects.requireNonNull(governance);
-        dtclReg = dependencies.getDataBroker().registerDataTreeChangeListener(CFG_DTI,
-                    (ClusteredDataTreeChangeListener<Config>) changes -> processNotification());
+        dtclReg = dependencies.getDataBroker().registerTreeChangeListener(CFG_DTI, changes -> processNotification());
         processNotification();
     }
 
@@ -245,8 +250,7 @@ public final class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     /*
      * JSON Rpc Force refresh
      */
-    @Override
-    public ListenableFuture<RpcResult<ForceRefreshOutput>> forceRefresh(ForceRefreshInput input) {
+    private  ListenableFuture<RpcResult<ForceRefreshOutput>> forceRefresh(ForceRefreshInput input) {
         LOG.debug("Refreshing json rpc state");
         return Futures.immediateFuture(RpcResultBuilder
                 .<ForceRefreshOutput>success(new ForceRefreshOutputBuilder().setResult(processNotification()).build())
@@ -256,8 +260,8 @@ public final class JsonRPCProvider implements JsonrpcService, AutoCloseable {
     /*
      * JSON Rpc Force reload
      */
-    @Override
-    public ListenableFuture<RpcResult<ForceReloadOutput>> forceReload(ForceReloadInput input) {
+    @VisibleForTesting
+    ListenableFuture<RpcResult<ForceReloadOutput>> forceReload(ForceReloadInput input) {
         final ForceReloadOutputBuilder outputBuilder = new ForceReloadOutputBuilder();
         LOG.debug("Remounting all json rpc peers");
         boolean result = true;
