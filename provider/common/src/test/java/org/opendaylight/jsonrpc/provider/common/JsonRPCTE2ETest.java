@@ -43,12 +43,10 @@ import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
-import org.opendaylight.mdsal.dom.api.DOMDataTreeTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMNotificationPublishService;
 import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChain;
-import org.opendaylight.mdsal.dom.api.DOMTransactionChainListener;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 
@@ -141,18 +139,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
      */
     @Test(expected = IllegalStateException.class)
     public void testUnfinishedTxChain() throws InterruptedException {
-        final DOMTransactionChain chain = jrbroker.createTransactionChain(new DOMTransactionChainListener() {
-            @Override
-            public void onTransactionChainSuccessful(DOMTransactionChain chain) {
-                // NOOP
-            }
-
-            @Override
-            public void onTransactionChainFailed(DOMTransactionChain chain, DOMDataTreeTransaction transaction,
-                    Throwable cause) {
-                // NOOP
-            }
-        });
+        final DOMTransactionChain chain = jrbroker.createTransactionChain();
         chain.newWriteOnlyTransaction();
         chain.newWriteOnlyTransaction();
     }
@@ -161,17 +148,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     public void testTxChain() throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
         final NodeResult e = TestUtils.getMockTopologyAsDom(getCodec());
-        final DOMTransactionChain chain = jrbroker.createTransactionChain(new DOMTransactionChainListener() {
-            @Override
-            public void onTransactionChainSuccessful(DOMTransactionChain chain) {
-                latch.countDown();
-            }
-
-            @Override
-            public void onTransactionChainFailed(DOMTransactionChain chain, DOMDataTreeTransaction transaction,
-                    Throwable cause) {
-            }
-        });
+        final DOMTransactionChain chain = jrbroker.createTransactionChain();
         final DOMDataTreeWriteTransaction tx1 = chain.newWriteOnlyTransaction();
         tx1.put(LogicalDatastoreType.OPERATIONAL, e.path(), e.node());
         tx1.commit();
