@@ -14,17 +14,15 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
-import java.util.Objects;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.yangtools.yang.binding.DataContainer;
 import org.opendaylight.yangtools.yang.binding.DataObject;
-import org.opendaylight.yangtools.yang.binding.RpcService;
+import org.opendaylight.yangtools.yang.binding.Rpc;
 import org.opendaylight.yangtools.yang.common.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
-import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,8 +33,9 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Sep 20, 2018
  */
-public class OutboundHandler<T extends RpcService> extends AbstractHandler<T> {
+public class OutboundHandler<T extends Rpc<?, ?>> extends AbstractHandler<T> {
     private static final Logger LOG = LoggerFactory.getLogger(OutboundHandler.class);
+
     private final RequesterSession session;
 
     public OutboundHandler(Class<T> type, RpcInvocationAdapter adapter, RequesterSession session) {
@@ -62,8 +61,6 @@ public class OutboundHandler<T extends RpcService> extends AbstractHandler<T> {
 
     private Object handleInvocationInternal(Method method, Object[] args) throws IOException {
         Preconditions.checkArgument(args.length < 2, "Unexpected number of arguments : %d", args.length);
-        RpcDefinition rpcDef = rpcMethodMap.get(method);
-        Objects.requireNonNull(rpcDef);
         final JsonElement request;
         // RPC with input
         if (args.length == 1) {

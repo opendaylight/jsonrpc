@@ -23,7 +23,11 @@ import org.opendaylight.jsonrpc.bus.messagelib.NoopReplyMessageHandler;
 import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TestHelper;
-import org.opendaylight.jsonrpc.test.TestModelServiceImpl;
+import org.opendaylight.jsonrpc.test.TestErrorMethod;
+import org.opendaylight.jsonrpc.test.TestFactorial;
+import org.opendaylight.jsonrpc.test.TestMultiplyList;
+import org.opendaylight.jsonrpc.test.TestRemoveCoffeePot;
+import org.opendaylight.jsonrpc.test.TestSimpleMethod;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.base.rev201014.numbers.list.Numbers;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.base.rev201014.numbers.list.NumbersBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.Coffee;
@@ -59,8 +63,12 @@ public class TestModelServiceTest {
         transportFactory = new SchemaAwareTransportFactory.Builder()
                 .withRpcInvocationAdapter(EmbeddedRpcInvocationAdapter.INSTANCE).build();
         final int port = TestHelper.getFreeTcpPort();
-        responder = transportFactory.createResponder(TestModelRpcService.class, new TestModelServiceImpl(),
-                TestHelper.getBindUri("ws", port));
+        responder = transportFactory.createMultiModelResponder(MultiModelBuilder.create()
+            .addService(new TestErrorMethod())
+            .addService(new TestFactorial())
+            .addService(new TestMultiplyList())
+            .addService(new TestRemoveCoffeePot())
+            .addService(new TestSimpleMethod()), TestHelper.getBindUri("ws", port));
         proxy = transportFactory.createBindingRequesterProxy(TestModelRpcService.class,
                 TestHelper.getConnectUri("ws", port));
         requester = transportFactory.endpointBuilder().requester().create(TestHelper.getConnectUri("ws", port),

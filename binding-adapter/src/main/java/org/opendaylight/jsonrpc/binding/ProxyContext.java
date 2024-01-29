@@ -9,8 +9,8 @@ package org.opendaylight.jsonrpc.binding;
 
 import java.util.function.Consumer;
 import org.opendaylight.jsonrpc.bus.messagelib.BaseSession;
-import org.opendaylight.yangtools.concepts.ObjectRegistration;
-import org.opendaylight.yangtools.yang.binding.RpcService;
+import org.opendaylight.yangtools.concepts.Registration;
+import org.opendaylight.yangtools.yang.binding.Rpc;
 
 /**
  * Context of proxy. Allows proper cleanup of created instance.
@@ -18,15 +18,15 @@ import org.opendaylight.yangtools.yang.binding.RpcService;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Sep 21, 2018
  */
-public class ProxyContext<T extends RpcService> implements AutoCloseable {
-    private final ObjectRegistration<T> rpcRegistration;
+public class ProxyContext<T extends Rpc<?, ?>> implements AutoCloseable {
+    private final Registration rpcRegistration;
     private final BaseSession session;
     private final T proxy;
     private final Consumer<T> cleanCallback;
     private final Class<T> type;
 
-    ProxyContext(final Class<T> type, final ObjectRegistration<T> rpcRegistration, final BaseSession session,
-            final T proxy, final Consumer<T> cleanCallback) {
+    ProxyContext(final Class<T> type, final Registration rpcRegistration, final BaseSession session, final T proxy,
+            final Consumer<T> cleanCallback) {
         this.rpcRegistration = rpcRegistration;
         this.session = session;
         this.proxy = proxy;
