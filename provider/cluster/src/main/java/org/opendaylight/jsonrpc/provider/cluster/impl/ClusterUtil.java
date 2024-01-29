@@ -19,8 +19,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.Ac
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpoints;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpointsKey;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier.IdentifiableItem;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier.PathArgument;
+import org.opendaylight.yangtools.yang.binding.KeyStep;
 import org.opendaylight.yangtools.yang.common.Uint16;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
@@ -47,7 +46,7 @@ final class ClusterUtil {
      * @return {@link DataTreeIdentifier}
      */
     public static DataTreeIdentifier<ActualEndpoints> getPeerOpstateIdentifier(String name) {
-        return DataTreeIdentifier.create(LogicalDatastoreType.OPERATIONAL,
+        return DataTreeIdentifier.of(LogicalDatastoreType.OPERATIONAL,
                 InstanceIdentifier.builder(Config.class)
                         .child(ActualEndpoints.class, new ActualEndpointsKey(name))
                         .build());
@@ -59,7 +58,7 @@ final class ClusterUtil {
      * @return {@link DataTreeIdentifier}
      */
     public static DataTreeIdentifier<ConfiguredEndpoints> getPeerListIdentifier() {
-        return DataTreeIdentifier.create(LogicalDatastoreType.CONFIGURATION,
+        return DataTreeIdentifier.of(LogicalDatastoreType.CONFIGURATION,
                 InstanceIdentifier.builder(Config.class).child(ConfiguredEndpoints.class).build());
     }
 
@@ -70,13 +69,13 @@ final class ClusterUtil {
      * @return peer's name
      */
     public static String peerNameFromII(InstanceIdentifier<? extends Peer> ii) {
-        final PathArgument last = Iterables.getLast(ii.getPathArguments());
-        Preconditions.checkArgument(last instanceof IdentifiableItem);
-        if (((IdentifiableItem<?, ?>) last).getKey() instanceof ConfiguredEndpointsKey) {
-            return ((ConfiguredEndpointsKey) ((IdentifiableItem<?, ?>) last).getKey()).getName();
+        final var last = Iterables.getLast(ii.getPathArguments());
+        Preconditions.checkArgument(last instanceof KeyStep);
+        if (((KeyStep<?, ?>) last).key() instanceof ConfiguredEndpointsKey) {
+            return ((ConfiguredEndpointsKey) ((KeyStep<?, ?>) last).key()).getName();
         }
-        if (((IdentifiableItem<?, ?>) last).getKey() instanceof ActualEndpointsKey) {
-            return ((ActualEndpointsKey) ((IdentifiableItem<?, ?>) last).getKey()).getName();
+        if (((KeyStep<?, ?>) last).key() instanceof ActualEndpointsKey) {
+            return ((ActualEndpointsKey) ((KeyStep<?, ?>) last).key()).getName();
         }
         throw new IllegalArgumentException("Unrecognized key : " + last);
     }

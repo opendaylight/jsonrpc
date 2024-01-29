@@ -19,7 +19,7 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.yangtools.yang.binding.DataContainer;
 import org.opendaylight.yangtools.yang.binding.DataObject;
-import org.opendaylight.yangtools.yang.binding.RpcService;
+import org.opendaylight.yangtools.yang.binding.Rpc;
 import org.opendaylight.yangtools.yang.common.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
@@ -35,8 +35,9 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Sep 20, 2018
  */
-public class OutboundHandler<T extends RpcService> extends AbstractHandler<T> {
+public class OutboundHandler<T extends Rpc<?, ?>> extends AbstractHandler<T> {
     private static final Logger LOG = LoggerFactory.getLogger(OutboundHandler.class);
+    
     private final RequesterSession session;
 
     public OutboundHandler(Class<T> type, RpcInvocationAdapter adapter, RequesterSession session) {
