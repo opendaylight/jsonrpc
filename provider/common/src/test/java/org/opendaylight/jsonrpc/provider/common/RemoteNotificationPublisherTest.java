@@ -22,7 +22,7 @@ import org.opendaylight.jsonrpc.impl.RemoteControl;
 import org.opendaylight.jsonrpc.model.RemoteNotificationPublisher;
 import org.opendaylight.mdsal.dom.api.DOMNotification;
 import org.opendaylight.mdsal.dom.api.DOMNotificationListener;
-import org.opendaylight.yangtools.concepts.ListenerRegistration;
+import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
 import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
@@ -39,18 +39,18 @@ public class RemoteNotificationPublisherTest extends AbstractJsonRpcTest {
     private static final Logger LOG = LoggerFactory.getLogger(RemoteNotificationPublisherTest.class);
     private DefaultTransportFactory transportFactory;
     private RemoteControl ctrl;
-    private ListenerRegistration<DOMNotificationListener> reg;
+    private Registration reg;
     private CountDownLatch latch;
 
     @Before
     public void setUp() {
         transportFactory = new DefaultTransportFactory();
-        ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory, getDOMNotificationRouter(),
-                getDOMRpcRouter().getRpcService(), codecFactory);
+        ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory,
+            getDOMNotificationRouter().notificationPublishService(), getDOMRpcRouter().rpcService(), codecFactory);
         NotificationDefinition path = findNode(schemaContext, "test-model-notification:notification1",
                 Module::getNotifications).orElseThrow();
         latch = new CountDownLatch(1);
-        reg = getDOMNotificationRouter().registerNotificationListener(new DOMNotificationListener() {
+        reg = getDOMNotificationRouter().notificationService().registerNotificationListener(new DOMNotificationListener() {
             @Override
             public void onNotification(@NonNull DOMNotification notification) {
                 LOG.info("Got notification : {}", notification);

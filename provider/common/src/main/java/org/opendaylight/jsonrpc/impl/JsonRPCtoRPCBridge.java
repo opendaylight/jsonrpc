@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
@@ -32,8 +31,7 @@ import org.opendaylight.mdsal.dom.api.DOMRpcImplementationNotAvailableException;
 import org.opendaylight.mdsal.dom.api.DOMRpcResult;
 import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
-import org.opendaylight.yangtools.concepts.AbstractListenerRegistration;
-import org.opendaylight.yangtools.concepts.ListenerRegistration;
+import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.util.concurrent.FluentFutures;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.QNameModule;
@@ -60,9 +58,9 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent implement
      * @param governance additional json rpc service to query for endpoints
      * @param transportFactory - JSON RPC 2.0 transport factory
      */
-    public JsonRPCtoRPCBridge(@NonNull Peer peer, @NonNull EffectiveModelContext schemaContext,
-            @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nullable RemoteGovernance governance,
-            @NonNull TransportFactory transportFactory, @NonNull JsonRpcCodecFactory codecFactory) {
+    public JsonRPCtoRPCBridge(Peer peer, EffectiveModelContext schemaContext,
+            HierarchicalEnumMap<JsonElement, DataType, String> pathMap, @Nullable RemoteGovernance governance,
+            TransportFactory transportFactory, JsonRpcCodecFactory codecFactory) {
         super(schemaContext, transportFactory, pathMap, codecFactory, peer);
         final ImmutableMap.Builder<QName, RpcClient> mappedRpcsBuilder = ImmutableMap.builder();
         for (final RpcDefinition def : schemaContext.getOperations()) {
@@ -115,15 +113,11 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent implement
     }
 
     @Override
-    public <T extends DOMRpcAvailabilityListener> ListenerRegistration<T> registerRpcListener(
-            @NonNull final T listener) {
+    public Registration registerRpcListener(final DOMRpcAvailabilityListener listener) {
         LOG.info("registered RPC implementation for json rpc broker");
         listener.onRpcAvailable(availableRpcs);
-        return new AbstractListenerRegistration<>(listener) {
-            @Override
-            protected void removeRegistration() {
-                // NOOP, no rpcs appear and disappear in this implementation
-            }
+        return () -> {
+            // NOOP, no rpcs appear and disappear in this implementation
         };
     }
 
