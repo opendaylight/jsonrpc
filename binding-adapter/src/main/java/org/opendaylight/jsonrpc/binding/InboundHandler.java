@@ -15,24 +15,19 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.Future;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage.Builder;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.RequestMessageHandler;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ResponseErrorCode;
-import org.opendaylight.yangtools.yang.binding.DataContainer;
 import org.opendaylight.yangtools.yang.binding.DataObject;
-import org.opendaylight.yangtools.yang.binding.RpcService;
+import org.opendaylight.yangtools.yang.binding.Rpc;
+import org.opendaylight.yangtools.yang.binding.RpcInput;
+import org.opendaylight.yangtools.yang.binding.RpcOutput;
 import org.opendaylight.yangtools.yang.common.RpcError;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
-import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
-import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,52 +39,45 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Sep 20, 2018
  */
-public class InboundHandler<T extends RpcService> extends AbstractHandler<T> implements RequestMessageHandler {
+public class InboundHandler<T extends Rpc<?, ?>> extends AbstractHandler<T> implements RequestMessageHandler {
     private static final Logger LOG = LoggerFactory.getLogger(InboundHandler.class);
-    private final T impl;
+    private final Rpc<?, ?> impl;
 
-    public InboundHandler(Class<T> type, RpcInvocationAdapter adapter, T impl) {
-        super(type, adapter);
+    public InboundHandler(RpcInvocationAdapter adapter, T impl) {
+        super((Class<T>) impl.implementedInterface(), adapter);
         this.impl = Objects.requireNonNull(impl);
-    }
-
-    private Optional<Entry<RpcDefinition, Method>> findMethod(String methodName) {
-        return rpcMethodMap.inverse()
-                .entrySet()
-                .stream()
-                .filter(e -> e.getKey().getQName().getLocalName().equals(methodName))
-                .findFirst();
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
     @Override
     public void handleRequest(JsonRpcRequestMessage request, Builder replyBuilder) {
+        final var method = request.getMethod();
+        if (!hasMethod(method)) {
+            logRpcInvocationFailure(new NoSuchMethodError(method));
+            replyBuilder.error(new JsonRpcErrorObject(ResponseErrorCode.MethodNotFound.getIntValue(),
+                "No such method : " + method, JsonNull.INSTANCE));
+            return;
+        }
+
         try {
-            final Entry<RpcDefinition, Method> rpcDefEntry = findMethod(request.getMethod())
-                    .orElseThrow(() -> new NoSuchMethodError(request.getMethod()));
-            final Method method = rpcDefEntry.getValue();
-            final Object[] args = convertArguments(rpcDefEntry, request.getParams(), method);
+            final var arg = convertArguments(request.getParams());
             @SuppressWarnings("unchecked")
-            final Future<RpcResult<Object>> output = (Future<RpcResult<Object>>) method.invoke(impl, args);
+            final var output = ((Rpc<RpcInput, RpcOutput>) impl).invoke(arg);
             LOG.debug("Output : {}", output);
-            final RpcResult<Object> rpcResult = Futures.getUnchecked(output);
+            final var rpcResult = Futures.getUnchecked(output);
             if (rpcResult.isSuccessful()) {
-                if (rpcResult.getResult() != null) {
-                    final ContainerNode domData = adapter.codec()
-                            .toNormalizedNodeRpcData((DataContainer) rpcResult.getResult());
+                final var result = rpcResult.getResult();
+                if (result != null) {
+                    final ContainerNode domData = adapter.codec().toNormalizedNodeRpcData(result);
                     final JsonElement reply = adapter.converter()
                             .get()
-                            .rpcOutputCodec(rpcDefEntry.getKey())
+                            .rpcOutputCodec(rpcDef)
                             .serialize(domData);
                     replyBuilder.result(reply);
                 }
             } else {
                 mapRpcError(replyBuilder, rpcResult);
             }
-        } catch (NoSuchMethodError e) {
-            logRpcInvocationFailure(e);
-            replyBuilder.error(new JsonRpcErrorObject(ResponseErrorCode.MethodNotFound.getIntValue(),
-                    "No such method : " + e.getMessage(), JsonNull.INSTANCE));
         } catch (IllegalArgumentException e) {
             logRpcInvocationFailure(e);
             replyBuilder.error(new JsonRpcErrorObject(ResponseErrorCode.InvalidParams.getIntValue(), e.getMessage(),
@@ -102,8 +90,8 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
         }
     }
 
-    private static void mapRpcError(Builder replyBuilder, final RpcResult<Object> rpcResult) {
-        final Collection<RpcError> errors = rpcResult.getErrors();
+    private static void mapRpcError(Builder replyBuilder, final RpcResult<?> rpcResult) {
+        final var errors = rpcResult.getErrors();
         if (errors.isEmpty()) {
             replyBuilder.error(new JsonRpcErrorObject(new JsonPrimitive("No error info available")));
         } else if (errors.size() == 1) {
@@ -116,24 +104,15 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
         }
     }
 
-    private Object[] convertArguments(final Entry<RpcDefinition, Method> rpcDefEntry, final JsonElement wrapper,
-            final Method method) throws IOException {
-        final Object[] args;
-        if (method.getParameterCount() == 1) {
-            final NormalizedNode nn = adapter.converter()
-                    .get()
-                    .rpcInputCodec(rpcDefEntry.getKey())
-                    .deserialize(wrapper);
-            final DataObject dataObject = adapter.codec()
-                    .fromNormalizedNodeRpcData(
-                            Absolute.of(rpcDefEntry.getKey().getQName(), rpcDefEntry.getKey().getInput().getQName()),
-                            (ContainerNode) nn);
-            LOG.debug("Input : {}", dataObject);
-            args = new Object[] { dataObject };
-        } else {
-            args = null;
-        }
-        return args;
+    private RpcInput convertArguments(final JsonElement wrapper) throws IOException {
+        final ContainerNode nn = adapter.converter()
+            .get()
+            .rpcInputCodec(rpcDef)
+            .deserialize(wrapper);
+        final DataObject dataObject = adapter.codec()
+            .fromNormalizedNodeRpcData(Absolute.of(rpcDef.getQName(), rpcDef.getInput().getQName()), nn);
+        LOG.debug("Input : {}", dataObject);
+        return RpcInput.class.cast(dataObject);
     }
 
     private static void logRpcInvocationFailure(Throwable cause) {
@@ -151,7 +130,7 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
     }
 
     @Override
-    protected Object handleInvocation(Object proxy, Method method, Object[] args) throws Throwable {
+    protected Object doHandleInvocation(Object proxy, Method method, Object[] args) {
         // NOOP, not used
         return null;
     }
@@ -160,6 +139,6 @@ public class InboundHandler<T extends RpcService> extends AbstractHandler<T> imp
      * Used by MultiModelRequestDispatcher
      */
     boolean hasMethod(String methodName) {
-        return findMethod(methodName).isPresent();
+        return rpcDef.getQName().getLocalName().equals(methodName);
     }
 }

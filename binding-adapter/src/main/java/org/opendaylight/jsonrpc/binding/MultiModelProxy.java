@@ -7,12 +7,11 @@
  */
 package org.opendaylight.jsonrpc.binding;
 
-import com.google.common.collect.ClassToInstanceMap;
 import com.google.common.collect.ImmutableClassToInstanceMap;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.opendaylight.yangtools.yang.binding.RpcService;
+import org.opendaylight.yangtools.yang.binding.Rpc;
 
 /**
  * Proxy context for remote RPC service which implements multiple yang models.
@@ -21,13 +20,13 @@ import org.opendaylight.yangtools.yang.binding.RpcService;
  * @since Oct 16, 2018
  */
 public class MultiModelProxy implements AutoCloseable {
-    private final ClassToInstanceMap<? extends RpcService> proxyMap;
-    private final Set<ProxyContext<RpcService>> proxies;
+    private final ImmutableClassToInstanceMap<Rpc<?, ?>> proxyMap;
+    private final Set<ProxyContext<?>> proxies;
 
-    public MultiModelProxy(Set<ProxyContext<RpcService>> proxies) {
+    public MultiModelProxy(Set<ProxyContext<?>> proxies) {
         this.proxies = proxies;
-        proxyMap = ImmutableClassToInstanceMap
-                .copyOf(proxies.stream().collect(Collectors.toMap(ProxyContext::getType, ProxyContext::getProxy)));
+        proxyMap = ImmutableClassToInstanceMap.copyOf(proxies.stream()
+            .collect(Collectors.toMap(ProxyContext::getType, ProxyContext::getProxy)));
     }
 
     @Override
@@ -36,14 +35,13 @@ public class MultiModelProxy implements AutoCloseable {
     }
 
     /**
-     * Get RPC proxy for particular {@link RpcService}.
+     * Get RPC proxy for particular {@link Rpc}.
      *
-     * @param type subtype of {@link RpcService} to get proxy for
+     * @param type subtype of {@link Rpc} to get proxy for
      * @return proxy for given RpcService subtype
      */
-    @SuppressWarnings("unchecked")
-    public <T extends RpcService> T getRpcService(Class<T> type) {
-        return (T) Objects.requireNonNull(proxyMap.get(type),
-                "Service is not supported by this requester instance : " + type);
+    public <T extends Rpc<?, ?>> T getRpcService(Class<T> type) {
+        return Objects.requireNonNull(proxyMap.getInstance(type),
+            "Service is not supported by this requester instance : " + type);
     }
 }

@@ -7,8 +7,6 @@
  */
 package org.opendaylight.jsonrpc.dom.codec;
 
-import static org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNodes.mapNodeBuilder;
-
 import com.google.common.collect.Iterables;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -20,6 +18,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
+import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.NodeIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.NodeIdentifierWithPredicates;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgument;
 import org.opendaylight.yangtools.yang.data.api.schema.MapEntryNode;
@@ -33,6 +32,7 @@ import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonWriterFactory;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.data.impl.schema.NormalizationResultHolder;
+import org.opendaylight.yangtools.yang.data.spi.node.ImmutableNodes;
 import org.opendaylight.yangtools.yang.data.util.DataSchemaContextTree;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.Module;
@@ -187,9 +187,10 @@ class DataCodec extends AbstractCodec implements Codec<JsonElement, NormalizedNo
                     .createNestedWriter(codecFactory, parentSchemaNode, null, jsonWriter);
             try (NormalizedNodeWriter nodeWriter = NormalizedNodeWriter.forStreamWriter(jsonStream)) {
                 jsonWriter.beginObject();
-                if (data instanceof MapEntryNode) {
-                    nodeWriter.write(mapNodeBuilder(data.getIdentifier().getNodeType())
-                        .withChild((MapEntryNode) data)
+                if (data instanceof MapEntryNode mapEntry) {
+                    nodeWriter.write(ImmutableNodes.newSystemMapBuilder()
+                        .withNodeIdentifier(new NodeIdentifier(mapEntry.name().getNodeType()))
+                        .withChild(mapEntry)
                         .build());
                 } else {
                     nodeWriter.write(data);

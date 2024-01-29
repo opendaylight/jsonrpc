@@ -7,10 +7,12 @@
  */
 package org.opendaylight.jsonrpc.provider.common;
 
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.gson.JsonElement;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,9 +29,9 @@ import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChainClosedException;
-import org.opendaylight.mdsal.dom.api.DOMTransactionChainListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpointsBuilder;
+import org.opendaylight.yangtools.yang.common.Empty;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 
 public class TxChainTest {
@@ -45,7 +47,7 @@ public class TxChainTest {
     @Mock
     private DOMDataBroker broker;
     @Mock
-    private DOMTransactionChainListener listener;
+    private FutureCallback<Empty> listener;
     @Mock
     private DOMDataTreeReadTransaction readOnlyTx;
     private TxChain chain;
@@ -68,7 +70,8 @@ public class TxChainTest {
         when(broker.newReadWriteTransaction()).thenReturn(writeOnlyTx1)
                 .thenReturn(writeOnlyTx2)
                 .thenReturn(writeOnlyTx3);
-        chain = new TxChain(broker, listener, transportFactory, pathMap, codec, schemaContext, DEVICE);
+        chain = new TxChain(broker, transportFactory, pathMap, codec, schemaContext, DEVICE);
+        chain.addCallback(listener);
     }
 
     @Test()
@@ -106,7 +109,7 @@ public class TxChainTest {
     @Test(expected = DOMTransactionChainClosedException.class)
     public void testCloseAfterFinished() throws Exception {
         chain.close();
-        verify(listener).onTransactionChainSuccessful(chain);
+        verify(listener).onSuccess(any());
         chain.newReadOnlyTransaction();
     }
 
@@ -116,7 +119,7 @@ public class TxChainTest {
         writeTx.commit().get();
         final TransactionCommitFailedException cause = new TransactionCommitFailedException("fail");
         chain.onFailure(writeOnlyTx1, cause);
-        verify(listener).onTransactionChainFailed(chain, writeOnlyTx1, cause);
+        verify(listener).onFailure(cause);
     }
 
     @Test
@@ -124,7 +127,7 @@ public class TxChainTest {
         final DOMDataTreeWriteTransaction writeTx = chain.newWriteOnlyTransaction();
         chain.close();
         writeTx.commit().get();
-        verify(listener).onTransactionChainSuccessful(chain);
+        verify(listener).onSuccess(any());
     }
 
     @Test
@@ -161,7 +164,7 @@ public class TxChainTest {
         // close chain
         chain.close();
 
-        verify(listener).onTransactionChainSuccessful(chain);
+        verify(listener).onSuccess(any());
     }
 
     @Test
@@ -190,8 +193,8 @@ public class TxChainTest {
         // 2nd transaction success
         chain.onSuccess(writeOnlyTx2);
 
-        verify(listener).onTransactionChainFailed(chain, writeOnlyTx1, cause1);
+        verify(listener).onFailure(cause1);
         // 1 transaction failed, onTransactionChainSuccessful must not be called
-        verify(listener, never()).onTransactionChainSuccessful(chain);
+        verify(listener, never()).onSuccess(any());
     }
 }

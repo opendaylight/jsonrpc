@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.provider.cluster.tx;
 import com.google.common.util.concurrent.FluentFuture;
 import java.util.Objects;
 import java.util.Optional;
-import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.common.api.ReadFailedException;
@@ -23,12 +22,17 @@ import org.slf4j.LoggerFactory;
 
 class FailedProxyTransaction implements ProxyTransactionFacade {
     private static final Logger LOG = LoggerFactory.getLogger(FailedProxyTransaction.class);
+
     private final String name;
     private final Throwable failure;
+    private final FluentFuture<CommitInfo> completionFuture;
 
     FailedProxyTransaction(final String name, final Throwable failure) {
         this.name = Objects.requireNonNull(name);
         this.failure = Objects.requireNonNull(failure);
+        completionFuture = FluentFutures.immediateFailedFluentFuture(
+            failure instanceof TransactionCommitFailedException tcfe ? tcfe :
+                new TransactionCommitFailedException("commit", failure));
     }
 
     @Override
@@ -41,14 +45,14 @@ class FailedProxyTransaction implements ProxyTransactionFacade {
             final YangInstanceIdentifier path) {
         LOG.debug("[{}][FAILED] Read {} {}", name, store, path, failure);
         return FluentFutures.immediateFailedFluentFuture(ReadFailedException.MAPPER
-                .apply(failure instanceof Exception ? (Exception) failure : new ReadFailedException("read", failure)));
+                .apply(failure instanceof Exception ex ? ex : new ReadFailedException("read", failure)));
     }
 
     @Override
     public FluentFuture<Boolean> exists(final LogicalDatastoreType store, final YangInstanceIdentifier path) {
         LOG.debug("[{}][FAILED] Exists {} {}", name, store, path, failure);
         return FluentFutures.immediateFailedFluentFuture(ReadFailedException.MAPPER.apply(
-                failure instanceof Exception ? (Exception) failure : new ReadFailedException("exists", failure)));
+                failure instanceof Exception ex ? ex : new ReadFailedException("exists", failure)));
     }
 
     @Override
@@ -73,14 +77,13 @@ class FailedProxyTransaction implements ProxyTransactionFacade {
     }
 
     @Override
-    public @NonNull FluentFuture<? extends @NonNull CommitInfo> commit() {
+    public FluentFuture<CommitInfo> commit() {
         LOG.debug("[{}][FAILED] Commit", name, failure);
-        final TransactionCommitFailedException cause;
-        if (failure instanceof TransactionCommitFailedException) {
-            cause = (TransactionCommitFailedException) failure;
-        } else {
-            cause = new TransactionCommitFailedException("commit", failure);
-        }
-        return FluentFutures.immediateFailedFluentFuture(cause);
+        return completionFuture;
+    }
+
+    @Override
+    public FluentFuture<?> completionFuture() {
+        return completionFuture;
     }
 }
