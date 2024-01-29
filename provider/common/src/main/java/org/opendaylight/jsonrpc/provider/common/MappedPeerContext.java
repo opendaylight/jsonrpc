@@ -49,8 +49,6 @@ import org.opendaylight.yangtools.yang.model.api.Module;
 /**
  * Context of mapped {@link Peer}.
  *
- * <p>
- *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public class MappedPeerContext extends AbstractPeerContext {

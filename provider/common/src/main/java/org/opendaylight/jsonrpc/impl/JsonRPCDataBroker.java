@@ -10,12 +10,11 @@ package org.opendaylight.jsonrpc.impl;
 import static org.opendaylight.jsonrpc.provider.common.Util.store2int;
 import static org.opendaylight.jsonrpc.provider.common.Util.store2str;
 
-import com.google.common.collect.ClassToInstanceMap;
-import com.google.common.collect.ImmutableClassToInstanceMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.List;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
@@ -31,23 +30,20 @@ import org.opendaylight.jsonrpc.model.RemoteOmShard;
 import org.opendaylight.jsonrpc.provider.common.Util;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
-import org.opendaylight.mdsal.dom.api.DOMDataBrokerExtension;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeChangeListener;
-import org.opendaylight.mdsal.dom.api.DOMDataTreeChangeService;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeIdentifier;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChain;
-import org.opendaylight.mdsal.dom.api.DOMTransactionChainListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
-import org.opendaylight.yangtools.concepts.AbstractListenerRegistration;
-import org.opendaylight.yangtools.concepts.ListenerRegistration;
+import org.opendaylight.yangtools.concepts.AbstractRegistration;
+import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public final class JsonRPCDataBroker extends RemoteShardAware implements DOMDataBroker, DOMDataTreeChangeService {
+public final class JsonRPCDataBroker extends RemoteShardAware
+        implements DOMDataBroker, DOMDataBroker.DataTreeChangeExtension {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCDataBroker.class);
     private static final JsonObject TOP = new JsonObject();
-    private final ClassToInstanceMap<DOMDataBrokerExtension> extensions;
 
     /**
      * Instantiates a new JSON-RPC data broker.
@@ -65,9 +61,7 @@ public final class JsonRPCDataBroker extends RemoteShardAware implements DOMData
             @NonNull TransportFactory transportFactory, @Nullable RemoteGovernance governance,
             @NonNull JsonRpcCodecFactory codecFactory) {
         super(schemaContext, transportFactory, pathMap, codecFactory, peer);
-        extensions = ImmutableClassToInstanceMap.<DOMDataBrokerExtension>builder()
-                .put(DOMDataTreeChangeService.class, this)
-                .build();
+
         if (peer.getDataConfigEndpoints() != null) {
             Util.populateFromEndpointList(pathMap, peer.nonnullDataConfigEndpoints().values(),
                     DataType.CONFIGURATION_DATA);
@@ -106,30 +100,29 @@ public final class JsonRPCDataBroker extends RemoteShardAware implements DOMData
     }
 
     @Override
-    public DOMTransactionChain createTransactionChain(DOMTransactionChainListener listener) {
-        return new TxChain(this, listener, transportFactory, pathMap, codecFactory, schemaContext, peer);
+    public DOMTransactionChain createTransactionChain() {
+        return new TxChain(this, transportFactory, pathMap, codecFactory, schemaContext, peer);
     }
 
     @Override
-    public @NonNull DOMTransactionChain createMergingTransactionChain(DOMTransactionChainListener listener) {
-        return createTransactionChain(listener);
+    public DOMTransactionChain createMergingTransactionChain() {
+        return createTransactionChain();
     }
 
     @Override
-    public @NonNull ClassToInstanceMap<DOMDataBrokerExtension> getExtensions() {
-        return extensions;
+    public List<? extends Extension> supportedExtensions() {
+        return List.of(this);
     }
 
     @Override
-    public <L extends DOMDataTreeChangeListener> ListenerRegistration<L> registerDataTreeChangeListener(
-            DOMDataTreeIdentifier treeId, L listener) {
-        final JsonElement busPath = codecFactory.pathCodec().serialize(treeId.getRootIdentifier());
-        final RemoteOmShard shard = getShard(treeId.getDatastoreType(), busPath);
+    public Registration registerTreeChangeListener(DOMDataTreeIdentifier treeId, DOMDataTreeChangeListener listener) {
+        final JsonElement busPath = codecFactory.pathCodec().serialize(treeId.path());
+        final RemoteOmShard shard = getShard(treeId.datastore(), busPath);
         final DOMDataTreeChangeListenerAdapter adapter;
         final ListenerKey listenerKey;
         try {
             listenerKey = shard.addListener(new AddListenerArgument(
-                    String.valueOf(Util.store2int(treeId.getDatastoreType())), "", busPath, null));
+                    String.valueOf(Util.store2int(treeId.datastore())), "", busPath, null));
             adapter = new DOMDataTreeChangeListenerAdapter(listener, transportFactory, listenerKey.getUri(),
                     codecFactory, schemaContext);
         } catch (URISyntaxException e) {
@@ -139,12 +132,18 @@ public final class JsonRPCDataBroker extends RemoteShardAware implements DOMData
             throw new IllegalStateException("Unable to create subscriber", e);
         }
 
-        return new AbstractListenerRegistration<>(listener) {
+        return new AbstractRegistration() {
             @Override
             protected void removeRegistration() {
                 shard.deleteListener(new DeleteListenerArgument(listenerKey.getUri(), listenerKey.getName()));
                 adapter.close();
             }
         };
+    }
+
+    @Override
+    public Registration registerLegacyTreeChangeListener(DOMDataTreeIdentifier treeId,
+            DOMDataTreeChangeListener listener) {
+        return registerTreeChangeListener(treeId, listener);
     }
 }

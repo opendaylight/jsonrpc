@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
 import org.opendaylight.jsonrpc.bus.messagelib.AbstractTransportFactory;
@@ -26,7 +27,8 @@ import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
 import org.opendaylight.jsonrpc.bus.spi.EventLoopGroupProvider;
 import org.opendaylight.yangtools.concepts.ObjectRegistration;
-import org.opendaylight.yangtools.yang.binding.RpcService;
+import org.opendaylight.yangtools.concepts.Registration;
+import org.opendaylight.yangtools.yang.binding.Rpc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +40,8 @@ import org.slf4j.LoggerFactory;
  */
 public final class SchemaAwareTransportFactory extends AbstractTransportFactory {
     private static final Logger LOG = LoggerFactory.getLogger(SchemaAwareTransportFactory.class);
-    private final Map<Object, ProxyContext<? extends RpcService>> proxyMap = new ConcurrentHashMap<>();
+    
+    private final ConcurrentMap<Object, ProxyContext<?>> proxyMap = new ConcurrentHashMap<>();
     private final RpcInvocationAdapter invocationAdapter;
 
     /**
@@ -100,13 +103,13 @@ public final class SchemaAwareTransportFactory extends AbstractTransportFactory 
      * @return proxy for {@link RpcService}.
      * @throws URISyntaxException if provided URI is invalid
      */
-    public <T extends RpcService> ProxyContext<T> createBindingRequesterProxy(Class<T> type, String uri)
+    public <T extends Rpc<?, ?>> ProxyContext<T> createBindingRequesterProxy(Class<T> type, String uri)
             throws URISyntaxException {
         LOG.info("Creating requester proxy for type {} against endpoint '{}'", type.getName(), uri);
         final RequesterSession requester = createRequester(uri, NoopReplyMessageHandler.INSTANCE);
         final OutboundHandler<T> handler = new OutboundHandler<>(type, invocationAdapter, requester);
         final T proxy = Reflection.newProxy(type, handler);
-        final ObjectRegistration<T> rpcReg = invocationAdapter.registerImpl(type, proxy);
+        final Registration rpcReg = invocationAdapter.registerImpl(proxy);
         final ProxyContext<T> context = new ProxyContext<>(type, rpcReg, requester, proxy, this::closeProxy);
         proxyMap.put(proxy, context);
         return context;
@@ -120,12 +123,11 @@ public final class SchemaAwareTransportFactory extends AbstractTransportFactory 
      * @return {@link MultiModelProxy} used to get actual RPC proxy and close requester once it is no longer needed
      * @throws URISyntaxException if provided responder URI is invalid
      */
-    @SuppressWarnings("unchecked")
-    public MultiModelProxy createMultiModelRequesterProxy(Set<Class<? extends RpcService>> services, String uri)
+    public MultiModelProxy createMultiModelRequesterProxy(Set<Class<? extends Rpc<?, ?>>> services, String uri)
             throws URISyntaxException {
-        final Set<ProxyContext<RpcService>> proxies = new HashSet<>();
-        for (final Class<? extends RpcService> service : services) {
-            proxies.add((ProxyContext<RpcService>) createBindingRequesterProxy(service, uri));
+        final var proxies = new HashSet<ProxyContext<?>>();
+        for (var service : services) {
+            proxies.add(createBindingRequesterProxy(service, uri));
         }
         return new MultiModelProxy(proxies);
     }
@@ -136,7 +138,7 @@ public final class SchemaAwareTransportFactory extends AbstractTransportFactory 
      * @param proxy proxy instance to close.
      */
     private void closeProxy(Object proxy) {
-        final ProxyContext<? extends RpcService> context = proxyMap.remove(proxy);
+        final var context = proxyMap.remove(proxy);
         if (context != null) {
             context.closeInternal();
         }
@@ -145,31 +147,29 @@ public final class SchemaAwareTransportFactory extends AbstractTransportFactory 
     /**
      * Create responder bound to local socket provided in URI.
      *
-     * @param type actual {@link RpcService} type
-     * @param rpcImpl {@link RpcService} implementation
+     * @param rpcImpl {@link Rpc} implementation
      * @param bindUri URI to bind to
      * @return {@link ResponderSession}
      * @throws URISyntaxException if provided URI is invalid
      */
-    public <T extends RpcService> ResponderSession createResponder(Class<T> type, T rpcImpl, String bindUri)
+    public ResponderSession createResponder(Rpc<?, ?> rpcImpl, String bindUri)
             throws URISyntaxException {
-        LOG.info("Creating responder type {} exposed on '{}'", type.getName(), bindUri);
+        LOG.info("Creating responder type {} exposed on '{}'", rpcImpl.implementedInterface().getName(), bindUri);
         final URI uri = new URI(bindUri);
         return getMessageLibraryForTransport(uri.getScheme()).responder(bindUri,
-                new InboundHandler<>(type, invocationAdapter, rpcImpl), false);
+            new InboundHandler<>(invocationAdapter, rpcImpl), false);
     }
 
     @SuppressWarnings("unchecked")
     public ResponderSession createMultiModelResponder(MultiModelBuilder builder, String bindUri)
             throws URISyntaxException {
-        final ClassToInstanceMap<RpcService> services = builder.build();
+        final ClassToInstanceMap<Rpc<?, ?>> services = builder.build();
 
         LOG.info("Creating multi-model responder for services {} exposed on '{}'", services.keySet(), bindUri);
         final URI uri = new URI(bindUri);
 
-        final Set<InboundHandler<RpcService>> handlers = services.entrySet()
-                .stream()
-                .map(e -> new InboundHandler<>((Class<RpcService>) e.getKey(), invocationAdapter, e.getValue()))
+        final Set<InboundHandler<?>> handlers = services.values().stream()
+                .map(impl -> new InboundHandler<>(invocationAdapter, impl))
                 .collect(Collectors.toSet());
 
         return getMessageLibraryForTransport(uri.getScheme()).responder(bindUri,

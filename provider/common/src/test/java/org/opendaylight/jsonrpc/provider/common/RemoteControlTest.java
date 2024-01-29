@@ -84,8 +84,8 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     public void setUp() throws Exception {
         transportFactory = new DefaultTransportFactory();
         codecFactory = new JsonRpcCodecFactory(schemaContext);
-        ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory, getDOMNotificationRouter(),
-                getDOMRpcRouter().getRpcService(), codecFactory);
+        ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory,
+                getDOMNotificationRouter().notificationPublishService(), getDOMRpcRouter().rpcService(), codecFactory);
 
         logTestName("START");
     }

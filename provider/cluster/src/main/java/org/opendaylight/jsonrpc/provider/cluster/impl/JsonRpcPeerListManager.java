@@ -12,8 +12,8 @@ import static org.opendaylight.jsonrpc.provider.common.Util.removeFromMapAndClos
 import akka.util.Timeout;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -24,20 +24,18 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.provider.cluster.api.JsonRpcPeerSingletonService;
 import org.opendaylight.jsonrpc.provider.common.AbstractPeerContext;
 import org.opendaylight.jsonrpc.provider.common.Util;
-import org.opendaylight.mdsal.binding.api.ClusteredDataTreeChangeListener;
 import org.opendaylight.mdsal.binding.api.DataObjectModification;
+import org.opendaylight.mdsal.binding.api.DataTreeChangeListener;
 import org.opendaylight.mdsal.binding.api.DataTreeModification;
-import org.opendaylight.mdsal.singleton.common.api.ClusterSingletonServiceRegistration;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshOutput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReloadInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReloadOutput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReloadOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.JsonrpcService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpoints;
-import org.opendaylight.yangtools.concepts.ListenerRegistration;
+import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
@@ -51,13 +49,14 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jul 1, 2020
  */
-public final class JsonRpcPeerListManager implements ClusteredDataTreeChangeListener<ConfiguredEndpoints>,
-        JsonRpcPeerSingletonService, JsonrpcService, AutoCloseable {
+public final class JsonRpcPeerListManager implements DataTreeChangeListener<ConfiguredEndpoints>,
+        JsonRpcPeerSingletonService, AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(JsonRpcPeerListManager.class);
-    private final ListenerRegistration<JsonRpcPeerListManager> dtcListener;
+
+    private final Registration dtcListener;
     @GuardedBy("this")
     private final Map<String, RemotePeerContext> peerMap = new HashMap<>();
-    private final Map<String, ClusterSingletonServiceRegistration> clusterRegistrations = new HashMap<>();
+    private final Map<String, Registration> clusterRegistrations = new HashMap<>();
     private final ClusterDependencies dependencies;
 
     public JsonRpcPeerListManager(ClusterDependencies dependencies) {
@@ -67,33 +66,33 @@ public final class JsonRpcPeerListManager implements ClusteredDataTreeChangeList
     private JsonRpcPeerListManager(ClusterDependencies dependencies, Timeout askTimeout) {
         this.dependencies = dependencies;
         this.dtcListener = dependencies.getDataBroker()
-                .registerDataTreeChangeListener(ClusterUtil.getPeerListIdentifier(), this);
+                .registerTreeChangeListener(ClusterUtil.getPeerListIdentifier(), this);
     }
 
     @Override
-    public void onDataTreeChanged(@NonNull Collection<DataTreeModification<ConfiguredEndpoints>> changes) {
+    public void onDataTreeChanged(@NonNull List<DataTreeModification<ConfiguredEndpoints>> changes) {
         for (final DataTreeModification<ConfiguredEndpoints> change : changes) {
             final DataObjectModification<ConfiguredEndpoints> rootNode = change.getRootNode();
-            final InstanceIdentifier<ConfiguredEndpoints> ident = change.getRootPath().getRootIdentifier();
+            final InstanceIdentifier<ConfiguredEndpoints> ident = change.getRootPath().path();
             final String name = ClusterUtil.peerNameFromII(ident);
-            LOG.debug("CFG DTC [{}] : {} => {}", rootNode.getModificationType(), rootNode.getDataBefore(),
-                    rootNode.getDataAfter());
-            switch (rootNode.getModificationType()) {
+            LOG.debug("CFG DTC [{}] : {} => {}", rootNode.modificationType(), rootNode.dataBefore(),
+                    rootNode.dataAfter());
+            switch (rootNode.modificationType()) {
                 case SUBTREE_MODIFIED:
-                    updatePeerContext(rootNode.getDataAfter());
+                    updatePeerContext(rootNode.dataAfter());
                     break;
                 case WRITE:
                     if (peerMap.containsKey(name)) {
-                        updatePeerContext(rootNode.getDataAfter());
+                        updatePeerContext(rootNode.dataAfter());
                     } else {
-                        createPeerContext(rootNode.getDataAfter());
+                        createPeerContext(rootNode.dataAfter());
                     }
                     break;
                 case DELETE:
                     destroyPeerContext(name);
                     break;
                 default:
-                    LOG.warn("Unhandled data modification {}", rootNode.getModificationType());
+                    LOG.warn("Unhandled data modification {}", rootNode.modificationType());
             }
         }
     }
@@ -118,7 +117,7 @@ public final class JsonRpcPeerListManager implements ClusteredDataTreeChangeList
         LOG.info("Creating context for '{}'", peer.getName());
         final RemotePeerContext service = new RemotePeerContext(peer, dependencies);
 
-        final ClusterSingletonServiceRegistration clusterContext = dependencies.getClusterSingletonServiceProvider()
+        final Registration clusterContext = dependencies.getClusterSingletonServiceProvider()
                 .registerClusterSingletonService(service);
 
         LOG.debug("Created {}", service);
@@ -136,15 +135,12 @@ public final class JsonRpcPeerListManager implements ClusteredDataTreeChangeList
         peerMap.clear();
     }
 
-    @Override
-    public ListenableFuture<RpcResult<ForceRefreshOutput>> forceRefresh(ForceRefreshInput input) {
+    private static ListenableFuture<RpcResult<ForceRefreshOutput>> forceRefresh(ForceRefreshInput input) {
         // This is NOOP nowadays
         return Futures.immediateFuture(RpcResultBuilder.success(new ForceRefreshOutputBuilder().build()).build());
     }
 
-    @Holding("this")
-    @Override
-    public synchronized ListenableFuture<RpcResult<ForceReloadOutput>> forceReload(ForceReloadInput input) {
+    private synchronized ListenableFuture<RpcResult<ForceReloadOutput>> forceReload(ForceReloadInput input) {
         //take snapshot of configured peers
         final Set<Peer> configured = peerMap.values()
                 .stream()
