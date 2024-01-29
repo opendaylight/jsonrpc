@@ -27,7 +27,7 @@ import org.opendaylight.jsonrpc.bus.messagelib.RequestMessageHandler;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ResponseErrorCode;
 import org.opendaylight.yangtools.yang.binding.DataContainer;
 import org.opendaylight.yangtools.yang.binding.DataObject;
-import org.opendaylight.yangtools.yang.binding.RpcService;
+import org.opendaylight.yangtools.yang.binding.Rpc;
 import org.opendaylight.yangtools.yang.common.RpcError;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
@@ -44,12 +44,12 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Sep 20, 2018
  */
-public class InboundHandler<T extends RpcService> extends AbstractHandler<T> implements RequestMessageHandler {
+public class InboundHandler<T extends Rpc<?, ?>> extends AbstractHandler<T> implements RequestMessageHandler {
     private static final Logger LOG = LoggerFactory.getLogger(InboundHandler.class);
     private final T impl;
 
-    public InboundHandler(Class<T> type, RpcInvocationAdapter adapter, T impl) {
-        super(type, adapter);
+    public InboundHandler(RpcInvocationAdapter adapter, T impl) {
+        super((Class<T>) impl.implementedInterface(), adapter);
         this.impl = Objects.requireNonNull(impl);
     }
 

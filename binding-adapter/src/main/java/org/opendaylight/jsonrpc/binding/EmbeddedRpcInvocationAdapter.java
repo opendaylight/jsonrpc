@@ -15,8 +15,8 @@ import org.opendaylight.mdsal.binding.runtime.api.BindingRuntimeContext;
 import org.opendaylight.mdsal.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.mdsal.dom.broker.DOMRpcRouter;
 import org.opendaylight.mdsal.dom.spi.FixedDOMSchemaService;
-import org.opendaylight.yangtools.concepts.ObjectRegistration;
-import org.opendaylight.yangtools.yang.binding.RpcService;
+import org.opendaylight.yangtools.concepts.Registration;
+import org.opendaylight.yangtools.yang.binding.Rpc;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 
 /**
@@ -36,11 +36,11 @@ public final class EmbeddedRpcInvocationAdapter implements RpcInvocationAdapter 
     private EmbeddedRpcInvocationAdapter() {
         final var runtimeContext = BindingRuntimeHelpers.createRuntimeContext();
         codec = new BindingCodecContext(runtimeContext);
-        final var schemaService = FixedDOMSchemaService.of(runtimeContext.getEffectiveModelContext());
+        final var schemaService = new FixedDOMSchemaService(runtimeContext.modelContext());
         converter = new SchemaChangeAwareConverter(schemaService);
         rpcService = new DOMRpcRouter(schemaService);
         rpcAdapter = new BindingDOMRpcProviderServiceAdapter(new ConstantAdapterContext(codec),
-                rpcService.getRpcProviderService());
+                rpcService.rpcProviderService());
     }
 
     @Override
@@ -54,13 +54,13 @@ public final class EmbeddedRpcInvocationAdapter implements RpcInvocationAdapter 
     }
 
     @Override
-    public <T extends RpcService> ObjectRegistration<T> registerImpl(Class<T> type, T impl) {
-        return rpcAdapter.registerRpcImplementation(type, impl);
+    public Registration registerImpl(Rpc<?, ?> impl) {
+        return rpcAdapter.registerRpcImplementation(impl);
     }
 
     @Override
     public EffectiveModelContext schemaContext() {
-        return getRuntimeContext().getEffectiveModelContext();
+        return getRuntimeContext().modelContext();
     }
 
     @Override

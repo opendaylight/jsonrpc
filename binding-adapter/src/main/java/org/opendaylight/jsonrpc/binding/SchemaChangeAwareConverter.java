@@ -15,7 +15,6 @@ import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
-import org.opendaylight.yangtools.yang.model.api.EffectiveModelContextListener;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
 /**
@@ -25,13 +24,13 @@ import org.opendaylight.yangtools.yang.model.api.SchemaContext;
  * @since Aug 25, 2018
  */
 public final class SchemaChangeAwareConverter
-        implements Supplier<JsonRpcCodecFactory>, AutoCloseable, EffectiveModelContextListener {
+        implements Supplier<JsonRpcCodecFactory>, AutoCloseable {
     private final AtomicReference<JsonRpcCodecFactory> converter = new AtomicReference<>(null);
     private Registration registration;
 
     public SchemaChangeAwareConverter(@NonNull DOMSchemaService domSchemaService) {
         Objects.requireNonNull(domSchemaService);
-        this.registration = domSchemaService.registerSchemaContextListener(this);
+        this.registration = domSchemaService.registerSchemaContextListener(this::onModelContextUpdated);
         refresh(domSchemaService.getGlobalContext());
     }
 
@@ -49,7 +48,6 @@ public final class SchemaChangeAwareConverter
         return converter.get();
     }
 
-    @Override
     public void onModelContextUpdated(EffectiveModelContext newModelContext) {
         refresh(newModelContext);
     }

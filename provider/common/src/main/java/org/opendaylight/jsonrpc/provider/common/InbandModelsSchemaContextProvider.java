@@ -17,7 +17,8 @@ import org.opendaylight.jsonrpc.model.SchemaContextProvider;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpoints;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
-import org.opendaylight.yangtools.yang.model.repo.api.YangTextSchemaSource;
+import org.opendaylight.yangtools.yang.model.api.source.SourceIdentifier;
+import org.opendaylight.yangtools.yang.model.spi.source.DelegatedYangTextSource;
 import org.opendaylight.yangtools.yang.parser.api.YangSyntaxErrorException;
 import org.opendaylight.yangtools.yang.parser.rfc7950.reactor.RFC7950Reactors;
 import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangStatementStreamSource;
@@ -66,8 +67,8 @@ public final class InbandModelsSchemaContextProvider implements SchemaContextPro
 
             requester.getModules().forEach(m -> {
                 try {
-                    reactor.addSource(YangStatementStreamSource.create(YangTextSchemaSource.delegateForCharSource(
-                            m.getName() + ".yang", CharSource.wrap(m.getContent()))));
+                    reactor.addSource(YangStatementStreamSource.create(new DelegatedYangTextSource(
+                        new SourceIdentifier(m.getName()), CharSource.wrap(m.getContent()))));
                 } catch (YangSyntaxErrorException | IOException e) {
                     throw new IllegalStateException("Failed to add YANG source for " + m.getName(), e);
                 }

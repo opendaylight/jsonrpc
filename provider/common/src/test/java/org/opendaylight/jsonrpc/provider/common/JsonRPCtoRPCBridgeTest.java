@@ -127,8 +127,8 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         QName path = rpcPath(mod, "simple-method");
         DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
         LOG.info("Simple RPC result : {}", result);
-        assertTrue(result.getErrors().isEmpty());
-        assertNotNull(result.getResult());
+        assertTrue(result.errors().isEmpty());
+        assertNotNull(result.value());
     }
 
     /**
@@ -146,7 +146,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
 
         final DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
         LOG.info("DOM RPC result : {}", result);
-        assertTrue(result.getErrors().isEmpty());
+        assertTrue(result.errors().isEmpty());
 
         // BI => BA
         final MultiplyLlOutput out = extractRpcOutput(result, MultiplyLlOutput.class, "multiply-ll", mod);
@@ -195,7 +195,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
 
         final DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
         logResult(result);
-        assertTrue(result.getErrors().isEmpty());
+        assertTrue(result.errors().isEmpty());
 
         // BI => BA
         final MultiplyListOutput out = extractRpcOutput(result, MultiplyListOutput.class, "multiply-list", mod);
@@ -242,7 +242,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         ContainerNode rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "error-method"));
         DOMRpcResult result = bridge.invokeRpc(rpcPath(mod, "error-method"), rpcDef).get();
         logResult(result);
-        assertFalse(result.getErrors().isEmpty());
+        assertFalse(result.errors().isEmpty());
     }
 
     @Test // (timeout = 15_000)
@@ -251,16 +251,16 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         final ContainerNode rpcDef = ImmutableNodes.containerNode(constructRpcQname(mod, "removeCoffeePot"));
         DOMRpcResult result = bridge.invokeRpc(path, rpcDef).get();
         logResult(result);
-        assertTrue(result.getErrors().isEmpty());
-        assertNotNull(result.getResult());
+        assertTrue(result.errors().isEmpty());
+        assertNotNull(result.value());
     }
 
     ///////////////////////////////////////////////////////////////////////////
     // Helper methods
     ///////////////////////////////////////////////////////////////////////////
     private static void logResult(DOMRpcResult result) {
-        LOG.info("Result : {}", result.getResult());
-        LOG.info("Errors : {}", result.getErrors());
+        LOG.info("Result : {}", result.value());
+        LOG.info("Errors : {}", result.errors());
     }
 
     private <T extends DataContainer> ContainerNode prepareRpcInput(T dataObject) {
@@ -270,7 +270,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     @SuppressWarnings("unchecked")
     private <T> T extractRpcOutput(DOMRpcResult result, Class<T> outputType, String rpcName, Module module) {
         Absolute path2 = Absolute.of(constructRpcQname(module, rpcName), constructRpcQname(module, "output"));
-        return (T) getCodec().fromNormalizedNodeRpcData(path2, (ContainerNode) result.getResult());
+        return (T) getCodec().fromNormalizedNodeRpcData(path2, (ContainerNode) result.value());
 
     }
 
