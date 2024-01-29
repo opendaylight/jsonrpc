@@ -24,10 +24,10 @@ import org.opendaylight.jsonrpc.model.ListenerKey;
 import org.opendaylight.jsonrpc.provider.common.Util;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
+import org.opendaylight.mdsal.dom.api.DOMDataBroker.DataTreeChangeExtension;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeChangeListener;
-import org.opendaylight.mdsal.dom.api.DOMDataTreeChangeService;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeIdentifier;
-import org.opendaylight.yangtools.concepts.ListenerRegistration;
+import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.tree.api.DataTreeCandidate;
 import org.slf4j.Logger;
@@ -40,12 +40,11 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since May 8, 2018
  */
-public final class DataChangeListenerRegistration
-        implements ListenerRegistration<DOMDataTreeChangeListener>, DOMDataTreeChangeListener {
+public final class DataChangeListenerRegistration implements Registration, DOMDataTreeChangeListener {
     private static final Logger LOG = LoggerFactory.getLogger(DataChangeListenerRegistration.class);
     private final DataChangeNotificationPublisher publisher;
     private final YangInstanceIdentifier path;
-    private final ListenerRegistration<DataChangeListenerRegistration> delegate;
+    private final Registration delegate;
     private final JsonRpcCodecFactory codecFactory;
     private final Consumer<ListenerKey> closeCallback;
     private final ListenerKey listenerKey;
@@ -61,9 +60,8 @@ public final class DataChangeListenerRegistration
         this.listenerKey = Objects.requireNonNull(listenerKey);
         Objects.requireNonNull(domDataBroker);
         Objects.requireNonNull(store);
-        final DOMDataTreeChangeService dtcs = (DOMDataTreeChangeService) domDataBroker.getExtensions()
-                .get(DOMDataTreeChangeService.class);
-        delegate = dtcs.registerDataTreeChangeListener(new DOMDataTreeIdentifier(store, path), this);
+        final var dtcs = domDataBroker.extension(DataTreeChangeExtension.class);
+        delegate = dtcs.registerDataTreeChangeListener(DOMDataTreeIdentifier.of(store, path), this);
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
@@ -76,11 +74,6 @@ public final class DataChangeListenerRegistration
         } catch (Exception e) {
             throw new IllegalStateException("Failed while closing registration", e);
         }
-    }
-
-    @Override
-    public DOMDataTreeChangeListener getInstance() {
-        return this;
     }
 
     @Override

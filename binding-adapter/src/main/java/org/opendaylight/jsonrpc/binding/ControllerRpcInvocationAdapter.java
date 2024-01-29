@@ -13,8 +13,8 @@ import org.opendaylight.mdsal.binding.runtime.api.BindingRuntimeContext;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yangtools.concepts.AbstractObjectRegistration;
 import org.opendaylight.yangtools.concepts.ObjectRegistration;
-import org.opendaylight.yangtools.yang.binding.RpcService;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
+import org.opendaylight.yangtools.yang.binding.Rpc;
+import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 
 /**
  * Implementation of {@link RpcInvocationAdapter} used within ODL controller.
@@ -44,7 +44,7 @@ public class ControllerRpcInvocationAdapter implements RpcInvocationAdapter {
     }
 
     @Override
-    public <T extends RpcService> ObjectRegistration<T> registerImpl(Class<T> type, T impl) {
+    public <T extends Rpc<?, ?>> ObjectRegistration<T> registerImpl(T impl) {
         return new AbstractObjectRegistration<>(impl) {
             @Override
             protected void removeRegistration() {
@@ -54,7 +54,7 @@ public class ControllerRpcInvocationAdapter implements RpcInvocationAdapter {
     }
 
     @Override
-    public SchemaContext schemaContext() {
+    public EffectiveModelContext schemaContext() {
         return schemaService.getGlobalContext();
     }
 

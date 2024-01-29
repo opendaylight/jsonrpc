@@ -13,7 +13,6 @@ import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage.Builder;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.RequestMessageHandler;
-import org.opendaylight.yangtools.yang.binding.RpcService;
 
 /**
  * {@link RequestMessageHandler} which dispatch incoming RPC request to correct implementation.

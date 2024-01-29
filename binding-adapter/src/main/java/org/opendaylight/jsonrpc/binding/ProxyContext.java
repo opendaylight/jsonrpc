@@ -10,6 +10,7 @@ package org.opendaylight.jsonrpc.binding;
 import java.util.function.Consumer;
 import org.opendaylight.jsonrpc.bus.messagelib.BaseSession;
 import org.opendaylight.yangtools.concepts.ObjectRegistration;
+import org.opendaylight.yangtools.yang.binding.Rpc;
 import org.opendaylight.yangtools.yang.binding.RpcService;
 
 /**
@@ -18,7 +19,7 @@ import org.opendaylight.yangtools.yang.binding.RpcService;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Sep 21, 2018
  */
-public class ProxyContext<T extends RpcService> implements AutoCloseable {
+public class ProxyContext<T extends Rpc<?, ?>> implements AutoCloseable {
     private final ObjectRegistration<T> rpcRegistration;
     private final BaseSession session;
     private final T proxy;

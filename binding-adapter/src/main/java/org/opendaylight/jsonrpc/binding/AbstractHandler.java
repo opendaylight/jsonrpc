@@ -16,7 +16,6 @@ import java.util.Objects;
 import java.util.stream.Collector;
 import org.opendaylight.mdsal.binding.runtime.api.BindingRuntimeContext;
 import org.opendaylight.mdsal.binding.spec.reflect.BindingReflections;
-import org.opendaylight.yangtools.yang.binding.RpcService;
 import org.opendaylight.yangtools.yang.binding.contract.Naming;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.QNameModule;
@@ -73,7 +72,7 @@ abstract class AbstractHandler<T extends RpcService> extends AbstractInvocationH
     private Module getModule(final Class<?> modeledClass) {
         final QNameModule moduleName = BindingReflections.getQNameModule(modeledClass);
         final BindingRuntimeContext localRuntimeContext = adapter.getRuntimeContext();
-        final Module module = localRuntimeContext.getEffectiveModelContext().findModule(moduleName).orElse(null);
+        final Module module = localRuntimeContext.modelContext().findModule(moduleName).orElse(null);
         if (module != null) {
             return module;
         }

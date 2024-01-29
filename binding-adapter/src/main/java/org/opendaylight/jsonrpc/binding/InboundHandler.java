@@ -27,7 +27,6 @@ import org.opendaylight.jsonrpc.bus.messagelib.RequestMessageHandler;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ResponseErrorCode;
 import org.opendaylight.yangtools.yang.binding.DataContainer;
 import org.opendaylight.yangtools.yang.binding.DataObject;
-import org.opendaylight.yangtools.yang.binding.RpcService;
 import org.opendaylight.yangtools.yang.common.RpcError;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;

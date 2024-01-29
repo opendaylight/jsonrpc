@@ -12,7 +12,7 @@ import com.google.common.collect.ImmutableClassToInstanceMap;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.opendaylight.yangtools.yang.binding.RpcService;
+import org.opendaylight.yangtools.yang.binding.Rpc;
 
 /**
  * Proxy context for remote RPC service which implements multiple yang models.
@@ -21,10 +21,10 @@ import org.opendaylight.yangtools.yang.binding.RpcService;
  * @since Oct 16, 2018
  */
 public class MultiModelProxy implements AutoCloseable {
-    private final ClassToInstanceMap<? extends RpcService> proxyMap;
-    private final Set<ProxyContext<RpcService>> proxies;
+    private final ClassToInstanceMap<Rpc<?, ?>> proxyMap;
+    private final Set<ProxyContext<Rpc<?, ?>>> proxies;
 
-    public MultiModelProxy(Set<ProxyContext<RpcService>> proxies) {
+    public MultiModelProxy(Set<ProxyContext<Rpc<?, ?>>> proxies) {
         this.proxies = proxies;
         proxyMap = ImmutableClassToInstanceMap
                 .copyOf(proxies.stream().collect(Collectors.toMap(ProxyContext::getType, ProxyContext::getProxy)));

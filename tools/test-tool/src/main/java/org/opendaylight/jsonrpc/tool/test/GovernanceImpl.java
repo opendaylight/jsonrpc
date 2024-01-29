@@ -7,8 +7,6 @@
  */
 package org.opendaylight.jsonrpc.tool.test;
 
-import static org.opendaylight.yangtools.yang.parser.rfc7950.repo.TextToIRTransformer.transformText;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -30,6 +28,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.ModuleInfo;
@@ -37,9 +36,8 @@ import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.StoreOperationArgument;
 import org.opendaylight.mdsal.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.yangtools.yang.binding.YangModuleInfo;
-import org.opendaylight.yangtools.yang.model.repo.api.YangIRSchemaSource;
-import org.opendaylight.yangtools.yang.model.repo.api.YangTextSchemaSource;
-import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangModelDependencyInfo;
+import org.opendaylight.yangtools.yang.model.spi.source.FileYangTextSource;
+import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangIRSourceInfoExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,12 +51,10 @@ final class GovernanceImpl implements RemoteGovernance {
             .build(new CacheLoader<Path, Set<ModuleInfo>>() {
                 @Override
                 public Set<ModuleInfo> load(Path file) throws Exception {
-                    final YangIRSchemaSource irSource = transformText(YangTextSchemaSource.forPath(file));
-                    return YangModelDependencyInfo.forIR(irSource)
-                            .getDependencies()
-                            .stream()
-                            .map(m -> new ModuleInfo(m.getModuleName().getLocalName(), null))
-                            .collect(Collectors.toSet());
+                    final var sourceInfo = YangIRSourceInfoExtractor.forYangText(new FileYangTextSource(file));
+                    return Stream.concat(sourceInfo.imports().stream(), sourceInfo.includes().stream())
+                        .map(m -> new ModuleInfo(m.name().getLocalName(), null))
+                        .collect(Collectors.toSet());
                 }
             });
 
