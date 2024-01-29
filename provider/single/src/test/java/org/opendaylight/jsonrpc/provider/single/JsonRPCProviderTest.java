@@ -87,7 +87,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
                 .build());
         ProviderDependencies deps = new ProviderDependencies(new MockTransportFactory(tf),
                 getDataBroker(), getDOMMountPointService(), getDomBroker(), getSchemaService(),
-                getDOMNotificationRouter(), getDOMRpcRouter().getRpcService(),
+                getDOMNotificationRouter().notificationPublishService(), getDOMRpcRouter().rpcService(),
                 ServiceLoader.load(YangXPathParserFactory.class).findFirst().orElseThrow());
         provider = new JsonRPCProvider(deps, () -> Optional.of(GOVERNANCE_MOCK));
         logTestName("START");

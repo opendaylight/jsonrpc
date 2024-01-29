@@ -20,7 +20,7 @@ import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.builder.DataContainerNodeBuilder;
 import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.data.codec.gson.JsonParserStream;
-import org.opendaylight.yangtools.yang.data.impl.schema.Builders;
+import org.opendaylight.yangtools.yang.data.spi.node.ImmutableNodes;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
 import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absolute;
@@ -82,7 +82,7 @@ class NotificationCodec extends RpcNotificationBaseCodec<DOMNotification> {
         }
 
         JsonRpcNotification(final Absolute schemaPath) {
-            this(Builders.containerBuilder().build(), schemaPath);
+            this(ImmutableNodes.newContainerBuilder().build(), schemaPath);
         }
 
         JsonRpcNotification(final ContainerNode content, final Absolute schemaPath) {

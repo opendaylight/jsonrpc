@@ -9,6 +9,8 @@
 package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.gson.JsonElement;
 import java.util.Objects;
 import java.util.Optional;
@@ -30,9 +32,9 @@ import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChain;
 import org.opendaylight.mdsal.dom.api.DOMTransactionChainClosedException;
-import org.opendaylight.mdsal.dom.api.DOMTransactionChainListener;
 import org.opendaylight.mdsal.dom.api.DOMTransactionFactory;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
+import org.opendaylight.yangtools.yang.common.Empty;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,9 +44,10 @@ import org.slf4j.LoggerFactory;
  */
 public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionChain, TransactionListener {
     private static final Logger LOG = LoggerFactory.getLogger(TxChain.class);
-    private final DOMTransactionFactory dataBroker;
-    private final DOMTransactionChainListener listener;
+
+    private final @NonNull SettableFuture<Empty> future = SettableFuture.create();
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+    private final DOMTransactionFactory dataBroker;
 
     /**
      * Transaction created by this chain that hasn't been submitted or cancelled yet.
@@ -55,14 +58,18 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
     @GuardedBy("rwLock")
     private final ConcurrentMap<DOMDataTreeWriteTransaction, AutoCloseable> pendingTxs = new ConcurrentHashMap<>();
 
-    public TxChain(@NonNull final DOMTransactionFactory dataBroker, @NonNull final DOMTransactionChainListener listener,
-            @NonNull TransportFactory transportFactory,
+    public TxChain(@NonNull final DOMTransactionFactory dataBroker, @NonNull TransportFactory transportFactory,
             @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap,
             @NonNull JsonRpcCodecFactory codecFactory, @NonNull EffectiveModelContext schemaContext,
             @NonNull Peer peer) {
         super(schemaContext, transportFactory, pathMap, codecFactory, peer);
         this.dataBroker = Objects.requireNonNull(dataBroker);
-        this.listener = Objects.requireNonNull(listener);
+    }
+
+
+    @Override
+    public ListenableFuture<Empty> future() {
+        return future;
     }
 
     @Override
@@ -116,7 +123,7 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
 
     private void notifyChainListenerSuccess() {
         if (closed && successful && pendingTxs.isEmpty()) {
-            listener.onTransactionChainSuccessful(this);
+            future.set(Empty.value());
         }
     }
 
@@ -156,7 +163,7 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
         if (currentTransaction != null) {
             currentTransaction.cancel();
         }
-        listener.onTransactionChainFailed(this, tx, failure);
+        future.setException(failure);
     }
 
     @Override

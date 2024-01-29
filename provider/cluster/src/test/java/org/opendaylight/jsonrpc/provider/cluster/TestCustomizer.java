@@ -33,7 +33,7 @@ public class TestCustomizer extends AbstractConcurrentDataBrokerTest {
     }
 
     public DOMNotificationPublishService getDOMNotificationRouter() {
-        return notificationRouter;
+        return notificationRouter.notificationPublishService();
     }
 
     public DOMRpcRouter getDOMRpcRouter() {

@@ -41,7 +41,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.NotificationEndpointsBuilder;
-import org.opendaylight.yangtools.concepts.ListenerRegistration;
+import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.binding.util.BindingMap;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.Revision;
@@ -96,7 +96,7 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
         final int listeners = 10;
         final int count = 10;
         final CountDownLatch cl = new CountDownLatch(listeners * count);
-        final Set<ListenerRegistration<DOMNotificationListener>> regs = new HashSet<>();
+        final Set<Registration> regs = new HashSet<>();
         for (int i = 0; i < listeners; i++) {
             regs.add(svc.registerNotificationListener((DOMNotificationListener) notification -> {
                 LOG.info("Received notification : {}", notification);
@@ -108,7 +108,7 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
             pubSession.publish("notification1", new int[] { 1, 2 });
         }
         assertTrue(cl.await(5, TimeUnit.SECONDS));
-        regs.stream().forEach(ListenerRegistration<DOMNotificationListener>::close);
+        regs.stream().forEach(Registration::close);
     }
 
     @Test

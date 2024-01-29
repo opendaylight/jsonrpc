@@ -49,18 +49,18 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractJsonRpcTest.class);
-    private ConcurrentDataBrokerTestCustomizer testCustomizer;
     private final DOMMountPointService domMountPointService = new DOMMountPointServiceImpl();
     private final DOMNotificationRouter notificationRouter = new DOMNotificationRouter(4);
     private DataBroker dataBroker;
     private DOMDataBroker domBroker;
     private DOMRpcRouter rpcRouter;
+    protected ConcurrentDataBrokerTestCustomizer testCustomizer;
     protected EffectiveModelContext schemaContext;
     protected JsonRpcCodecFactory codecFactory;
     @Rule
     public TestName nameRule = new TestName();
     private BindingCodecContext bnnc;
-    private @NonNull BindingRuntimeContext runtimeContext = BindingRuntimeHelpers.createRuntimeContext();
+    protected @NonNull BindingRuntimeContext runtimeContext = BindingRuntimeHelpers.createRuntimeContext();
 
     @Override
     protected void setupWithSchema(final EffectiveModelContext context) {
