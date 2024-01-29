@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
@@ -34,14 +33,18 @@ import scala.concurrent.Future;
 
 public class ProxyReadWriteTransaction implements DOMDataTreeReadWriteTransaction {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyReadWriteTransaction.class);
+
     private final String name;
     private final AtomicBoolean opened = new AtomicBoolean(true);
     private final List<Consumer<ProxyTransactionFacade>> queue = new ArrayList<>();
+    private final SettableFuture<CommitInfo> settableFuture = SettableFuture.create();
+    private final FluentFuture<CommitInfo> completionFuture = FluentFuture.from(settableFuture);
+
     private volatile ProxyTransactionFacade txFacade;
 
     public ProxyReadWriteTransaction(final Peer peer, final Future<Object> future,
             final ExecutionContext executionContext, final Timeout askTimeout) {
-        this.name = peer.getName();
+        name = peer.getName();
 
         future.onComplete(new OnComplete<>() {
             @Override
@@ -61,12 +64,18 @@ public class ProxyReadWriteTransaction implements DOMDataTreeReadWriteTransactio
     }
 
     @Override
+    public FluentFuture<?> completionFuture() {
+        return completionFuture;
+    }
+
+    @Override
     public boolean cancel() {
         if (!opened.compareAndSet(true, false)) {
             return false;
         }
 
         performAction(DOMDataTreeWriteTransaction::cancel, "cancel");
+        completionFuture.cancel(false);
         return true;
     }
 
@@ -109,13 +118,12 @@ public class ProxyReadWriteTransaction implements DOMDataTreeReadWriteTransactio
     }
 
     @Override
-    public @NonNull FluentFuture<? extends @NonNull CommitInfo> commit() {
+    public FluentFuture<CommitInfo> commit() {
         Preconditions.checkState(opened.compareAndSet(true, false), "[%s] Transaction is already closed", name);
         LOG.debug("[{}] Commit", name);
 
-        final SettableFuture<CommitInfo> returnFuture = SettableFuture.create();
-        performAction(facade -> returnFuture.setFuture(facade.commit()), "commit");
-        return FluentFuture.from(returnFuture);
+        performAction(facade -> settableFuture.setFuture(facade.commit()), "commit");
+        return completionFuture;
     }
 
     @Override
@@ -123,7 +131,7 @@ public class ProxyReadWriteTransaction implements DOMDataTreeReadWriteTransactio
         return this;
     }
 
-    private void performAction(final Consumer<ProxyTransactionFacade> operation, String opDescription) {
+    private void performAction(final Consumer<ProxyTransactionFacade> operation, final String opDescription) {
         final ProxyTransactionFacade facadeOnEntry;
         synchronized (queue) {
             if (txFacade == null) {

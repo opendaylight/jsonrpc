@@ -15,12 +15,13 @@ import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.GovernanceProvider;
 import org.opendaylight.jsonrpc.provider.common.ProviderDependencies;
 import org.opendaylight.mdsal.binding.api.DataBroker;
+import org.opendaylight.mdsal.binding.api.RpcProviderService;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMMountPointService;
 import org.opendaylight.mdsal.dom.api.DOMNotificationPublishService;
 import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
-import org.opendaylight.mdsal.singleton.common.api.ClusterSingletonServiceProvider;
+import org.opendaylight.mdsal.singleton.api.ClusterSingletonServiceProvider;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.cluster.provider.config.rev200708.Config;
 import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
 
@@ -34,6 +35,7 @@ public class ClusterDependencies extends ProviderDependencies {
     private final ActorSystem actorSystem;
     private final ClusterSingletonServiceProvider clusterSingletonServiceProvider;
     private final GovernanceProvider governanceProvider;
+    private final RpcProviderService rpcProviderService;
     private final Config config;
 
     public ClusterDependencies(@NonNull TransportFactory transportFactory, @NonNull DataBroker dataBroker,
@@ -42,17 +44,23 @@ public class ClusterDependencies extends ProviderDependencies {
             @NonNull DOMNotificationPublishService domNotificationPublishService, @NonNull DOMRpcService domRpcService,
             @NonNull YangXPathParserFactory yangXPathParserFactory, @NonNull ActorSystem actorSystem,
             @NonNull ClusterSingletonServiceProvider clusterSingletonServiceProvider,
-            @NonNull GovernanceProvider governanceProvider, @Nullable Config config) {
+            @NonNull GovernanceProvider governanceProvider, @NonNull RpcProviderService rpcProviderService,
+            @Nullable Config config) {
         super(transportFactory, dataBroker, domMountPointService, domDataBroker, schemaService,
                 domNotificationPublishService, domRpcService, yangXPathParserFactory);
         this.actorSystem = Objects.requireNonNull(actorSystem);
         this.clusterSingletonServiceProvider = Objects.requireNonNull(clusterSingletonServiceProvider);
         this.governanceProvider = Objects.requireNonNull(governanceProvider);
+        this.rpcProviderService = Objects.requireNonNull(rpcProviderService);
         this.config = config;
     }
 
     public ActorSystem getActorSystem() {
         return actorSystem;
+    }
+
+    public RpcProviderService getRpcProviderService() {
+        return rpcProviderService;
     }
 
     public ClusterSingletonServiceProvider getClusterSingletonServiceProvider() {

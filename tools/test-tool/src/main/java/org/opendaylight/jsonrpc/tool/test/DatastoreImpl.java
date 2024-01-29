@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
-import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
@@ -35,7 +34,6 @@ import org.opendaylight.mdsal.dom.store.inmemory.InMemoryDOMDataStore;
 import org.opendaylight.mdsal.dom.store.inmemory.InMemoryDOMDataStoreFactory;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
-import org.opendaylight.yangtools.yang.model.api.EffectiveModelContextProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,25 +52,11 @@ final class DatastoreImpl extends JsonRpcDatastoreAdapter {
         final EffectiveModelContext schemaContext = schemaProvider
                 .createSchemaContext(new MutablePeer().addModels(new ArrayList<>(modules)));
         LOG.info("Schema : {}", schemaContext);
-        final DOMSchemaService domSchemaService = FixedDOMSchemaService
-                .of(new FixedEffectiveModelContextProvider(schemaContext));
+        final DOMSchemaService domSchemaService = new FixedDOMSchemaService(schemaContext);
         final JsonRpcCodecFactory codecFactory = new JsonRpcCodecFactory(schemaContext);
         final DOMDataBroker domDataBroker = createDomDataBroker(domSchemaService,
                 MoreExecutors.listeningDecorator(Executors.newCachedThreadPool()));
         return new DatastoreImpl(codecFactory, domDataBroker, schemaContext, transportFactory, endpoint);
-    }
-
-    private static class FixedEffectiveModelContextProvider implements EffectiveModelContextProvider {
-        private final EffectiveModelContext context;
-
-        FixedEffectiveModelContextProvider(EffectiveModelContext context) {
-            this.context = context;
-        }
-
-        @Override
-        public @NonNull EffectiveModelContext getEffectiveModelContext() {
-            return context;
-        }
     }
 
     private static DOMDataBroker createDomDataBroker(DOMSchemaService schemaService,

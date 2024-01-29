@@ -15,11 +15,11 @@ import org.opendaylight.jsonrpc.binding.ProxyContext;
 import org.opendaylight.jsonrpc.binding.SchemaAwareTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.spi.EventLoopGroupProvider;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.bb.example.rev180924.BbExampleService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.bb.example.rev180924.Method1;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.bb.example.rev180924.Method1Input;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.bb.example.rev180924.Method1Output;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.bb.example.rev180924.Method1OutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.TestModelRpcService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.SimpleMethod;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 
@@ -36,7 +36,7 @@ import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Sep 24, 2018
  */
-public class OutsideController implements BbExampleService, AutoCloseable {
+public class OutsideController implements Method1, AutoCloseable {
     private static SchemaAwareTransportFactory transport;
     private static OutsideController provider;
     private static CountDownLatch shutdownLock = new CountDownLatch(1);
@@ -55,11 +55,11 @@ public class OutsideController implements BbExampleService, AutoCloseable {
     }
 
     private ResponderSession responder;
-    private ProxyContext<TestModelRpcService> proxy;
+    private ProxyContext<SimpleMethod> proxy;
 
     public void init() throws URISyntaxException {
-        responder = transport.createResponder(BbExampleService.class, provider, "ws://0.0.0.0:20000");
-        proxy = transport.createBindingRequesterProxy(TestModelRpcService.class, "zmq://127.0.0.1:24320");
+        responder = transport.createResponder(provider, "ws://0.0.0.0:20000");
+        proxy = transport.createBindingRequesterProxy(SimpleMethod.class, "zmq://127.0.0.1:24320");
     }
 
     @Override
@@ -79,7 +79,7 @@ public class OutsideController implements BbExampleService, AutoCloseable {
      * When this RPC method is invoked, it causes application to shutdown.
      */
     @Override
-    public ListenableFuture<RpcResult<Method1Output>> method1(Method1Input input) {
+    public ListenableFuture<RpcResult<Method1Output>> invoke(Method1Input input) {
         shutdownLock.countDown();
         return RpcResultBuilder.success(new Method1OutputBuilder().setOutParam(input.getInParam()).build())
             .buildFuture();

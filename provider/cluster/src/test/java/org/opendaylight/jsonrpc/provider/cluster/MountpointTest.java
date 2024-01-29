@@ -55,6 +55,7 @@ import org.opendaylight.mdsal.binding.api.DataObjectModification;
 import org.opendaylight.mdsal.binding.api.DataTreeIdentifier;
 import org.opendaylight.mdsal.binding.api.DataTreeModification;
 import org.opendaylight.mdsal.binding.api.ReadTransaction;
+import org.opendaylight.mdsal.binding.api.RpcProviderService;
 import org.opendaylight.mdsal.binding.api.WriteTransaction;
 import org.opendaylight.mdsal.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
@@ -65,9 +66,9 @@ import org.opendaylight.mdsal.dom.api.DOMMountPoint;
 import org.opendaylight.mdsal.dom.api.DOMMountPointService;
 import org.opendaylight.mdsal.dom.api.DOMRpcResult;
 import org.opendaylight.mdsal.dom.api.DOMRpcService;
-import org.opendaylight.mdsal.singleton.common.api.ClusterSingletonServiceProvider;
-import org.opendaylight.mdsal.singleton.common.api.ClusterSingletonServiceRegistration;
-import org.opendaylight.mdsal.singleton.dom.impl.DOMClusterSingletonServiceProviderImpl;
+import org.opendaylight.mdsal.eos.dom.simple.SimpleDOMEntityOwnershipService;
+import org.opendaylight.mdsal.singleton.api.ClusterSingletonServiceProvider;
+import org.opendaylight.mdsal.singleton.impl.EOSClusterSingletonServiceProvider;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
@@ -85,6 +86,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.data.rev201014
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.FactorialInput;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
+import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.binding.YangModuleInfo;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
@@ -105,15 +107,17 @@ public class MountpointTest {
             .child(ConfiguredEndpoints.class, new ConfiguredEndpointsKey("device-1"))
             .build();
     private static final DataTreeIdentifier<ActualEndpoints> PEER_OP_DTI = DataTreeIdentifier
-            .create(LogicalDatastoreType.OPERATIONAL, MOCK_PEER_OP_ID);
+            .of(LogicalDatastoreType.OPERATIONAL, MOCK_PEER_OP_ID);
     private @Mock AbstractTransportFactory transportFactory;
-    private DOMClusterSingletonServiceProviderImpl clusterSingletonServiceProvider;
+    private EOSClusterSingletonServiceProvider clusterSingletonServiceProvider;
     private @Mock ClusterSingletonServiceProvider mockClusterSingletonServiceProvider;
     private @Mock ActorSystemProvider masterActorSystemProvider;
     private @Mock ActorSystemProvider slaveActorSystemProvider;
     private @Mock GovernanceProvider governanceProvider;
-    private @Mock ClusterSingletonServiceRegistration mockSingletonRegistration;
+    private @Mock Registration mockSingletonRegistration;
     private @Mock RequesterSession rpcClient;
+    private @Mock RpcProviderService rpcProviderService;
+    private @Mock Registration rpcReg;
     private JsonRpcPeerListManager masterManager;
     private JsonRpcPeerListManager slaveManager;
     private TestCustomizer masterTestCustomizer;
@@ -125,8 +129,7 @@ public class MountpointTest {
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
-        clusterSingletonServiceProvider = new DOMClusterSingletonServiceProviderImpl();
-        clusterSingletonServiceProvider.initializeProvider();
+        clusterSingletonServiceProvider = new EOSClusterSingletonServiceProvider(new SimpleDOMEntityOwnershipService());
 
         final YangXPathParserFactory yangXPathParserFactory = ServiceLoader
                 .<YangXPathParserFactory>load(YangXPathParserFactory.class)
@@ -150,17 +153,19 @@ public class MountpointTest {
                 .sendRequestAndReadReply(anyString(), any(), any(JsonObject.class));
         doReturn(rpcClient).when(transportFactory)
                 .createRequester(anyString(), any(ReplyMessageHandler.class), anyBoolean());
+        doReturn(rpcReg).when(rpcProviderService).registerRpcImplementations(any());
+
         final ClusterDependencies masterDeps = new ClusterDependencies(tf, masterTestCustomizer.getDataBroker(),
                 masterTestCustomizer.getDOMMountPointService(), masterTestCustomizer.getDomBroker(),
                 masterTestCustomizer.getSchemaService(), masterTestCustomizer.getDOMNotificationRouter(),
-                masterTestCustomizer.getDOMRpcRouter().getRpcService(), yangXPathParserFactory, masterActorSystem,
-                clusterSingletonServiceProvider, governanceProvider, null);
+                masterTestCustomizer.getDOMRpcRouter().rpcService(), yangXPathParserFactory, masterActorSystem,
+                clusterSingletonServiceProvider, governanceProvider, rpcProviderService, null);
 
         final ClusterDependencies slaveDeps = new ClusterDependencies(tf, slaveTestCustomizer.getDataBroker(),
                 slaveTestCustomizer.getDOMMountPointService(), slaveTestCustomizer.getDomBroker(),
                 slaveTestCustomizer.getSchemaService(), slaveTestCustomizer.getDOMNotificationRouter(),
-                slaveTestCustomizer.getDOMRpcRouter().getRpcService(), yangXPathParserFactory, slaveActorSystem,
-                mockClusterSingletonServiceProvider, governanceProvider, null);
+                slaveTestCustomizer.getDOMRpcRouter().rpcService(), yangXPathParserFactory, slaveActorSystem,
+                mockClusterSingletonServiceProvider, governanceProvider, rpcProviderService, null);
 
         masterConverter = new JsonRpcCodecFactory(masterTestCustomizer.getSchemaService().getGlobalContext());
         JsonRpcDatastoreAdapter datastoreAdapter = new JsonRpcDatastoreAdapter(masterConverter,
@@ -268,16 +273,16 @@ public class MountpointTest {
     }
 
     private void testSlave() throws InterruptedException, ExecutionException {
-        masterTestCustomizer.getDataBroker().registerDataTreeChangeListener(PEER_OP_DTI, changes -> {
+        masterTestCustomizer.getDataBroker().registerTreeChangeListener(PEER_OP_DTI, changes -> {
             final WriteTransaction slaveTx = slaveTestCustomizer.getDataBroker().newWriteOnlyTransaction();
             for (DataTreeModification<ActualEndpoints> dtm : changes) {
                 LOG.info("Change to copy : {}", dtm);
                 DataObjectModification<ActualEndpoints> rootNode = dtm.getRootNode();
-                InstanceIdentifier<ActualEndpoints> path = dtm.getRootPath().getRootIdentifier();
-                switch (rootNode.getModificationType()) {
+                InstanceIdentifier<ActualEndpoints> path = dtm.getRootPath().path();
+                switch (rootNode.modificationType()) {
                     case WRITE:
                     case SUBTREE_MODIFIED:
-                        slaveTx.merge(LogicalDatastoreType.OPERATIONAL, path, rootNode.getDataAfter());
+                        slaveTx.merge(LogicalDatastoreType.OPERATIONAL, path, rootNode.dataAfter());
                         break;
                     case DELETE:
                         slaveTx.delete(LogicalDatastoreType.OPERATIONAL, path);
