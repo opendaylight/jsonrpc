@@ -23,8 +23,8 @@ import org.opendaylight.yangtools.yang.data.api.schema.builder.NormalizedNodeCon
 import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStreamWriter;
 import org.opendaylight.yangtools.yang.data.codec.gson.JSONCodecFactory;
 import org.opendaylight.yangtools.yang.data.codec.gson.JSONCodecFactorySupplier;
-import org.opendaylight.yangtools.yang.data.impl.schema.Builders;
 import org.opendaylight.yangtools.yang.data.impl.schema.ImmutableNormalizedNodeStreamWriter;
+import org.opendaylight.yangtools.yang.data.spi.node.ImmutableNodes;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.Module;
 
@@ -37,7 +37,7 @@ abstract class AbstractCodec {
     }
 
     protected static DataContainerNodeBuilder<NodeIdentifier, ContainerNode> createNodeBuilder(QName qname) {
-        return Builders.containerBuilder().withNodeIdentifier(NodeIdentifier.create(qname));
+        return ImmutableNodes.newContainerBuilder().withNodeIdentifier(NodeIdentifier.create(qname));
     }
 
     protected static NormalizedNodeStreamWriter createWriter(NormalizedNodeContainerBuilder<?, ?, ?, ?> builder) {

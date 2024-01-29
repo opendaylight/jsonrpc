@@ -50,7 +50,7 @@ class EnsureParentTransactionFactory implements TransactionFactory {
                 while (it.hasNext()) {
                     final PathArgument pathArgument = it.next();
                     if (rootNormalizedPath == null) {
-                        rootNormalizedPath = YangInstanceIdentifier.create(pathArgument);
+                        rootNormalizedPath = YangInstanceIdentifier.of(pathArgument);
                     }
                     if (it.hasNext()) {
                         normalizedPathWithoutChildArgs.add(pathArgument);
@@ -61,7 +61,7 @@ class EnsureParentTransactionFactory implements TransactionFactory {
                 }
                 Preconditions.checkArgument(rootNormalizedPath != null, "Empty path received");
                 final NormalizedNode parentStructure = ImmutableNodes.fromInstanceId(schemaContext,
-                        YangInstanceIdentifier.create(normalizedPathWithoutChildArgs));
+                        YangInstanceIdentifier.of(normalizedPathWithoutChildArgs));
                 delegate().merge(store, rootNormalizedPath, parentStructure);
             }
 

@@ -12,6 +12,7 @@ import static org.opendaylight.yangtools.yang.parser.rfc7950.repo.TextToIRTransf
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Queues;
 import com.google.common.io.CharSource;
 import java.io.IOException;
@@ -26,15 +27,16 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.model.ModuleInfo;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.model.SchemaContextProvider;
-import org.opendaylight.jsonrpc.model.StringYangTextSchemaSource;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
-import org.opendaylight.yangtools.yang.model.api.EffectiveModelContextProvider;
-import org.opendaylight.yangtools.yang.model.api.ModuleImport;
-import org.opendaylight.yangtools.yang.model.repo.api.YangTextSchemaSource;
+import org.opendaylight.yangtools.yang.model.api.source.SourceDependency;
+import org.opendaylight.yangtools.yang.model.api.source.SourceIdentifier;
+import org.opendaylight.yangtools.yang.model.spi.source.DelegatedYangTextSource;
+import org.opendaylight.yangtools.yang.model.spi.source.SourceInfo;
+import org.opendaylight.yangtools.yang.model.spi.source.StringYangTextSource;
 import org.opendaylight.yangtools.yang.parser.api.YangSyntaxErrorException;
 import org.opendaylight.yangtools.yang.parser.rfc7950.reactor.RFC7950Reactors;
-import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangModelDependencyInfo;
+import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangIRSourceInfoExtractor;
 import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangStatementStreamSource;
 import org.opendaylight.yangtools.yang.parser.spi.meta.ReactorException;
 import org.opendaylight.yangtools.yang.parser.stmt.reactor.CrossSourceStatementReactor.BuildAction;
@@ -55,16 +57,20 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
     private static final Duration CACHE_TTL = Duration.ofMinutes(10L);
     private final YangXPathParserFactory xpathParserFactory;
     // cache to speed-up module import lookups
-    private final LoadingCache<ModuleInfo, Set<ModuleImport>> moduleImportCache = CacheBuilder.newBuilder()
+    private final LoadingCache<ModuleInfo, Set<SourceDependency>> moduleImportCache = CacheBuilder.newBuilder()
             .expireAfterWrite(CACHE_TTL)
-            .build(new CacheLoader<ModuleInfo, Set<ModuleImport>>() {
+            .build(new CacheLoader<>() {
                 @Override
-                public Set<ModuleImport> load(ModuleInfo key) throws Exception {
+                public Set<SourceDependency> load(ModuleInfo key) throws Exception {
                     LOG.trace("Resolving imports of module '{}'", key);
                     final String content = sourceCache.getUnchecked(key);
-                    return YangModelDependencyInfo
-                            .forIR(transformText(new StringYangTextSchemaSource(key.getModule(), content)))
-                            .getDependencies();
+
+                    final SourceInfo info  = YangIRSourceInfoExtractor.forIR(transformText(
+                        new StringYangTextSource(new SourceIdentifier(key.getModule()), content)));
+                    return ImmutableSet.<SourceDependency>builder()
+                        .addAll(info.imports())
+                        .addAll(info.includes())
+                        .build();
                 }
             });
 
@@ -128,7 +134,7 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
                 final ModuleInfo mi = toResolve.pop();
                 final Set<ModuleInfo> imports = moduleImportCache.getUnchecked(mi)
                         .stream()
-                        .map(imp -> new ModuleInfo(imp.getModuleName().getLocalName(), null))
+                        .map(imp -> new ModuleInfo(imp.name().getLocalName(), null))
                         .filter(m -> !resolved.contains(m))
                         .filter(m -> !toResolve.contains(m))
                         .collect(Collectors.toSet());
@@ -147,8 +153,8 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
 
     private static void addSourceToReactor(BuildAction reactor, String name, String yangSource) {
         try {
-            reactor.addSource(YangStatementStreamSource.create(YangTextSchemaSource.delegateForCharSource(
-                    name + ".yang", CharSource.wrap(yangSource))));
+            reactor.addSource(YangStatementStreamSource.create(new DelegatedYangTextSource(
+                    new SourceIdentifier(name), CharSource.wrap(yangSource))));
         } catch (YangSyntaxErrorException | IOException e) {
             throw new IllegalStateException("Unable to add source of '" + name + "' into reactor", e);
         }
