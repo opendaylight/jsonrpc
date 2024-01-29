@@ -13,6 +13,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
@@ -24,9 +25,9 @@ import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 
 public class DataCodecTest extends AbstractCodecTest {
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testEmptyPath() {
-        factory.dataCodec(YangInstanceIdentifier.empty());
+        assertThrows(IllegalArgumentException.class, () -> factory.dataCodec(YangInstanceIdentifier.of()));
     }
 
     @Test

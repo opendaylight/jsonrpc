@@ -34,9 +34,7 @@ import org.opendaylight.mdsal.dom.api.DOMNotification;
 import org.opendaylight.mdsal.dom.api.DOMNotificationListener;
 import org.opendaylight.mdsal.dom.api.DOMNotificationService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
-import org.opendaylight.yangtools.concepts.AbstractListenerRegistration;
 import org.opendaylight.yangtools.concepts.AbstractRegistration;
-import org.opendaylight.yangtools.concepts.ListenerRegistration;
 import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.QNameModule;
@@ -96,12 +94,12 @@ public final class JsonRPCNotificationService extends AbstractJsonRPCComponent
     }
 
     @Override
-    public synchronized <T extends DOMNotificationListener> ListenerRegistration<T> registerNotificationListener(
-            final T listener, final Collection<Absolute> types) {
+    public synchronized Registration registerNotificationListener(final DOMNotificationListener listener,
+            final Collection<Absolute> types) {
         for (final Absolute type : types) {
             listeners.put(type, listener);
         }
-        return new AbstractListenerRegistration<>(listener) {
+        return new AbstractRegistration() {
             @Override
             protected void removeRegistration() {
                 for (final Absolute type : types) {
