@@ -141,18 +141,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
      */
     @Test(expected = IllegalStateException.class)
     public void testUnfinishedTxChain() throws InterruptedException {
-        final DOMTransactionChain chain = jrbroker.createTransactionChain(new DOMTransactionChainListener() {
-            @Override
-            public void onTransactionChainSuccessful(DOMTransactionChain chain) {
-                // NOOP
-            }
-
-            @Override
-            public void onTransactionChainFailed(DOMTransactionChain chain, DOMDataTreeTransaction transaction,
-                    Throwable cause) {
-                // NOOP
-            }
-        });
+        final DOMTransactionChain chain = jrbroker.createTransactionChain();
         chain.newWriteOnlyTransaction();
         chain.newWriteOnlyTransaction();
     }
@@ -161,17 +150,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     public void testTxChain() throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
         final NodeResult e = TestUtils.getMockTopologyAsDom(getCodec());
-        final DOMTransactionChain chain = jrbroker.createTransactionChain(new DOMTransactionChainListener() {
-            @Override
-            public void onTransactionChainSuccessful(DOMTransactionChain chain) {
-                latch.countDown();
-            }
-
-            @Override
-            public void onTransactionChainFailed(DOMTransactionChain chain, DOMDataTreeTransaction transaction,
-                    Throwable cause) {
-            }
-        });
+        final DOMTransactionChain chain = jrbroker.createTransactionChain();
         final DOMDataTreeWriteTransaction tx1 = chain.newWriteOnlyTransaction();
         tx1.put(LogicalDatastoreType.OPERATIONAL, e.path(), e.node());
         tx1.commit();
