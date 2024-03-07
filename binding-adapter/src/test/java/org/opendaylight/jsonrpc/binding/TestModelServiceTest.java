@@ -16,7 +16,6 @@ import java.util.concurrent.TimeUnit;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.NoopReplyMessageHandler;
 import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
@@ -40,7 +39,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.SimpleMethodInputBuilder;
 import org.opendaylight.yangtools.yang.binding.util.BindingMap;
 import org.opendaylight.yangtools.yang.common.ErrorSeverity;
-import org.opendaylight.yangtools.yang.common.RpcError;
 import org.opendaylight.yangtools.yang.common.Uint16;
 
 /**
@@ -81,75 +79,82 @@ public class TestModelServiceTest {
 
     @Test
     public void testFactorial() throws Exception {
-        final var proxy = transportFactory.createBindingRequesterProxy(Factorial.class, connectUri);
-        final var result = proxy.getProxy().invoke(new FactorialInputBuilder().setInNumber(Uint16.valueOf(6)).build());
-        assertEquals(720L, result.get().getResult().getOutNumber().longValue());
+        try (var proxy = transportFactory.createBindingRequesterProxy(Factorial.class, connectUri)) {
+            final var result = proxy.getProxy().invoke(new FactorialInputBuilder()
+                .setInNumber(Uint16.valueOf(6))
+                .build());
+            assertEquals(720L, result.get().getResult().getOutNumber().longValue());
+        }
     }
 
     @Test
     public void testMultiplyList() throws Exception {
-        final var proxy = transportFactory.createBindingRequesterProxy(MultiplyList.class, connectUri);
-        final var resp = proxy.getProxy().invoke(new MultiplyListInputBuilder()
-            .setMultiplier((short) 10)
-            .setNumbers(BindingMap.ordered(
-                new NumbersBuilder().setNum(10).build(),
-                new NumbersBuilder().setNum(20).build()))
-            .build())
-            .get()
-            .getResult()
-            .getNumbers()
-            .values();
+        try (var proxy = transportFactory.createBindingRequesterProxy(MultiplyList.class, connectUri)) {
+            final var resp = proxy.getProxy().invoke(new MultiplyListInputBuilder()
+                .setMultiplier((short) 10)
+                .setNumbers(BindingMap.ordered(
+                    new NumbersBuilder().setNum(10).build(),
+                    new NumbersBuilder().setNum(20).build()))
+                .build())
+                .get()
+                .getResult()
+                .nonnullNumbers()
+                .values();
 
-        assertEquals(2, resp.size());
+            assertEquals(2, resp.size());
+        }
     }
 
     @Test
     public void testErrorMethod() throws Exception {
-        final var proxy = transportFactory.createBindingRequesterProxy(ErrorMethod.class, connectUri);
-        final var result = proxy.getProxy().invoke(new ErrorMethodInputBuilder().build()).get();
-        assertFalse(result.isSuccessful());
-        final RpcError err = result.getErrors().iterator().next();
-        assertEquals("Ha!", err.getMessage());
-        assertEquals(ErrorSeverity.ERROR, err.getSeverity());
+        try (var proxy = transportFactory.createBindingRequesterProxy(ErrorMethod.class, connectUri)) {
+            final var result = proxy.getProxy().invoke(new ErrorMethodInputBuilder().build()).get();
+            assertFalse(result.isSuccessful());
+            final var err = result.getErrors().iterator().next();
+            assertEquals("Ha!", err.getMessage());
+            assertEquals(ErrorSeverity.ERROR, err.getSeverity());
+        }
     }
 
     @Test
     public void testSimpleMethod() throws Exception {
-        final var proxy = transportFactory.createBindingRequesterProxy(SimpleMethod.class, connectUri);
-        assertTrue(proxy.getProxy().invoke(new SimpleMethodInputBuilder().build()).get().isSuccessful());
+        try (var proxy = transportFactory.createBindingRequesterProxy(SimpleMethod.class, connectUri)) {
+            assertTrue(proxy.getProxy().invoke(new SimpleMethodInputBuilder().build()).get().isSuccessful());
+        }
     }
 
     @Test
     public void testSimpleMethodNull() {
-        JsonRpcReplyMessage reply = requester.sendRequestAndReadReply("simple-method", null);
+        final var reply = requester.sendRequestAndReadReply("simple-method", null);
         assertEquals(null, reply.getError());
     }
 
     @Test
     public void testRemoveCoffeePot() throws Exception {
-        final var proxy = transportFactory.createBindingRequesterProxy(RemoveCoffeePot.class, connectUri);
-        final var result = proxy.getProxy().invoke(new RemoveCoffeePotInputBuilder().build())
+        try (var proxy = transportFactory.createBindingRequesterProxy(RemoveCoffeePot.class, connectUri)) {
+            final var result = proxy.getProxy().invoke(new RemoveCoffeePotInputBuilder().build())
                 .get()
                 .getResult();
-        assertEquals(6, result.getCupsBrewed().longValue());
-        assertEquals(Coffee.VALUE, result.getDrink());
+            assertEquals(6, result.getCupsBrewed().longValue());
+            assertEquals(Coffee.VALUE, result.getDrink());
+        }
     }
 
     @Test
     public void testSendPrimitiveParameter() {
-        final JsonRpcReplyMessage response = requester.sendRequestAndReadReply("factorial", 5);
+        final var response = requester.sendRequestAndReadReply("factorial", 5);
         assertEquals(120, response.getResult().getAsJsonObject().get("out-number").getAsInt());
     }
 
     @Test
     public void testSendSingleArrayParameter() {
-        final JsonRpcReplyMessage response = requester.sendRequestAndReadReply("factorial", new Object[] { 5 });
+        final var response = requester.sendRequestAndReadReply("factorial", new Object[] { 5 });
         assertEquals(120, response.getResult().getAsJsonObject().get("out-number").getAsInt());
     }
 
     @Test
     public void testInvalidMethod() {
-        final JsonRpcReplyMessage response = requester.sendRequestAndReadReply(UUID.randomUUID().toString(), null);
+        final var response = requester.sendRequestAndReadReply(UUID.randomUUID().toString(), null);
         assertEquals(-32601, response.getError().getCode());
     }
 }
