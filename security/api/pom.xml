@@ -37,7 +37,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpkix-jdk18on</artifactId>
+            <artifactId>bcprov-jdk18on</artifactId>
         </dependency>
     </dependencies>
 </project>
