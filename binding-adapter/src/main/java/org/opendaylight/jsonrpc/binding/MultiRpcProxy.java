@@ -8,9 +8,10 @@
 package org.opendaylight.jsonrpc.binding;
 
 import com.google.common.collect.ImmutableClassToInstanceMap;
-import java.util.Objects;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.yangtools.yang.binding.Rpc;
 
 /**
@@ -19,19 +20,14 @@ import org.opendaylight.yangtools.yang.binding.Rpc;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Oct 16, 2018
  */
-public class MultiModelProxy implements AutoCloseable {
+public final class MultiRpcProxy extends AbstractRpcProxy {
     private final ImmutableClassToInstanceMap<Rpc<?, ?>> proxyMap;
-    private final Set<ProxyContext<?>> proxies;
+    private final Set<SingleRpcProxy<?>> proxies;
 
-    public MultiModelProxy(Set<ProxyContext<?>> proxies) {
+    public MultiRpcProxy(final Set<SingleRpcProxy<?>> proxies) {
         this.proxies = proxies;
         proxyMap = ImmutableClassToInstanceMap.copyOf(proxies.stream()
-            .collect(Collectors.toMap(ProxyContext::getType, ProxyContext::getProxy)));
-    }
-
-    @Override
-    public void close() {
-        proxies.stream().forEach(ProxyContext::close);
+            .collect(Collectors.toMap(SingleRpcProxy::getType, SingleRpcProxy::getProxy)));
     }
 
     /**
@@ -39,9 +35,23 @@ public class MultiModelProxy implements AutoCloseable {
      *
      * @param type subtype of {@link Rpc} to get proxy for
      * @return proxy for given RpcService subtype
+     * @throws NoSuchElementException if there is no RPC proxy for specified type
      */
-    public <T extends Rpc<?, ?>> T getRpcService(Class<T> type) {
-        return Objects.requireNonNull(proxyMap.getInstance(type),
-            "Service is not supported by this requester instance : " + type);
+    public <T extends Rpc<?, ?>> @NonNull T getRpcService(final Class<T> type) {
+        final var instance = proxyMap.getInstance(type);
+        if (instance == null) {
+            throw new NoSuchElementException("Service is not supported by this requester instance : " + type);
+        }
+        return instance;
+    }
+
+    @Override
+    public boolean isConnectionReady() {
+        return proxies.stream().allMatch(SingleRpcProxy::isConnectionReady);
+    }
+
+    @Override
+    protected void removeRegistration() {
+        proxies.stream().forEach(SingleRpcProxy::close);
     }
 }

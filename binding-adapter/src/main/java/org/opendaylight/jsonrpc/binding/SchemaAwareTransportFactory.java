@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 public final class SchemaAwareTransportFactory extends AbstractTransportFactory {
     private static final Logger LOG = LoggerFactory.getLogger(SchemaAwareTransportFactory.class);
 
-    private final ConcurrentMap<Object, ProxyContext<?>> proxyMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Object, SingleRpcProxy<?>> proxyMap = new ConcurrentHashMap<>();
     private final RpcInvocationAdapter invocationAdapter;
 
     /**
@@ -101,14 +101,14 @@ public final class SchemaAwareTransportFactory extends AbstractTransportFactory 
      * @return proxy for {@link Rpc}.
      * @throws URISyntaxException if provided URI is invalid
      */
-    public <T extends Rpc<?, ?>> ProxyContext<T> createBindingRequesterProxy(Class<T> type, String uri)
+    public <T extends Rpc<?, ?>> SingleRpcProxy<T> createBindingRequesterProxy(Class<T> type, String uri)
             throws URISyntaxException {
         LOG.info("Creating requester proxy for type {} against endpoint '{}'", type.getName(), uri);
         final RequesterSession requester = createRequester(uri, NoopReplyMessageHandler.INSTANCE);
         final OutboundHandler<T> handler = new OutboundHandler<>(type, invocationAdapter, requester);
         final T proxy = Reflection.newProxy(type, handler);
         final Registration rpcReg = invocationAdapter.registerImpl(proxy);
-        final ProxyContext<T> context = new ProxyContext<>(type, rpcReg, requester, proxy, this::closeProxy);
+        final SingleRpcProxy<T> context = new SingleRpcProxy<>(type, rpcReg, requester, proxy, this::closeProxy);
         proxyMap.put(proxy, context);
         return context;
     }
@@ -118,16 +118,16 @@ public final class SchemaAwareTransportFactory extends AbstractTransportFactory 
      *
      * @param services set of {@link Rpc}s implemented by remote service
      * @param uri remote responder endpoint
-     * @return {@link MultiModelProxy} used to get actual RPC proxy and close requester once it is no longer needed
+     * @return {@link MultiRpcProxy} used to get actual RPC proxy and close requester once it is no longer needed
      * @throws URISyntaxException if provided responder URI is invalid
      */
-    public MultiModelProxy createMultiModelRequesterProxy(Set<Class<? extends Rpc<?, ?>>> services, String uri)
+    public MultiRpcProxy createMultiModelRequesterProxy(Set<Class<? extends Rpc<?, ?>>> services, String uri)
             throws URISyntaxException {
-        final var proxies = new HashSet<ProxyContext<?>>();
+        final var proxies = new HashSet<SingleRpcProxy<?>>();
         for (var service : services) {
             proxies.add(createBindingRequesterProxy(service, uri));
         }
-        return new MultiModelProxy(proxies);
+        return new MultiRpcProxy(proxies);
     }
 
     /**
@@ -179,7 +179,7 @@ public final class SchemaAwareTransportFactory extends AbstractTransportFactory 
      */
     @Override
     public void close() {
-        proxyMap.values().stream().forEach(ProxyContext::close);
+        proxyMap.values().stream().forEach(SingleRpcProxy::close);
         proxyMap.clear();
         super.close();
     }

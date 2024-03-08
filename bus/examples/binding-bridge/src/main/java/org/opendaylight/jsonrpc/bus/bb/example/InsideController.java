@@ -11,8 +11,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.net.URISyntaxException;
 import java.util.concurrent.ExecutionException;
 import org.opendaylight.jsonrpc.binding.ControllerRpcInvocationAdapter;
-import org.opendaylight.jsonrpc.binding.ProxyContext;
 import org.opendaylight.jsonrpc.binding.SchemaAwareTransportFactory;
+import org.opendaylight.jsonrpc.binding.SingleRpcProxy;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
 import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer;
@@ -42,7 +42,7 @@ import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 public class InsideController implements Method1, AutoCloseable {
     private EventLoopConfiguration eventLoopConfiguration;
     private SchemaAwareTransportFactory transport;
-    private ProxyContext<SimpleMethod> proxy;
+    private SingleRpcProxy<SimpleMethod> proxy;
     private ResponderSession responder;
     private DOMSchemaService schemaService;
     private BindingNormalizedNodeSerializer codec;

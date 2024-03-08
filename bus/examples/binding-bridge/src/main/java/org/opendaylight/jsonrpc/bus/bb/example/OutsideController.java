@@ -11,8 +11,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.net.URISyntaxException;
 import java.util.concurrent.CountDownLatch;
 import org.opendaylight.jsonrpc.binding.EmbeddedRpcInvocationAdapter;
-import org.opendaylight.jsonrpc.binding.ProxyContext;
 import org.opendaylight.jsonrpc.binding.SchemaAwareTransportFactory;
+import org.opendaylight.jsonrpc.binding.SingleRpcProxy;
 import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.spi.EventLoopGroupProvider;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.bb.example.rev180924.Method1;
@@ -55,7 +55,7 @@ public class OutsideController implements Method1, AutoCloseable {
     }
 
     private ResponderSession responder;
-    private ProxyContext<SimpleMethod> proxy;
+    private SingleRpcProxy<SimpleMethod> proxy;
 
     public void init() throws URISyntaxException {
         responder = transport.createResponder(provider, "ws://0.0.0.0:20000");

@@ -8,7 +8,7 @@
 package org.opendaylight.jsonrpc.binding;
 
 import java.util.function.Consumer;
-import org.opendaylight.jsonrpc.bus.messagelib.BaseSession;
+import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
 import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.binding.Rpc;
 
@@ -18,15 +18,15 @@ import org.opendaylight.yangtools.yang.binding.Rpc;
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Sep 21, 2018
  */
-public class ProxyContext<T extends Rpc<?, ?>> implements AutoCloseable {
+public final class SingleRpcProxy<T extends Rpc<?, ?>> extends AbstractRpcProxy {
     private final Registration rpcRegistration;
-    private final BaseSession session;
+    private final RequesterSession session;
     private final T proxy;
     private final Consumer<T> cleanCallback;
     private final Class<T> type;
 
-    ProxyContext(final Class<T> type, final Registration rpcRegistration, final BaseSession session, final T proxy,
-            final Consumer<T> cleanCallback) {
+    SingleRpcProxy(final Class<T> type, final Registration rpcRegistration, final RequesterSession session,
+            final T proxy, final Consumer<T> cleanCallback) {
         this.rpcRegistration = rpcRegistration;
         this.session = session;
         this.proxy = proxy;
@@ -39,7 +39,12 @@ public class ProxyContext<T extends Rpc<?, ?>> implements AutoCloseable {
     }
 
     @Override
-    public void close() {
+    public boolean isConnectionReady() {
+        return session.isConnectionReady();
+    }
+
+    @Override
+    protected void removeRegistration() {
         cleanCallback.accept(proxy);
     }
 

@@ -38,6 +38,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.RemoveCoffeePotInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.SimpleMethod;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.SimpleMethodInputBuilder;
+import org.opendaylight.yangtools.yang.binding.Rpc;
 import org.opendaylight.yangtools.yang.binding.util.BindingMap;
 import org.opendaylight.yangtools.yang.common.ErrorSeverity;
 import org.opendaylight.yangtools.yang.common.Uint16;
@@ -74,14 +75,14 @@ public class TestModelServiceTest {
 
     @After
     public void tearDown() {
-        // FIXME: close requester as well, but that is flushing out a timing problem somewhere
+        requester.close();
         responder.close();
         transportFactory.close();
     }
 
     @Test
     public void testFactorial() throws Exception {
-        try (var proxy = transportFactory.createBindingRequesterProxy(Factorial.class, connectUri)) {
+        try (var proxy = createProxy(Factorial.class)) {
             final var result = proxy.getProxy().invoke(new FactorialInputBuilder()
                 .setInNumber(Uint16.valueOf(6))
                 .build());
@@ -91,7 +92,7 @@ public class TestModelServiceTest {
 
     @Test
     public void testMultiplyList() throws Exception {
-        try (var proxy = transportFactory.createBindingRequesterProxy(MultiplyList.class, connectUri)) {
+        try (var proxy = createProxy(MultiplyList.class)) {
             final var resp = proxy.getProxy().invoke(new MultiplyListInputBuilder()
                 .setMultiplier((short) 10)
                 .setNumbers(BindingMap.ordered(
@@ -109,7 +110,7 @@ public class TestModelServiceTest {
 
     @Test
     public void testErrorMethod() throws Exception {
-        try (var proxy = transportFactory.createBindingRequesterProxy(ErrorMethod.class, connectUri)) {
+        try (var proxy = createProxy(ErrorMethod.class)) {
             final var result = proxy.getProxy().invoke(new ErrorMethodInputBuilder().build()).get();
             assertFalse(result.isSuccessful());
             final var err = result.getErrors().iterator().next();
@@ -120,7 +121,7 @@ public class TestModelServiceTest {
 
     @Test
     public void testSimpleMethod() throws Exception {
-        try (var proxy = transportFactory.createBindingRequesterProxy(SimpleMethod.class, connectUri)) {
+        try (var proxy = createProxy(SimpleMethod.class)) {
             assertTrue(proxy.getProxy().invoke(new SimpleMethodInputBuilder().build()).get().isSuccessful());
         }
     }
@@ -133,7 +134,7 @@ public class TestModelServiceTest {
 
     @Test
     public void testRemoveCoffeePot() throws Exception {
-        try (var proxy = transportFactory.createBindingRequesterProxy(RemoveCoffeePot.class, connectUri)) {
+        try (var proxy = createProxy(RemoveCoffeePot.class)) {
             final var result = proxy.getProxy().invoke(new RemoveCoffeePotInputBuilder().build())
                 .get()
                 .getResult();
@@ -158,5 +159,11 @@ public class TestModelServiceTest {
     public void testInvalidMethod() {
         final var response = requester.sendRequestAndReadReply(UUID.randomUUID().toString(), null);
         assertEquals(-32601, response.getError().getCode());
+    }
+
+    private <T extends Rpc<?, ?>> SingleRpcProxy<T> createProxy(final Class<T> type) throws Exception {
+        final var proxy = transportFactory.createBindingRequesterProxy(type, connectUri);
+        Awaitility.await().atMost(Duration.ofSeconds(5)).until(proxy::isConnectionReady);
+        return proxy;
     }
 }
