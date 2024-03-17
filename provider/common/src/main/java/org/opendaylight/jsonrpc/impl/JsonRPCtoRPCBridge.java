@@ -81,7 +81,7 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent implement
             ImmutableMap.Builder<QName, RpcClient> mapped) {
         final QNameModule qm = def.getQName().getModule();
         final String localName = def.getQName().getLocalName();
-        final Optional<Module> possibleModule = schemaContext.findModule(qm.getNamespace(), qm.getRevision());
+        final Optional<Module> possibleModule = schemaContext.findModule(qm);
         final JsonObject path = createRootPath(possibleModule.orElseThrow(), def.getQName());
         final String endpoint = getEndpoint(DataType.RPC, governance, path);
         if (endpoint != null) {

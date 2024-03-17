@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.provider.single;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableClassToInstanceMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.net.URISyntaxException;
@@ -56,7 +55,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRelo
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-import org.opendaylight.yangtools.yang.binding.Rpc;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
@@ -91,10 +89,9 @@ public final class JsonRPCProvider implements AutoCloseable {
             @Reference TransportFactory transportFactory, @Reference GovernanceProvider governance) {
         this(new ProviderDependencies(transportFactory, dataBroker, domMountPointService, domDataBroker, schemaService,
             domNotificationPublishService, domRpcService, yangXPathParserFactory), governance);
-        rpcReg = rpcProviderService.registerRpcImplementations(ImmutableClassToInstanceMap.<Rpc<?, ?>>builder()
-            .put(ForceRefresh.class, this::forceRefresh)
-            .put(ForceReload.class, this::forceReload)
-            .build());
+        rpcReg = rpcProviderService.registerRpcImplementations(
+            (ForceRefresh) this::forceRefresh,
+            (ForceReload) this::forceReload);
     }
 
     public JsonRPCProvider(ProviderDependencies dependencies, GovernanceProvider governance) {

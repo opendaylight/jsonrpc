@@ -10,7 +10,6 @@ package org.opendaylight.jsonrpc.provider.cluster.impl;
 import static org.opendaylight.jsonrpc.provider.common.Util.removeFromMapAndClose;
 
 import akka.util.Timeout;
-import com.google.common.collect.ImmutableClassToInstanceMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.HashMap;
@@ -40,7 +39,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpoints;
 import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-import org.opendaylight.yangtools.yang.binding.Rpc;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
@@ -72,11 +70,9 @@ public final class JsonRpcPeerListManager implements DataTreeChangeListener<Conf
         this.dependencies = dependencies;
         this.dtcListener = dependencies.getDataBroker()
                 .registerTreeChangeListener(ClusterUtil.getPeerListIdentifier(), this);
-        this.rpcReg = dependencies.getRpcProviderService()
-            .registerRpcImplementations(ImmutableClassToInstanceMap.<Rpc<?, ?>>builder()
-                .put(ForceRefresh.class, JsonRpcPeerListManager::forceRefresh)
-                .put(ForceReload.class, this::forceReload)
-                .build());
+        this.rpcReg = dependencies.getRpcProviderService().registerRpcImplementations(
+            (ForceRefresh) JsonRpcPeerListManager::forceRefresh,
+            (ForceReload) this::forceReload);
     }
 
     @Override

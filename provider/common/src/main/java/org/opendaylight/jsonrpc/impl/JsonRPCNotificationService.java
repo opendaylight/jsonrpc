@@ -62,7 +62,7 @@ public final class JsonRPCNotificationService extends AbstractJsonRPCComponent
         for (final NotificationDefinition def : schemaContext.getNotifications()) {
             final QNameModule qm = def.getQName().getModule();
             final String localName = def.getQName().getLocalName();
-            final Optional<Module> possibleModule = schemaContext.findModule(qm.getNamespace(), qm.getRevision());
+            final Optional<Module> possibleModule = schemaContext.findModule(qm);
             final JsonObject path = createRootPath(possibleModule.orElseThrow(), def.getQName());
             final String endpoint = getEndpoint(DataType.NOTIFICATION, governance, path);
             if (endpoint != null) {

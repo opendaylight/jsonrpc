@@ -297,7 +297,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
     }
 
     private static QName constructRpcQname(Module mod, String methodName) {
-        return QName.create(mod.getQNameModule().getNamespace(), mod.getQNameModule().getRevision(), methodName);
+        return QName.create(mod.getQNameModule(), methodName);
     }
 
     private static QName rpcPath(Module mod, String methodName) {

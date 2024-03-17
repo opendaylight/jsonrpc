@@ -153,7 +153,6 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
     }
 
     private static Absolute notificationPath(Module mod, String methodName) {
-        return Absolute.of(QName.create(mod.getQNameModule().getNamespace(),
-                mod.getQNameModule().getRevision(), methodName));
+        return Absolute.of(QName.create(mod.getQNameModule(), methodName));
     }
 }

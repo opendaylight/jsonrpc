@@ -53,10 +53,9 @@ abstract class AbstractCodec {
      * @throws IllegalStateException If module can't be found exception
      */
     protected static Module getModule(EffectiveModelContext context, QNameModule nameModule) {
-        return context.findModule(nameModule)
-                .orElseThrow(() -> new IllegalStateException(
-                        String.format("Could not find module for namespace %s and revision %s",
-                                nameModule.getNamespace(), nameModule.getRevision())));
+        return context.findModule(nameModule).orElseThrow(
+            () -> new IllegalStateException("Could not find module for namespace %s and revision %s".formatted(
+                nameModule.namespace(), nameModule.revision())));
     }
 
     /**
