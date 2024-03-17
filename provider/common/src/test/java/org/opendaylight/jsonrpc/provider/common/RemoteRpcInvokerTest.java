@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.provider.common;
 
 import static org.junit.Assert.assertNotNull;
 
-import com.google.common.collect.ImmutableClassToInstanceMap;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.junit.After;
@@ -27,13 +26,7 @@ import org.opendaylight.jsonrpc.test.TestSimpleMethod;
 import org.opendaylight.mdsal.binding.dom.adapter.BindingDOMRpcProviderServiceAdapter;
 import org.opendaylight.mdsal.binding.dom.adapter.ConstantAdapterContext;
 import org.opendaylight.mdsal.binding.dom.codec.impl.BindingCodecContext;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.ErrorMethod;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.Factorial;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.MultiplyList;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.RemoveCoffeePot;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.SimpleMethod;
 import org.opendaylight.yangtools.concepts.Registration;
-import org.opendaylight.yangtools.yang.binding.Rpc;
 
 /**
  * Test for {@link RemoteRpcInvoker} part of {@link RemoteControl}.
@@ -52,13 +45,12 @@ public class RemoteRpcInvokerTest extends AbstractJsonRpcTest {
         final BindingDOMRpcProviderServiceAdapter rpcAdapter = new BindingDOMRpcProviderServiceAdapter(
                 new ConstantAdapterContext(new BindingCodecContext(getBindingRuntimeContext())),
                 getDOMRpcRouter().rpcProviderService());
-        rpcReg = rpcAdapter.registerRpcImplementations(ImmutableClassToInstanceMap.<Rpc<?, ?>>builder()
-            .put(ErrorMethod.class, new TestErrorMethod())
-            .put(Factorial.class, new TestFactorial())
-            .put(MultiplyList.class, new TestMultiplyList())
-            .put(RemoveCoffeePot.class, new TestRemoveCoffeePot())
-            .put(SimpleMethod.class, new TestSimpleMethod())
-            .build());
+        rpcReg = rpcAdapter.registerRpcImplementations(
+            new TestErrorMethod(),
+            new TestFactorial(),
+            new TestMultiplyList(),
+            new TestRemoveCoffeePot(),
+            new TestSimpleMethod());
         testCustomizer.updateSchema(runtimeContext);
         codecFactory = new JsonRpcCodecFactory(schemaContext);
         transportFactory = new DefaultTransportFactory();

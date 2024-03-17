@@ -7,13 +7,14 @@
  */
 package org.opendaylight.jsonrpc.provider.common;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.gson.JsonObject;
 import java.lang.reflect.Type;
-import java.util.Objects;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.ClassFileVersion;
+import net.bytebuddy.NamingStrategy.Suffixing.BaseNameResolver.ForFixedValue;
 import net.bytebuddy.NamingStrategy.SuffixingRandom;
-import net.bytebuddy.NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue;
 import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.DynamicType.Builder;
@@ -44,10 +45,10 @@ final class InterfaceGenerator {
      * @return generated proxy interface
      */
     static Class<? extends AutoCloseable> generate(@NonNull RpcDefinition node) {
-        Objects.requireNonNull(node);
-        Builder<AutoCloseable> builder = BB.makeInterface(AutoCloseable.class);
-        builder = generateMethod(node, builder);
-        return builder.make().load(InterfaceGenerator.class.getClassLoader()).getLoaded();
+        return generateMethod(requireNonNull(node), BB.makeInterface(AutoCloseable.class))
+            .make()
+            .load(InterfaceGenerator.class.getClassLoader())
+            .getLoaded();
     }
 
     private static Type getReturnType(RpcDefinition node) {
