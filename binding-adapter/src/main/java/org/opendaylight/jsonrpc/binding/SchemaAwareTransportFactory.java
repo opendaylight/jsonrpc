@@ -25,8 +25,8 @@ import org.opendaylight.jsonrpc.bus.messagelib.ResponderSession;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.bus.spi.EventLoopConfiguration;
 import org.opendaylight.jsonrpc.bus.spi.EventLoopGroupProvider;
+import org.opendaylight.yangtools.binding.Rpc;
 import org.opendaylight.yangtools.concepts.Registration;
-import org.opendaylight.yangtools.yang.binding.Rpc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
