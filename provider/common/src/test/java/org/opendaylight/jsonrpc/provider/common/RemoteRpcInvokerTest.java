@@ -25,7 +25,7 @@ import org.opendaylight.jsonrpc.test.TestRemoveCoffeePot;
 import org.opendaylight.jsonrpc.test.TestSimpleMethod;
 import org.opendaylight.mdsal.binding.dom.adapter.BindingDOMRpcProviderServiceAdapter;
 import org.opendaylight.mdsal.binding.dom.adapter.ConstantAdapterContext;
-import org.opendaylight.mdsal.binding.dom.codec.impl.di.DefaultBindingDOMCodecFactory;
+import org.opendaylight.yangtools.binding.data.codec.impl.di.DefaultBindingDOMCodecFactory;
 import org.opendaylight.yangtools.concepts.Registration;
 
 /**

@@ -9,8 +9,8 @@ package org.opendaylight.jsonrpc.binding;
 
 import java.util.function.Consumer;
 import org.opendaylight.jsonrpc.bus.messagelib.RequesterSession;
+import org.opendaylight.yangtools.binding.Rpc;
 import org.opendaylight.yangtools.concepts.Registration;
-import org.opendaylight.yangtools.yang.binding.Rpc;
 
 /**
  * Context of proxy. Allows proper cleanup of created instance.

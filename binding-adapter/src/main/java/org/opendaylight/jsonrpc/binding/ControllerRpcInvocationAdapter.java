@@ -8,11 +8,11 @@
 package org.opendaylight.jsonrpc.binding;
 
 import java.util.Objects;
-import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer;
-import org.opendaylight.mdsal.binding.runtime.api.BindingRuntimeContext;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
+import org.opendaylight.yangtools.binding.Rpc;
+import org.opendaylight.yangtools.binding.data.codec.api.BindingNormalizedNodeSerializer;
+import org.opendaylight.yangtools.binding.runtime.api.BindingRuntimeContext;
 import org.opendaylight.yangtools.concepts.Registration;
-import org.opendaylight.yangtools.yang.binding.Rpc;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 
 /**
