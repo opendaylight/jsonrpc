@@ -66,13 +66,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.opendaylight.mdsal</groupId>
-            <artifactId>mdsal-binding-dom-codec</artifactId>
+            <groupId>org.opendaylight.yangtools</groupId>
+            <artifactId>binding-data-codec-dynamic</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.opendaylight.mdsal</groupId>
-            <artifactId>mdsal-binding-runtime-spi</artifactId>
+            <groupId>org.opendaylight.yangtools</groupId>
+            <artifactId>binding-runtime-spi</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -86,8 +86,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.opendaylight.mdsal</groupId>
-            <artifactId>mdsal-binding-generator</artifactId>
+            <groupId>org.opendaylight.yangtools</groupId>
+            <artifactId>binding-generator</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

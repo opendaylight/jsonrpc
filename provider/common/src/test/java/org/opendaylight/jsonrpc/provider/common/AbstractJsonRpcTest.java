@@ -21,10 +21,6 @@ import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.mdsal.binding.api.DataBroker;
 import org.opendaylight.mdsal.binding.dom.adapter.test.AbstractDataBrokerTest;
 import org.opendaylight.mdsal.binding.dom.adapter.test.ConcurrentDataBrokerTestCustomizer;
-import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer;
-import org.opendaylight.mdsal.binding.dom.codec.impl.di.DefaultBindingDOMCodecFactory;
-import org.opendaylight.mdsal.binding.runtime.api.BindingRuntimeContext;
-import org.opendaylight.mdsal.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMMountPointService;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
@@ -36,7 +32,11 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.data.rev201014
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.notif.rev201014.Notification1;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.FactorialInput;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
-import org.opendaylight.yangtools.yang.binding.YangModuleInfo;
+import org.opendaylight.yangtools.binding.data.codec.api.BindingNormalizedNodeSerializer;
+import org.opendaylight.yangtools.binding.data.codec.impl.di.DefaultBindingDOMCodecFactory;
+import org.opendaylight.yangtools.binding.meta.YangModuleInfo;
+import org.opendaylight.yangtools.binding.runtime.api.BindingRuntimeContext;
+import org.opendaylight.yangtools.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 import org.slf4j.Logger;
@@ -76,7 +76,7 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
     }
 
     @Override
-    protected Set<YangModuleInfo> getModuleInfos() throws Exception {
+    protected Set<YangModuleInfo> getModuleInfos() {
         return Set.of(
             BindingRuntimeHelpers.getYangModuleInfo(Config.class),
             BindingRuntimeHelpers.getYangModuleInfo(NetworkTopology.class),

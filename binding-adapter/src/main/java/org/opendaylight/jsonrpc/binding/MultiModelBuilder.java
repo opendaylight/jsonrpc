@@ -11,7 +11,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ClassToInstanceMap;
 import com.google.common.collect.ImmutableClassToInstanceMap;
 import com.google.common.collect.MutableClassToInstanceMap;
-import org.opendaylight.yangtools.yang.binding.Rpc;
+import org.opendaylight.yangtools.binding.Rpc;
 
 /**
  * Builder for convenient way to define multiple RpcService implementations.

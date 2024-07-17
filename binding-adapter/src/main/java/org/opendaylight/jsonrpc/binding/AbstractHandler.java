@@ -11,7 +11,7 @@ import com.google.common.reflect.AbstractInvocationHandler;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Objects;
-import org.opendaylight.yangtools.yang.binding.Rpc;
+import org.opendaylight.yangtools.binding.Rpc;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
 
 /**
