@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.ServiceLoader;
 import org.opendaylight.jsonrpc.model.InbandModelsService;
 import org.opendaylight.jsonrpc.model.Module;
-import org.opendaylight.yangtools.yang.binding.YangModelBindingProvider;
+import org.opendaylight.yangtools.binding.meta.YangModelBindingProvider;
 
 /**
  * Convenient class meant to be extended by standalone applications running outside of controller.

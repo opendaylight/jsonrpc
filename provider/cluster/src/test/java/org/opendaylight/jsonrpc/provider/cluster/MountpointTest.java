@@ -57,7 +57,6 @@ import org.opendaylight.mdsal.binding.api.DataTreeModification;
 import org.opendaylight.mdsal.binding.api.ReadTransaction;
 import org.opendaylight.mdsal.binding.api.RpcProviderService;
 import org.opendaylight.mdsal.binding.api.WriteTransaction;
-import org.opendaylight.mdsal.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
@@ -86,10 +85,11 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.data.rev201014
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.FactorialInput;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
+import org.opendaylight.yangtools.binding.Rpc;
+import org.opendaylight.yangtools.binding.meta.YangModuleInfo;
+import org.opendaylight.yangtools.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-import org.opendaylight.yangtools.yang.binding.Rpc;
-import org.opendaylight.yangtools.yang.binding.YangModuleInfo;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.model.api.Module;
@@ -195,7 +195,7 @@ public class MountpointTest {
     private static TestCustomizer newDataBrokerTest() throws Exception {
         final TestCustomizer dataBrokerTest = new TestCustomizer() {
             @Override
-            protected Set<YangModuleInfo> getModuleInfos() throws Exception {
+            protected Set<YangModuleInfo> getModuleInfos() {
                 return ImmutableSet.of(
                     BindingRuntimeHelpers.getYangModuleInfo(NetworkTopology.class),
                     BindingRuntimeHelpers.getYangModuleInfo(Topology.class),
