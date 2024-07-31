@@ -9,7 +9,7 @@
 <features name="odl-jsonrpc-cluster-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0">
     <feature name="odl-jsonrpc-cluster" version="${project.version}">
         <feature version="[14,15)">odl-mdsal-binding-dom-adapter</feature>
-        <feature version="[8,9)">odl-restconf-openapi</feature>
+        <feature version="[9,10)">odl-restconf-openapi</feature>
     </feature>
 </features>
 

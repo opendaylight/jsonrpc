@@ -23,9 +23,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <dependencies>
             <dependency>
                 <groupId>org.opendaylight.controller</groupId>
-                <!-- Unusual import to get the akka-testkit declaration -->
+                <!-- Unusual import to get the pekko-testkit declaration -->
                 <artifactId>bundle-parent</artifactId>
-                <version>10.0.2</version>
+                <version>11.0.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -40,6 +40,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-transport</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.checkerframework</groupId>
+            <artifactId>checker-qual</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -213,13 +218,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.awaitility</groupId>
-            <artifactId>awaitility</artifactId>
+            <groupId>org.apache.pekko</groupId>
+            <artifactId>pekko-testkit_2.13</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-testkit_2.13</artifactId>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

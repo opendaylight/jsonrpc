@@ -27,6 +27,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.checkerframework</groupId>
+            <artifactId>checker-qual</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.opendaylight.yangtools</groupId>
             <artifactId>yang-parser-api</artifactId>
         </dependency>
@@ -187,6 +192,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <dependency>
             <groupId>org.opendaylight.jsonrpc</groupId>
             <artifactId>jsonrpc-provider-common</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.jsonrpc</groupId>
