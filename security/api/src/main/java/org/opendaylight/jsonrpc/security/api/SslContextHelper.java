@@ -112,6 +112,8 @@ public final class SslContextHelper {
             final KeyStoreFactory ksf = keyStoreFactoryFromOpts(options);
             final TrustManagerFactory trustManagerFactory = tmfFromOpts(ksf, options);
             final SslContextBuilder builder = SslContextBuilder.forClient()
+                    // FIXME: do not disable validation
+                    .endpointIdentificationAlgorithm(null)
                     .ciphers(ciphers)
                     .protocols(protocols)
                     .trustManager(trustManagerFactory);
@@ -143,6 +145,8 @@ public final class SslContextHelper {
             final PrivateKey serverPrivateKey = (PrivateKey) serverCerts[0];
             final X509Certificate[] serverCertChain = (X509Certificate[]) serverCerts[1];
             return SslContextBuilder.forServer(serverPrivateKey, serverCertChain)
+                    // FIXME: do not disable validation
+                    .endpointIdentificationAlgorithm(null)
                     .clientAuth(clientAuth)
                     .protocols(protocols)
                     .ciphers(ciphers)
