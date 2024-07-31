@@ -7,13 +7,12 @@
  */
 package org.opendaylight.jsonrpc.binding;
 
+import java.util.ServiceLoader;
 import org.opendaylight.mdsal.binding.dom.adapter.BindingDOMRpcProviderServiceAdapter;
 import org.opendaylight.mdsal.binding.dom.adapter.ConstantAdapterContext;
 import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer;
-import org.opendaylight.mdsal.binding.dom.codec.impl.di.DefaultBindingDOMCodecFactory;
 import org.opendaylight.mdsal.binding.dom.codec.spi.BindingDOMCodecServices;
 import org.opendaylight.mdsal.binding.runtime.api.BindingRuntimeContext;
-import org.opendaylight.mdsal.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.mdsal.dom.broker.DOMRpcRouter;
 import org.opendaylight.mdsal.dom.spi.FixedDOMSchemaService;
 import org.opendaylight.yangtools.concepts.Registration;
@@ -35,8 +34,8 @@ public final class EmbeddedRpcInvocationAdapter implements RpcInvocationAdapter 
     private final BindingDOMRpcProviderServiceAdapter rpcAdapter;
 
     private EmbeddedRpcInvocationAdapter() {
-        final var runtimeContext = BindingRuntimeHelpers.createRuntimeContext();
-        codec = new DefaultBindingDOMCodecFactory().createBindingDOMCodec(runtimeContext);
+        codec = ServiceLoader.load(BindingDOMCodecServices.class).findFirst().orElseThrow();
+        final var runtimeContext = codec.getRuntimeContext();
         final var schemaService = new FixedDOMSchemaService(runtimeContext.modelContext());
         converter = new SchemaChangeAwareConverter(schemaService);
         rpcService = new DOMRpcRouter(schemaService);
