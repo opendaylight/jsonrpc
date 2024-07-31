@@ -9,7 +9,8 @@ package org.opendaylight.jsonrpc.bus.spi;
 
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.MultiThreadIoEventLoopGroup;
+import io.netty.channel.nio.NioIoHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.internal.SystemPropertyUtil;
@@ -27,7 +28,7 @@ public final class EventLoopGroupProvider {
     private static final EventLoopConfiguration CONFIG;
 
     static {
-        SHARED_GROUP = new NioEventLoopGroup(SystemPropertyUtil.getInt("jsonrpc.eventloop.size", 12));
+        SHARED_GROUP = new MultiThreadIoEventLoopGroup(12, NioIoHandler.newFactory());
         HANDLER_GROUP = new DefaultEventExecutorGroup(SystemPropertyUtil.getInt("jsonrpc.eventloop.size", 12));
         CONFIG = new DefaultEventLoopConfiguration(SHARED_GROUP, SHARED_GROUP, HANDLER_GROUP);
     }
