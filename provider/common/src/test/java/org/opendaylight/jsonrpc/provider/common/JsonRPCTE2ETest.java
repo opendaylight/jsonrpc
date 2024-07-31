@@ -72,7 +72,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
     @Before
     public void setUp() throws URISyntaxException {
         transportFactory = mock(AbstractTransportFactory.class);
-        shard = new RemoteControl(getDomBroker(), schemaContext, transportFactory,
+        shard = new RemoteControl(getDomBroker(), modelContext, transportFactory,
                 mock(DOMNotificationPublishService.class), mock(DOMRpcService.class), codecFactory);
         peer = new MutablePeer();
         peer.name("test");
@@ -84,7 +84,7 @@ public class JsonRPCTE2ETest extends AbstractJsonRpcTest {
         pathMap.put(JsonParser.parseString("{\"network-topology:network-topology\":{}}"), DataType.OPERATIONAL_DATA,
                 "zmq://localhost");
 
-        jrbroker = new JsonRPCDataBroker(peer, schemaContext, pathMap, new MockTransportFactory(transportFactory),
+        jrbroker = new JsonRPCDataBroker(peer, modelContext, pathMap, new MockTransportFactory(transportFactory),
                 governance, codecFactory);
         logTestName("START");
     }

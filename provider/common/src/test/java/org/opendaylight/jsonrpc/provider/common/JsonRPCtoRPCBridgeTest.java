@@ -91,9 +91,9 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
         startTransport();
         final Peer peer = getPeer();
         Util.populateFromEndpointList(pathMap, peer.getRpcEndpoints().values(), DataType.RPC);
-        bridge = new JsonRPCtoRPCBridge(peer, schemaContext, pathMap, mock(RemoteGovernance.class), transportFactory,
-                new JsonRpcCodecFactory(schemaContext));
-        mod = schemaContext.findModule("test-model-rpc", Revision.of("2020-10-14")).orElseThrow();
+        bridge = new JsonRPCtoRPCBridge(peer, modelContext, pathMap, mock(RemoteGovernance.class), transportFactory,
+                new JsonRpcCodecFactory(modelContext));
+        mod = modelContext.findModule("test-model-rpc", Revision.of("2020-10-14")).orElseThrow();
         logTestName("START");
         TimeUnit.MILLISECONDS.sleep(250);
     }
@@ -214,8 +214,8 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
                 .findFirst()
                 .orElseThrow();
         try (JsonParserStream parser = JsonParserStream.create(writer,
-                JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(schemaContext),
-                SchemaInferenceStack.of(schemaContext, Absolute.of(rpcDef.getQName())).toInference())) {
+                JSONCodecFactorySupplier.DRAFT_LHOTKA_NETMOD_YANG_JSON_02.getShared(modelContext),
+                SchemaInferenceStack.of(modelContext, Absolute.of(rpcDef.getQName())).toInference())) {
             parser.parse(JsonReaderAdapter.from(
                 JsonParser.parseString("{\"input\" : { \"some-number\":5, \"some-data\": { \"data\" : 123}}}")));
         }

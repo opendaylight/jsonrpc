@@ -51,10 +51,9 @@ public class RemoteRpcInvokerTest extends AbstractJsonRpcTest {
             new TestMultiplyList(),
             new TestRemoveCoffeePot(),
             new TestSimpleMethod());
-        testCustomizer.updateSchema(runtimeContext);
-        codecFactory = new JsonRpcCodecFactory(schemaContext);
+        codecFactory = new JsonRpcCodecFactory(modelContext);
         transportFactory = new DefaultTransportFactory();
-        ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory,
+        ctrl = new RemoteControl(getDomBroker(), modelContext, transportFactory,
             getDOMNotificationRouter().notificationPublishService(), getDOMRpcRouter().rpcService(), codecFactory);
 
         logTestName("START");
