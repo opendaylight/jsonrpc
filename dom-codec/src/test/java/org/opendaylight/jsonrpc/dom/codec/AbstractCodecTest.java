@@ -19,8 +19,6 @@ import java.util.Collection;
 import org.junit.Rule;
 import org.junit.rules.TestName;
 import org.opendaylight.mdsal.binding.dom.adapter.test.AbstractDataBrokerTest;
-import org.opendaylight.mdsal.binding.dom.codec.impl.BindingCodecContext;
-import org.opendaylight.mdsal.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.NodeIdentifierWithPredicates;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.PathArgument;
@@ -39,8 +37,6 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractCodecTest extends AbstractDataBrokerTest {
     protected static final Logger LOG = LoggerFactory.getLogger(AbstractCodecTest.class);
     protected JsonRpcCodecFactory factory;
-    protected static final BindingCodecContext BCC = new BindingCodecContext(
-            BindingRuntimeHelpers.createRuntimeContext());
 
     @Rule
     public TestName nameRule = new TestName();
