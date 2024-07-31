@@ -10,7 +10,8 @@ package org.opendaylight.jsonrpc.binding;
 import org.opendaylight.mdsal.binding.dom.adapter.BindingDOMRpcProviderServiceAdapter;
 import org.opendaylight.mdsal.binding.dom.adapter.ConstantAdapterContext;
 import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer;
-import org.opendaylight.mdsal.binding.dom.codec.impl.BindingCodecContext;
+import org.opendaylight.mdsal.binding.dom.codec.impl.di.DefaultBindingDOMCodecFactory;
+import org.opendaylight.mdsal.binding.dom.codec.spi.BindingDOMCodecServices;
 import org.opendaylight.mdsal.binding.runtime.api.BindingRuntimeContext;
 import org.opendaylight.mdsal.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.mdsal.dom.broker.DOMRpcRouter;
@@ -28,14 +29,14 @@ import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 public final class EmbeddedRpcInvocationAdapter implements RpcInvocationAdapter {
     public static final EmbeddedRpcInvocationAdapter INSTANCE = new EmbeddedRpcInvocationAdapter();
 
-    private final BindingCodecContext codec;
+    private final BindingDOMCodecServices codec;
     private final SchemaChangeAwareConverter converter;
     private final DOMRpcRouter rpcService;
     private final BindingDOMRpcProviderServiceAdapter rpcAdapter;
 
     private EmbeddedRpcInvocationAdapter() {
         final var runtimeContext = BindingRuntimeHelpers.createRuntimeContext();
-        codec = new BindingCodecContext(runtimeContext);
+        codec = new DefaultBindingDOMCodecFactory().createBindingDOMCodec(runtimeContext);
         final var schemaService = new FixedDOMSchemaService(runtimeContext.modelContext());
         converter = new SchemaChangeAwareConverter(schemaService);
         rpcService = new DOMRpcRouter(schemaService);
