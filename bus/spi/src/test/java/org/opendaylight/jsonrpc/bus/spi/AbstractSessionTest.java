@@ -9,7 +9,8 @@ package org.opendaylight.jsonrpc.bus.spi;
 
 import com.google.common.io.Resources;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.MultiThreadIoEventLoopGroup;
+import io.netty.channel.nio.NioIoHandler;
 import java.io.IOException;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -35,7 +36,7 @@ public abstract class AbstractSessionTest {
 
     @Before
     public void setUp() {
-        group = new NioEventLoopGroup(10);
+        group = new MultiThreadIoEventLoopGroup(10, NioIoHandler.newFactory());
         config = new DefaultEventLoopConfiguration(group, group, group);
         factory = createFactory();
     }

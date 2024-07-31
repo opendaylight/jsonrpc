@@ -7,7 +7,7 @@
  */
 package org.opendaylight.jsonrpc.provider.cluster.tx;
 
-import akka.util.Timeout;
+import org.apache.pekko.util.Timeout;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import scala.concurrent.ExecutionContext;
