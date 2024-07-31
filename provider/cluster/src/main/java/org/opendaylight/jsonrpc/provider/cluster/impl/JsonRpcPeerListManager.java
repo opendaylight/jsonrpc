@@ -9,7 +9,6 @@ package org.opendaylight.jsonrpc.provider.cluster.impl;
 
 import static org.opendaylight.jsonrpc.provider.common.Util.removeFromMapAndClose;
 
-import akka.util.Timeout;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.HashMap;
@@ -18,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import org.apache.pekko.util.Timeout;
 import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.checkerframework.checker.lock.qual.Holding;
 import org.eclipse.jdt.annotation.NonNull;
