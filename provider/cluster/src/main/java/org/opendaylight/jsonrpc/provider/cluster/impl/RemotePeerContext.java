@@ -7,13 +7,9 @@
  */
 package org.opendaylight.jsonrpc.provider.cluster.impl;
 
-import static akka.pattern.Patterns.ask;
+import static org.apache.pekko.pattern.Patterns.ask;
 import static org.opendaylight.jsonrpc.provider.cluster.impl.ClusterUtil.createMasterActorName;
 
-import akka.actor.ActorRef;
-import akka.cluster.Cluster;
-import akka.dispatch.OnComplete;
-import akka.util.Timeout;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.gson.JsonElement;
@@ -21,6 +17,10 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.cluster.Cluster;
+import org.apache.pekko.dispatch.OnComplete;
+import org.apache.pekko.util.Timeout;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.jsonrpc.hmap.DataType;
