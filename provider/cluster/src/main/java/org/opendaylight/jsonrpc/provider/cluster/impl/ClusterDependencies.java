@@ -7,8 +7,8 @@
  */
 package org.opendaylight.jsonrpc.provider.cluster.impl;
 
-import akka.actor.ActorSystem;
 import java.util.Objects;
+import org.apache.pekko.actor.ActorSystem;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;

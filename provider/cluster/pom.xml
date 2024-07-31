@@ -23,7 +23,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <dependencies>
             <dependency>
                 <groupId>org.opendaylight.controller</groupId>
-                <!-- Unusual import to get the akka-testkit declaration -->
+                <!-- Unusual import to get the pekko-testkit declaration -->
                 <artifactId>bundle-parent</artifactId>
                 <version>10.0.2</version>
                 <type>pom</type>
@@ -218,8 +218,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-testkit_2.13</artifactId>
+            <groupId>org.apache.pekko</groupId>
+            <artifactId>pekko-testkit_2.13</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
