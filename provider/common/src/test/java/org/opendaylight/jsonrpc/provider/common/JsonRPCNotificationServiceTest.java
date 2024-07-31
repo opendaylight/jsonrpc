@@ -73,12 +73,12 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
         port = getFreeTcpPort();
         governance = mock(RemoteGovernance.class);
         when(governance.governance(anyInt(), anyString(), any())).thenReturn(getPath());
-        mod = schemaContext.findModule("test-model-notification", Revision.of("2020-10-14")).orElseThrow();
+        mod = modelContext.findModule("test-model-notification", Revision.of("2020-10-14")).orElseThrow();
 
         transportFactory = new DefaultTransportFactory();
         svc = new JsonRPCNotificationService(getPeer(),
-                new BuiltinSchemaContextProvider(schemaContext).createSchemaContext(getPeer()), pathMap,
-                new JsonRpcCodecFactory(schemaContext), transportFactory, governance);
+                new BuiltinSchemaContextProvider(modelContext).createSchemaContext(getPeer()), pathMap,
+                new JsonRpcCodecFactory(modelContext), transportFactory, governance);
         ml = new MessageLibrary("ws");
         pubSession = ml.publisher(getPath(), true);
         TimeUnit.MILLISECONDS.sleep(150);

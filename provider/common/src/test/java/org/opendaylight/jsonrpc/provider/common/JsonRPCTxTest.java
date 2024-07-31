@@ -96,8 +96,8 @@ public class JsonRPCTxTest extends AbstractJsonRpcTest {
         transportFactory = mock(AbstractTransportFactory.class);
         om = mock(RemoteOmShard.class);
         doReturn(om).when(transportFactory).createRequesterProxy(any(), anyString(), anyBoolean());
-        codec = new JsonRpcCodecFactory(schemaContext);
-        trx = new JsonRPCTx(new MockTransportFactory(transportFactory), DEVICE, pathMap, codec, schemaContext);
+        codec = new JsonRpcCodecFactory(modelContext);
+        trx = new JsonRPCTx(new MockTransportFactory(transportFactory), DEVICE, pathMap, codec, modelContext);
     }
 
     @After

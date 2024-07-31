@@ -45,9 +45,9 @@ public class RemoteNotificationPublisherTest extends AbstractJsonRpcTest {
     @Before
     public void setUp() {
         transportFactory = new DefaultTransportFactory();
-        ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory,
+        ctrl = new RemoteControl(getDomBroker(), modelContext, transportFactory,
             getDOMNotificationRouter().notificationPublishService(), getDOMRpcRouter().rpcService(), codecFactory);
-        NotificationDefinition path = findNode(schemaContext, "test-model-notification:notification1",
+        NotificationDefinition path = findNode(modelContext, "test-model-notification:notification1",
                 Module::getNotifications).orElseThrow();
         latch = new CountDownLatch(1);
         reg = getDOMNotificationRouter().notificationService()
