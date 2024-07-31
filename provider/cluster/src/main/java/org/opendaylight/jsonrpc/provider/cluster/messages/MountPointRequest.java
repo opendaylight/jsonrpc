@@ -7,8 +7,8 @@
  */
 package org.opendaylight.jsonrpc.provider.cluster.messages;
 
-import akka.actor.ActorRef;
 import java.io.Serializable;
+import org.apache.pekko.actor.ActorRef;
 
 /**
  * Sent by slave to initiate slave mountpoint creation.

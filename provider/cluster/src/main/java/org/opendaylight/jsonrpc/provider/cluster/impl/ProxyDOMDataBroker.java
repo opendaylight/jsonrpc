@@ -10,10 +10,10 @@ package org.opendaylight.jsonrpc.provider.cluster.impl;
 import static org.opendaylight.jsonrpc.provider.cluster.impl.ClusterUtil.DEFAULT_ASK_TIMEOUT;
 import static org.opendaylight.jsonrpc.provider.cluster.impl.ClusterUtil.durationFromUint16seconds;
 
-import akka.actor.ActorRef;
-import akka.pattern.Patterns;
-import akka.util.Timeout;
 import java.util.concurrent.TimeUnit;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.pattern.Patterns;
+import org.apache.pekko.util.Timeout;
 import org.opendaylight.jsonrpc.provider.cluster.tx.ProxyReadTransaction;
 import org.opendaylight.jsonrpc.provider.cluster.tx.ProxyReadWriteTransaction;
 import org.opendaylight.jsonrpc.provider.cluster.tx.TxRequest;
