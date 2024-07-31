@@ -7,15 +7,15 @@
  */
 package org.opendaylight.jsonrpc.provider.cluster.tx;
 
-import akka.actor.Props;
-import akka.actor.ReceiveTimeout;
-import akka.actor.Status.Failure;
-import akka.actor.Status.Success;
-import akka.actor.UntypedAbstractActor;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.Optional;
+import org.apache.pekko.actor.Props;
+import org.apache.pekko.actor.ReceiveTimeout;
+import org.apache.pekko.actor.Status.Failure;
+import org.apache.pekko.actor.Status.Success;
+import org.apache.pekko.actor.UntypedAbstractActor;
 import org.opendaylight.jsonrpc.provider.cluster.messages.PathAndDataMsg;
 import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
