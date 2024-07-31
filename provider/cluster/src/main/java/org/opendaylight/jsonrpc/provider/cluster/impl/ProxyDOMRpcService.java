@@ -7,20 +7,20 @@
  */
 package org.opendaylight.jsonrpc.provider.cluster.impl;
 
-import static akka.pattern.Patterns.ask;
+import static org.apache.pekko.pattern.Patterns.ask;
 import static org.opendaylight.jsonrpc.provider.cluster.impl.ClusterUtil.DEFAULT_RPC_TIMEOUT;
 import static org.opendaylight.jsonrpc.provider.cluster.impl.ClusterUtil.durationFromUint16seconds;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSystem;
-import akka.dispatch.OnComplete;
-import akka.util.Timeout;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.ActorSystem;
+import org.apache.pekko.dispatch.OnComplete;
+import org.apache.pekko.util.Timeout;
 import org.opendaylight.jsonrpc.provider.cluster.messages.PathAndDataMsg;
 import org.opendaylight.jsonrpc.provider.cluster.rpc.EmptyRpcResponse;
 import org.opendaylight.jsonrpc.provider.cluster.rpc.InvokeRpcRequest;
