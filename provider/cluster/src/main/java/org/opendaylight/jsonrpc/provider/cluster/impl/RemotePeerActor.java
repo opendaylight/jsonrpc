@@ -10,14 +10,14 @@ package org.opendaylight.jsonrpc.provider.cluster.impl;
 import static org.opendaylight.jsonrpc.provider.cluster.impl.ClusterUtil.DEFAULT_WRITE_TX_TIMEOUT;
 import static org.opendaylight.jsonrpc.provider.cluster.impl.ClusterUtil.durationFromUint16seconds;
 
-import akka.actor.ActorRef;
-import akka.actor.Props;
-import akka.actor.Status.Failure;
-import akka.actor.Status.Success;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.Props;
+import org.apache.pekko.actor.Status.Failure;
+import org.apache.pekko.actor.Status.Success;
 import org.opendaylight.controller.cluster.common.actor.AbstractUntypedActor;
 import org.opendaylight.jsonrpc.provider.cluster.messages.InitCompleted;
 import org.opendaylight.jsonrpc.provider.cluster.messages.InitMasterMountPoint;
