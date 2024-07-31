@@ -7,21 +7,21 @@
  */
 package org.opendaylight.jsonrpc.provider.cluster.impl;
 
-import static akka.pattern.Patterns.ask;
+import static org.apache.pekko.pattern.Patterns.ask;
 import static org.opendaylight.jsonrpc.provider.cluster.impl.ClusterUtil.DEFAULT_ASK_TIMEOUT;
 import static org.opendaylight.jsonrpc.provider.cluster.impl.ClusterUtil.createActorPath;
 import static org.opendaylight.jsonrpc.provider.cluster.impl.ClusterUtil.createMasterActorName;
 import static org.opendaylight.jsonrpc.provider.cluster.impl.ClusterUtil.durationFromUint16seconds;
 import static org.opendaylight.jsonrpc.provider.cluster.impl.ClusterUtil.getPeerOpstateIdentifier;
 
-import akka.actor.ActorRef;
-import akka.actor.ActorSelection;
-import akka.actor.PoisonPill;
-import akka.dispatch.OnComplete;
-import akka.util.Timeout;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.apache.pekko.actor.ActorRef;
+import org.apache.pekko.actor.ActorSelection;
+import org.apache.pekko.actor.PoisonPill;
+import org.apache.pekko.dispatch.OnComplete;
+import org.apache.pekko.util.Timeout;
 import org.opendaylight.jsonrpc.provider.cluster.api.JsonRpcPeerSingletonService;
 import org.opendaylight.jsonrpc.provider.cluster.messages.MountPointRequest;
 import org.opendaylight.jsonrpc.provider.cluster.messages.UnregisterMountPoint;
