@@ -25,7 +25,7 @@ import org.opendaylight.jsonrpc.test.TestRemoveCoffeePot;
 import org.opendaylight.jsonrpc.test.TestSimpleMethod;
 import org.opendaylight.mdsal.binding.dom.adapter.BindingDOMRpcProviderServiceAdapter;
 import org.opendaylight.mdsal.binding.dom.adapter.ConstantAdapterContext;
-import org.opendaylight.mdsal.binding.dom.codec.impl.BindingCodecContext;
+import org.opendaylight.mdsal.binding.dom.codec.impl.di.DefaultBindingDOMCodecFactory;
 import org.opendaylight.yangtools.concepts.Registration;
 
 /**
@@ -43,8 +43,9 @@ public class RemoteRpcInvokerTest extends AbstractJsonRpcTest {
     @Before
     public void setUp() throws Exception {
         final BindingDOMRpcProviderServiceAdapter rpcAdapter = new BindingDOMRpcProviderServiceAdapter(
-                new ConstantAdapterContext(new BindingCodecContext(getBindingRuntimeContext())),
-                getDOMRpcRouter().rpcProviderService());
+            new ConstantAdapterContext(new DefaultBindingDOMCodecFactory().createBindingDOMCodec(
+                getBindingRuntimeContext())),
+            getDOMRpcRouter().rpcProviderService());
         rpcReg = rpcAdapter.registerRpcImplementations(
             new TestErrorMethod(),
             new TestFactorial(),

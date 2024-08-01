@@ -22,7 +22,7 @@ import org.opendaylight.mdsal.binding.api.DataBroker;
 import org.opendaylight.mdsal.binding.dom.adapter.test.AbstractDataBrokerTest;
 import org.opendaylight.mdsal.binding.dom.adapter.test.ConcurrentDataBrokerTestCustomizer;
 import org.opendaylight.mdsal.binding.dom.codec.api.BindingNormalizedNodeSerializer;
-import org.opendaylight.mdsal.binding.dom.codec.impl.BindingCodecContext;
+import org.opendaylight.mdsal.binding.dom.codec.impl.di.DefaultBindingDOMCodecFactory;
 import org.opendaylight.mdsal.binding.runtime.api.BindingRuntimeContext;
 import org.opendaylight.mdsal.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.mdsal.dom.api.DOMDataBroker;
@@ -59,7 +59,7 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
     protected JsonRpcCodecFactory codecFactory;
     @Rule
     public TestName nameRule = new TestName();
-    private BindingCodecContext bnnc;
+    private BindingNormalizedNodeSerializer bnnc;
     protected @NonNull BindingRuntimeContext runtimeContext = BindingRuntimeHelpers.createRuntimeContext();
 
     @Override
@@ -71,7 +71,7 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
         this.schemaContext = context;
         setupWithDataBroker(this.dataBroker);
         rpcRouter = new DOMRpcRouter(getSchemaService());
-        bnnc = new BindingCodecContext(runtimeContext);
+        bnnc = new DefaultBindingDOMCodecFactory().createBindingDOMCodec(runtimeContext);
         codecFactory = new JsonRpcCodecFactory(context);
     }
 
