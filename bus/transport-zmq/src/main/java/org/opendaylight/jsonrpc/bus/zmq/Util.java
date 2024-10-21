@@ -24,8 +24,7 @@ final class Util {
     /**
      * Mapping for allowed socket types.
      *
-     * <p>
-     * See "The Socket-Type Property" in
+     * <p>See "The Socket-Type Property" in
      * <a href="https://rfc.zeromq.org/spec:23/ZMTP/">specification</a> for
      * details.
      */

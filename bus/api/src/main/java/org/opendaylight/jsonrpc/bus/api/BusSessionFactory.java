@@ -12,8 +12,7 @@ package org.opendaylight.jsonrpc.bus.api;
  * This factory is used to create different kinds of sessions for a given bus.
  * This interface needs to be implemented by various bus implementations.
  *
- * <p>
- * Use {@link #close()} to close the underlying bus.
+ * <p>Use {@link #close()} to close the underlying bus.
  * <dl>
  * <dt>publisher</dt>
  * <dd>To send/publish messages only</dd>

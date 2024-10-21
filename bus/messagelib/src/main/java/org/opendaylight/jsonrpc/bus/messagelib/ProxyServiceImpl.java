@@ -100,7 +100,7 @@ public class ProxyServiceImpl implements ProxyService {
      *    {"jsonrpc":"2.0","id":1,"method":"methodX","params":[{"property":"value"}]}
      * </code>
      *
-     * <p> this should be
+     * <p>this should be
      * <code>
      *    {"jsonrpc":"2.0","id":1,"method":"methodX","params":{"property":"value"}}
      * </code>

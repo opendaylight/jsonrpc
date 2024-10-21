@@ -30,8 +30,7 @@ import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
  * <li>Expose self to jsonrpc bus</li>
  * </ol>
  *
- * <p>
- * This provider is meant to be running outside of ODL controller, like microservice.
+ * <p>This provider is meant to be running outside of ODL controller, like microservice.
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Sep 24, 2018

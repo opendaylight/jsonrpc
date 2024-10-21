@@ -44,8 +44,7 @@ import scala.concurrent.duration.Duration;
 /**
  * {@link DOMRpcService} implementation that forwards RPC invocation requests to master actor in cluster.
  *
- * <p>
- * Acknowledgement : this code is inspired by implementation of netconf-topology-singleton.
+ * <p>Acknowledgement : this code is inspired by implementation of netconf-topology-singleton.
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jul 7, 2020

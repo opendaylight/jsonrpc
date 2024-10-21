@@ -33,8 +33,7 @@ import scala.concurrent.duration.Duration;
 /**
  * Implementation of {@link DOMDataBroker} that forward all requests to actor on master node.
  *
- * <p>
- * Acknowledgement : this code is inspired by implementation of netconf-topology-singleton.
+ * <p>Acknowledgement : this code is inspired by implementation of netconf-topology-singleton.
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jul 11, 2020

@@ -31,8 +31,7 @@ import scala.concurrent.ExecutionContext;
 /**
  * Implementation of {@link DOMDataTreeReadWriteTransaction} that interacts with an actor.
  *
- * <p>
- * Acknowledgement : this code is inspired by implementation of netconf-topology-singleton.
+ * <p>Acknowledgement : this code is inspired by implementation of netconf-topology-singleton.
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jul 11, 2020

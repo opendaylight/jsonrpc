@@ -10,8 +10,7 @@
  * This package contains public API that can be used to create instances of
  * various session types and proxy objects.
  *
- * <p>
- * <strong>Requester proxy</strong> - send request to remote responder instance
+ * <p><strong>Requester proxy</strong> - send request to remote responder instance
  * and read response back. To create requester proxy, follow these steps:
  * <ol>
  * <li>create responder (on remote peer) by providing implementation of known
@@ -35,8 +34,7 @@
  * }
  * </pre>
  *
- * <p>
- * step 1 (remote peer)
+ * <p>step 1 (remote peer)
  *
  * <pre>
  * TransportFactory tf = ...
@@ -45,8 +43,7 @@
  *
  * </pre>
  *
- * <p>
- * step 2 (local peer)
+ * <p>step 2 (local peer)
  *
  * <pre>
  *
@@ -55,24 +52,21 @@
  *
  * </pre>
  *
- * <p>
- * step 3 (local peer)
+ * <p>step 3 (local peer)
  *
  * <pre>
  * int x = svc.method1(1, "ABC"); // return value assigned to x is 10 (see
  *                                // implementation above)
  * </pre>
  *
- * <p>
- * This will result in following communication on bus:
+ * <p>This will result in following communication on bus:
  *
  * <pre>
  * &gt; { "id" : 1, "jsonrpc" : "2.0", "method" : "method1", params: [1, "ABC"] }
  * &lt; { "id" : 1, "jsonrpc" : "2.0", "result" : 10 }
  * </pre>
  *
- * <p>
- * <strong>Publisher proxy</strong> - send notification to all channels
+ * <p><strong>Publisher proxy</strong> - send notification to all channels
  * subscribed on remote publisher instance. To create publisher proxy instance,
  * follow these steps:
  * <ol>
@@ -81,8 +75,7 @@
  * <li>invoke notification method on publisher proxy (provided interface)</li>
  * </ol>
  *
- * <p>
- * Example of API:
+ * <p>Example of API:
  *
  * <pre>
  * interface SomeAPI {
@@ -97,8 +90,7 @@
  * }
  * </pre>
  *
- * <p>
- * step 1 - local peer
+ * <p>step 1 - local peer
  *
  * <pre>
  * TransportFactory tf = ...
@@ -106,23 +98,20 @@
  * SomeAPI proxy = tf.createPublisherProxy(SomeAPI.class, "ws://192.168.1.12:12345");
  * </pre>
  *
- * <p>
- * step 2 - (multiple) remote peers
+ * <p>step 2 - (multiple) remote peers
  *
  * <pre>
  * TransportFactory tf = ...
  * SomeSubscriber session = tf.createSubscriber("ws://192.168.1.12:12345", new SomeSubscriber());
  * </pre>
  *
- * <p>
- * step 3 - local peer
+ * <p>step 3 - local peer
  *
  * <pre>
  * proxy.notification_method1("ABC")
  * </pre>
  *
- * <p>
- * This will send notification to all connected subscribers:
+ * <p>This will send notification to all connected subscribers:
  * <pre>
  * { "jsonrpc" : "2.0", "method" : "notification_method1", params: ["ABC"] }
  * </pre>

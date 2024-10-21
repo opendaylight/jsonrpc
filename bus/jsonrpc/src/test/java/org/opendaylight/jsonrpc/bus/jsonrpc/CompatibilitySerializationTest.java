@@ -22,8 +22,7 @@ import org.junit.Test;
  * Test some compatibility-related scenarios. There are 2 possible forms of serialization format. Consider following
  * java code:
  *
- * <p>
- * <code>
+ * <p><code>
  * public class ModuleInfo {
  *     String name;
  *     String revision;
@@ -32,24 +31,17 @@ import org.junit.Test;
  * public List&lt;ModuleInfo&gt; getModules() { ... }
  * </code>
  *
- * <p>
- * These JSONRPC responses should be considered same with regards to resulting object:
- *
- * <p>
+ * <p>These JSONRPC responses should be considered same with regards to resulting object:
  * <code>
  * { "jsonrpc" : "2.0", "id" : 1, "result" : [{"name":"abc", "revision":"2020-02-29"}] }
  * </code>
  *
- * <p>
- * and
- *
- * <p>
+ * <p>and
  * <code>
  * { "jsonrpc" : "2.0", "id" : 1, "result" : { "modules" : [{"name":"abc", "revision":"2020-02-29"}] } }
  * </code>
  *
- * <p>
- * Same rules applies for JSONRPC parameters element.
+ * <p>Same rules applies for JSONRPC parameters element.
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Feb 29, 2020

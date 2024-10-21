@@ -14,8 +14,7 @@ import java.util.List;
 /**
  * DOM data broker operations.
  *
- * <p>
- * Documented at <a href= "https://wiki.opendaylight.org/view/JSON-RPC2.0::ExtendingTheDataStore">wiki</a>
+ * <p>Documented at <a href= "https://wiki.opendaylight.org/view/JSON-RPC2.0::ExtendingTheDataStore">wiki</a>
  */
 public interface RemoteOmShard extends AutoCloseable {
     /**

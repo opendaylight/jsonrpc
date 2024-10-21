@@ -11,8 +11,7 @@
  * which can associate vector values to any given data node specified by path
  * within tree.
  *
- * <p>
- * Data are associated into {@link org.opendaylight.jsonrpc.hmap.EnumTreeNode},
+ * <p>Data are associated into {@link org.opendaylight.jsonrpc.hmap.EnumTreeNode},
  * which represents point within data tree.
  *
  * {@link org.opendaylight.jsonrpc.hmap.PathCodec} is bi-directional API to

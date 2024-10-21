@@ -30,8 +30,7 @@ import scala.concurrent.duration.Duration;
 /**
  * Actor to interact with Peer's {@link DOMDataBroker}.
  *
- * <p>
- * Acknowledgement : this code is inspired by netconf-topology-singleton implementation.
+ * <p>Acknowledgement : this code is inspired by netconf-topology-singleton implementation.
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Jul 12, 2020
