@@ -14,16 +14,12 @@ import java.nio.charset.StandardCharsets;
 /**
  * Security mechanism.
  *
- * <p>
- * For details, check
+ * <p>For details, check
  * <a href="https://rfc.zeromq.org/spec:23/ZMTP/">specification</a>.
  *
- * <p>
- * ABNF grammar:
+ * <p>ABNF grammar:
  *
- * <p>
- *
- * <pre>
+ * <p><pre>
  * ;   The mechanism is a null padded string
  * mechanism = 20mechanism-char
  * mechanism-char = "A"-"Z" | DIGIT

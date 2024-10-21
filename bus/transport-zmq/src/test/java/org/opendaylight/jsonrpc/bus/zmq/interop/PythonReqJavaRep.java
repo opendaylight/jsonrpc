@@ -18,9 +18,7 @@ import org.opendaylight.jsonrpc.bus.api.Responder;
  * Requester in Python, responder in Java. Java code just reverse message and
  * send it back.
  *
- * <p>
- * Python code
- *
+ * <p>Python code
  * <pre>
  * import zmq
  * import time

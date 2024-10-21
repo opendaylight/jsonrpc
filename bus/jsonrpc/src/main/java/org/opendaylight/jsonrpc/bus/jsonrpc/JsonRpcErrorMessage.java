@@ -18,8 +18,7 @@ import org.eclipse.jdt.annotation.Nullable;
  * {@link org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage
  * JsonRpcReplyMessage} containing the error details.
  *
- * <p>
- * <a href="https://www.jsonrpc.org/specification#error_object">See message definition</a>
+ * <p><a href="https://www.jsonrpc.org/specification#error_object">See message definition</a>
  *
  * @author Shaleen Saxena
  */

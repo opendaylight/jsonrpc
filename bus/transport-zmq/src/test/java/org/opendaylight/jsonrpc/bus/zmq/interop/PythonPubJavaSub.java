@@ -20,9 +20,7 @@ import org.slf4j.LoggerFactory;
  * Publisher in Python, subscriber in Java. Publisher simply emits "ABCD"
  * message in loop with some delay.
  *
- * <p>
- * Python code
- *
+ * <p>Python code
  * <pre>
  * import zmq
  * import time

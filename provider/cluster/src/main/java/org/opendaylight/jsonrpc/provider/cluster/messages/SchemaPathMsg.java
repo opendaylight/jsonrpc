@@ -21,8 +21,7 @@ import org.opendaylight.yangtools.yang.model.api.stmt.SchemaNodeIdentifier.Absol
 /**
  * Message that conveys {@link Absolute}.
  *
- * <p>
- * Acknowledgement : this code is inspired by implementation of netconf-topology-singleton.
+ * <p>Acknowledgement : this code is inspired by implementation of netconf-topology-singleton.
  *
  * @since Jul 14, 2020
  */

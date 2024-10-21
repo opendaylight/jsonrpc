@@ -17,9 +17,7 @@ import io.netty.buffer.Unpooled;
  * </p>
  * ABNF grammar:
  *
- * <p>
- *
- * <pre>
+ * <p><pre>
  * signature = %xFF padding %x7F
  * padding = 8OCTET        ; Not significant
  * </pre>

@@ -16,9 +16,7 @@ import org.opendaylight.jsonrpc.bus.api.Publisher;
  * Publisher in Java, subscriber in Python. Publisher simply emits "ABCD"
  * message couple of times and then goes down.
  *
- * <p>
- * Python code
- *
+ * <p>Python code
  * <pre>
  * import sys
  * import zmq

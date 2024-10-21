@@ -14,9 +14,7 @@ package org.opendaylight.jsonrpc.bus.zmq;
  * </p>
  * ABNF grammar:
  *
- * <p>
- *
- * <pre>
+ * <p><pre>
  * ;   A message is one or more frames
  * message = *message-more message-last
  * message-more = ( %x01 short-size | %x03 long-size ) message-body

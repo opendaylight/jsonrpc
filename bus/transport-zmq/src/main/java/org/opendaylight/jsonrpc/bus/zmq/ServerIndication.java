@@ -13,16 +13,12 @@ import io.netty.buffer.Unpooled;
 /**
  * Combination of "as-server" and "filler" fields.
  *
- * <p>
- * For details, check
+ * <p>For details, check
  * <a href="https://rfc.zeromq.org/spec:23/ZMTP/">specification</a>.
  *
- * <p>
- * ABNF grammar:
+ * <p>ABNF grammar:
  *
- * <p>
- *
- * <pre>
+ * <p><pre>
  * ;   Is the peer acting as server?
  * as-server = %x00 | %x01
  *

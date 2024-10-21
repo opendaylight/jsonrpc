@@ -17,8 +17,7 @@ import org.opendaylight.jsonrpc.bus.api.BusSessionFactoryProvider;
  * {@link ClassLoader}, used in non-OSGi environments. Proper function of this
  * factory provider requires Java's {@link ServiceLoader} facility.
  *
- * <p>
- * For more info about TCCL, see
+ * <p>For more info about TCCL, see
  * {@link Thread#setContextClassLoader(ClassLoader)}
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>

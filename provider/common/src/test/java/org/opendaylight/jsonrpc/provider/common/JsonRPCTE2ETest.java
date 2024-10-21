@@ -55,8 +55,7 @@ import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 /**
  * End-to-end test connecting {@link JsonRPCDataBroker}, {@link JsonRPCTx} and {@link RemoteOmShard}.
  *
- * <p>
- * Goal is to make sure that behavior of {@link JsonRPCDataBroker} is consistent with {@link DOMDataBroker}
+ * <p>Goal is to make sure that behavior of {@link JsonRPCDataBroker} is consistent with {@link DOMDataBroker}
  *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
