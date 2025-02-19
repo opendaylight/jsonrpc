@@ -12,12 +12,11 @@ import io.netty.buffer.Unpooled;
 
 /**
  * Protocol signature.
- * <p>
- * See <a href="https://rfc.zeromq.org/spec:23/ZMTP/">specification</a>.
- * </p>
+ *
+ * <p>See <a href="https://rfc.zeromq.org/spec:23/ZMTP/">specification</a>.
  * ABNF grammar:
  *
- * <p><pre>
+ * <pre>
  * signature = %xFF padding %x7F
  * padding = 8OCTET        ; Not significant
  * </pre>

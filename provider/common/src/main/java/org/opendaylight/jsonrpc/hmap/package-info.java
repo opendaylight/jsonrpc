@@ -18,9 +18,7 @@
  * convert between internal node identifier and external path specification.
  * Path is sequence of node identifier, with first identifier equals to null.
  *
- * <p>
- * Example code
- * </p>
+ * <p>Example code
  * <blockquote>
  *
  * <pre>

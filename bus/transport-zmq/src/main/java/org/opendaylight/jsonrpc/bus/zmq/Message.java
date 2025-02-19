@@ -9,12 +9,11 @@ package org.opendaylight.jsonrpc.bus.zmq;
 
 /**
  * Protocol message.
- * <p>
- * See <a href="https://rfc.zeromq.org/spec:23/ZMTP/">specification</a>.
- * </p>
+ *
+ * <p>See <a href="https://rfc.zeromq.org/spec:23/ZMTP/">specification</a>.
  * ABNF grammar:
  *
- * <p><pre>
+ * <pre>
  * ;   A message is one or more frames
  * message = *message-more message-last
  * message-more = ( %x01 short-size | %x03 long-size ) message-body

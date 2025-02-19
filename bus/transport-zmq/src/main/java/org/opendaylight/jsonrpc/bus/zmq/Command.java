@@ -9,12 +9,10 @@ package org.opendaylight.jsonrpc.bus.zmq;
 
 /**
  * Command.
- * <p>
- * See <a href="https://rfc.zeromq.org/spec:23/ZMTP/">specification</a>.
- * </p>
- * ABNF grammar:
  *
- * <p><pre>
+ * <p>See <a href="https://rfc.zeromq.org/spec:23/ZMTP/">specification</a>.
+ * ABNF grammar:
+ * <pre>
  * ;   A command is a single long or short frame
  * command = command-size command-body
  * command-size = %x04 short-size | %x06 long-size

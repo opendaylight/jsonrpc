@@ -18,7 +18,7 @@ import io.netty.buffer.Unpooled;
  *
  * <p>ABNF grammar:
  *
- * <p><pre>
+ * <pre>
  * ;   Is the peer acting as server?
  * as-server = %x00 | %x01
  *
