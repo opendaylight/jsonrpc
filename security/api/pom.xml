@@ -19,6 +19,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <artifactId>security-api</artifactId>
     <packaging>bundle</packaging>
     <name>JSON-RPC :: Security :: API</name>
+
+    <properties>
+        <odlparent.modernizer.enforce>false</odlparent.modernizer.enforce>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.netty</groupId>

@@ -19,6 +19,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <name>JSON-RPC :: Tools :: Test</name>
     <properties>
         <java.main.class>org.opendaylight.jsonrpc.tool.test.Main</java.main.class>
+        <odlparent.modernizer.enforce>false</odlparent.modernizer.enforce>
     </properties>
     <dependencies>
         <dependency>
