@@ -5,11 +5,8 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-
 /**
- * <p>
  * HTTP transports session types support matrix.
- * </p>
  * <table border="1">
  * <caption>Support matrix</caption>
  * <tr>
@@ -48,10 +45,7 @@
  * <td>Yes</td>
  * </tr>
  * </table>
- * <p>
- * Implementations details
- * </p>
  *
+ * <p>Implementations details
  */
-
 package org.opendaylight.jsonrpc.bus.http;

@@ -40,14 +40,14 @@ public class NameMatchingPredicate implements Predicate<Method> {
     }
 
     /**
-     * Convert raw method name to name with underscores. <br />
-     * <p>
-     * Examples:
+     * Convert raw method name to name with underscores.
+     *
+     * <p>Examples:
      * </p>
      * <ul>
      * <li>method-abc =&gt; method_abc</li>
      * <li>method_def =&gt; method_def</li>
-     * <li>method123 => method123</li>
+     * <li>method123 =&gt; method123</li>
      * </ul>
      */
     private String toUnderscoreName(String name) {

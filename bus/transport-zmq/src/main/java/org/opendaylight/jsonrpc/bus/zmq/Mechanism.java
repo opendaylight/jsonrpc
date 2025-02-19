@@ -18,8 +18,7 @@ import java.nio.charset.StandardCharsets;
  * <a href="https://rfc.zeromq.org/spec:23/ZMTP/">specification</a>.
  *
  * <p>ABNF grammar:
- *
- * <p><pre>
+ * <pre>
  * ;   The mechanism is a null padded string
  * mechanism = 20mechanism-char
  * mechanism-char = "A"-"Z" | DIGIT
