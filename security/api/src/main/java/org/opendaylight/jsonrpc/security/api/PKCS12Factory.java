@@ -14,7 +14,7 @@ import static org.opendaylight.jsonrpc.security.api.SecurityConstants.OPT_KEYSTO
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.Map;
@@ -37,7 +37,7 @@ public class PKCS12Factory extends AbstractKeyStoreFactory {
         keyStorePassword = Objects.requireNonNull(options.get(OPT_KEYSTORE_PASSWORD));
         LOG.debug("Loading KeyStore from {}", trustStoreFile);
         trustStore = KeyStore.getInstance(KEYSTORE_TYPE_PKCS12);
-        trustStore.load(Files.newInputStream(Paths.get(trustStoreFile)), keyStorePassword.toCharArray());
+        trustStore.load(Files.newInputStream(Path.of(trustStoreFile)), keyStorePassword.toCharArray());
         keyStore = trustStore;
     }
 }

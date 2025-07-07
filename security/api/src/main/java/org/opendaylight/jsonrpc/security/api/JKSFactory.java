@@ -16,7 +16,7 @@ import static org.opendaylight.jsonrpc.security.api.SecurityConstants.OPT_TRUSTS
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.util.Map;
@@ -54,11 +54,11 @@ public class JKSFactory extends AbstractKeyStoreFactory {
         final String trustStoreFile = options.getOrDefault(OPT_TRUSTSTORE_FILE, DEFAULT_TRUSTSTORE_LOCATION);
         final String trustStorePassword = options.getOrDefault(OPT_TRUSTSTORE_PASSWORD, DEFAULT_KEYSTORE_PASSWORD);
         LOG.debug("Loading trust KeyStore from {}", trustStoreFile);
-        trustStore.load(Files.newInputStream(Paths.get(trustStoreFile)), trustStorePassword.toCharArray());
+        trustStore.load(Files.newInputStream(Path.of(trustStoreFile)), trustStorePassword.toCharArray());
         final String storeFile = options.getOrDefault(OPT_KEYSTORE_FILE, trustStoreFile);
         keyStorePassword = options.getOrDefault(OPT_KEYSTORE_PASSWORD, trustStorePassword);
         LOG.debug("Loading KeyStore from {}", storeFile);
         keyStore = KeyStore.getInstance(KEYSTORE_TYPE_JKS);
-        keyStore.load(Files.newInputStream(Paths.get(storeFile)), keyStorePassword.toCharArray());
+        keyStore.load(Files.newInputStream(Path.of(storeFile)), keyStorePassword.toCharArray());
     }
 }
