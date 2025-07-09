@@ -16,6 +16,23 @@
       "message": "14:13:33 org.apache.felix.resolver.reason.ReasonException: Unable to resolve root: missing requirement [root] osgi.identity; osgi.identity\u003dodl-integration-all; type\u003dkaraf.feature; version\u003d\"[0.22.0.SNAPSHOT,0.22.0.SNAPSHOT]\"; filter:\u003d\"(\u0026(osgi.identity\u003dodl-integration-all)(type\u003dkaraf.feature)(version\u003e\u003d0.22.0.SNAPSHOT)(version\u003c\u003d0.22.0.SNAPSHOT))\" [caused by: Unable to resolve odl-integration-all/0.22.0.SNAPSHOT: missing requirement [odl-integration-all/0.22.0.SNAPSHOT] osgi.identity; osgi.identity\u003dodl-integration-compatible-with-all; type\u003dkaraf.feature; version\u003d\"[0.22.0.SNAPSHOT,0.22.0.SNAPSHOT]\" [caused by: Unable to resolve odl-integration-compatible-with-all/0.22.0.SNAPSHOT: missing requirement [odl-integration-compatible-with-all/0.22.0.SNAPSHOT] osgi.identity; osgi.identity\u003dodl-jsonrpc-all; type\u003dkaraf.feature; version\u003d\"[1.18.0.SNAPSHOT,1.18.0.SNAPSHOT]\" [caused by: Unable to resolve odl-jsonrpc-all/1.18.0.SNAPSHOT: missing requirement [odl-jsonrpc-all/1.18.0.SNAPSHOT] osgi.identity; osgi.identity\u003dodl-jsonrpc-provider; type\u003dkaraf.feature; version\u003d\"[1.18.0.SNAPSHOT,1.18.0.SNAPSHOT]\" [caused by: Unable to resolve odl-jsonrpc-provider/1.18.0.SNAPSHOT: missing requirement [odl-jsonrpc-provider/1.18.0.SNAPSHOT] osgi.identity; osgi.identity\u003dorg.opendaylight.jsonrpc.provider-common; type\u003dosgi.bundle; version\u003d\"[1.18.0.SNAPSHOT,1.18.0.SNAPSHOT]\"; resolution:\u003dmandatory [caused by: Unable to resolve org.opendaylight.jsonrpc.provider-common/1.18.0.SNAPSHOT: missing requirement [org.opendaylight.jsonrpc.provider-common/1.18.0.SNAPSHOT] osgi.wiring.package; filter:\u003d\"(\u0026(osgi.wiring.package\u003dorg.bouncycastle.jce.provider)(version\u003e\u003d1.81.0)(!(version\u003e\u003d2.0.0)))\"]]]]]",
       "revId": "77f90bcb833c9e9a61c4efa25e294cebd287e780",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "aaa0d085_eaac9931",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 17
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 8144
+      },
+      "writtenOn": "2025-07-09T13:23:16Z",
+      "side": 1,
+      "message": "recheck",
+      "revId": "77f90bcb833c9e9a61c4efa25e294cebd287e780",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81"
     }
   ]
 }
