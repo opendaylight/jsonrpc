@@ -13,7 +13,6 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
@@ -44,7 +43,7 @@ public final class Main {
         try {
             final Options opts = Parameters.createArgParser(args);
             final TransportFactory tf = new DefaultTransportFactory();
-            final Path yangDir = Paths.get(opts.yangDirectory);
+            final Path yangDir = Path.of(opts.yangDirectory);
             final GovernanceImpl governance = new GovernanceImpl(tf, opts.governance, yangDir);
             LOG.info("Started : {}", governance);
             if (opts.datastore != null) {
