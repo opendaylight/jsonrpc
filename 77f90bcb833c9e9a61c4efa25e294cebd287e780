@@ -33,6 +33,24 @@
       "message": "recheck",
       "revId": "77f90bcb833c9e9a61c4efa25e294cebd287e780",
       "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "67b86d07_03b0a8b2",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 17
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 649
+      },
+      "writtenOn": "2025-07-10T07:42:48Z",
+      "side": 1,
+      "message": "This in integration-distribution test failure, we can ignore it as it will clear as netconf-9 is adopted in int/dist",
+      "parentUuid": "38b3c4d1_0ee4938a",
+      "revId": "77f90bcb833c9e9a61c4efa25e294cebd287e780",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81"
     }
   ]
 }
