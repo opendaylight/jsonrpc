@@ -8,7 +8,7 @@
  -->
 <features name="odl-jsonrpc-provider-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0">
     <feature name="odl-jsonrpc-provider" version="${project.version}">
-        <feature version="[14,15)">odl-mdsal-binding-dom-adapter</feature>
+        <feature version="[15,16)">odl-mdsal-binding-dom-adapter</feature>
     </feature>
 </features>
 
