@@ -8,7 +8,7 @@
  -->
 <features name="odl-jsonrpc-${project.version}" xmlns="http://karaf.apache.org/xmlns/features/v1.2.0">
     <feature name="odl-jsonrpc-all" version="${project.version}">
-        <feature version="[9,10)">odl-restconf-openapi</feature>
+        <feature version="[10,11)">odl-restconf-openapi</feature>
     </feature>
 </features>
 

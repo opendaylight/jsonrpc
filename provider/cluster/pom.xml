@@ -25,7 +25,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <groupId>org.opendaylight.controller</groupId>
                 <!-- Unusual import to get the pekko-testkit declaration -->
                 <artifactId>bundle-parent</artifactId>
-                <version>11.0.2</version>
+                <version>12.0.3</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -133,7 +133,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.opendaylight.mdsal.binding.model.ietf</groupId>
+            <groupId>org.opendaylight.ietf.model</groupId>
             <artifactId>rfc6991-ietf-yang-types</artifactId>
         </dependency>
         <dependency>
@@ -219,7 +219,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         </dependency>
         <dependency>
             <groupId>org.apache.pekko</groupId>
-            <artifactId>pekko-testkit_2.13</artifactId>
+            <artifactId>pekko-testkit_3</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
