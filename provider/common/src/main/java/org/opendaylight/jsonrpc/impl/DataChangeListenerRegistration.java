@@ -61,7 +61,7 @@ public final class DataChangeListenerRegistration implements Registration, DOMDa
         Objects.requireNonNull(domDataBroker);
         Objects.requireNonNull(store);
         final var dtcs = domDataBroker.extension(DataTreeChangeExtension.class);
-        delegate = dtcs.registerDataTreeChangeListener(DOMDataTreeIdentifier.of(store, path), this);
+        delegate = dtcs.registerTreeChangeListener(DOMDataTreeIdentifier.of(store, path), this);
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
