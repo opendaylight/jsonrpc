@@ -10,6 +10,7 @@ package org.opendaylight.jsonrpc.binding;
 import org.opendaylight.mdsal.binding.dom.adapter.BindingDOMRpcProviderServiceAdapter;
 import org.opendaylight.mdsal.binding.dom.adapter.ConstantAdapterContext;
 import org.opendaylight.mdsal.dom.broker.DOMRpcRouter;
+import org.opendaylight.mdsal.dom.broker.RouterDOMRpcProviderService;
 import org.opendaylight.mdsal.dom.spi.FixedDOMSchemaService;
 import org.opendaylight.yangtools.binding.Rpc;
 import org.opendaylight.yangtools.binding.data.codec.api.BindingNormalizedNodeSerializer;
@@ -41,7 +42,7 @@ public final class EmbeddedRpcInvocationAdapter implements RpcInvocationAdapter 
         converter = new SchemaChangeAwareConverter(schemaService);
         rpcService = new DOMRpcRouter(schemaService);
         rpcAdapter = new BindingDOMRpcProviderServiceAdapter(new ConstantAdapterContext(codec),
-                rpcService.rpcProviderService());
+                new RouterDOMRpcProviderService(rpcService));
     }
 
     @Override

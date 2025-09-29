@@ -38,6 +38,8 @@ import org.opendaylight.jsonrpc.provider.common.ProviderDependencies;
 import org.opendaylight.mdsal.binding.api.ReadTransaction;
 import org.opendaylight.mdsal.binding.api.WriteTransaction;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.mdsal.dom.broker.RouterDOMPublishNotificationService;
+import org.opendaylight.mdsal.dom.broker.RouterDOMRpcService;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
@@ -88,7 +90,8 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
                 .build());
         ProviderDependencies deps = new ProviderDependencies(new MockTransportFactory(tf),
                 getDataBroker(), getDOMMountPointService(), getDomBroker(), getSchemaService(),
-                getDOMNotificationRouter().notificationPublishService(), getDOMRpcRouter().rpcService(),
+                new RouterDOMPublishNotificationService(getDOMNotificationRouter()),
+                new RouterDOMRpcService(getDOMRpcRouter()),
                 ServiceLoader.load(YangXPathParserFactory.class).findFirst().orElseThrow());
         provider = new JsonRPCProvider(deps, () -> Optional.of(GOVERNANCE_MOCK));
         logTestName("START");

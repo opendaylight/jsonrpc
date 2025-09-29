@@ -46,6 +46,8 @@ import org.opendaylight.jsonrpc.model.TxArgument;
 import org.opendaylight.jsonrpc.model.TxOperationArgument;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeWriteTransaction;
+import org.opendaylight.mdsal.dom.broker.RouterDOMPublishNotificationService;
+import org.opendaylight.mdsal.dom.broker.RouterDOMRpcService;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Uri;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
@@ -85,7 +87,8 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         transportFactory = new DefaultTransportFactory();
         codecFactory = new JsonRpcCodecFactory(schemaContext);
         ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory,
-                getDOMNotificationRouter().notificationPublishService(), getDOMRpcRouter().rpcService(), codecFactory);
+            new RouterDOMPublishNotificationService(getDOMNotificationRouter()),
+            new RouterDOMRpcService(getDOMRpcRouter()), codecFactory);
 
         logTestName("START");
     }

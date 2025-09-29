@@ -14,6 +14,7 @@ import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.mdsal.dom.broker.DOMMountPointServiceImpl;
 import org.opendaylight.mdsal.dom.broker.DOMNotificationRouter;
 import org.opendaylight.mdsal.dom.broker.DOMRpcRouter;
+import org.opendaylight.mdsal.dom.broker.RouterDOMPublishNotificationService;
 
 public class TestCustomizer extends AbstractConcurrentDataBrokerTest {
     private final DOMMountPointServiceImpl mountPointService = new DOMMountPointServiceImpl();
@@ -33,7 +34,7 @@ public class TestCustomizer extends AbstractConcurrentDataBrokerTest {
     }
 
     public DOMNotificationPublishService getDOMNotificationRouter() {
-        return notificationRouter.notificationPublishService();
+        return new RouterDOMPublishNotificationService(notificationRouter);
     }
 
     public DOMRpcRouter getDOMRpcRouter() {
