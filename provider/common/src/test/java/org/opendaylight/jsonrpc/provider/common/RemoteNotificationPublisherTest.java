@@ -14,7 +14,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import org.eclipse.jdt.annotation.NonNull;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,6 +22,9 @@ import org.opendaylight.jsonrpc.impl.RemoteControl;
 import org.opendaylight.jsonrpc.model.RemoteNotificationPublisher;
 import org.opendaylight.mdsal.dom.api.DOMNotification;
 import org.opendaylight.mdsal.dom.api.DOMNotificationListener;
+import org.opendaylight.mdsal.dom.broker.RouterDOMNotificationService;
+import org.opendaylight.mdsal.dom.broker.RouterDOMPublishNotificationService;
+import org.opendaylight.mdsal.dom.broker.RouterDOMRpcService;
 import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.NotificationDefinition;
@@ -47,14 +49,15 @@ public class RemoteNotificationPublisherTest extends AbstractJsonRpcTest {
     public void setUp() {
         transportFactory = new DefaultTransportFactory();
         ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory,
-            getDOMNotificationRouter().notificationPublishService(), getDOMRpcRouter().rpcService(), codecFactory);
+            new RouterDOMPublishNotificationService(getDOMNotificationRouter()),
+            new RouterDOMRpcService(getDOMRpcRouter()), codecFactory);
         NotificationDefinition path = findNode(schemaContext, "test-model-notification:notification1",
                 Module::getNotifications).orElseThrow();
         latch = new CountDownLatch(1);
-        reg = getDOMNotificationRouter().notificationService()
+        reg = new RouterDOMNotificationService(getDOMNotificationRouter())
             .registerNotificationListener(new DOMNotificationListener() {
                 @Override
-                public void onNotification(@NonNull DOMNotification notification) {
+                public void onNotification(DOMNotification notification) {
                     LOG.info("Got notification : {}", notification);
                     latch.countDown();
                 }

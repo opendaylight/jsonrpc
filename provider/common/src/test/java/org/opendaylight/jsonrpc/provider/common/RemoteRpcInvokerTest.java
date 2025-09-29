@@ -26,6 +26,9 @@ import org.opendaylight.jsonrpc.test.TestRemoveCoffeePot;
 import org.opendaylight.jsonrpc.test.TestSimpleMethod;
 import org.opendaylight.mdsal.binding.dom.adapter.BindingDOMRpcProviderServiceAdapter;
 import org.opendaylight.mdsal.binding.dom.adapter.ConstantAdapterContext;
+import org.opendaylight.mdsal.dom.broker.RouterDOMPublishNotificationService;
+import org.opendaylight.mdsal.dom.broker.RouterDOMRpcProviderService;
+import org.opendaylight.mdsal.dom.broker.RouterDOMRpcService;
 import org.opendaylight.yangtools.binding.data.codec.impl.di.DefaultBindingDOMCodecFactory;
 import org.opendaylight.yangtools.concepts.Registration;
 
@@ -46,7 +49,7 @@ public class RemoteRpcInvokerTest extends AbstractJsonRpcTest {
         final BindingDOMRpcProviderServiceAdapter rpcAdapter = new BindingDOMRpcProviderServiceAdapter(
             new ConstantAdapterContext(new DefaultBindingDOMCodecFactory().createBindingDOMCodec(
                 getBindingRuntimeContext())),
-            getDOMRpcRouter().rpcProviderService());
+            new RouterDOMRpcProviderService(getDOMRpcRouter()));
         rpcReg = rpcAdapter.registerRpcImplementations(
             new TestErrorMethod(),
             new TestFactorial(),
@@ -57,7 +60,8 @@ public class RemoteRpcInvokerTest extends AbstractJsonRpcTest {
         codecFactory = new JsonRpcCodecFactory(schemaContext);
         transportFactory = new DefaultTransportFactory();
         ctrl = new RemoteControl(getDomBroker(), schemaContext, transportFactory,
-            getDOMNotificationRouter().notificationPublishService(), getDOMRpcRouter().rpcService(), codecFactory);
+            new RouterDOMPublishNotificationService(getDOMNotificationRouter()),
+            new RouterDOMRpcService(getDOMRpcRouter()), codecFactory);
 
         logTestName("START");
     }

@@ -65,6 +65,7 @@ import org.opendaylight.mdsal.dom.api.DOMMountPoint;
 import org.opendaylight.mdsal.dom.api.DOMMountPointService;
 import org.opendaylight.mdsal.dom.api.DOMRpcResult;
 import org.opendaylight.mdsal.dom.api.DOMRpcService;
+import org.opendaylight.mdsal.dom.broker.RouterDOMRpcService;
 import org.opendaylight.mdsal.eos.dom.simple.SimpleDOMEntityOwnershipService;
 import org.opendaylight.mdsal.singleton.api.ClusterSingletonServiceProvider;
 import org.opendaylight.mdsal.singleton.impl.EOSClusterSingletonServiceProvider;
@@ -160,14 +161,14 @@ public class MountpointTest {
         final ClusterDependencies masterDeps = new ClusterDependencies(tf, masterTestCustomizer.getDataBroker(),
                 masterTestCustomizer.getDOMMountPointService(), masterTestCustomizer.getDomBroker(),
                 masterTestCustomizer.getSchemaService(), masterTestCustomizer.getDOMNotificationRouter(),
-                masterTestCustomizer.getDOMRpcRouter().rpcService(), yangXPathParserFactory, masterActorSystem,
-                clusterSingletonServiceProvider, governanceProvider, rpcProviderService, null);
+                new RouterDOMRpcService(masterTestCustomizer.getDOMRpcRouter()), yangXPathParserFactory,
+                masterActorSystem, clusterSingletonServiceProvider, governanceProvider, rpcProviderService, null);
 
         final ClusterDependencies slaveDeps = new ClusterDependencies(tf, slaveTestCustomizer.getDataBroker(),
                 slaveTestCustomizer.getDOMMountPointService(), slaveTestCustomizer.getDomBroker(),
                 slaveTestCustomizer.getSchemaService(), slaveTestCustomizer.getDOMNotificationRouter(),
-                slaveTestCustomizer.getDOMRpcRouter().rpcService(), yangXPathParserFactory, slaveActorSystem,
-                mockClusterSingletonServiceProvider, governanceProvider, rpcProviderService, null);
+                new RouterDOMRpcService(slaveTestCustomizer.getDOMRpcRouter()), yangXPathParserFactory,
+                slaveActorSystem, mockClusterSingletonServiceProvider, governanceProvider, rpcProviderService, null);
 
         masterConverter = new JsonRpcCodecFactory(masterTestCustomizer.getSchemaService().getGlobalContext());
         JsonRpcDatastoreAdapter datastoreAdapter = new JsonRpcDatastoreAdapter(masterConverter,
