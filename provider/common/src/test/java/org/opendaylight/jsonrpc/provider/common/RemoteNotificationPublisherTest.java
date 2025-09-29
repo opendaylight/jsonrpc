@@ -7,6 +7,7 @@
  */
 package org.opendaylight.jsonrpc.provider.common;
 
+import static org.junit.Assert.assertThrows;
 import static org.opendaylight.jsonrpc.provider.common.Util.findNode;
 
 import com.google.gson.JsonObject;
@@ -84,13 +85,15 @@ public class RemoteNotificationPublisherTest extends AbstractJsonRpcTest {
         latch.await(10, TimeUnit.SECONDS);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testNonExistingModule() throws InterruptedException {
-        ctrl.publishNotification("module-not-exists:notification1", new JsonObject());
+    @Test
+    public void testNonExistingModule() {
+        assertThrows(IllegalArgumentException.class,
+            () -> ctrl.publishNotification("module-not-exists:notification1", new JsonObject()));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testNonExistingNotification() throws InterruptedException {
-        ctrl.publishNotification("notification-not-exists", new JsonObject());
+    @Test
+    public void testNonExistingNotification() {
+        assertThrows(IllegalArgumentException.class,
+            () -> ctrl.publishNotification("notification-not-exists", new JsonObject()));
     }
 }

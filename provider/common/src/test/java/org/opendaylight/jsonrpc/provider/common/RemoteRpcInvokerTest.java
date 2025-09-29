@@ -8,6 +8,7 @@
 package org.opendaylight.jsonrpc.provider.common;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -81,13 +82,15 @@ public class RemoteRpcInvokerTest extends AbstractJsonRpcTest {
         assertNotNull(result);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testInvokeNonExistentMethod() {
-        ctrl.invokeRpc("test-model:method-not-exists", new JsonObject());
+        assertThrows(IllegalArgumentException.class,
+            () -> ctrl.invokeRpc("test-model:method-not-exists", new JsonObject()));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testInvokeNonExistentPrefix() {
-        ctrl.invokeRpc("module-not-exists:simple-method", new JsonObject());
+        assertThrows(IllegalArgumentException.class,
+            () -> ctrl.invokeRpc("module-not-exists:simple-method", new JsonObject()));
     }
 }
