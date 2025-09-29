@@ -54,8 +54,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.Noti
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.NotificationEndpointsKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpointsKey;
+import org.opendaylight.yangtools.binding.DataObjectIdentifier;
 import org.opendaylight.yangtools.binding.util.BindingMap;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
 
 /**
@@ -65,7 +65,8 @@ import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
  */
 public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     private static final String DEMO1_MODEL = "demo1";
-    private static final InstanceIdentifier<Config> GLOBAL_CFG_II = InstanceIdentifier.create(Config.class);
+    private static final DataObjectIdentifier<Config> GLOBAL_CFG_II =
+        DataObjectIdentifier.builder(Config.class).build();
     private JsonRPCProvider provider;
     private static final RemoteGovernance GOVERNANCE_MOCK = new MockGovernance();
     private int governancePort;
@@ -254,7 +255,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         try (ReadTransaction rtx = getDataBroker().newReadOnlyTransaction()) {
             return rtx
                     .read(LogicalDatastoreType.OPERATIONAL,
-                            InstanceIdentifier.builder(Config.class)
+                            DataObjectIdentifier.builder(Config.class)
                                     .child(ActualEndpoints.class, new ActualEndpointsKey(name))
                                     .build())
                     .get();

@@ -28,7 +28,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ActualEndpoints;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ActualEndpointsBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ActualEndpointsKey;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
+import org.opendaylight.yangtools.binding.DataObjectIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,8 +57,8 @@ public abstract class AbstractPeerContext implements AutoCloseable {
 
     protected void removeOperationalState() {
         final WriteTransaction wrTrx = dataBroker.newWriteOnlyTransaction();
-        final InstanceIdentifier<ActualEndpoints> peerOpId = InstanceIdentifier.builder(Config.class)
-                .child(ActualEndpoints.class, new ActualEndpointsKey(peer.getName()))
+        final DataObjectIdentifier<ActualEndpoints> peerOpId = DataObjectIdentifier.builder(Config.class)
+                .child(ActualEndpoints.class, new ActualEndpointsKey(peer.requireName()))
                 .build();
         wrTrx.delete(LogicalDatastoreType.OPERATIONAL, peerOpId);
         commitTransaction(wrTrx, peer.getName(), "Unpublish operational state");
@@ -92,8 +92,8 @@ public abstract class AbstractPeerContext implements AutoCloseable {
 
     protected void publishState(ActualEndpointsBuilder builder, MountStatus status, Optional<Throwable> cause,
             String managedBy) {
-        final InstanceIdentifier<ActualEndpoints> peerId = InstanceIdentifier.builder(Config.class)
-                .child(ActualEndpoints.class, new ActualEndpointsKey(peer.getName()))
+        final DataObjectIdentifier<ActualEndpoints> peerId = DataObjectIdentifier.builder(Config.class)
+                .child(ActualEndpoints.class, new ActualEndpointsKey(peer.requireName()))
                 .build();
         builder.setManagedBy(managedBy);
         builder.setMountStatus(status);

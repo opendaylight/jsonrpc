@@ -53,8 +53,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRelo
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReloadOutput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReloadOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
+import org.opendaylight.yangtools.binding.DataObjectIdentifier;
 import org.opendaylight.yangtools.concepts.Registration;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
@@ -69,7 +69,8 @@ import org.slf4j.LoggerFactory;
 public final class JsonRPCProvider implements AutoCloseable {
     private static final String ME = "JSON RPC Provider";
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCProvider.class);
-    private static final InstanceIdentifier<Config> GLOBAL_CFG_II = InstanceIdentifier.create(Config.class);
+    private static final DataObjectIdentifier<Config> GLOBAL_CFG_II =
+        DataObjectIdentifier.builder(Config.class).build();
     private static final DataTreeIdentifier<Config> CFG_DTI =
         DataTreeIdentifier.of(LogicalDatastoreType.CONFIGURATION, GLOBAL_CFG_II);
     private final Map<String, AbstractPeerContext> peerState = new ConcurrentHashMap<>();
