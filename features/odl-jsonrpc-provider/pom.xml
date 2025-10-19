@@ -19,7 +19,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <groupId>org.opendaylight.jsonrpc</groupId>
     <artifactId>odl-jsonrpc-provider</artifactId>
-    <version>1.18.1-SNAPSHOT</version>
+    <version>1.18.2-SNAPSHOT</version>
     <packaging>feature</packaging>
     <name>JSON-RPC :: Feature :: provider</name>
 

@@ -16,7 +16,7 @@
     </parent>
     <groupId>org.opendaylight.jsonrpc</groupId>
     <artifactId>features-aggregator</artifactId>
-    <version>1.18.1-SNAPSHOT</version>
+    <version>1.18.2-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>JSON-RPC :: Features :: Aggregator</name>
     <modules>
