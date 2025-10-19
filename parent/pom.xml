@@ -18,7 +18,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opendaylight.jsonrpc</groupId>
     <artifactId>jsonrpc-parent</artifactId>
-    <version>1.17.3-SNAPSHOT</version>
+    <version>1.17.4-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>JSON-RPC :: Parent</name>
 

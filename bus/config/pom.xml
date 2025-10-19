@@ -17,7 +17,7 @@
 
   <groupId>org.opendaylight.jsonrpc.bus</groupId>
   <artifactId>bus-config</artifactId>
-  <version>1.17.3-SNAPSHOT</version>
+  <version>1.17.4-SNAPSHOT</version>
   <name>JSON-RPC :: BUS :: Config</name>
   <description>Configuration files for JSONRPC bus</description>
   <packaging>jar</packaging>
