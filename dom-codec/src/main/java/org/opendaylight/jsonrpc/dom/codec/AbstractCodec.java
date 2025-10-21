@@ -11,9 +11,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.StringWriter;
 import java.util.Objects;
+import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.QNameModule;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.NodeIdentifier;
@@ -32,7 +32,7 @@ abstract class AbstractCodec {
     protected static final String COLON = ":";
     protected final EffectiveModelContext context;
 
-    AbstractCodec(@NonNull final EffectiveModelContext context) {
+    AbstractCodec(final @NonNull EffectiveModelContext context) {
         this.context = Objects.requireNonNull(context);
     }
 
