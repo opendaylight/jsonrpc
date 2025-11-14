@@ -62,18 +62,15 @@ public abstract class JsonRpcBaseMessage {
         this.metadata = builder.metadata;
     }
 
-    @NonNull
-    public String getJsonrpc() {
+    public @NonNull String getJsonrpc() {
         return jsonrpc;
     }
 
-    @Nullable
-    public JsonObject getMetadata() {
+    public @Nullable JsonObject getMetadata() {
         return metadata;
     }
 
-    @Nullable
-    public JsonElement getId() {
+    public @Nullable JsonElement getId() {
         return id;
     }
 
@@ -195,8 +192,7 @@ public abstract class JsonRpcBaseMessage {
         return VERSION.equals(version) || VERSION_SHORT.equals(version);
     }
 
-    @NonNull
-    public abstract JsonRpcMessageType getType();
+    public abstract @NonNull JsonRpcMessageType getType();
 
     public abstract static class AbstractBuilder<T extends AbstractBuilder<T, M>, M extends JsonRpcBaseMessage> {
         private String jsonrpc;

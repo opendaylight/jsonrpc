@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Objects;
 import org.eclipse.jdt.annotation.NonNull;
-import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.NodeIdentifier;
@@ -90,7 +89,6 @@ class DataCodec extends AbstractCodec implements Codec<JsonElement, NormalizedNo
         }
     }
 
-    @Nullable
     @Override
     public NormalizedNode deserialize(JsonElement input) throws IOException {
         LOG.trace("[Decode] input : {}", input);
@@ -142,7 +140,6 @@ class DataCodec extends AbstractCodec implements Codec<JsonElement, NormalizedNo
         }
     }
 
-    @Nullable
     @Override
     public JsonElement serialize(NormalizedNode input) throws IOException {
         LOG.trace("[Decode] input : {}", input);

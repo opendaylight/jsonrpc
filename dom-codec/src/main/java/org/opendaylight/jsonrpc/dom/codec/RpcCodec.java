@@ -11,7 +11,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.io.IOException;
 import java.util.function.Supplier;
-import org.eclipse.jdt.annotation.Nullable;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier.NodeIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.stream.NormalizedNodeStreamWriter;
@@ -44,7 +43,6 @@ class RpcCodec extends RpcNotificationBaseCodec<ContainerNode> {
         this.type = type;
     }
 
-    @Nullable
     @Override
     public ContainerNode deserialize(JsonElement input) throws IOException {
         LOG.trace("[decode][{}][{}] input : {}", shortName, type, input);

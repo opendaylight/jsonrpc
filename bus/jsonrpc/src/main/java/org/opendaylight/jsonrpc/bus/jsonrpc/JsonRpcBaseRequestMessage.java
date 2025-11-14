@@ -28,13 +28,11 @@ public abstract class JsonRpcBaseRequestMessage extends JsonRpcBaseMessage {
         this.params = builder.params;
     }
 
-    @NonNull
-    public String getMethod() {
+    public @NonNull String getMethod() {
         return method;
     }
 
-    @Nullable
-    public JsonElement getParams() {
+    public @Nullable JsonElement getParams() {
         return params;
     }
 

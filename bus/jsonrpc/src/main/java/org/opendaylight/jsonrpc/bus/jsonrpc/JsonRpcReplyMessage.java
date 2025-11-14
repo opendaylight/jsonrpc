@@ -38,8 +38,7 @@ public final class JsonRpcReplyMessage extends JsonRpcBaseMessage {
         return error != null;
     }
 
-    @Nullable
-    public JsonElement getResult() {
+    public @Nullable JsonElement getResult() {
         return result;
     }
 
@@ -56,8 +55,7 @@ public final class JsonRpcReplyMessage extends JsonRpcBaseMessage {
         return convertJsonElementToClass(getResult(), type);
     }
 
-    @Nullable
-    public JsonRpcErrorObject getError() {
+    public @Nullable JsonRpcErrorObject getError() {
         return error;
     }
 

@@ -34,8 +34,7 @@ public final class JsonRpcErrorMessage extends JsonRpcBaseMessage {
         this.data = builder.data;
     }
 
-    @NonNull
-    public String getMessage() {
+    public @NonNull String getMessage() {
         return message;
     }
 
@@ -43,8 +42,7 @@ public final class JsonRpcErrorMessage extends JsonRpcBaseMessage {
         return code;
     }
 
-    @Nullable
-    public JsonElement getData() {
+    public @Nullable JsonElement getData() {
         return data;
     }
 
