@@ -12,6 +12,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import com.google.gson.JsonArray;
@@ -58,14 +59,16 @@ public class RpcCodecTest extends AbstractCodecTest {
         assertThat(encoded.toString(), hasJsonPath("$.in-number", equalTo(6)));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testInputArrayMismatchArguments() throws IOException {
         final Codec<JsonElement, ContainerNode, IOException> codec = factory.rpcInputCodec(getRpc("factorial"));
         final JsonArray arr = new JsonArray();
         arr.add(1);
         arr.add(2);
         arr.add(3);
-        codec.deserialize(arr);
+        final var ex = assertThrows(IllegalArgumentException.class, () -> codec.deserialize(arr));
+        assertEquals("Number of input array elements (3) does not match number of child schema nodes (1)",
+            ex.getMessage());
     }
 
     @Test
@@ -85,7 +88,7 @@ public class RpcCodecTest extends AbstractCodecTest {
         assertEquals(F_INPUT, encoded);
     }
 
-    private RpcDefinition getRpc(String name) {
+    private RpcDefinition getRpc(final String name) {
         return schemaContext.getOperations()
                 .stream()
                 .filter(rpc -> rpc.getQName().getLocalName().equals(name))
