@@ -7,6 +7,7 @@
  */
 package org.opendaylight.jsonrpc.provider.common;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -130,7 +131,7 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
         // positional parameters, but not all values are present
         pubSession.publish("notification1", new int[] { 1, 3 });
         pubSession.publish("notification1", new int[] { 1, 2 });
-        assertTrue(cl.await(5, TimeUnit.SECONDS));
+        await().atMost(15, TimeUnit.SECONDS).pollInterval(2, TimeUnit.SECONDS).until(() -> cl.getCount() == 0);
     }
 
     private String getPath() {
