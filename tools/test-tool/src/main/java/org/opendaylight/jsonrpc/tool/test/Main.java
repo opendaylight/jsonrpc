@@ -22,8 +22,8 @@ import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.provider.common.GovernanceSchemaContextProvider;
 import org.opendaylight.jsonrpc.tool.test.Parameters.Options;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
-import org.opendaylight.yangtools.yang.parser.impl.DefaultYangParserFactory;
-import org.opendaylight.yangtools.yang.xpath.impl.AntlrXPathParserFactory;
+import org.opendaylight.yangtools.dagger.yang.parser.DaggerDefaultYangParserComponent;
+import org.opendaylight.yangtools.yang.source.ir.dagger.YangIRSourceModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +45,8 @@ public final class Main {
             final Options opts = Parameters.createArgParser(args);
             final TransportFactory tf = new DefaultTransportFactory();
             final Path yangDir = Path.of(opts.yangDirectory);
-            final GovernanceImpl governance = new GovernanceImpl(tf, opts.governance, yangDir);
+            final var yangTextToIR = YangIRSourceModule.provideTextToIR();
+            final GovernanceImpl governance = new GovernanceImpl(tf, opts.governance, yangDir, yangTextToIR);
             LOG.info("Started : {}", governance);
             if (opts.datastore != null) {
                 Preconditions.checkArgument(opts.datastoreModules != null,
@@ -58,7 +59,7 @@ public final class Main {
                 final DatastoreImpl datastore = DatastoreImpl.create(tf, opts.datastore,
                         modules.stream().map(YangIdentifier::new).collect(Collectors.toSet()),
                         new GovernanceSchemaContextProvider(governance,
-                            new DefaultYangParserFactory(new AntlrXPathParserFactory())));
+                            DaggerDefaultYangParserComponent.create().parserFactory(), yangTextToIR));
                 LOG.info("Started : {}", datastore);
             }
             if (opts.rpc != null) {

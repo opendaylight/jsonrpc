@@ -16,6 +16,7 @@ import org.opendaylight.mdsal.dom.api.DOMMountPointService;
 import org.opendaylight.mdsal.dom.api.DOMNotificationPublishService;
 import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
+import org.opendaylight.yangtools.yang.model.spi.source.YangTextToIRSourceTransformer;
 import org.opendaylight.yangtools.yang.parser.api.YangParserFactory;
 
 /**
@@ -33,12 +34,13 @@ public class ProviderDependencies {
     private final DOMNotificationPublishService domNotificationPublishService;
     private final DOMRpcService domRpcService;
     private final YangParserFactory yangParserFactory;
+    private final YangTextToIRSourceTransformer yangTextToIR;
 
     public ProviderDependencies(@NonNull TransportFactory transportFactory, @NonNull DataBroker dataBroker,
             @NonNull DOMMountPointService domMountPointService, @NonNull DOMDataBroker domDataBroker,
             @NonNull DOMSchemaService schemaService,
             @NonNull DOMNotificationPublishService domNotificationPublishService, @NonNull DOMRpcService domRpcService,
-            @NonNull YangParserFactory yangParserFactory) {
+            @NonNull YangParserFactory yangParserFactory, @NonNull YangTextToIRSourceTransformer yangTextToIR) {
         this.transportFactory = Objects.requireNonNull(transportFactory);
         this.dataBroker = Objects.requireNonNull(dataBroker);
         this.domMountPointService = Objects.requireNonNull(domMountPointService);
@@ -47,6 +49,7 @@ public class ProviderDependencies {
         this.domNotificationPublishService = Objects.requireNonNull(domNotificationPublishService);
         this.domRpcService = Objects.requireNonNull(domRpcService);
         this.yangParserFactory = Objects.requireNonNull(yangParserFactory);
+        this.yangTextToIR = Objects.requireNonNull(yangTextToIR);
     }
 
     public TransportFactory getTransportFactory() {
@@ -79,5 +82,9 @@ public class ProviderDependencies {
 
     public YangParserFactory getYangParserFactory() {
         return yangParserFactory;
+    }
+
+    public YangTextToIRSourceTransformer getYangTextToIR() {
+        return yangTextToIR;
     }
 }
