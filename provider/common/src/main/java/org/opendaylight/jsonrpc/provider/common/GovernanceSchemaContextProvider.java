@@ -7,8 +7,6 @@
  */
 package org.opendaylight.jsonrpc.provider.common;
 
-import static org.opendaylight.yangtools.yang.parser.rfc7950.repo.TextToIRTransformer.transformText;
-
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -31,13 +29,12 @@ import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.source.SourceDependency;
 import org.opendaylight.yangtools.yang.model.api.source.SourceIdentifier;
 import org.opendaylight.yangtools.yang.model.spi.source.DelegatedYangTextSource;
-import org.opendaylight.yangtools.yang.model.spi.source.SourceInfo;
 import org.opendaylight.yangtools.yang.model.spi.source.StringYangTextSource;
+import org.opendaylight.yangtools.yang.model.spi.source.YangTextToIRSourceTransformer;
 import org.opendaylight.yangtools.yang.parser.api.YangParser;
 import org.opendaylight.yangtools.yang.parser.api.YangParserException;
 import org.opendaylight.yangtools.yang.parser.api.YangParserFactory;
 import org.opendaylight.yangtools.yang.parser.api.YangSyntaxErrorException;
-import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangIRSourceInfoExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,9 +47,12 @@ import org.slf4j.LoggerFactory;
  */
 public class GovernanceSchemaContextProvider implements SchemaContextProvider {
     private static final Logger LOG = LoggerFactory.getLogger(GovernanceSchemaContextProvider.class);
-    private final RemoteGovernance governance;
     private static final Duration CACHE_TTL = Duration.ofMinutes(10L);
+
+    private final RemoteGovernance governance;
     private final YangParserFactory yangParserFactory;
+    private final YangTextToIRSourceTransformer textToIR;
+
     // cache to speed-up module import lookups
     private final LoadingCache<ModuleInfo, Set<SourceDependency>> moduleImportCache = CacheBuilder.newBuilder()
             .expireAfterWrite(CACHE_TTL)
@@ -62,11 +62,12 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
                     LOG.trace("Resolving imports of module '{}'", key);
                     final String content = sourceCache.getUnchecked(key);
 
-                    final SourceInfo info  = YangIRSourceInfoExtractor.forIR(transformText(
-                        new StringYangTextSource(new SourceIdentifier(key.getModule()), content)));
+                    final var sourceInfo = textToIR.transformSource(
+                        new StringYangTextSource(new SourceIdentifier(key.getModule()), content))
+                        .extractSourceInfo();
                     return ImmutableSet.<SourceDependency>builder()
-                        .addAll(info.imports())
-                        .addAll(info.includes())
+                        .addAll(sourceInfo.imports())
+                        .addAll(sourceInfo.includes())
                         .build();
                 }
             });
@@ -84,10 +85,11 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
                 }
             });
 
-    public GovernanceSchemaContextProvider(@NonNull final RemoteGovernance governance,
-            @NonNull final YangParserFactory yangParserFactory) {
+    public GovernanceSchemaContextProvider(final @NonNull RemoteGovernance governance,
+            final @NonNull YangParserFactory yangParserFactory, final @NonNull YangTextToIRSourceTransformer textToIR) {
         this.governance = Objects.requireNonNull(governance);
         this.yangParserFactory = Objects.requireNonNull(yangParserFactory);
+        this.textToIR = Objects.requireNonNull(textToIR);
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
