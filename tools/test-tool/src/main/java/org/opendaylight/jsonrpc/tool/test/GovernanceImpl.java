@@ -37,7 +37,7 @@ import org.opendaylight.jsonrpc.model.StoreOperationArgument;
 import org.opendaylight.yangtools.binding.meta.YangModuleInfo;
 import org.opendaylight.yangtools.binding.runtime.spi.BindingRuntimeHelpers;
 import org.opendaylight.yangtools.yang.model.spi.source.FileYangTextSource;
-import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangIRSourceInfoExtractor;
+import org.opendaylight.yangtools.yang.model.spi.source.YangTextToIRSourceTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,21 +51,26 @@ final class GovernanceImpl implements RemoteGovernance {
             .build(new CacheLoader<Path, Set<ModuleInfo>>() {
                 @Override
                 public Set<ModuleInfo> load(Path file) throws Exception {
-                    final var sourceInfo = YangIRSourceInfoExtractor.forYangText(new FileYangTextSource(file));
+                    final var sourceInfo = yangTextToIR.transformSource(new FileYangTextSource(file))
+                        .extractSourceInfo();
                     return Stream.concat(sourceInfo.imports().stream(), sourceInfo.includes().stream())
                         .map(m -> new ModuleInfo(m.name().getLocalName(), null))
                         .collect(Collectors.toSet());
                 }
             });
 
-    private ResponderSession session;
+    private final YangTextToIRSourceTransformer yangTextToIR;
     private final Path yangDir;
 
-    GovernanceImpl(TransportFactory transportFactory, String endpoint, Path yangDir) throws URISyntaxException {
+    private ResponderSession session;
+
+    GovernanceImpl(TransportFactory transportFactory, String endpoint, Path yangDir,
+            YangTextToIRSourceTransformer yangTextToIR) throws URISyntaxException {
+        this.yangDir = yangDir;
+        this.yangTextToIR = yangTextToIR;
         if (endpoint != null) {
             session = transportFactory.endpointBuilder().responder().create(endpoint, this);
         }
-        this.yangDir = yangDir;
     }
 
     @Override

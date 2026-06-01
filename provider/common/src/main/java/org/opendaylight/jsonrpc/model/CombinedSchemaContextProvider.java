@@ -34,13 +34,13 @@ public class CombinedSchemaContextProvider implements SchemaContextProvider {
         }
         if (governanceProvider.get().isPresent()) {
             return new GovernanceSchemaContextProvider(governanceProvider.get().orElseThrow(),
-                    dependencies.getYangParserFactory());
+                    dependencies.getYangParserFactory(), dependencies.getYangTextToIR());
         }
         return new BuiltinSchemaContextProvider(dependencies.getSchemaService().getGlobalContext());
     }
 
     @Override
-    public EffectiveModelContext createSchemaContext(@NonNull Peer peer) {
+    public EffectiveModelContext createSchemaContext(Peer peer) {
         Objects.requireNonNull(peer);
         return getProvider(peer).createSchemaContext(peer);
     }
