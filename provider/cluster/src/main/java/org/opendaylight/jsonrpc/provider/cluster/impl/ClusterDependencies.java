@@ -23,6 +23,7 @@ import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.mdsal.singleton.api.ClusterSingletonServiceProvider;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.cluster.provider.config.rev200708.Config;
+import org.opendaylight.yangtools.yang.model.spi.source.YangTextToIRSourceTransformer;
 import org.opendaylight.yangtools.yang.parser.api.YangParserFactory;
 
 /**
@@ -42,12 +43,12 @@ public class ClusterDependencies extends ProviderDependencies {
             @NonNull DOMMountPointService domMountPointService, @NonNull DOMDataBroker domDataBroker,
             @NonNull DOMSchemaService schemaService,
             @NonNull DOMNotificationPublishService domNotificationPublishService, @NonNull DOMRpcService domRpcService,
-            @NonNull YangParserFactory yangParserFactory, @NonNull ActorSystem actorSystem,
-            @NonNull ClusterSingletonServiceProvider clusterSingletonServiceProvider,
+            @NonNull YangParserFactory yangParserFactory, @NonNull YangTextToIRSourceTransformer yangTextToIR,
+            @NonNull ActorSystem actorSystem, @NonNull ClusterSingletonServiceProvider clusterSingletonServiceProvider,
             @NonNull GovernanceProvider governanceProvider, @NonNull RpcProviderService rpcProviderService,
             @Nullable Config config) {
         super(transportFactory, dataBroker, domMountPointService, domDataBroker, schemaService,
-                domNotificationPublishService, domRpcService, yangParserFactory);
+                domNotificationPublishService, domRpcService, yangParserFactory, yangTextToIR);
         this.actorSystem = Objects.requireNonNull(actorSystem);
         this.clusterSingletonServiceProvider = Objects.requireNonNull(clusterSingletonServiceProvider);
         this.governanceProvider = Objects.requireNonNull(governanceProvider);

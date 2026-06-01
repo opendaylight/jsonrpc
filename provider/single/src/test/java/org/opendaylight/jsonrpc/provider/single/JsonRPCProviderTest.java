@@ -58,6 +58,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcE
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcEndpointsKey;
 import org.opendaylight.yangtools.binding.DataObjectIdentifier;
 import org.opendaylight.yangtools.binding.util.BindingMap;
+import org.opendaylight.yangtools.yang.model.spi.source.YangTextToIRSourceTransformer;
 import org.opendaylight.yangtools.yang.parser.api.YangParserFactory;
 
 /**
@@ -92,7 +93,8 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
                 getDataBroker(), getDOMMountPointService(), getDomBroker(), getSchemaService(),
                 new RouterDOMPublishNotificationService(getDOMNotificationRouter()),
                 new RouterDOMRpcService(getDOMRpcRouter()),
-                ServiceLoader.load(YangParserFactory.class).findFirst().orElseThrow());
+                ServiceLoader.load(YangParserFactory.class).findFirst().orElseThrow(),
+                ServiceLoader.load(YangTextToIRSourceTransformer.class).findFirst().orElseThrow());
         provider = new JsonRPCProvider(deps, () -> Optional.of(GOVERNANCE_MOCK));
         logTestName("START");
     }
