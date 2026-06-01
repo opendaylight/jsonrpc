@@ -35,10 +35,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <groupId>org.opendaylight.yangtools</groupId>
             <artifactId>yang-parser-api</artifactId>
         </dependency>
-        <dependency>
+        <!--dependency>
             <groupId>org.opendaylight.yangtools</groupId>
             <artifactId>yang-parser-impl</artifactId>
-        </dependency>
+        </dependency-->
         <dependency>
             <groupId>org.opendaylight.yangtools</groupId>
             <artifactId>yang-data-codec-gson</artifactId>
