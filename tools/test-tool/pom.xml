@@ -51,6 +51,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <artifactId>jsonrpc-test-model</artifactId>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.opendaylight.yangtools</groupId>
+            <artifactId>dagger-yang-parser</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

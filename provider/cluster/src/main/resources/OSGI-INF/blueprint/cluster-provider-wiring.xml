@@ -17,6 +17,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <reference id="domRpcService" interface="org.opendaylight.mdsal.dom.api.DOMRpcService" />
     <reference id="domNotificationPublishService" interface="org.opendaylight.mdsal.dom.api.DOMNotificationPublishService" />
     <reference id="yangParserFactory" interface="org.opendaylight.yangtools.yang.parser.api.YangParserFactory" />
+    <reference id="yangTextToIR" interface="org.opendaylight.yangtools.yang.model.spi.source.YangTextToIRSourceTransformer" />
     <reference id="clusterSingletonServiceProvider" interface="org.opendaylight.mdsal.singleton.api.ClusterSingletonServiceProvider" />
     <reference id="rpcProviderService" interface="org.opendaylight.mdsal.binding.api.RpcProviderService" />
     <reference id="actorSystemProvider" interface="org.opendaylight.controller.cluster.ActorSystemProvider" />
@@ -36,6 +37,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <argument ref="domNotificationPublishService" />
         <argument ref="domRpcService" />
         <argument ref="yangParserFactory" />
+        <argument ref="yangTextToIR" />
         <argument ref="actorSystem" />
         <argument ref="clusterSingletonServiceProvider" />
         <argument ref="governanceProvider" />
