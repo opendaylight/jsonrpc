@@ -95,7 +95,7 @@ import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.opendaylight.yangtools.yang.model.api.Module;
 import org.opendaylight.yangtools.yang.model.api.RpcDefinition;
-import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
+import org.opendaylight.yangtools.yang.parser.api.YangParserFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,8 +134,8 @@ public class MountpointTest {
         MockitoAnnotations.openMocks(this);
         clusterSingletonServiceProvider = new EOSClusterSingletonServiceProvider(new SimpleDOMEntityOwnershipService());
 
-        final YangXPathParserFactory yangXPathParserFactory = ServiceLoader
-                .<YangXPathParserFactory>load(YangXPathParserFactory.class)
+        final YangParserFactory yangParserFactory = ServiceLoader
+                .load(YangParserFactory.class)
                 .findFirst()
                 .orElseThrow();
 
@@ -161,13 +161,13 @@ public class MountpointTest {
         final ClusterDependencies masterDeps = new ClusterDependencies(tf, masterTestCustomizer.getDataBroker(),
                 masterTestCustomizer.getDOMMountPointService(), masterTestCustomizer.getDomBroker(),
                 masterTestCustomizer.getSchemaService(), masterTestCustomizer.getDOMNotificationRouter(),
-                new RouterDOMRpcService(masterTestCustomizer.getDOMRpcRouter()), yangXPathParserFactory,
+                new RouterDOMRpcService(masterTestCustomizer.getDOMRpcRouter()), yangParserFactory,
                 masterActorSystem, clusterSingletonServiceProvider, governanceProvider, rpcProviderService, null);
 
         final ClusterDependencies slaveDeps = new ClusterDependencies(tf, slaveTestCustomizer.getDataBroker(),
                 slaveTestCustomizer.getDOMMountPointService(), slaveTestCustomizer.getDomBroker(),
                 slaveTestCustomizer.getSchemaService(), slaveTestCustomizer.getDOMNotificationRouter(),
-                new RouterDOMRpcService(slaveTestCustomizer.getDOMRpcRouter()), yangXPathParserFactory,
+                new RouterDOMRpcService(slaveTestCustomizer.getDOMRpcRouter()), yangParserFactory,
                 slaveActorSystem, mockClusterSingletonServiceProvider, governanceProvider, rpcProviderService, null);
 
         masterConverter = new JsonRpcCodecFactory(masterTestCustomizer.getSchemaService().getGlobalContext());

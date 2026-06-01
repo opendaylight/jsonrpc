@@ -13,11 +13,10 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Queues;
 import com.google.common.io.CharSource;
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Deque;
+import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
@@ -34,13 +33,11 @@ import org.opendaylight.yangtools.yang.model.api.source.SourceIdentifier;
 import org.opendaylight.yangtools.yang.model.spi.source.DelegatedYangTextSource;
 import org.opendaylight.yangtools.yang.model.spi.source.SourceInfo;
 import org.opendaylight.yangtools.yang.model.spi.source.StringYangTextSource;
+import org.opendaylight.yangtools.yang.parser.api.YangParser;
+import org.opendaylight.yangtools.yang.parser.api.YangParserException;
+import org.opendaylight.yangtools.yang.parser.api.YangParserFactory;
 import org.opendaylight.yangtools.yang.parser.api.YangSyntaxErrorException;
-import org.opendaylight.yangtools.yang.parser.rfc7950.reactor.RFC7950Reactors;
 import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangIRSourceInfoExtractor;
-import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangStatementStreamSource;
-import org.opendaylight.yangtools.yang.parser.spi.meta.ReactorException;
-import org.opendaylight.yangtools.yang.parser.stmt.reactor.CrossSourceStatementReactor.BuildAction;
-import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +52,7 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
     private static final Logger LOG = LoggerFactory.getLogger(GovernanceSchemaContextProvider.class);
     private final RemoteGovernance governance;
     private static final Duration CACHE_TTL = Duration.ofMinutes(10L);
-    private final YangXPathParserFactory xpathParserFactory;
+    private final YangParserFactory yangParserFactory;
     // cache to speed-up module import lookups
     private final LoadingCache<ModuleInfo, Set<SourceDependency>> moduleImportCache = CacheBuilder.newBuilder()
             .expireAfterWrite(CACHE_TTL)
@@ -88,9 +85,9 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
             });
 
     public GovernanceSchemaContextProvider(@NonNull final RemoteGovernance governance,
-            @NonNull final YangXPathParserFactory xpathParserFactory) {
+            @NonNull final YangParserFactory yangParserFactory) {
         this.governance = Objects.requireNonNull(governance);
-        this.xpathParserFactory = Objects.requireNonNull(xpathParserFactory);
+        this.yangParserFactory = Objects.requireNonNull(yangParserFactory);
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
@@ -104,9 +101,9 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
-    private EffectiveModelContext createInternal(Peer peer) throws ReactorException {
-        final BuildAction reactor = RFC7950Reactors.defaultReactorBuilder(xpathParserFactory).build().newBuild();
-        final Deque<ModuleInfo> toResolve = Queues.newArrayDeque();
+    private EffectiveModelContext createInternal(Peer peer) throws YangParserException {
+        final var parser = yangParserFactory.createParser();
+        final var toResolve = new ArrayDeque<ModuleInfo>();
         try {
             Optional.ofNullable(peer.getModules())
                     .orElse(Set.of())
@@ -147,14 +144,13 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
         LOG.trace("Assembling schema from following modules : {}", toResolve);
         toResolve.stream()
                 .distinct()
-                .forEach(m -> addSourceToReactor(reactor, m.getModule(), sourceCache.getUnchecked(m)));
-        return reactor.buildEffective();
+                .forEach(m -> addSourceToParser(parser, m.getModule(), sourceCache.getUnchecked(m)));
+        return parser.buildEffectiveModel();
     }
 
-    private static void addSourceToReactor(BuildAction reactor, String name, String yangSource) {
+    private static void addSourceToParser(YangParser parser, String name, String yangSource) {
         try {
-            reactor.addSource(YangStatementStreamSource.create(new DelegatedYangTextSource(
-                    new SourceIdentifier(name), CharSource.wrap(yangSource))));
+            parser.addSource(new DelegatedYangTextSource(new SourceIdentifier(name), CharSource.wrap(yangSource)));
         } catch (YangSyntaxErrorException | IOException e) {
             throw new IllegalStateException("Unable to add source of '" + name + "' into reactor", e);
         }

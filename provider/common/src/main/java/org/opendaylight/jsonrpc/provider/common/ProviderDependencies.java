@@ -16,7 +16,7 @@ import org.opendaylight.mdsal.dom.api.DOMMountPointService;
 import org.opendaylight.mdsal.dom.api.DOMNotificationPublishService;
 import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
-import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
+import org.opendaylight.yangtools.yang.parser.api.YangParserFactory;
 
 /**
  * Simple grouping of all required dependencies for easier propagation.
@@ -32,13 +32,13 @@ public class ProviderDependencies {
     private final DOMSchemaService schemaService;
     private final DOMNotificationPublishService domNotificationPublishService;
     private final DOMRpcService domRpcService;
-    private final YangXPathParserFactory yangXPathParserFactory;
+    private final YangParserFactory yangParserFactory;
 
     public ProviderDependencies(@NonNull TransportFactory transportFactory, @NonNull DataBroker dataBroker,
             @NonNull DOMMountPointService domMountPointService, @NonNull DOMDataBroker domDataBroker,
             @NonNull DOMSchemaService schemaService,
             @NonNull DOMNotificationPublishService domNotificationPublishService, @NonNull DOMRpcService domRpcService,
-            @NonNull YangXPathParserFactory yangXPathParserFactory) {
+            @NonNull YangParserFactory yangParserFactory) {
         this.transportFactory = Objects.requireNonNull(transportFactory);
         this.dataBroker = Objects.requireNonNull(dataBroker);
         this.domMountPointService = Objects.requireNonNull(domMountPointService);
@@ -46,7 +46,7 @@ public class ProviderDependencies {
         this.schemaService = Objects.requireNonNull(schemaService);
         this.domNotificationPublishService = Objects.requireNonNull(domNotificationPublishService);
         this.domRpcService = Objects.requireNonNull(domRpcService);
-        this.yangXPathParserFactory = Objects.requireNonNull(yangXPathParserFactory);
+        this.yangParserFactory = Objects.requireNonNull(yangParserFactory);
     }
 
     public TransportFactory getTransportFactory() {
@@ -77,7 +77,7 @@ public class ProviderDependencies {
         return domRpcService;
     }
 
-    public YangXPathParserFactory getYangXPathParserFactory() {
-        return yangXPathParserFactory;
+    public YangParserFactory getYangParserFactory() {
+        return yangParserFactory;
     }
 }
