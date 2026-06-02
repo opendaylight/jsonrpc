@@ -15,10 +15,10 @@ import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
 import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
-import org.opendaylight.yangtools.yang.model.api.SchemaContext;
 
 /**
- * {@link Supplier} of {@link JsonRpcCodecFactory} that is up-to-date with changes in global {@link SchemaContext}.
+ * {@link Supplier} of {@link JsonRpcCodecFactory} that is up-to-date with changes in global
+ * {@link EffectiveModelContext}.
  *
  * @author <a href="mailto:richard.kosegi@gmail.com">Richard Kosegi</a>
  * @since Aug 25, 2018
