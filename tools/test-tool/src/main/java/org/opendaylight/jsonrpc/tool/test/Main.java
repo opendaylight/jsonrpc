@@ -22,6 +22,7 @@ import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.provider.common.GovernanceSchemaContextProvider;
 import org.opendaylight.jsonrpc.tool.test.Parameters.Options;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.YangIdentifier;
+import org.opendaylight.yangtools.yang.parser.impl.DefaultYangParserFactory;
 import org.opendaylight.yangtools.yang.xpath.impl.AntlrXPathParserFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +57,8 @@ public final class Main {
                 LOG.info("Datastore modules : {}", modules);
                 final DatastoreImpl datastore = DatastoreImpl.create(tf, opts.datastore,
                         modules.stream().map(YangIdentifier::new).collect(Collectors.toSet()),
-                        new GovernanceSchemaContextProvider(governance, new AntlrXPathParserFactory()));
+                        new GovernanceSchemaContextProvider(governance,
+                            new DefaultYangParserFactory(new AntlrXPathParserFactory())));
                 LOG.info("Started : {}", datastore);
             }
             if (opts.rpc != null) {

@@ -35,7 +35,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
 import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
-import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
+import org.opendaylight.yangtools.yang.parser.api.YangParserFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -61,14 +61,14 @@ public final class RemoteControlProvider
     private ResponderSession remoteControl;
 
     @Activate
-    public RemoteControlProvider(@Reference YangXPathParserFactory yangXPathParserFactory,
+    public RemoteControlProvider(@Reference YangParserFactory yangParserFactory,
             @Reference DataBroker dataBroker, @Reference DOMDataBroker domDataBroker,
             @Reference DOMMountPointService domMountPointService, @Reference DOMSchemaService schemaService,
             @Reference DOMRpcService domRpcService,
             @Reference DOMNotificationPublishService domNotificationPublishService,
             @Reference TransportFactory transportFactory) {
         this(new ProviderDependencies(transportFactory, dataBroker, domMountPointService, domDataBroker, schemaService,
-            domNotificationPublishService, domRpcService, yangXPathParserFactory));
+            domNotificationPublishService, domRpcService, yangParserFactory));
     }
 
     public RemoteControlProvider(@NonNull ProviderDependencies dependencies) {

@@ -30,11 +30,11 @@ public class CombinedSchemaContextProvider implements SchemaContextProvider {
     private SchemaContextProvider getProvider(Peer peer) {
         if (Util.supportInbandModels(peer)) {
             return InbandModelsSchemaContextProvider.create(dependencies.getTransportFactory(),
-                    dependencies.getYangXPathParserFactory());
+                    dependencies.getYangParserFactory());
         }
         if (governanceProvider.get().isPresent()) {
             return new GovernanceSchemaContextProvider(governanceProvider.get().orElseThrow(),
-                    dependencies.getYangXPathParserFactory());
+                    dependencies.getYangParserFactory());
         }
         return new BuiltinSchemaContextProvider(dependencies.getSchemaService().getGlobalContext());
     }

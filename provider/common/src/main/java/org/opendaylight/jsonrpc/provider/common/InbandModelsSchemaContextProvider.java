@@ -19,11 +19,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.peer.RpcE
 import org.opendaylight.yangtools.yang.model.api.EffectiveModelContext;
 import org.opendaylight.yangtools.yang.model.api.source.SourceIdentifier;
 import org.opendaylight.yangtools.yang.model.spi.source.DelegatedYangTextSource;
+import org.opendaylight.yangtools.yang.parser.api.YangParserFactory;
 import org.opendaylight.yangtools.yang.parser.api.YangSyntaxErrorException;
-import org.opendaylight.yangtools.yang.parser.rfc7950.reactor.RFC7950Reactors;
-import org.opendaylight.yangtools.yang.parser.rfc7950.repo.YangStatementStreamSource;
-import org.opendaylight.yangtools.yang.parser.stmt.reactor.CrossSourceStatementReactor;
-import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
 
 /**
  * {@link SchemaContextProvider} used for peers that provide required YANG modules by themselves.
@@ -33,17 +30,17 @@ import org.opendaylight.yangtools.yang.xpath.api.YangXPathParserFactory;
  */
 public final class InbandModelsSchemaContextProvider implements SchemaContextProvider {
     private final TransportFactory transportFactory;
-    private final YangXPathParserFactory xpathParserFactory;
+    private final YangParserFactory yangParserFactory;
 
     public static InbandModelsSchemaContextProvider create(TransportFactory transportFactory,
-            YangXPathParserFactory xpathParserFactory) {
-        return new InbandModelsSchemaContextProvider(transportFactory, xpathParserFactory);
+            YangParserFactory yangParserFactory) {
+        return new InbandModelsSchemaContextProvider(transportFactory, yangParserFactory);
     }
 
     private InbandModelsSchemaContextProvider(final TransportFactory transportFactory,
-            YangXPathParserFactory xpathParserFactory) {
+            YangParserFactory yangParserFactory) {
         this.transportFactory = Objects.requireNonNull(transportFactory);
-        this.xpathParserFactory = Objects.requireNonNull(xpathParserFactory);
+        this.yangParserFactory = Objects.requireNonNull(yangParserFactory);
     }
 
     @Override
@@ -60,20 +57,16 @@ public final class InbandModelsSchemaContextProvider implements SchemaContextPro
         try (InbandModelsService requester = transportFactory.endpointBuilder()
                 .requester()
                 .createProxy(InbandModelsService.class, enpodint.getEndpointUri().getValue())) {
-            final CrossSourceStatementReactor.BuildAction reactor = RFC7950Reactors
-                    .defaultReactorBuilder(xpathParserFactory)
-                    .build()
-                    .newBuild();
-
+            final var parser = yangParserFactory.createParser();
             requester.getModules().forEach(m -> {
                 try {
-                    reactor.addSource(YangStatementStreamSource.create(new DelegatedYangTextSource(
-                        new SourceIdentifier(m.getName()), CharSource.wrap(m.getContent()))));
+                    parser.addSource(new DelegatedYangTextSource(
+                        new SourceIdentifier(m.getName()), CharSource.wrap(m.getContent())));
                 } catch (YangSyntaxErrorException | IOException e) {
                     throw new IllegalStateException("Failed to add YANG source for " + m.getName(), e);
                 }
             });
-            return reactor.buildEffective();
+            return parser.buildEffectiveModel();
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("URI is invalid", e);
         } catch (Exception e) {
