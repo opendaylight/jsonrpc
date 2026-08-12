@@ -12,7 +12,6 @@ import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.DE
 import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.PARAM_PROXY_RETRY_COUNT;
 import static org.opendaylight.jsonrpc.bus.messagelib.MessageLibraryConstants.PARAM_PROXY_RETRY_DELAY;
 
-import com.google.common.collect.Queues;
 import com.google.common.primitives.Ints;
 import com.google.gson.JsonObject;
 import io.netty.util.concurrent.Future;
@@ -20,6 +19,7 @@ import io.netty.util.concurrent.GenericFutureListener;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -46,7 +46,7 @@ public final class RequesterSessionImpl extends AbstractSession implements Messa
     private static final Logger LOG = LoggerFactory.getLogger(RequesterSessionImpl.class);
     private final Requester requester;
     private final ReplyMessageHandler handler;
-    private final BlockingQueue<String> responseQueue = Queues.newLinkedBlockingDeque();
+    private final BlockingQueue<String> responseQueue = new LinkedBlockingDeque<>();
     private final AtomicReference<Future<?>> lastRequest = new AtomicReference<>(null);
     private final int retryCount;
     private final long retryDelay;
@@ -68,12 +68,11 @@ public final class RequesterSessionImpl extends AbstractSession implements Messa
         try {
             PeerContextHolder.set(peerContext);
             for (final JsonRpcBaseMessage msg : messages) {
-                if (msg.getType() == JsonRpcMessageType.REPLY) {
-                    handler.handleReply((JsonRpcReplyMessage) msg);
-                } else {
+                if (msg.getType() != JsonRpcMessageType.REPLY) {
                     throw new MessageLibraryMismatchException(
                             String.format("Requester received %s message", msg.getType().name()));
                 }
+                handler.handleReply((JsonRpcReplyMessage) msg);
             }
         } finally {
             PeerContextHolder.remove();
@@ -90,14 +89,11 @@ public final class RequesterSessionImpl extends AbstractSession implements Messa
             throw new RecoverableTransportException("There is unfinished request on this channel, try again later");
         }
         LOG.debug("Sending request : {}", message);
-        lastRequest.set(requester.send(message).addListener(new GenericFutureListener<Future<String>>() {
-            @Override
-            public void operationComplete(final Future<String> future) throws Exception {
-                if (future.isSuccess()) {
-                    responseQueue.add(future.get());
-                } else {
-                    LOG.warn("Send failed", future.cause());
-                }
+        lastRequest.set(requester.send(message).addListener((GenericFutureListener<Future<String>>) future -> {
+            if (future.isSuccess()) {
+                responseQueue.add(future.get());
+            } else {
+                LOG.warn("Send failed", future.cause());
             }
         }));
     }
@@ -110,9 +106,8 @@ public final class RequesterSessionImpl extends AbstractSession implements Messa
                 lastRequest.getAndSet(null).cancel(true);
                 throw new MessageLibraryTimeoutException(
                         String.format("Message was not received within %d milliseconds", timeout));
-            } else {
-                return resp;
             }
+            return resp;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -121,14 +116,13 @@ public final class RequesterSessionImpl extends AbstractSession implements Messa
 
     private JsonRpcReplyMessage readReply(String msg) {
         final List<JsonRpcBaseMessage> replies = JsonRpcSerializer.fromJson(msg);
-        if (replies.size() == 1) {
-            if (replies.get(0).getType() != JsonRpcMessageType.REPLY) {
-                throw new MessageLibraryMismatchException("Unexpected message : " + replies.get(0));
-            } else {
-                return (JsonRpcReplyMessage) replies.get(0);
-            }
-        } else {
+        if (replies.size() != 1) {
             throw new MessageLibraryException("Unexpected number of replies (1 required) : " + replies.size());
+        }
+        if (replies.get(0).getType() != JsonRpcMessageType.REPLY) {
+            throw new MessageLibraryMismatchException("Unexpected message : " + replies.get(0));
+        } else {
+            return (JsonRpcReplyMessage) replies.get(0);
         }
     }
 

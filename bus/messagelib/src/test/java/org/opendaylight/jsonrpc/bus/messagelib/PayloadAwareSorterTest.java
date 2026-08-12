@@ -9,11 +9,11 @@ package org.opendaylight.jsonrpc.bus.messagelib;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.lang.reflect.Method;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import org.junit.Test;
@@ -30,11 +30,11 @@ public class PayloadAwareSorterTest {
     }
 
     public static class Service {
-        public void test(int arg) {
+        public void test(final int arg) {
             // NOOP
         }
 
-        public void test(ObjectArg arg) {
+        public void test(final ObjectArg arg) {
             // NOOP
         }
     }
@@ -45,22 +45,22 @@ public class PayloadAwareSorterTest {
         Method object = Service.class.getDeclaredMethod("test", ObjectArg.class);
         // object argument
         Comparator<Method> sorter = Util.payloadAwareSorter(new JsonObject());
-        List<Method> list = Lists.<Method>newArrayList(primitive, object);
-        Collections.sort(list, sorter);
+        List<Method> list = new ArrayList<>(Arrays.asList(primitive, object));
+        list.sort(sorter);
         assertEquals(object, list.get(0));
 
-        list = Lists.<Method>newArrayList(object, primitive);
-        Collections.sort(list, sorter);
+        list = new ArrayList<>(Arrays.asList(object, primitive));
+        list.sort(sorter);
         assertEquals(object, list.get(0));
 
         // primitive argument
         sorter = Util.payloadAwareSorter(new JsonPrimitive(10));
-        list = Lists.<Method>newArrayList(primitive, object);
-        Collections.sort(list, sorter);
+        list = new ArrayList<>(Arrays.asList(primitive, object));
+        list.sort(sorter);
         assertEquals(primitive, list.get(0));
 
-        list = Lists.<Method>newArrayList(object, primitive);
-        Collections.sort(list, sorter);
+        list = new ArrayList<>(Arrays.asList(object, primitive));
+        list.sort(sorter);
         assertEquals(primitive, list.get(0));
     }
 }

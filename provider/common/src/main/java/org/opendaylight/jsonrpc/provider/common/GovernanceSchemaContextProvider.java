@@ -13,10 +13,10 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Queues;
 import com.google.common.io.CharSource;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.Objects;
@@ -106,7 +106,7 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
     @SuppressWarnings("checkstyle:IllegalCatch")
     private EffectiveModelContext createInternal(Peer peer) throws ReactorException {
         final BuildAction reactor = RFC7950Reactors.defaultReactorBuilder(xpathParserFactory).build().newBuild();
-        final Deque<ModuleInfo> toResolve = Queues.newArrayDeque();
+        final Deque<ModuleInfo> toResolve = new ArrayDeque<>();
         try {
             Optional.ofNullable(peer.getModules())
                     .orElse(Set.of())
@@ -128,7 +128,7 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
                     return new ModuleInfo(parts[0], parts[1]);
                 }
                 return new ModuleInfo(yi.getValue(), null);
-            }).collect(Collectors.toList()));
+            }).toList());
             // resolve remaining until queue is empty
             while (!toResolve.isEmpty()) {
                 final ModuleInfo mi = toResolve.pop();

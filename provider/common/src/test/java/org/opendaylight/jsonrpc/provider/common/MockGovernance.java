@@ -7,7 +7,6 @@
  */
 package org.opendaylight.jsonrpc.provider.common;
 
-import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -50,6 +49,6 @@ public class MockGovernance implements RemoteGovernance {
 
     @Override
     public List<ModuleInfo> depends(ModuleInfo arg) {
-        return Lists.newArrayList(new ModuleInfo(arg.getModule(), arg.getRevision()));
+        return List.of(new ModuleInfo(arg.getModule(), arg.getRevision()));
     }
 }
