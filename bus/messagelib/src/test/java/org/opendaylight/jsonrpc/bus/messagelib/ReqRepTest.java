@@ -7,8 +7,8 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
-import com.google.common.collect.Lists;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import org.junit.After;
 import org.junit.Before;
@@ -16,9 +16,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage.Builder;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +33,7 @@ public class ReqRepTest {
 
     @Parameters
     public static Collection<String[]> data() {
-        return Lists.newArrayList(new String[] { "http" }, new String[] { "ws" }, new String[] { "zmq" });
+        return List.of(new String[] { "http" }, new String[] { "ws" }, new String[] { "zmq" });
     }
 
     public ReqRepTest(final String transport) {
@@ -59,20 +56,14 @@ public class ReqRepTest {
         final int port = TestHelper.getFreeTcpPort();
         final CountDownLatch replyCounter = new CountDownLatch(count);
         final CountDownLatch requestCounter = new CountDownLatch(count);
-        final RequesterSession req = ml.requester(TestHelper.getConnectUri(transport, port), new ReplyMessageHandler() {
-            @Override
-            public void handleReply(JsonRpcReplyMessage reply) {
-                LOG.info("Response received : {}", reply);
-                replyCounter.countDown();
-            }
+        final RequesterSession req = ml.requester(TestHelper.getConnectUri(transport, port), reply -> {
+            LOG.info("Response received : {}", reply);
+            replyCounter.countDown();
         }, true);
-        final ResponderSession rep = ml.responder(TestHelper.getBindUri(transport, port), new RequestMessageHandler() {
-            @Override
-            public void handleRequest(JsonRpcRequestMessage request, Builder replyBuilder) {
-                LOG.info("Request received : {}", request);
-                replyBuilder.metadata(request.getMetadata()).result(request.getParams());
-                requestCounter.countDown();
-            }
+        final ResponderSession rep = ml.responder(TestHelper.getBindUri(transport, port), (request, replyBuilder) -> {
+            LOG.info("Request received : {}", request);
+            replyBuilder.metadata(request.getMetadata()).result(request.getParams());
+            requestCounter.countDown();
         }, true);
         req.await();
         for (int i = 0; i < count; i++) {

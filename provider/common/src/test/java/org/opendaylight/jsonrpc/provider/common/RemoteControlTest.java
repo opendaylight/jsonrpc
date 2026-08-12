@@ -15,13 +15,12 @@ import static org.junit.Assert.fail;
 import static org.opendaylight.jsonrpc.provider.common.Util.store2int;
 import static org.opendaylight.jsonrpc.provider.common.Util.store2str;
 
-import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -234,7 +233,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
     public void testMerge() throws OperationFailedException, InterruptedException, ExecutionException {
         DOMDataTreeWriteTransaction wtx = getDomBroker().newWriteOnlyTransaction();
         Config c1 = new ConfigBuilder().setWhoAmI(new Uri("urn:bla"))
-                .setConfiguredEndpoints(Collections.emptyMap()).build();
+                .setConfiguredEndpoints(Map.of()).build();
 
         NodeResult e1 = getCodec()
                 .toNormalizedDataObject(InstanceIdentifier.create(Config.class), c1);
@@ -383,7 +382,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         int index = 0;
         LOG.info("Path len : {}", path.size());
         for (final PathArgument p : path) {
-            LOG.info("{}{} : {}", Strings.repeat("-", index++), p.getNodeType(), p);
+            LOG.info("{}{} : {}", "-".repeat(index++), p.getNodeType(), p);
         }
     }
 }

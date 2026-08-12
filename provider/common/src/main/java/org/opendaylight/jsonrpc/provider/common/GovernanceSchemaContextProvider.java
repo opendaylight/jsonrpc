@@ -127,7 +127,7 @@ public class GovernanceSchemaContextProvider implements SchemaContextProvider {
                     return new ModuleInfo(parts[0], parts[1]);
                 }
                 return new ModuleInfo(yi.getValue(), null);
-            }).collect(Collectors.toList()));
+            }).toList());
             // resolve remaining until queue is empty
             while (!toResolve.isEmpty()) {
                 final ModuleInfo mi = toResolve.pop();

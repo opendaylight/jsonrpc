@@ -7,7 +7,6 @@
  */
 package org.opendaylight.jsonrpc.bus.http;
 
-import com.google.common.base.Strings;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import org.junit.Test;
@@ -24,7 +23,7 @@ public class WsReqRepTest extends AbstractReqRepTest {
     @Test
     public void testBigMessageSize() throws InterruptedException, ExecutionException, TimeoutException {
         final int port = getFreeTcpPort();
-        testReqRep(getConnectUri(port), getBindUri(port), Strings.repeat("X", 3000), Strings.repeat("Y", 2000));
+        testReqRep(getConnectUri(port), getBindUri(port), "X".repeat(3000), "Y".repeat(2000));
     }
 
     @Override
