@@ -7,7 +7,6 @@
  */
 package org.opendaylight.jsonrpc.dom.codec;
 
-import com.google.common.base.Strings;
 import com.google.common.io.Resources;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
@@ -49,13 +48,13 @@ public abstract class AbstractCodecTest extends AbstractDataBrokerTest {
         factory = new JsonRpcCodecFactory(context);
     }
 
-    protected JsonElement loadJsonData(String name) throws IOException {
+    protected JsonElement loadJsonData(final String name) throws IOException {
         try (InputStream is = Resources.getResource(name).openStream()) {
             return JsonParser.parseReader(new InputStreamReader(is));
         }
     }
 
-    protected NormalizedNode loadDomData(String name, YangInstanceIdentifier path) throws IOException {
+    protected NormalizedNode loadDomData(final String name, final YangInstanceIdentifier path) throws IOException {
         final SchemaInferenceStack stack = DataSchemaContextTree.from(schemaContext)
                 .enterPath(path)
                 .orElseThrow()
@@ -74,7 +73,7 @@ public abstract class AbstractCodecTest extends AbstractDataBrokerTest {
         }
     }
 
-    protected static void dumpYangPath(YangInstanceIdentifier path) {
+    protected static void dumpYangPath(final YangInstanceIdentifier path) {
         final StringBuilder sb = new StringBuilder();
         int level = 2;
         for (PathArgument arg : path.getPathArguments()) {
@@ -83,12 +82,12 @@ public abstract class AbstractCodecTest extends AbstractDataBrokerTest {
         LOG.info("YangInstanceIdentifier : \n{}", sb.toString());
     }
 
-    protected static void dumpYangPathArgument(int level, StringBuilder sb, PathArgument arg) {
-        sb.append(Strings.repeat(" ", (level - 1) * 2));
+    protected static void dumpYangPathArgument(final int level, final StringBuilder sb, final PathArgument arg) {
+        sb.append(" ".repeat((level - 1) * 2));
         sb.append(" ").append(arg.getClass().getSimpleName()).append(arg).append('\n');
         if (arg instanceof NodeIdentifierWithPredicates) {
             ((NodeIdentifierWithPredicates) arg).entrySet().forEach(pre -> {
-                sb.append(Strings.repeat(" ", (level - 1) * 2));
+                sb.append(" ".repeat((level - 1) * 2));
                 sb.append(" key")
                         .append(':')
                         .append(pre.getKey().getLocalName())
@@ -100,14 +99,14 @@ public abstract class AbstractCodecTest extends AbstractDataBrokerTest {
 
     }
 
-    protected static void dumpNormalizedNode(NormalizedNode node) {
+    protected static void dumpNormalizedNode(final NormalizedNode node) {
         StringWriter sw = new StringWriter();
         dumpNormalizedNode(node, sw, 1);
         LOG.info("Normalized node content : \n{}", sw.toString());
     }
 
-    protected static void dumpNormalizedNode(NormalizedNode nn, StringWriter sw, int level) {
-        sw.write(Strings.repeat(" ", (level - 1) * 2));
+    protected static void dumpNormalizedNode(final NormalizedNode nn, final StringWriter sw, final int level) {
+        sw.write(" ".repeat((level - 1) * 2));
         sw.write(nn.body().getClass().getSimpleName());
         sw.write(" : ");
         sw.write(nn.name().toString());

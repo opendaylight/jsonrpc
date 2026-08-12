@@ -8,11 +8,12 @@
 package org.opendaylight.jsonrpc.tool.test;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.Uninterruptibles;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
@@ -49,7 +50,7 @@ public final class Main {
             if (opts.datastore != null) {
                 Preconditions.checkArgument(opts.datastoreModules != null,
                         "Argument 'datastore-modules' is required if --datastore option is provided");
-                final List<String> modules = Lists.newArrayList(opts.datastoreModules.split(","));
+                final List<String> modules = new ArrayList<>(Arrays.asList(opts.datastoreModules.split(",")));
                 if (opts.rpc != null) {
                     modules.add("test-model-rpc");
                 }
