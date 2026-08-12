@@ -9,15 +9,12 @@ package org.opendaylight.jsonrpc.bus.zmq;
 
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.base.Strings;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.Test;
 import org.opendaylight.jsonrpc.bus.api.BusSessionFactory;
-import org.opendaylight.jsonrpc.bus.api.MessageListener;
-import org.opendaylight.jsonrpc.bus.api.PeerContext;
 import org.opendaylight.jsonrpc.bus.api.RecoverableTransportException;
 import org.opendaylight.jsonrpc.bus.api.Requester;
 import org.opendaylight.jsonrpc.bus.api.Responder;
@@ -40,13 +37,10 @@ public class ReqRepTest extends AbstractSessionTest {
                 latch.countDown();
             }
         });
-        final Requester requester = factory.requester(getConnectUri(port), new MessageListener() {
-            @Override
-            public void onMessage(PeerContext peerContext, String message) {
-                LOG.info("Received response : {}", message);
-                if ("Hi".equals(message)) {
-                    latch.countDown();
-                }
+        final Requester requester = factory.requester(getConnectUri(port), (peerContext, message) -> {
+            LOG.info("Received response : {}", message);
+            if ("Hi".equals(message)) {
+                latch.countDown();
             }
         });
         requester.awaitConnection();
@@ -60,7 +54,7 @@ public class ReqRepTest extends AbstractSessionTest {
     public void testLongFrame() throws Exception {
         final int port = getFreeTcpPort();
         final CountDownLatch latch = new CountDownLatch(2);
-        final String msg = Strings.repeat("X", 256);
+        final String msg = "X".repeat(256);
         final Responder responder = factory.responder(getBindUri(port), (peerContext, message) -> {
             if (msg.equals(message)) {
                 // echo back
@@ -68,13 +62,10 @@ public class ReqRepTest extends AbstractSessionTest {
                 latch.countDown();
             }
         });
-        final Requester requester = factory.requester(getConnectUri(port), new MessageListener() {
-            @Override
-            public void onMessage(PeerContext peerContext, String message) {
-                LOG.info("Received response : {}", message);
-                if (msg.equals(message)) {
-                    latch.countDown();
-                }
+        final Requester requester = factory.requester(getConnectUri(port), (peerContext, message) -> {
+            LOG.info("Received response : {}", message);
+            if (msg.equals(message)) {
+                latch.countDown();
             }
         });
         requester.awaitConnection();

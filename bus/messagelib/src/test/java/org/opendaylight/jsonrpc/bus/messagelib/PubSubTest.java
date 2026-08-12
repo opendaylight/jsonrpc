@@ -7,7 +7,6 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
-import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,7 +18,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcNotificationMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +35,7 @@ public class PubSubTest {
 
     @Parameters
     public static Collection<String[]> data() {
-        return Lists.newArrayList(new String[] { "ws" }, new String[] { "zmq" });
+        return List.of(new String[] { "ws" }, new String[] { "zmq" });
     }
 
     public PubSubTest(final String transport) {
@@ -64,12 +62,9 @@ public class PubSubTest {
         final PublisherSession pub = ml.publisher(TestHelper.getBindUri(transport, port), true);
         for (int i = 0; i < subCount; i++) {
             final SubscriberSession sub = ml.subscriber(TestHelper.getConnectUri(transport, port),
-                    new NotificationMessageHandler() {
-                        @Override
-                        public void handleNotification(JsonRpcNotificationMessage notification) {
-                            LOG.info("Notification : {}", notification);
-                            latch.countDown();
-                        }
+                    notification -> {
+                        LOG.info("Notification : {}", notification);
+                        latch.countDown();
                     }, true);
             sub.await();
             subscribers.add(sub);

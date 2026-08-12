@@ -7,7 +7,6 @@
  */
 package org.opendaylight.jsonrpc.provider.common;
 
-import com.google.common.base.Strings;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Set;
@@ -64,12 +63,12 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
 
     @Override
     protected void setupWithSchema(final EffectiveModelContext context) {
-        this.testCustomizer = new ConcurrentDataBrokerTestCustomizer(true);
-        this.dataBroker = this.testCustomizer.createDataBroker();
-        this.domBroker = this.testCustomizer.createDOMDataBroker();
-        this.testCustomizer.updateSchema(runtimeContext);
-        this.schemaContext = context;
-        setupWithDataBroker(this.dataBroker);
+        testCustomizer = new ConcurrentDataBrokerTestCustomizer(true);
+        dataBroker = testCustomizer.createDataBroker();
+        domBroker = testCustomizer.createDOMDataBroker();
+        testCustomizer.updateSchema(runtimeContext);
+        schemaContext = context;
+        setupWithDataBroker(dataBroker);
         rpcRouter = new DOMRpcRouter(getSchemaService());
         bnnc = new DefaultBindingDOMCodecFactory().createBindingDOMCodec(runtimeContext);
         codecFactory = new JsonRpcCodecFactory(context);
@@ -90,7 +89,7 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
     }
 
     protected DOMSchemaService getSchemaService() {
-        return this.testCustomizer.getSchemaService();
+        return testCustomizer.getSchemaService();
     }
 
     @Override
@@ -99,16 +98,16 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
 
     @Override
     public DataBroker getDataBroker() {
-        return this.dataBroker;
+        return dataBroker;
     }
 
     @Override
     public DOMDataBroker getDomBroker() {
-        return this.domBroker;
+        return domBroker;
     }
 
     public DOMMountPointService getDOMMountPointService() {
-        return this.domMountPointService;
+        return domMountPointService;
     }
 
     public DOMRpcRouter getDOMRpcRouter() {
@@ -124,9 +123,9 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
     }
 
     protected void logTestName(final String stage) {
-        LOG.info("{}", Strings.repeat("=", 80));
+        LOG.info("{}", "=".repeat(80));
         LOG.info("[{}]{}", stage, nameRule.getMethodName());
-        LOG.info("{}", Strings.repeat("=", 80));
+        LOG.info("{}", "=".repeat(80));
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")

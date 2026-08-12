@@ -7,7 +7,6 @@
  */
 package org.opendaylight.jsonrpc.bus.http;
 
-import com.google.common.base.Strings;
 import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -54,7 +53,7 @@ public class WssReqRepTest extends AbstractReqRepTest {
                 .build();
 
         testReqRep(clientUri, serverUri, "ABCD", "1234567890");
-        testReqRep(clientUri, serverUri, Strings.repeat("X", 3000), Strings.repeat("Y", 2000));
+        testReqRep(clientUri, serverUri, "X".repeat(3000), "Y".repeat(2000));
     }
 
     @Test(timeout = 15_000, expected = IllegalStateException.class)
