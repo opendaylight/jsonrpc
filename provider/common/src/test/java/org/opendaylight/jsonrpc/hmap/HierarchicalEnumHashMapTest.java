@@ -11,7 +11,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import java.io.ByteArrayOutputStream;
@@ -19,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -74,7 +74,7 @@ public class HierarchicalEnumHashMapTest {
     @Test
     public void testDeserializePath() throws IOException {
         JsonElement json;
-        json = CODEC.deserialize(Lists.newArrayList(null, "level1", "level2", "level3"));
+        json = CODEC.deserialize(Arrays.asList(null, "level1", "level2", "level3"));
         LOG.info("JSON : {}", json);
         assertEquals("{\"level1\":{\"level2\":{\"level3\":{}}}}", json.toString());
         final List<String> rootOnlyPath = new ArrayList<>();
@@ -82,19 +82,19 @@ public class HierarchicalEnumHashMapTest {
         json = CODEC.deserialize(rootOnlyPath);
         LOG.info("JSON : {}", json);
         assertEquals("{}", json.toString());
-        json = CODEC.deserialize(Lists.newArrayList(null, "level1", "item1=value", "level3", "item=value"));
+        json = CODEC.deserialize(Arrays.asList(null, "level1", "item1=value", "level3", "item=value"));
         LOG.info("JSON : {}", json);
-        json = CODEC.deserialize(Lists.newArrayList(null, "network-topology:network-topology", "topology",
+        json = CODEC.deserialize(Arrays.asList(null, "network-topology:network-topology", "topology",
                 "topology-id=topology1", "node", "node-id=node1", "termination-point", "tp-id=eth0"));
         LOG.info("JSON : {}", json);
         assertEquals(parse(getData("path4")).toString(), json.toString());
     }
 
-    private static JsonElement parse(String str) {
+    private static JsonElement parse(final String str) {
         return JsonParser.parseString(str);
     }
 
-    private String getData(String name) throws IOException {
+    private String getData(final String name) throws IOException {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (InputStream is = getClass().getResourceAsStream("/" + name + ".json")) {
             is.transferTo(baos);

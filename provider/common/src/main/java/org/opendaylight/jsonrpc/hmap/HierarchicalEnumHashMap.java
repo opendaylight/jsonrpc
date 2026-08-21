@@ -7,7 +7,6 @@
  */
 package org.opendaylight.jsonrpc.hmap;
 
-import com.google.common.base.Strings;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -111,7 +110,7 @@ public final class HierarchicalEnumHashMap<P, K extends Enum<K>, D, I> implement
     }
 
     private void append(StringBuilder sb, EnumTreeNode<I, K, D> node, int level) {
-        sb.append(Strings.repeat(" ", level * 2));
+        sb.append(" ".repeat(level * 2));
         sb.append(node.id()).append("[").append(node.allValues()).append("]");
         sb.append("\n");
         for (final EnumTreeNode<I, K, D> child : node.children()) {
