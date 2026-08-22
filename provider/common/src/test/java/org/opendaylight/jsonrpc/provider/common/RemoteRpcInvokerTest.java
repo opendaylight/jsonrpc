@@ -29,7 +29,7 @@ import org.opendaylight.mdsal.binding.dom.adapter.ConstantAdapterContext;
 import org.opendaylight.mdsal.dom.broker.RouterDOMPublishNotificationService;
 import org.opendaylight.mdsal.dom.broker.RouterDOMRpcProviderService;
 import org.opendaylight.mdsal.dom.broker.RouterDOMRpcService;
-import org.opendaylight.yangtools.binding.data.codec.impl.di.DefaultBindingDOMCodecFactory;
+import org.opendaylight.yangtools.binding.data.codec.dynamic.dagger.BindingDataCodecFactoryModule;
 import org.opendaylight.yangtools.concepts.Registration;
 
 /**
@@ -47,8 +47,8 @@ public class RemoteRpcInvokerTest extends AbstractJsonRpcTest {
     @Before
     public void setUp() throws Exception {
         final BindingDOMRpcProviderServiceAdapter rpcAdapter = new BindingDOMRpcProviderServiceAdapter(
-            new ConstantAdapterContext(new DefaultBindingDOMCodecFactory().createBindingDOMCodec(
-                getBindingRuntimeContext())),
+            new ConstantAdapterContext(BindingDataCodecFactoryModule.provideBindingDOMCodecFactory()
+                .createBindingDOMCodec(getBindingRuntimeContext())),
             new RouterDOMRpcProviderService(getDOMRpcRouter()));
         rpcReg = rpcAdapter.registerRpcImplementations(
             new TestErrorMethod(),

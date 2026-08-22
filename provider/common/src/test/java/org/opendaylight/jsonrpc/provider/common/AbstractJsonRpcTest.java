@@ -26,13 +26,13 @@ import org.opendaylight.mdsal.dom.api.DOMSchemaService;
 import org.opendaylight.mdsal.dom.broker.DOMMountPointServiceImpl;
 import org.opendaylight.mdsal.dom.broker.DOMNotificationRouter;
 import org.opendaylight.mdsal.dom.broker.DOMRpcRouter;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.data.rev201014.TopContainer;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.notif.rev201014.Notification1;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.FactorialInput;
-import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.JsonrpcData;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.data.rev201014.TestModelDataData;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.notif.rev201014.TestModelNotificationData;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.test.rpc.rev201014.TestModelRpcData;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopologyData;
 import org.opendaylight.yangtools.binding.data.codec.api.BindingNormalizedNodeSerializer;
-import org.opendaylight.yangtools.binding.data.codec.impl.di.DefaultBindingDOMCodecFactory;
+import org.opendaylight.yangtools.binding.data.codec.dynamic.dagger.BindingDataCodecFactoryModule;
 import org.opendaylight.yangtools.binding.meta.YangModuleInfo;
 import org.opendaylight.yangtools.binding.runtime.api.BindingRuntimeContext;
 import org.opendaylight.yangtools.binding.runtime.spi.BindingRuntimeHelpers;
@@ -70,18 +70,20 @@ public abstract class AbstractJsonRpcTest extends AbstractDataBrokerTest {
         schemaContext = context;
         setupWithDataBroker(dataBroker);
         rpcRouter = new DOMRpcRouter(getSchemaService());
-        bnnc = new DefaultBindingDOMCodecFactory().createBindingDOMCodec(runtimeContext);
+        bnnc = BindingDataCodecFactoryModule.provideBindingDataCodecFactory()
+            .newBindingDataCodec(runtimeContext)
+            .nodeSerializer();
         codecFactory = new JsonRpcCodecFactory(context);
     }
 
     @Override
     protected Set<YangModuleInfo> getModuleInfos() {
         return Set.of(
-            BindingRuntimeHelpers.getYangModuleInfo(Config.class),
-            BindingRuntimeHelpers.getYangModuleInfo(NetworkTopology.class),
-            BindingRuntimeHelpers.getYangModuleInfo(TopContainer.class),
-            BindingRuntimeHelpers.getYangModuleInfo(Notification1.class),
-            BindingRuntimeHelpers.getYangModuleInfo(FactorialInput.class));
+            JsonrpcData.META.moduleInfo(),
+            NetworkTopologyData.META.moduleInfo(),
+            TestModelDataData.META.moduleInfo(),
+            TestModelNotificationData.META.moduleInfo(),
+            TestModelRpcData.META.moduleInfo());
     }
 
     protected BindingNormalizedNodeSerializer getCodec() {
