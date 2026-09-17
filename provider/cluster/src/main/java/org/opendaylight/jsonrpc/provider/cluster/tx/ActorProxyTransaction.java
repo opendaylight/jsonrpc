@@ -175,7 +175,7 @@ class ActorProxyTransaction implements ProxyTransactionFacade {
 
             private TransactionCommitFailedException newTransactionCommitFailedException(final Throwable failure) {
                 return new TransactionCommitFailedException(
-                        String.format("%s: Commit of transaction failed", getIdentifier()), failure);
+                        "%s: Commit of transaction failed".formatted(getIdentifier()), failure);
             }
         }, executionContext);
 

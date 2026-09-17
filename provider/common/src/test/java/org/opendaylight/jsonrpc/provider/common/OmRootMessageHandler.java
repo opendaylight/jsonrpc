@@ -42,7 +42,7 @@ public class OmRootMessageHandler implements RequestMessageHandler {
                     replyBuilder.result(new JsonPrimitive(getYangSource(request.getParams().getAsString())));
                     return;
                 case "governance":
-                    replyBuilder.result(new JsonPrimitive(String.format("zmq://localhost:%d", governancePort)));
+                    replyBuilder.result(new JsonPrimitive("zmq://localhost:" + governancePort));
                     return;
                 case "close":
                     replyBuilder.result(new JsonPrimitive("ok"));

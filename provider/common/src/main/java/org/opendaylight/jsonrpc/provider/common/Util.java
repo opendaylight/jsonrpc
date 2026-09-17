@@ -91,7 +91,7 @@ public final class Util {
         } catch (NumberFormatException e) {
             /* String representation of the datastore */
             final Integer s = STORE_STR_MAP.get(store);
-            Objects.requireNonNull(s, () -> String.format(ERR_UNRECOGNIZED_STORE, store));
+            Objects.requireNonNull(s, () -> ERR_UNRECOGNIZED_STORE.formatted(store));
             return s;
         }
     }
@@ -105,7 +105,7 @@ public final class Util {
     public static int store2int(@NonNull final LogicalDatastoreType store) {
         Objects.requireNonNull(store);
         final Integer ldt = STORE_MAP.inverse().get(store);
-        Objects.requireNonNull(ldt, () -> String.format(ERR_UNRECOGNIZED_STORE, store));
+        Objects.requireNonNull(ldt, () -> ERR_UNRECOGNIZED_STORE.formatted(store));
         return ldt;
     }
 

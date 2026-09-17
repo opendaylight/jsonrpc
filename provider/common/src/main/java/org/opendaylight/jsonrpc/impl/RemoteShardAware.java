@@ -61,7 +61,7 @@ abstract class RemoteShardAware extends AbstractJsonRPCComponent implements Auto
      */
     private Supplier<IllegalArgumentException> shardNotAvailable(final LogicalDatastoreType store,
             final JsonElement path) {
-        return () -> new IllegalArgumentException(String.format(SHARD_NOT_AVAILABLE, peer.getName(), store, path));
+        return () -> new IllegalArgumentException(SHARD_NOT_AVAILABLE.formatted(peer.getName(), store, path));
     }
 
     @Override

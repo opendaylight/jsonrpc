@@ -70,7 +70,7 @@ public final class RequesterSessionImpl extends AbstractSession implements Messa
             for (final JsonRpcBaseMessage msg : messages) {
                 if (msg.getType() != JsonRpcMessageType.REPLY) {
                     throw new MessageLibraryMismatchException(
-                            String.format("Requester received %s message", msg.getType().name()));
+                        "Requester received %s message".formatted(msg.getType().name()));
                 }
                 handler.handleReply((JsonRpcReplyMessage) msg);
             }
@@ -105,7 +105,7 @@ public final class RequesterSessionImpl extends AbstractSession implements Messa
             if (resp == null) {
                 lastRequest.getAndSet(null).cancel(true);
                 throw new MessageLibraryTimeoutException(
-                        String.format("Message was not received within %d milliseconds", timeout));
+                    "Message was not received within %d milliseconds".formatted(timeout));
             }
             return resp;
         } catch (InterruptedException e) {

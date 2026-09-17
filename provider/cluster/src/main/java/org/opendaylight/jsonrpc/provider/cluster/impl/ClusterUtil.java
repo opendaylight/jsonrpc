@@ -79,11 +79,11 @@ final class ClusterUtil {
     }
 
     public static String createActorPath(final String masterAddress, final String name) {
-        return String.format("%s/user/%s", masterAddress, name);
+        return "%s/user/%s".formatted(masterAddress, name);
     }
 
     public static String createMasterActorName(final String name, final String masterAddress) {
-        return String.format("%s_%s", masterAddress.replaceAll("//", ""), name);
+        return "%s_%s".formatted(masterAddress.replaceAll("//", ""), name);
     }
 
     public static Duration durationFromUint16seconds(Uint16 timeout, FiniteDuration defValue) {

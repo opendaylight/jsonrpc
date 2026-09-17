@@ -48,7 +48,7 @@ public class BuiltinSchemaContextProvider implements SchemaContextProvider {
                         .stream()
                         .findFirst()
                         .orElseThrow(() -> new IllegalStateException(
-                                String.format("No model '%s' in global schema context", m))))
+                                "No model '%s' in global schema context".formatted(m))))
                 .collect(Collectors.toSet());
 
         return buildSchemaContext(moduleIds);
