@@ -34,8 +34,7 @@ public interface PathCodec<P, I> {
     /**
      * Deserialize sequence of I into external path specification P.
      *
-     * @param path {@link Iterable}&lt;I&gt; sequence of internal path
-     *            identifiers
+     * @param path {@code Iterable<I>} sequence of internal path identifiers
      * @return P external path specification
      */
     P deserialize(Iterable<I> path);
