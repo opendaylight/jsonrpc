@@ -37,7 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.opendaylight.controller.cluster.ActorSystemProvider;
+import org.opendaylight.controller.pekko.support.ActorSystemInstance;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.AbstractTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.MockTransportFactory;
@@ -114,8 +114,8 @@ public class MountpointTest {
     private @Mock AbstractTransportFactory transportFactory;
     private EOSClusterSingletonServiceProvider clusterSingletonServiceProvider;
     private @Mock ClusterSingletonServiceProvider mockClusterSingletonServiceProvider;
-    private @Mock ActorSystemProvider masterActorSystemProvider;
-    private @Mock ActorSystemProvider slaveActorSystemProvider;
+    private @Mock ActorSystemInstance.WithShutdown masterActorSystemProvider;
+    private @Mock ActorSystemInstance.WithShutdown slaveActorSystemProvider;
     private @Mock GovernanceProvider governanceProvider;
     private @Mock Registration mockSingletonRegistration;
     private @Mock RequesterSession rpcClient;
@@ -147,10 +147,10 @@ public class MountpointTest {
                 .registerClusterSingletonService(any());
         doReturn(Optional.empty()).when(governanceProvider).get();
         masterActorSystem = ActorSystem.create("test", ConfigFactory.load().getConfig("Master"));
-        doReturn(masterActorSystem).when(masterActorSystemProvider).getActorSystem();
+        doReturn(masterActorSystem).when(masterActorSystemProvider).actorSystem();
 
         slaveActorSystem = ActorSystem.create("test", ConfigFactory.load().getConfig("Slave"));
-        doReturn(slaveActorSystem).when(slaveActorSystemProvider).getActorSystem();
+        doReturn(slaveActorSystem).when(slaveActorSystemProvider).actorSystem();
 
         masterTestCustomizer = newDataBrokerTest();
         slaveTestCustomizer = newDataBrokerTest();
@@ -166,13 +166,15 @@ public class MountpointTest {
                 masterTestCustomizer.getDOMMountPointService(), masterTestCustomizer.getDomBroker(),
                 masterTestCustomizer.getSchemaService(), masterTestCustomizer.getDOMNotificationRouter(),
                 new RouterDOMRpcService(masterTestCustomizer.getDOMRpcRouter()), yangParserFactory, yangTextToIR,
-                masterActorSystem, clusterSingletonServiceProvider, governanceProvider, rpcProviderService, null);
+                masterActorSystemProvider, clusterSingletonServiceProvider, governanceProvider, rpcProviderService,
+                null);
 
         final ClusterDependencies slaveDeps = new ClusterDependencies(tf, slaveTestCustomizer.getDataBroker(),
                 slaveTestCustomizer.getDOMMountPointService(), slaveTestCustomizer.getDomBroker(),
                 slaveTestCustomizer.getSchemaService(), slaveTestCustomizer.getDOMNotificationRouter(),
                 new RouterDOMRpcService(slaveTestCustomizer.getDOMRpcRouter()), yangParserFactory, yangTextToIR,
-                slaveActorSystem, mockClusterSingletonServiceProvider, governanceProvider, rpcProviderService, null);
+                slaveActorSystemProvider, mockClusterSingletonServiceProvider, governanceProvider, rpcProviderService,
+                null);
 
         masterConverter = new JsonRpcCodecFactory(masterTestCustomizer.getSchemaService().getGlobalContext());
         JsonRpcDatastoreAdapter datastoreAdapter = new JsonRpcDatastoreAdapter(masterConverter,
@@ -214,7 +216,7 @@ public class MountpointTest {
         return dataBrokerTest;
     }
 
-    private static void createPeer(DataBroker dataBroker) throws InterruptedException, ExecutionException {
+    private static void createPeer(final DataBroker dataBroker) throws InterruptedException, ExecutionException {
         final WriteTransaction wtx = dataBroker.newWriteOnlyTransaction();
         wtx.put(LogicalDatastoreType.CONFIGURATION, MOCK_PEER_CFG_ID, new ConfiguredEndpointsBuilder()
                 .setName("device-1")
@@ -232,7 +234,7 @@ public class MountpointTest {
         wtx.commit().get();
     }
 
-    private static Optional<ActualEndpoints> getOpState(DataBroker dataBroker) {
+    private static Optional<ActualEndpoints> getOpState(final DataBroker dataBroker) {
         try (ReadTransaction rtx = dataBroker.newReadOnlyTransaction()) {
             return Futures.getUnchecked(rtx.read(LogicalDatastoreType.OPERATIONAL, MOCK_PEER_OP_ID));
         }
@@ -321,7 +323,7 @@ public class MountpointTest {
 
     }
 
-    private static Optional<DOMMountPoint> getMountPoint(DOMMountPointService mountService) {
+    private static Optional<DOMMountPoint> getMountPoint(final DOMMountPointService mountService) {
         return mountService.getMountPoint(Util.createBiPath("device-1"));
     }
 
