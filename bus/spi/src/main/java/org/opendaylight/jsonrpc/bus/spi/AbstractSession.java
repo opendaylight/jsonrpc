@@ -70,7 +70,7 @@ public abstract class AbstractSession implements AutoCloseable, BusSession {
         try {
             return new URI(uriStr);
         } catch (URISyntaxException e) {
-            throw new IllegalArgumentException(String.format("Invalid URI : '%s'", uriStr), e);
+            throw new IllegalArgumentException("Invalid URI : '%s'".formatted(uriStr), e);
         }
     }
 

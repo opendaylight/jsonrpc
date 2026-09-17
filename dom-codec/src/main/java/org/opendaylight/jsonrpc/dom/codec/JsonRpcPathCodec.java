@@ -130,7 +130,7 @@ public class JsonRpcPathCodec implements Codec<JsonObject, YangInstanceIdentifie
                 decodeLeaf(builder, nodeNs, localNs, entry.getValue().getAsJsonPrimitive());
             } else {
                 throw new IllegalStateException(
-                        String.format("Unexpected element : %s => %s", value.getClass().getSimpleName(), value));
+                    "Unexpected element : %s => %s".formatted(value.getClass().getSimpleName(), value));
             }
         }
         return builder.build();
@@ -154,7 +154,7 @@ public class JsonRpcPathCodec implements Codec<JsonObject, YangInstanceIdentifie
 
     private static Module ensureModuleFound(Optional<? extends Module> module, String name) {
         return module.orElseThrow(
-            () -> new IllegalArgumentException(String.format("Module '%s' not found in schema", name)));
+            () -> new IllegalArgumentException("Module '%s' not found in schema".formatted(name)));
     }
 
     private Module findModule(String moduleName) {
@@ -167,6 +167,6 @@ public class JsonRpcPathCodec implements Codec<JsonObject, YangInstanceIdentifie
 
     private static void throwJsonPathError(JsonElement ex) {
         throw new IllegalStateException(
-                String.format("Unexpected JsonElement : %s => %s", ex.getClass().getSimpleName(), ex));
+            "Unexpected JsonElement : %s => %s".formatted(ex.getClass().getSimpleName(), ex));
     }
 }
