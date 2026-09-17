@@ -7,6 +7,8 @@
  */
 package org.opendaylight.jsonrpc.binding;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.common.util.concurrent.Futures;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -15,7 +17,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.Objects;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcErrorObject;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage.Builder;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcRequestMessage;
@@ -41,11 +42,12 @@ import org.slf4j.LoggerFactory;
  */
 public class InboundHandler<T extends Rpc<?, ?>> extends AbstractHandler<T> implements RequestMessageHandler {
     private static final Logger LOG = LoggerFactory.getLogger(InboundHandler.class);
-    private final Rpc<?, ?> impl;
+
+    private final T impl;
 
     public InboundHandler(RpcInvocationAdapter adapter, T impl) {
         super((Class<T>) impl.implementedInterface(), adapter);
-        this.impl = Objects.requireNonNull(impl);
+        this.impl = requireNonNull(impl);
     }
 
     @SuppressWarnings("checkstyle:IllegalCatch")
@@ -61,10 +63,11 @@ public class InboundHandler<T extends Rpc<?, ?>> extends AbstractHandler<T> impl
 
         try {
             final var arg = convertArguments(request.getParams());
-            @SuppressWarnings("unchecked")
-            final var output = ((Rpc<RpcInput, RpcOutput>) impl).invoke(arg);
+            @SuppressWarnings({ "rawtypes", "unchecked" })
+            final var output = ((Rpc) impl).invoke(arg);
             LOG.debug("Output : {}", output);
-            final var rpcResult = Futures.getUnchecked(output);
+            @SuppressWarnings("unchecked")
+            final var rpcResult = (RpcResult<? extends RpcOutput<?>>) Futures.getUnchecked(output);
             if (rpcResult.isSuccessful()) {
                 final var result = rpcResult.getResult();
                 if (result != null) {
@@ -104,7 +107,7 @@ public class InboundHandler<T extends Rpc<?, ?>> extends AbstractHandler<T> impl
         }
     }
 
-    private RpcInput convertArguments(final JsonElement wrapper) throws IOException {
+    private RpcInput<?> convertArguments(final JsonElement wrapper) throws IOException {
         final ContainerNode nn = adapter.converter()
             .get()
             .rpcInputCodec(rpcDef)
