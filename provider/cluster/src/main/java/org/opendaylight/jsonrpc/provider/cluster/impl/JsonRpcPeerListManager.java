@@ -25,6 +25,8 @@ import org.opendaylight.jsonrpc.provider.common.Util;
 import org.opendaylight.mdsal.binding.api.DataObjectModification;
 import org.opendaylight.mdsal.binding.api.DataTreeChangeListener;
 import org.opendaylight.mdsal.binding.api.DataTreeModification;
+import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefresh;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshOutput;
@@ -35,8 +37,9 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRelo
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceReloadOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpoints;
+import org.opendaylight.yangtools.binding.DataObjectIdentifier;
+import org.opendaylight.yangtools.binding.DataObjectReference;
 import org.opendaylight.yangtools.concepts.Registration;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
@@ -66,8 +69,8 @@ public final class JsonRpcPeerListManager implements DataTreeChangeListener<Conf
 
     private JsonRpcPeerListManager(ClusterDependencies dependencies, Timeout askTimeout) {
         this.dependencies = dependencies;
-        this.dtcListener = dependencies.getDataBroker()
-                .registerTreeChangeListener(ClusterUtil.getPeerListIdentifier(), this);
+        this.dtcListener = dependencies.getDataBroker().registerTreeChangeListener(LogicalDatastoreType.CONFIGURATION,
+            DataObjectReference.builder(Config.class).child(ConfiguredEndpoints.class).build(), this);
         this.rpcReg = dependencies.getRpcProviderService().registerRpcImplementations(
             (ForceRefresh) JsonRpcPeerListManager::forceRefresh,
             (ForceReload) this::forceReload);
@@ -77,7 +80,7 @@ public final class JsonRpcPeerListManager implements DataTreeChangeListener<Conf
     public void onDataTreeChanged(@NonNull List<DataTreeModification<ConfiguredEndpoints>> changes) {
         for (final DataTreeModification<ConfiguredEndpoints> change : changes) {
             final DataObjectModification<ConfiguredEndpoints> rootNode = change.getRootNode();
-            final InstanceIdentifier<ConfiguredEndpoints> ident = change.getRootPath().path();
+            final DataObjectIdentifier<ConfiguredEndpoints> ident = change.path();
             final String name = ClusterUtil.peerNameFromII(ident);
             LOG.debug("CFG DTC [{}] : {} => {}", rootNode.modificationType(), rootNode.dataBefore(),
                     rootNode.dataAfter());
