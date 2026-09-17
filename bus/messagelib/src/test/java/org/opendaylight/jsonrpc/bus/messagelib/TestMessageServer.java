@@ -7,7 +7,6 @@
  */
 package org.opendaylight.jsonrpc.bus.messagelib;
 
-import com.google.common.base.Joiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +25,7 @@ public class TestMessageServer implements ServerPartialInterface {
 
     @Override
     public String join(String delim, String[] msgs) {
-        return Joiner.on(delim).join(msgs);
+        return String.join(delim, msgs);
     }
 
     @Override
