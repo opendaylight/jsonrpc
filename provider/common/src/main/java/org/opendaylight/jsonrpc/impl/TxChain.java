@@ -11,15 +11,14 @@ package org.opendaylight.jsonrpc.impl;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import com.google.gson.JsonElement;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.dom.codec.JsonRpcCodecFactory;
@@ -56,7 +55,7 @@ public class TxChain extends AbstractJsonRPCComponent implements DOMTransactionC
     private volatile boolean closed = false;
     private volatile boolean successful = true;
     @GuardedBy("rwLock")
-    private final ConcurrentMap<DOMDataTreeWriteTransaction, AutoCloseable> pendingTxs = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<DOMDataTreeWriteTransaction, AutoCloseable> pendingTxs = new ConcurrentHashMap<>();
 
     public TxChain(@NonNull final DOMTransactionFactory dataBroker, @NonNull TransportFactory transportFactory,
             @NonNull HierarchicalEnumMap<JsonElement, DataType, String> pathMap,

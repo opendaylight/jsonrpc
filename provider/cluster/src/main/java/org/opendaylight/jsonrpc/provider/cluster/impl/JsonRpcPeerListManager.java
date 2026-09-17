@@ -11,15 +11,13 @@ import static org.opendaylight.jsonrpc.provider.common.Util.removeFromMapAndClos
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.apache.pekko.util.Timeout;
-import org.checkerframework.checker.lock.qual.GuardedBy;
-import org.checkerframework.checker.lock.qual.Holding;
 import org.eclipse.jdt.annotation.NonNull;
 import org.opendaylight.jsonrpc.provider.cluster.api.JsonRpcPeerSingletonService;
 import org.opendaylight.jsonrpc.provider.common.AbstractPeerContext;
@@ -56,8 +54,8 @@ public final class JsonRpcPeerListManager implements DataTreeChangeListener<Conf
     private static final Logger LOG = LoggerFactory.getLogger(JsonRpcPeerListManager.class);
 
     @GuardedBy("this")
-    private final Map<String, RemotePeerContext> peerMap = new HashMap<>();
-    private final Map<String, Registration> clusterRegistrations = new HashMap<>();
+    private final HashMap<String, RemotePeerContext> peerMap = new HashMap<>();
+    private final HashMap<String, Registration> clusterRegistrations = new HashMap<>();
     private final ClusterDependencies dependencies;
     private final Registration dtcListener;
     private Registration rpcReg;
@@ -103,7 +101,7 @@ public final class JsonRpcPeerListManager implements DataTreeChangeListener<Conf
         }
     }
 
-    @Holding("this")
+    @GuardedBy("this")
     private synchronized void updatePeerContext(ConfiguredEndpoints peer) {
         if (peerMap.containsKey(peer.getName())) {
             destroyPeerContext(peer.getName());
@@ -111,14 +109,14 @@ public final class JsonRpcPeerListManager implements DataTreeChangeListener<Conf
         }
     }
 
-    @Holding("this")
+    @GuardedBy("this")
     private synchronized void destroyPeerContext(String name) {
         LOG.info("Removing context '{}'", name);
         removeFromMapAndClose(peerMap, name);
         removeFromMapAndClose(clusterRegistrations, name);
     }
 
-    @Holding("this")
+    @GuardedBy("this")
     private synchronized void createPeerContext(ConfiguredEndpoints peer) {
         LOG.info("Creating context for '{}'", peer.getName());
         final RemotePeerContext service = new RemotePeerContext(peer, dependencies);
