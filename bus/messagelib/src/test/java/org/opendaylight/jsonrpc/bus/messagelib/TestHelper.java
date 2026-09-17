@@ -38,7 +38,7 @@ public final class TestHelper {
     }
 
     private static String getUri(String transport, String ip, int port) {
-        return String.format("%s://%s:%d", transport, ip, port);
+        return "%s://%s:%d".formatted(transport, ip, port);
     }
 
     public static void awaitForProxy(TransportFactory factory, AutoCloseable proxy, long milliseconds) {

@@ -87,8 +87,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         when(tf.createSubscriber(anyString(), any(), anyBoolean())).thenReturn(mock(SubscriberSession.class));
         governancePort = getFreeTcpPort();
         dummyPort = getFreeTcpPort();
-        updateConfig(new ConfigBuilder().setGovernanceRoot(new Uri(String.format("zmq://localhost:%d", governancePort)))
-                .build());
+        updateConfig(new ConfigBuilder().setGovernanceRoot(new Uri("zmq://localhost:%d" + governancePort)).build());
         ProviderDependencies deps = new ProviderDependencies(new MockTransportFactory(tf),
                 getDataBroker(), getDOMMountPointService(), getDomBroker(), getSchemaService(),
                 new RouterDOMPublishNotificationService(getDOMNotificationRouter()),
@@ -146,7 +145,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         // wait until nothing there
         retryAction(TimeUnit.SECONDS, 2, () -> !getPeerOpState(DEMO1_MODEL).isPresent());
         updateConfig(new ConfigBuilder()
-                .setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
+                .setWhoAmI(new Uri("zmq://localhost:" + getFreeTcpPort()))
                 .setConfiguredEndpoints(BindingMap.of(new ConfiguredEndpointsBuilder().setName("test-model")
                         .setModules(Set.of(new YangIdentifier("test-model")))
                         .setRpcEndpoints(BindingMap.of(new RpcEndpointsBuilder().withKey(new RpcEndpointsKey("{}"))
@@ -176,7 +175,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         retryAction(TimeUnit.SECONDS, 2, () -> !getPeerOpState(DEMO1_MODEL).isPresent());
         //@formatter:off
         updateConfig(new ConfigBuilder()
-                .setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
+                .setWhoAmI(new Uri("zmq://localhost:" + getFreeTcpPort()))
                 .setConfiguredEndpoints(BindingMap.of(
                         new ConfiguredEndpointsBuilder().setName(DEMO1_MODEL)
                             .setModules(Set.of(new YangIdentifier("jsonrpc-inband-models")))
@@ -216,7 +215,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         // wait until nothing there
         retryAction(TimeUnit.SECONDS, 2, () -> !getPeerOpState("test-model-op-only").isPresent());
         updateConfig(new ConfigBuilder()
-                .setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
+                .setWhoAmI(new Uri("zmq://localhost:" + getFreeTcpPort()))
                 .setConfiguredEndpoints(BindingMap.of(
                         new ConfiguredEndpointsBuilder().setName("test-model-op-only")
                                 .setModules(Set.of(new YangIdentifier("test-model-op-only")))
@@ -237,7 +236,7 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
         retryAction(TimeUnit.SECONDS, 2, () -> !getPeerOpState("test-model-op-only").isPresent());
 
         updateConfig(
-                new ConfigBuilder().setWhoAmI(new Uri(String.format("zmq://localhost:%d", getFreeTcpPort())))
+                new ConfigBuilder().setWhoAmI(new Uri("zmq://localhost:" + getFreeTcpPort()))
                         .setConfiguredEndpoints(BindingMap.of(new ConfiguredEndpointsBuilder()
                                 .setName("test-model-op-only")
                                 .setModules(Set.of(new YangIdentifier("bad-module")))
@@ -274,6 +273,6 @@ public class JsonRPCProviderTest extends AbstractJsonRpcTest {
     }
 
     private String dummyUri() {
-        return String.format("zmq://localhost:%d", dummyPort);
+        return "zmq://localhost:" + dummyPort;
     }
 }

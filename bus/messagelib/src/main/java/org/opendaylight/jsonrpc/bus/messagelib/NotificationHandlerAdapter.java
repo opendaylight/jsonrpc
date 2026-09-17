@@ -39,7 +39,7 @@ public class NotificationHandlerAdapter implements MessageListener {
         for (final JsonRpcBaseMessage notification : incoming) {
             if (notification.getType() != JsonRpcMessageType.NOTIFICATION) {
                 throw new MessageLibraryMismatchException(
-                        String.format("Expected NOTIFICATION, but got %s message", notification.getType().name()));
+                    "Expected NOTIFICATION, but got %s message".formatted(notification.getType().name()));
             } else {
                 handler.handleNotification((JsonRpcNotificationMessage) notification);
             }

@@ -71,11 +71,11 @@ public abstract class AbstractSessionTest {
     }
 
     protected String getBindUri(int port) {
-        return String.format("%s://0.0.0.0:%d/", factory.name(), port);
+        return "%s://0.0.0.0:%d/".formatted(factory.name(), port);
     }
 
     protected String getConnectUri(int port) {
-        return String.format("%s://127.0.0.1:%d/", factory.name(), port);
+        return "%s://127.0.0.1:%d/".formatted(factory.name(), port);
     }
 
     public static int getFreeTcpPort() {

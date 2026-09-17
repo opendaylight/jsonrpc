@@ -87,7 +87,7 @@ public class DataChangeListenerRegistry implements AutoCloseable {
         try (Socket socket = new Socket()) {
             socket.bind(null);
             final PeerContext peer = PeerContextHolder.get();
-            return String.format("%s://%s:%d", transport != null ? transport : peer.transport(),
+            return "%s://%s:%d".formatted(transport != null ? transport : peer.transport(),
                     ((InetSocketAddress) peer.channel().localAddress()).getAddress().getHostAddress(),
                     socket.getLocalPort());
         }

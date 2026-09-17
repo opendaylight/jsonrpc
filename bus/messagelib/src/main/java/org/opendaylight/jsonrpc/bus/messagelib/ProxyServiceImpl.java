@@ -130,7 +130,7 @@ public class ProxyServiceImpl implements ProxyService {
          */
         if (TO_STRING_METHOD_NAME.equals(methodName) && method.getParameterTypes().length == 0) {
             LOG.debug("Proxy for session {}", proxyMap.get(obj));
-            return String.format("Proxy => %s", proxyMap.get(obj));
+            return "Proxy => " + proxyMap.get(obj);
         }
         /*
          * Special case to handle AutoCloseable#close(). Instead of forwarding

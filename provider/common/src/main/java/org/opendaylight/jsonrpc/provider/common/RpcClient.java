@@ -71,8 +71,7 @@ public class RpcClient implements AutoCloseable {
             return immediateFluentFuture(new DefaultDOMRpcResult(outputCodec.deserialize((JsonObject) output)));
         } catch (Exception e) {
             final RpcError error = RpcResultBuilder.newError(ErrorType.RPC, new ErrorTag("jsonrpc"),
-                    String.format("Invocation of method '%s' failed", def.getQName().getLocalName()), null, endpoint,
-                    e);
+                "Invocation of method '%s' failed".formatted(def.getQName().getLocalName()), null, endpoint, e);
             return immediateFluentFuture(new DefaultDOMRpcResult(error));
         }
     }

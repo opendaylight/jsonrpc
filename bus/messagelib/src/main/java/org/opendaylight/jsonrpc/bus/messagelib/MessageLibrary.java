@@ -69,7 +69,7 @@ public class MessageLibrary implements AutoCloseable, Consumer<AutoCloseable> {
         }
 
         if (desiredFactory == null) {
-            throw new IllegalArgumentException(String.format("Bus Type not supported : %s", busType));
+            throw new IllegalArgumentException("Bus Type not supported : " + busType);
         }
 
         this.factory = desiredFactory;

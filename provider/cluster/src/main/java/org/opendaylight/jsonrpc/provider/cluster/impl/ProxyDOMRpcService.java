@@ -80,7 +80,7 @@ final class ProxyDOMRpcService implements DOMRpcService {
                         result.setException(failure);
                     } else {
                         result.setException(
-                                new DefaultDOMRpcException(String.format("%s : RPC invocation failed", peer), failure));
+                                new DefaultDOMRpcException("%s : RPC invocation failed".formatted(peer), failure));
                     }
                     return;
                 }
