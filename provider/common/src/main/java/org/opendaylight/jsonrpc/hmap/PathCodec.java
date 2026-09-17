@@ -19,7 +19,6 @@ package org.opendaylight.jsonrpc.hmap;
  *
  * @param <P> external path representation
  * @param <I> internal node identifier
- *
  * @author <a href="mailto:rkosegi@brocade.com">Richard Kosegi</a>
  */
 public interface PathCodec<P, I> {
@@ -34,8 +33,7 @@ public interface PathCodec<P, I> {
     /**
      * Deserialize sequence of I into external path specification P.
      *
-     * @param path {@link Iterable}&lt;I&gt; sequence of internal path
-     *            identifiers
+     * @param path {@link Iterable} sequence of internal path identifiers
      * @return P external path specification
      */
     P deserialize(Iterable<I> path);

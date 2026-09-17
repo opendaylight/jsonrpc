@@ -45,9 +45,9 @@ public class NameMatchingPredicate implements Predicate<Method> {
      * <p>Examples:
      * </p>
      * <ul>
-     * <li>method-abc =&gt; method_abc</li>
-     * <li>method_def =&gt; method_def</li>
-     * <li>method123 =&gt; method123</li>
+     * <li>{@code method-abc => method_abc}</li>
+     * <li>{@code method_def => method_def}</li>
+     * <li>{@code method123 => method123}</li>
      * </ul>
      */
     private String toUnderscoreName(String name) {
