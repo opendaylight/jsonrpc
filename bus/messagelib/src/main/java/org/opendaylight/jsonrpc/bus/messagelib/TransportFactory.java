@@ -94,6 +94,7 @@ public interface TransportFactory extends AutoCloseable {
 
     /**
      * Get {@link BaseEndpointBuilder}.
+     *
      * @return {@link BaseEndpointBuilder}
      */
     EndpointBuilder endpointBuilder();
