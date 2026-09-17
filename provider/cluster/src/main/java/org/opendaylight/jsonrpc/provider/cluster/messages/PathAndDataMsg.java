@@ -12,10 +12,11 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import org.eclipse.jdt.annotation.NonNull;
-import org.opendaylight.controller.cluster.datastore.node.utils.stream.SerializationUtils;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
+import org.opendaylight.yangtools.yang.data.codec.binfmt.NormalizedNodeDataInput;
+import org.opendaylight.yangtools.yang.data.codec.binfmt.NormalizedNodeStreamVersion;
 
 public class PathAndDataMsg implements Externalizable {
     private YangInstanceIdentifier path;
@@ -25,7 +26,7 @@ public class PathAndDataMsg implements Externalizable {
         // default ctor is required
     }
 
-    public PathAndDataMsg(ContainerNode data) {
+    public PathAndDataMsg(final ContainerNode data) {
         this(YangInstanceIdentifier.of(), data);
     }
 
@@ -44,18 +45,18 @@ public class PathAndDataMsg implements Externalizable {
 
     @Override
     public void writeExternal(final ObjectOutput out) throws IOException {
-        SerializationUtils.writeNodeAndPath(out, path, data);
+        try (var stream = NormalizedNodeStreamVersion.POTASSIUM.newDataOutput(out)) {
+            stream.writeNormalizedNode(data);
+            stream.writeYangInstanceIdentifier(path);
+        }
     }
 
     @Override
     public void readExternal(final ObjectInput in) throws IOException {
-        SerializationUtils.readNodeAndPath(in, this, APPLIER);
+        final var stream = NormalizedNodeDataInput.newDataInput(in);
+        data = stream.readNormalizedNode();
+        path = stream.readYangInstanceIdentifier();
     }
-
-    private static final SerializationUtils.Applier<PathAndDataMsg> APPLIER = (instance, path, node) -> {
-        instance.path = path;
-        instance.data = node;
-    };
 
     @Override
     public String toString() {
