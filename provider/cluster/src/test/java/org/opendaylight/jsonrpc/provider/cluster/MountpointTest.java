@@ -37,7 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.opendaylight.controller.cluster.ActorSystemProvider;
+import org.opendaylight.controller.pekko.support.ActorSystemInstance;
 import org.opendaylight.jsonrpc.bus.jsonrpc.JsonRpcReplyMessage;
 import org.opendaylight.jsonrpc.bus.messagelib.AbstractTransportFactory;
 import org.opendaylight.jsonrpc.bus.messagelib.MockTransportFactory;
@@ -114,8 +114,8 @@ public class MountpointTest {
     private @Mock AbstractTransportFactory transportFactory;
     private EOSClusterSingletonServiceProvider clusterSingletonServiceProvider;
     private @Mock ClusterSingletonServiceProvider mockClusterSingletonServiceProvider;
-    private @Mock ActorSystemProvider masterActorSystemProvider;
-    private @Mock ActorSystemProvider slaveActorSystemProvider;
+    private @Mock ActorSystemInstance masterActorSystemProvider;
+    private @Mock ActorSystemInstance slaveActorSystemProvider;
     private @Mock GovernanceProvider governanceProvider;
     private @Mock Registration mockSingletonRegistration;
     private @Mock RequesterSession rpcClient;
@@ -147,10 +147,10 @@ public class MountpointTest {
                 .registerClusterSingletonService(any());
         doReturn(Optional.empty()).when(governanceProvider).get();
         masterActorSystem = ActorSystem.create("test", ConfigFactory.load().getConfig("Master"));
-        doReturn(masterActorSystem).when(masterActorSystemProvider).getActorSystem();
+        doReturn(masterActorSystem).when(masterActorSystemProvider).actorSystem();
 
         slaveActorSystem = ActorSystem.create("test", ConfigFactory.load().getConfig("Slave"));
-        doReturn(slaveActorSystem).when(slaveActorSystemProvider).getActorSystem();
+        doReturn(slaveActorSystem).when(slaveActorSystemProvider).actorSystem();
 
         masterTestCustomizer = newDataBrokerTest();
         slaveTestCustomizer = newDataBrokerTest();
