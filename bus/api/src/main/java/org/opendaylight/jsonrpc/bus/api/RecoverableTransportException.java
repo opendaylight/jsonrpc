@@ -22,6 +22,6 @@ public class RecoverableTransportException extends RuntimeException {
     }
 
     public RecoverableTransportException(SessionType sessionType, String address) {
-        super(String.format("Remote enpodint not ready : %s@%s", sessionType, address));
+        super("Remote enpodint not ready : %s@%s".formatted(sessionType, address));
     }
 }
