@@ -134,16 +134,14 @@ public class JsonRPCNotificationServiceTest extends AbstractJsonRpcTest {
     }
 
     private String getPath() {
-        return String.format("ws://localhost:%d", port);
+        return "ws://localhost:%d".formatted(port);
     }
 
     private Peer getPeer() {
         //@formatter:off
         return new ConfiguredEndpointsBuilder()
                 .setName("test")
-                .setModules(Set.of(
-                        new YangIdentifier("test-model-notification")
-                        ))
+                .setModules(Set.of(new YangIdentifier("test-model-notification")))
                 .setNotificationEndpoints(BindingMap.of(new NotificationEndpointsBuilder()
                         .setPath("{}")
                         .setEndpointUri(new Uri(getPath()))

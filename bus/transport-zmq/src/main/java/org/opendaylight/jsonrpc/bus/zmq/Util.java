@@ -52,7 +52,7 @@ final class Util {
         final int actual = buffer.readableBytes();
         if (actual < expected) {
             throw new IllegalArgumentException(
-                    String.format("Not enough data in buffer. Expected at least %d, but got %d", expected, actual));
+                "Not enough data in buffer. Expected at least %d, but got %d".formatted(expected, actual));
         }
     }
 

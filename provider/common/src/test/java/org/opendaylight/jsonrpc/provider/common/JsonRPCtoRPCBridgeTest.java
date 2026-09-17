@@ -276,7 +276,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
 
     private Peer getPeer() {
         final RpcEndpointsBuilder builder = new RpcEndpointsBuilder();
-        builder.setEndpointUri(new Uri(String.format(TRANSPORT + "://localhost:%d", rpcResponderPort)));
+        builder.setEndpointUri(new Uri(TRANSPORT + "://localhost:" + rpcResponderPort));
         builder.setPath("{}");
         return new ConfiguredEndpointsBuilder().setName("BlahBlah")
                 .setRpcEndpoints(BindingMap.of(builder.build()))
@@ -285,8 +285,7 @@ public class JsonRPCtoRPCBridgeTest extends AbstractJsonRpcTest {
 
     private void startTransport() {
         messaging = ((AbstractTransportFactory) transportFactory).getMessageLibraryForTransport(TRANSPORT);
-        rpcResponder = messaging.responder(String.format(TRANSPORT + "://0.0.0.0:%d", rpcResponderPort),
-                new MockRpcHandler(), true);
+        rpcResponder = messaging.responder(TRANSPORT + "://0.0.0.0:" + rpcResponderPort, new MockRpcHandler(), true);
         LOG.info("Started responder on port {}", rpcResponderPort);
     }
 

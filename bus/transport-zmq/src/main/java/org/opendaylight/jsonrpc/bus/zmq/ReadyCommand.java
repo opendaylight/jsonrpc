@@ -37,7 +37,7 @@ public class ReadyCommand implements Command {
         final byte readyLen = buffer.readByte();
         final String readyStr = buffer.readCharSequence(readyLen, StandardCharsets.US_ASCII).toString();
         if (!Constants.READY_STR.equals(readyStr)) {
-            throw new IllegalArgumentException(String.format("Expected 'READY' string, but got '%s'", readyStr));
+            throw new IllegalArgumentException("Expected 'READY' string, but got '%s'".formatted(readyStr));
         }
         this.name = Constants.READY_STR;
         // read metadata
