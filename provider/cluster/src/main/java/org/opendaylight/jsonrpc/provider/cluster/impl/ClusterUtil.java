@@ -7,8 +7,6 @@
  */
 package org.opendaylight.jsonrpc.provider.cluster.impl;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
 import java.util.concurrent.TimeUnit;
 import org.opendaylight.mdsal.binding.api.DataTreeIdentifier;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
@@ -18,8 +16,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.Ac
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ActualEndpointsKey;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpoints;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpointsKey;
+import org.opendaylight.yangtools.binding.DataObjectIdentifier;
 import org.opendaylight.yangtools.binding.KeyStep;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.Uint16;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
@@ -47,7 +45,7 @@ final class ClusterUtil {
      */
     public static DataTreeIdentifier<ActualEndpoints> getPeerOpstateIdentifier(String name) {
         return DataTreeIdentifier.of(LogicalDatastoreType.OPERATIONAL,
-                InstanceIdentifier.builder(Config.class)
+                DataObjectIdentifier.builder(Config.class)
                         .child(ActualEndpoints.class, new ActualEndpointsKey(name))
                         .build());
     }
@@ -59,7 +57,7 @@ final class ClusterUtil {
      */
     public static DataTreeIdentifier<ConfiguredEndpoints> getPeerListIdentifier() {
         return DataTreeIdentifier.of(LogicalDatastoreType.CONFIGURATION,
-                InstanceIdentifier.builder(Config.class).child(ConfiguredEndpoints.class).build());
+                DataObjectIdentifier.builder(Config.class).child(ConfiguredEndpoints.class).build());
     }
 
     /**
@@ -68,16 +66,16 @@ final class ClusterUtil {
      * @param ii {@link InstanceIdentifier} of subtype of {@link Peer}
      * @return peer's name
      */
-    public static String peerNameFromII(InstanceIdentifier<? extends Peer> ii) {
-        final var last = Iterables.getLast(ii.getPathArguments());
-        Preconditions.checkArgument(last instanceof KeyStep);
-        if (((KeyStep<?, ?>) last).key() instanceof ConfiguredEndpointsKey) {
-            return ((ConfiguredEndpointsKey) ((KeyStep<?, ?>) last).key()).getName();
+    public static String peerNameFromII(DataObjectIdentifier<? extends Peer> ii) {
+        final var last = ii.lastStep();
+        if (!(last instanceof KeyStep<?, ?> keyStep)) {
+            throw new IllegalArgumentException("Unexpected last step " + last);
         }
-        if (((KeyStep<?, ?>) last).key() instanceof ActualEndpointsKey) {
-            return ((ActualEndpointsKey) ((KeyStep<?, ?>) last).key()).getName();
-        }
-        throw new IllegalArgumentException("Unrecognized key : " + last);
+        return switch (keyStep.key()) {
+            case ConfiguredEndpointsKey key -> key.getName();
+            case ActualEndpointsKey key -> key.getName();
+            default -> throw new IllegalArgumentException("Unrecognized key : " + keyStep);
+        };
     }
 
     public static String createActorPath(final String masterAddress, final String name) {
