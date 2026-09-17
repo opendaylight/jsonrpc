@@ -27,29 +27,29 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <optional>true</optional>
         </dependency>
         <dependency>
-            <groupId>org.opendaylight.yangtools</groupId>
-            <artifactId>binding-runtime-spi</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.mdsal</groupId>
-            <artifactId>mdsal-dom-inmemory-datastore</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.opendaylight.mdsal</groupId>
-            <artifactId>mdsal-dom-broker</artifactId>
+            <groupId>org.opendaylight.jsonrpc</groupId>
+            <artifactId>jsonrpc-test-model</artifactId>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.jsonrpc.bus</groupId>
             <artifactId>bus-messagelib</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.opendaylight.mdsal</groupId>
+            <artifactId>dom-store-inmemory</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.mdsal</groupId>
+            <artifactId>mdsal-dom-broker</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.opendaylight.mdsal.model</groupId>
             <artifactId>ietf-topology</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.opendaylight.jsonrpc</groupId>
-            <artifactId>jsonrpc-test-model</artifactId>
-            <scope>compile</scope>
+            <groupId>org.opendaylight.yangtools</groupId>
+            <artifactId>binding-runtime-spi</artifactId>
         </dependency>
         <dependency>
             <groupId>org.opendaylight.yangtools</groupId>
