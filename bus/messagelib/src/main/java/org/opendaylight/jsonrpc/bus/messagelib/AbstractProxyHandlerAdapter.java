@@ -94,12 +94,12 @@ abstract class AbstractProxyHandlerAdapter {
             // At this point it could be wrong number of arguments.
             opt = findMethodLenient(message);
             if (!opt.isEmpty()) {
-                String msg = String.format("Found method but wrong number of arguments: %s", message.getMethod());
+                String msg = "Found method but wrong number of arguments: " + message.getMethod();
                 LOG.debug(msg);
                 throw new IllegalArgumentException(msg);
             }
         }
-        throw new NoSuchMethodException(String.format("Method not found : %s", message.getMethod()));
+        throw new NoSuchMethodException("Method not found : " + message.getMethod());
     }
 
     /**

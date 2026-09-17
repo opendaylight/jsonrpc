@@ -117,6 +117,6 @@ abstract class AbstractWebBusSessionFactory extends AbstractBusSessionFactory {
 
     private void throwUnsupported(SessionType sessionType) {
         throw new UnsupportedOperationException(
-                String.format("Transport '%s' does not support %s session type", name, sessionType.name()));
+            "Transport '%s' does not support %s session type".formatted(name, sessionType.name()));
     }
 }
