@@ -19,10 +19,10 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.NodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPointBuilder;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPointKey;
+import org.opendaylight.yangtools.binding.DataObjectIdentifier;
 import org.opendaylight.yangtools.binding.data.codec.api.BindingNormalizedNodeSerializer;
 import org.opendaylight.yangtools.binding.data.codec.api.BindingNormalizedNodeSerializer.NodeResult;
 import org.opendaylight.yangtools.binding.util.BindingMap;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 
 /**
  * Utility class to reduce code duplication.
@@ -62,7 +62,7 @@ public final class TestUtils {
 
     public static NodeResult getMockTopologyAsDom(BindingNormalizedNodeSerializer codec) {
         final NetworkTopology nt = getMockTopology();
-        return codec.toNormalizedDataObject(InstanceIdentifier.create(NetworkTopology.class), nt);
+        return codec.toNormalizedDataObject(DataObjectIdentifier.builder(NetworkTopology.class).build(), nt);
     }
 
     /**

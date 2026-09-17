@@ -58,8 +58,8 @@ import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.Node;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.topology.node.TerminationPoint;
+import org.opendaylight.yangtools.binding.DataObjectIdentifier;
 import org.opendaylight.yangtools.binding.data.codec.api.BindingNormalizedNodeSerializer.NodeResult;
-import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.OperationFailedException;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
@@ -143,7 +143,7 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
         wtx.put(LogicalDatastoreType.OPERATIONAL, e.path(), e.node());
         wtx.commit().get();
 
-        InstanceIdentifier<NetworkTopology> nii = InstanceIdentifier.create(NetworkTopology.class);
+        var nii = DataObjectIdentifier.builder(NetworkTopology.class).build();
 
         YangInstanceIdentifier yii = getCodec().toYangInstanceIdentifier(nii);
         dumpYii(yii);
@@ -236,14 +236,14 @@ public class RemoteControlTest extends AbstractJsonRpcTest {
                 .setConfiguredEndpoints(Map.of()).build();
 
         NodeResult e1 = getCodec()
-                .toNormalizedDataObject(InstanceIdentifier.create(Config.class), c1);
+                .toNormalizedDataObject(DataObjectIdentifier.builder(Config.class).build(), c1);
 
         wtx.put(LogicalDatastoreType.CONFIGURATION, e1.path(), e1.node());
         wtx.commit().get();
         ConfiguredEndpoints c2 = new ConfiguredEndpointsBuilder().setName("name-1")
                 .setModules(Set.of(new YangIdentifier("ietf-inet-types"))).build();
 
-        NodeResult e2 = getCodec().toNormalizedDataObject(InstanceIdentifier
+        NodeResult e2 = getCodec().toNormalizedDataObject(DataObjectIdentifier
                 .builder(Config.class).child(ConfiguredEndpoints.class, new ConfiguredEndpointsKey("name-1")).build(),
                 c2);
 
