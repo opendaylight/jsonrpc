@@ -153,6 +153,7 @@ public final class Util {
      * In order to have deterministic order of methods, we need to sort them by
      * argument types. This is because outcome of
      * {@link Class#getDeclaredMethods()} is not sorted.
+     *
      * @return {@link Comparator}
      */
     public static Comparator<Method> argsSorter() {
@@ -171,6 +172,7 @@ public final class Util {
 
     /**
      * Combination of {@link #nameSorter()} and {@link #argsSorter()}.
+     *
      * @return combined {@link Comparator}
      */
     public static Comparator<Method> nameAndArgsSorter() {
