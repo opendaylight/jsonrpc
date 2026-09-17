@@ -11,6 +11,7 @@ import java.util.Objects;
 import org.apache.pekko.actor.ActorSystem;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+import org.opendaylight.controller.pekko.support.ActorSystemInstance;
 import org.opendaylight.jsonrpc.bus.messagelib.TransportFactory;
 import org.opendaylight.jsonrpc.model.GovernanceProvider;
 import org.opendaylight.jsonrpc.provider.common.ProviderDependencies;
@@ -33,7 +34,7 @@ import org.opendaylight.yangtools.yang.parser.api.YangParserFactory;
  * @since Jul 2, 2020
  */
 public class ClusterDependencies extends ProviderDependencies {
-    private final ActorSystem actorSystem;
+    private final ActorSystemInstance actorSystemInstance;
     private final ClusterSingletonServiceProvider clusterSingletonServiceProvider;
     private final GovernanceProvider governanceProvider;
     private final RpcProviderService rpcProviderService;
@@ -44,20 +45,25 @@ public class ClusterDependencies extends ProviderDependencies {
             @NonNull DOMSchemaService schemaService,
             @NonNull DOMNotificationPublishService domNotificationPublishService, @NonNull DOMRpcService domRpcService,
             @NonNull YangParserFactory yangParserFactory, @NonNull YangTextToIRSourceTransformer yangTextToIR,
-            @NonNull ActorSystem actorSystem, @NonNull ClusterSingletonServiceProvider clusterSingletonServiceProvider,
+            @NonNull ActorSystemInstance actorSystemInstance,
+            @NonNull ClusterSingletonServiceProvider clusterSingletonServiceProvider,
             @NonNull GovernanceProvider governanceProvider, @NonNull RpcProviderService rpcProviderService,
             @Nullable Config config) {
         super(transportFactory, dataBroker, domMountPointService, domDataBroker, schemaService,
                 domNotificationPublishService, domRpcService, yangParserFactory, yangTextToIR);
-        this.actorSystem = Objects.requireNonNull(actorSystem);
+        this.actorSystemInstance = Objects.requireNonNull(actorSystemInstance);
         this.clusterSingletonServiceProvider = Objects.requireNonNull(clusterSingletonServiceProvider);
         this.governanceProvider = Objects.requireNonNull(governanceProvider);
         this.rpcProviderService = Objects.requireNonNull(rpcProviderService);
         this.config = config;
     }
 
-    public ActorSystem getActorSystem() {
-        return actorSystem;
+    public ActorSystemInstance getActorSystemInstance() {
+        return actorSystemInstance;
+    }
+
+    public final ActorSystem getActorSystem() {
+        return actorSystemInstance.actorSystem();
     }
 
     public RpcProviderService getRpcProviderService() {
