@@ -82,7 +82,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         </dependency>
         <dependency>
             <groupId>org.opendaylight.mdsal</groupId>
-            <artifactId>mdsal-dom-inmemory-datastore</artifactId>
+            <artifactId>dom-store-inmemory</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -93,6 +93,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <dependency>
             <groupId>org.opendaylight.yangtools</groupId>
             <artifactId>binding-generator</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.yangtools</groupId>
+            <artifactId>yang-data-tree-ri</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
