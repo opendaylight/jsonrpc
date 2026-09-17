@@ -130,7 +130,7 @@ public final class JsonRPCNotificationService extends AbstractJsonRPCComponent
             final NotificationDefinition def = findNode(schemaContext, notification.getMethod(),
                     Module::getNotifications)
                             .orElseThrow(() -> new IllegalStateException(
-                                    String.format("Notification with name '%s' not found", notification.getMethod())));
+                                    "Notification with name '%s' not found".formatted(notification.getMethod())));
             publishNotification(codecFactory.notificationCodec(def).deserialize(notification.getParams()));
         } catch (IOException e) {
             throw new IllegalStateException(e);
