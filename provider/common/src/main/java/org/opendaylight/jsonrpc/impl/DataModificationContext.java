@@ -42,6 +42,7 @@ public class DataModificationContext implements AutoCloseable {
 
     /**
      * Cancel all chained transactions.
+     *
      * @return true if no transaction has been allocated.
      */
     public boolean cancel() {
