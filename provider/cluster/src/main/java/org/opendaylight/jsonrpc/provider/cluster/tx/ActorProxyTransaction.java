@@ -9,12 +9,11 @@ package org.opendaylight.jsonrpc.provider.cluster.tx;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 import org.apache.pekko.actor.ActorRef;
-import org.apache.pekko.dispatch.OnComplete;
 import org.apache.pekko.pattern.Patterns;
-import org.apache.pekko.util.Timeout;
 import org.opendaylight.jsonrpc.provider.cluster.messages.PathAndDataMsg;
 import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
@@ -26,7 +25,6 @@ import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.concurrent.ExecutionContext;
 
 /**
  * Implementation of {@link DOMDataTreeReadWriteTransaction} that interacts with an actor.
@@ -43,16 +41,13 @@ class ActorProxyTransaction implements ProxyTransactionFacade {
     private final FluentFuture<CommitInfo> completionFuture = FluentFuture.from(settableFuture);
     private final ActorRef actorRef;
     private final Peer peer;
-    private final ExecutionContext executionContext;
-    private final Timeout askTimeout;
+    private final Duration askTimeout;
     private final String name;
 
-    ActorProxyTransaction(final ActorRef actorRef, final Peer peer, final ExecutionContext executionContext,
-            final Timeout askTimeout) {
+    ActorProxyTransaction(final ActorRef actorRef, final Peer peer, final Duration askTimeout) {
         this.actorRef = Objects.requireNonNull(actorRef);
         this.peer = Objects.requireNonNull(peer);
         name = peer.getName();
-        this.executionContext = Objects.requireNonNull(executionContext);
         this.askTimeout = Objects.requireNonNull(askTimeout);
     }
 
@@ -69,16 +64,13 @@ class ActorProxyTransaction implements ProxyTransactionFacade {
     @Override
     public boolean cancel() {
         LOG.debug("[{}]: Cancel tx via actor {}", name, actorRef);
-        Patterns.ask(actorRef, new TxCancel(), askTimeout).onComplete(new OnComplete<>() {
-            @Override
-            public void onComplete(final Throwable failure, final Object response) {
-                if (failure != null) {
-                    LOG.warn("[{}] tx cancel failed", name, failure);
-                    return;
-                }
-                LOG.debug("[{}] tx cancel succeeded", name);
+        Patterns.ask(actorRef, new TxCancel(), askTimeout).whenComplete((response, failure) -> {
+            if (failure != null) {
+                LOG.warn("[{}] tx cancel failed", name, failure);
+                return;
             }
-        }, executionContext);
+            LOG.debug("[{}] tx cancel succeeded", name);
+        });
         return settableFuture.cancel(false);
     }
 
@@ -86,30 +78,27 @@ class ActorProxyTransaction implements ProxyTransactionFacade {
     public FluentFuture<Optional<NormalizedNode>> read(final LogicalDatastoreType store,
             final YangInstanceIdentifier path) {
         LOG.debug("[{}] Read {} {} via actor {}", name, store, path, actorRef);
-        final SettableFuture<Optional<NormalizedNode>> future = SettableFuture.create();
-        Patterns.ask(actorRef, new TxRead(store, path, false), askTimeout).onComplete(new OnComplete<>() {
-            @Override
-            public void onComplete(final Throwable failure, final Object response) {
-                if (failure != null) {
-                    LOG.debug("[{}]: Read {} {} failed", name, store, path, failure);
-                    if (failure instanceof ReadFailedException) {
-                        future.setException(failure);
-                    } else {
-                        future.setException(
-                                new ReadFailedException("Read of store " + store + " at " + path + " failed", failure));
-                    }
-                    return;
+        final var future = SettableFuture.<Optional<NormalizedNode>>create();
+        Patterns.ask(actorRef, new TxRead(store, path, false), askTimeout).whenComplete((response, failure) -> {
+            if (failure != null) {
+                LOG.debug("[{}]: Read {} {} failed", name, store, path, failure);
+                if (failure instanceof ReadFailedException) {
+                    future.setException(failure);
+                } else {
+                    future.setException(
+                        new ReadFailedException("Read of store " + store + " at " + path + " failed", failure));
                 }
-
-                LOG.debug("[{}] Read {} {} succeeded: {}", name, store, path, response);
-
-                if (response instanceof EmptyReadResponse) {
-                    future.set(Optional.empty());
-                } else if (response instanceof final PathAndDataMsg pad) {
-                    future.set(Optional.of(pad.getData()));
-                }
+                return;
             }
-        }, executionContext);
+
+            LOG.debug("[{}] Read {} {} succeeded: {}", name, store, path, response);
+
+            if (response instanceof EmptyReadResponse) {
+                future.set(Optional.empty());
+            } else if (response instanceof PathAndDataMsg pad) {
+                future.set(Optional.of(pad.getData()));
+            }
+        });
 
         return FluentFuture.from(future);
     }
@@ -117,25 +106,22 @@ class ActorProxyTransaction implements ProxyTransactionFacade {
     @Override
     public FluentFuture<Boolean> exists(final LogicalDatastoreType store, final YangInstanceIdentifier path) {
         LOG.debug("[{}] Exists {} {} via actor {}", name, store, path, actorRef);
-        final SettableFuture<Boolean> future = SettableFuture.create();
-        Patterns.ask(actorRef, new TxRead(store, path, true), askTimeout).onComplete(new OnComplete<>() {
-            @Override
-            public void onComplete(final Throwable failure, final Object response) {
-                if (failure != null) {
-                    LOG.debug("[{}] Exists {} {} failed", name, store, path, failure);
-                    if (failure instanceof ReadFailedException) {
-                        future.setException(failure);
-                    } else {
-                        future.setException(new ReadFailedException(
-                                "Exists of store " + store + " path " + path + " failed", failure));
-                    }
-                    return;
+        final var future = SettableFuture.<Boolean>create();
+        Patterns.ask(actorRef, new TxRead(store, path, true), askTimeout).whenComplete((response, failure) -> {
+            if (failure != null) {
+                LOG.debug("[{}] Exists {} {} failed", name, store, path, failure);
+                if (failure instanceof ReadFailedException) {
+                    future.setException(failure);
+                } else {
+                    future.setException(new ReadFailedException(
+                        "Exists of store " + store + " path " + path + " failed", failure));
                 }
-
-                LOG.debug("[{}] Exists {} {} succeeded: {}", name, store, path, response);
-                future.set((Boolean) response);
+                return;
             }
-        }, executionContext);
+
+            LOG.debug("[{}] Exists {} {} succeeded: {}", name, store, path, response);
+            future.set((Boolean) response);
+        });
 
         return FluentFuture.from(future);
     }
@@ -161,23 +147,16 @@ class ActorProxyTransaction implements ProxyTransactionFacade {
     @Override
     public FluentFuture<? extends CommitInfo> commit() {
         LOG.debug("[{}] Commit via actor {}", name, actorRef);
-        Patterns.ask(actorRef, new TxCommit(), askTimeout).onComplete(new OnComplete<>() {
-            @Override
-            public void onComplete(final Throwable failure, final Object response) {
-                if (failure != null) {
-                    LOG.debug("[{}] Commit failed", name, failure);
-                    settableFuture.setException(newTransactionCommitFailedException(failure));
-                    return;
-                }
+        Patterns.ask(actorRef, new TxCommit(), askTimeout).whenComplete((response, failure) -> {
+            if (failure == null) {
                 LOG.debug("[{}] Commit succeeded", name);
                 settableFuture.set(CommitInfo.empty());
+                return;
             }
-
-            private TransactionCommitFailedException newTransactionCommitFailedException(final Throwable failure) {
-                return new TransactionCommitFailedException(
-                        "%s: Commit of transaction failed".formatted(getIdentifier()), failure);
-            }
-        }, executionContext);
+            LOG.debug("[{}] Commit failed", name, failure);
+            settableFuture.setException(new TransactionCommitFailedException(
+                "%s: Commit of transaction failed".formatted(getIdentifier()), failure));
+        });
 
         return completionFuture;
     }

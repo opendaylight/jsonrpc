@@ -10,15 +10,15 @@ package org.opendaylight.jsonrpc.provider.cluster.tx;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import org.apache.pekko.actor.ActorRef;
-import org.apache.pekko.dispatch.OnComplete;
-import org.apache.pekko.util.Timeout;
 import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadWriteTransaction;
@@ -28,8 +28,6 @@ import org.opendaylight.yangtools.yang.data.api.YangInstanceIdentifier;
 import org.opendaylight.yangtools.yang.data.api.schema.NormalizedNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.concurrent.ExecutionContext;
-import scala.concurrent.Future;
 
 public class ProxyReadWriteTransaction implements DOMDataTreeReadWriteTransaction {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyReadWriteTransaction.class);
@@ -42,25 +40,20 @@ public class ProxyReadWriteTransaction implements DOMDataTreeReadWriteTransactio
 
     private volatile ProxyTransactionFacade txFacade;
 
-    public ProxyReadWriteTransaction(final Peer peer, final Future<Object> future,
-            final ExecutionContext executionContext, final Timeout askTimeout) {
+    public ProxyReadWriteTransaction(final Peer peer, final CompletionStage<Object> future, final Duration askTimeout) {
         name = peer.getName();
-
-        future.onComplete(new OnComplete<>() {
-            @Override
-            public void onComplete(final Throwable failure, final Object actorRef) {
-                final ProxyTransactionFacade facade;
-                if (failure != null) {
-                    LOG.debug("[{}] Failed to obtain master actor", name, failure);
-                    facade = new FailedProxyTransaction(name, failure);
-                } else {
-                    LOG.debug("[{}] Obtained master actor {}", name, actorRef);
-                    facade = new ActorProxyTransaction((ActorRef) actorRef, peer, executionContext, askTimeout);
-                }
-
-                invokeBefore(facade);
+        future.whenComplete((actorRef, failure) -> {
+            final ProxyTransactionFacade facade;
+            if (failure != null) {
+                LOG.debug("[{}] Failed to obtain master actor", name, failure);
+                facade = new FailedProxyTransaction(name, failure);
+            } else {
+                LOG.debug("[{}] Obtained master actor {}", name, actorRef);
+                facade = new ActorProxyTransaction((ActorRef) actorRef, peer, askTimeout);
             }
-        }, executionContext);
+
+            invokeBefore(facade);
+        });
     }
 
     @Override

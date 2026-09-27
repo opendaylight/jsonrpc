@@ -7,17 +7,14 @@
  */
 package org.opendaylight.jsonrpc.provider.cluster.tx;
 
-import org.apache.pekko.util.Timeout;
+import java.time.Duration;
+import java.util.concurrent.CompletionStage;
 import org.opendaylight.mdsal.dom.api.DOMDataTreeReadTransaction;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
-import scala.concurrent.ExecutionContext;
-import scala.concurrent.Future;
 
 public class ProxyReadTransaction extends ProxyReadWriteTransaction implements DOMDataTreeReadTransaction {
-
-    public ProxyReadTransaction(final Peer id, final Future<Object> actorFuture,
-            final ExecutionContext executionContext, final Timeout askTimeout) {
-        super(id, actorFuture, executionContext, askTimeout);
+    public ProxyReadTransaction(final Peer id, final CompletionStage<Object> actorFuture, final Duration askTimeout) {
+        super(id, actorFuture, askTimeout);
     }
 
     @Override
