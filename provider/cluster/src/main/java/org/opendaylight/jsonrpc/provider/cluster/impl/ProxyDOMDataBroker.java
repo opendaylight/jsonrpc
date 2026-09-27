@@ -10,10 +10,9 @@ package org.opendaylight.jsonrpc.provider.cluster.impl;
 import static org.opendaylight.jsonrpc.provider.cluster.impl.ClusterUtil.DEFAULT_ASK_TIMEOUT;
 import static org.opendaylight.jsonrpc.provider.cluster.impl.ClusterUtil.durationFromUint16seconds;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 import org.apache.pekko.actor.ActorRef;
 import org.apache.pekko.pattern.Patterns;
-import org.apache.pekko.util.Timeout;
 import org.opendaylight.jsonrpc.provider.cluster.tx.ProxyReadTransaction;
 import org.opendaylight.jsonrpc.provider.cluster.tx.ProxyReadWriteTransaction;
 import org.opendaylight.jsonrpc.provider.cluster.tx.TxRequest;
@@ -26,9 +25,7 @@ import org.opendaylight.mdsal.dom.spi.PingPongMergingDOMDataBroker;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.concurrent.ExecutionContext;
-import scala.concurrent.Future;
-import scala.concurrent.duration.Duration;
+import scala.jdk.javaapi.DurationConverters;
 
 /**
  * Implementation of {@link DOMDataBroker} that forward all requests to actor on master node.
@@ -41,39 +38,36 @@ import scala.concurrent.duration.Duration;
 final class ProxyDOMDataBroker implements PingPongMergingDOMDataBroker {
     private static final Logger LOG = LoggerFactory.getLogger(ProxyDOMDataBroker.class);
     private final Peer peer;
-    private final Timeout askTimeout;
+    private final Duration askTimeout;
     private final ActorRef masterActorRef;
-    private final ExecutionContext dispatcher;
 
-    ProxyDOMDataBroker(Peer peer, ActorRef masterActorRef, ClusterDependencies dependencies) {
+    ProxyDOMDataBroker(final Peer peer, final ActorRef masterActorRef, final ClusterDependencies dependencies) {
         this.peer = peer;
-        final Duration askDuration = dependencies.getConfig() == null ? DEFAULT_ASK_TIMEOUT
+        final var askDuration = dependencies.getConfig() == null ? DEFAULT_ASK_TIMEOUT
                 : durationFromUint16seconds(dependencies.getConfig().getActorResponseWaitTime(), DEFAULT_ASK_TIMEOUT);
-        askTimeout = Timeout.apply(askDuration.toSeconds(), TimeUnit.SECONDS);
+        askTimeout = DurationConverters.toJava(askDuration);
         this.masterActorRef = masterActorRef;
-        dispatcher = dependencies.getActorSystem().dispatcher();
         LOG.debug("Created {}", this);
     }
 
     @Override
     public DOMDataTreeReadTransaction newReadOnlyTransaction() {
         LOG.debug("[{}] new ROT via {}", peer.getName(), masterActorRef);
-        final Future<Object> txActorFuture = Patterns.ask(masterActorRef, new TxRequest(), askTimeout);
-        return new ProxyReadTransaction(peer, txActorFuture, dispatcher, askTimeout);
+        return new ProxyReadTransaction(peer, Patterns.ask(masterActorRef, new TxRequest(), askTimeout), askTimeout);
     }
 
     @Override
     public DOMDataTreeReadWriteTransaction newReadWriteTransaction() {
         LOG.debug("[{}] new RWT via {}", peer.getName(), masterActorRef);
-        final Future<Object> future = Patterns.ask(masterActorRef, new TxRequest(), askTimeout);
-        return new ProxyReadWriteTransaction(peer, future, dispatcher, askTimeout);
+        return new ProxyReadWriteTransaction(peer, Patterns.ask(masterActorRef, new TxRequest(), askTimeout),
+            askTimeout);
     }
 
     @Override
     public DOMDataTreeWriteTransaction newWriteOnlyTransaction() {
         LOG.debug("[{}] new WOT via {}", peer.getName(), masterActorRef);
-        final Future<Object> future = Patterns.ask(masterActorRef, new TxRequest(), askTimeout);
-        return new ProxyReadWriteTransaction(peer, future, dispatcher, askTimeout);
+        return new ProxyReadWriteTransaction(peer, Patterns.ask(masterActorRef, new TxRequest(), askTimeout),
+            askTimeout);
     }
 
     // TODO : How about this?

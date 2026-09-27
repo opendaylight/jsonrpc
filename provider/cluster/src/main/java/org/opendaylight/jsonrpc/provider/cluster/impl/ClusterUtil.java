@@ -18,7 +18,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.Co
 import org.opendaylight.yangtools.binding.DataObjectIdentifier;
 import org.opendaylight.yangtools.binding.KeyStep;
 import org.opendaylight.yangtools.yang.common.Uint16;
-import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
 /**
@@ -28,9 +27,9 @@ import scala.concurrent.duration.FiniteDuration;
  * @since Jul 1, 2020
  */
 final class ClusterUtil {
-    static final FiniteDuration DEFAULT_WRITE_TX_TIMEOUT = Duration.apply(120, TimeUnit.SECONDS);
-    static final FiniteDuration DEFAULT_ASK_TIMEOUT = Duration.apply(10, TimeUnit.SECONDS);
-    static final FiniteDuration DEFAULT_RPC_TIMEOUT = Duration.apply(30, TimeUnit.SECONDS);
+    static final FiniteDuration DEFAULT_WRITE_TX_TIMEOUT = FiniteDuration.create(120, TimeUnit.SECONDS);
+    static final FiniteDuration DEFAULT_ASK_TIMEOUT = FiniteDuration.create(10, TimeUnit.SECONDS);
+    static final FiniteDuration DEFAULT_RPC_TIMEOUT = FiniteDuration.create(30, TimeUnit.SECONDS);
 
     private ClusterUtil() {
         // utility class
@@ -75,10 +74,7 @@ final class ClusterUtil {
         return "%s_%s".formatted(masterAddress.replace("//", ""), name);
     }
 
-    static Duration durationFromUint16seconds(final Uint16 timeout, final FiniteDuration defValue) {
-        if (timeout == null) {
-            return defValue;
-        }
-        return Duration.apply(timeout.doubleValue(), TimeUnit.SECONDS);
+    static FiniteDuration durationFromUint16seconds(final Uint16 timeout, final FiniteDuration defValue) {
+        return timeout == null ? defValue : FiniteDuration.create(timeout.toJava(), TimeUnit.SECONDS);
     }
 }
