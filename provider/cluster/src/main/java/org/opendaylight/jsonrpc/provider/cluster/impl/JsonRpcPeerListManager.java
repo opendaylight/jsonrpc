@@ -25,6 +25,8 @@ import org.opendaylight.jsonrpc.provider.common.Util;
 import org.opendaylight.mdsal.binding.api.DataObjectModification;
 import org.opendaylight.mdsal.binding.api.DataTreeChangeListener;
 import org.opendaylight.mdsal.binding.api.DataTreeModification;
+import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefresh;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRefreshOutput;
@@ -36,6 +38,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.ForceRelo
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpoints;
 import org.opendaylight.yangtools.binding.DataObjectIdentifier;
+import org.opendaylight.yangtools.binding.DataObjectReference;
 import org.opendaylight.yangtools.concepts.Registration;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
@@ -66,8 +69,8 @@ public final class JsonRpcPeerListManager implements DataTreeChangeListener<Conf
 
     private JsonRpcPeerListManager(ClusterDependencies dependencies, Timeout askTimeout) {
         this.dependencies = dependencies;
-        this.dtcListener = dependencies.getDataBroker()
-                .registerTreeChangeListener(ClusterUtil.getPeerListIdentifier(), this);
+        this.dtcListener = dependencies.getDataBroker().registerTreeChangeListener(LogicalDatastoreType.CONFIGURATION,
+            DataObjectReference.builder(Config.class).child(ConfiguredEndpoints.class).build(), this);
         this.rpcReg = dependencies.getRpcProviderService().registerRpcImplementations(
             (ForceRefresh) JsonRpcPeerListManager::forceRefresh,
             (ForceReload) this::forceReload);

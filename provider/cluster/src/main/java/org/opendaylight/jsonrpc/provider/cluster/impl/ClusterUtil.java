@@ -14,7 +14,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Config;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ActualEndpoints;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ActualEndpointsKey;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpoints;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.config.ConfiguredEndpointsKey;
 import org.opendaylight.yangtools.binding.DataObjectIdentifier;
 import org.opendaylight.yangtools.binding.KeyStep;
@@ -43,21 +42,11 @@ final class ClusterUtil {
      * @param name name of peer
      * @return {@link DataTreeIdentifier}
      */
-    public static DataTreeIdentifier<ActualEndpoints> getPeerOpstateIdentifier(String name) {
+    static DataTreeIdentifier<ActualEndpoints> getPeerOpstateIdentifier(final String name) {
         return DataTreeIdentifier.of(LogicalDatastoreType.OPERATIONAL,
                 DataObjectIdentifier.builder(Config.class)
                         .child(ActualEndpoints.class, new ActualEndpointsKey(name))
                         .build());
-    }
-
-    /**
-     * Get {@link DataTreeIdentifier} corresponding to list of {@link ConfiguredEndpoints} in config DS.
-     *
-     * @return {@link DataTreeIdentifier}
-     */
-    public static DataTreeIdentifier<ConfiguredEndpoints> getPeerListIdentifier() {
-        return DataTreeIdentifier.of(LogicalDatastoreType.CONFIGURATION,
-                DataObjectIdentifier.builder(Config.class).child(ConfiguredEndpoints.class).build());
     }
 
     /**
@@ -66,7 +55,7 @@ final class ClusterUtil {
      * @param ii {@link InstanceIdentifier} of subtype of {@link Peer}
      * @return peer's name
      */
-    public static String peerNameFromII(DataObjectIdentifier<? extends Peer> ii) {
+    static String peerNameFromII(final DataObjectIdentifier<? extends Peer> ii) {
         final var last = ii.lastStep();
         if (!(last instanceof KeyStep<?, ?> keyStep)) {
             throw new IllegalArgumentException("Unexpected last step " + last);
@@ -78,15 +67,15 @@ final class ClusterUtil {
         };
     }
 
-    public static String createActorPath(final String masterAddress, final String name) {
+    static String createActorPath(final String masterAddress, final String name) {
         return "%s/user/%s".formatted(masterAddress, name);
     }
 
-    public static String createMasterActorName(final String name, final String masterAddress) {
-        return "%s_%s".formatted(masterAddress.replaceAll("//", ""), name);
+    static String createMasterActorName(final String name, final String masterAddress) {
+        return "%s_%s".formatted(masterAddress.replace("//", ""), name);
     }
 
-    public static Duration durationFromUint16seconds(Uint16 timeout, FiniteDuration defValue) {
+    static Duration durationFromUint16seconds(final Uint16 timeout, final FiniteDuration defValue) {
         if (timeout == null) {
             return defValue;
         }
