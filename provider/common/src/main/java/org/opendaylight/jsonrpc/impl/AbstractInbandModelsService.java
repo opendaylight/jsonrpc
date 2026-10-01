@@ -8,8 +8,8 @@
 package org.opendaylight.jsonrpc.impl;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Streams;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.ServiceLoader;
 import org.opendaylight.jsonrpc.model.InbandModelsService;
@@ -23,21 +23,17 @@ import org.opendaylight.yangtools.binding.meta.YangModelBindingProvider;
  * @since Jan 12, 2019
  */
 public abstract class AbstractInbandModelsService implements InbandModelsService {
-    private static final List<Module> MODULES;
-
-    static {
-        MODULES = Streams.stream(ServiceLoader.load(YangModelBindingProvider.class).iterator())
-                .map(YangModelBindingProvider::getModuleInfo)
-                .filter(ymi -> !ymi.getName().getLocalName().startsWith("jsonrpc"))
-                .map(ymi -> {
-                    try {
-                        return new Module(ymi.getName().getLocalName(), ymi.getYangTextCharSource().read());
-                    } catch (IOException e) {
-                        throw new ExceptionInInitializerError(e);
-                    }
-                })
-                .collect(ImmutableList.toImmutableList());
-    }
+    private static final List<Module> MODULES = ServiceLoader.load(YangModelBindingProvider.class).stream()
+        .map(provider -> provider.get().getModuleInfo())
+        .filter(ymi -> !ymi.name().getLocalName().startsWith("jsonrpc"))
+        .map(ymi -> {
+            try {
+                return new Module(ymi.name().getLocalName(), ymi.getYangTextCharSource().read());
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        })
+        .collect(ImmutableList.toImmutableList());
 
     @Override
     public List<Module> getModules() {
