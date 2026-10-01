@@ -7,7 +7,7 @@
  */
 package org.opendaylight.jsonrpc.provider.common;
 
-import static org.opendaylight.yangtools.util.concurrent.FluentFutures.immediateFluentFuture;
+import static org.opendaylight.mdsal.common.api.FluentFutures.immediateFluentFuture;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.JsonElement;

@@ -9,7 +9,7 @@ package org.opendaylight.jsonrpc.impl;
 
 import static org.opendaylight.jsonrpc.provider.common.Util.store2int;
 import static org.opendaylight.jsonrpc.provider.common.Util.store2str;
-import static org.opendaylight.yangtools.util.concurrent.FluentFutures.immediateFluentFuture;
+import static org.opendaylight.mdsal.common.api.FluentFutures.immediateFluentFuture;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -39,7 +39,6 @@ import org.opendaylight.mdsal.common.api.CommitInfo;
 import org.opendaylight.mdsal.common.api.LogicalDatastoreType;
 import org.opendaylight.mdsal.common.api.TransactionCommitFailedException;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
-import org.opendaylight.yangtools.util.concurrent.FluentFutures;
 import org.opendaylight.yangtools.yang.common.ErrorTag;
 import org.opendaylight.yangtools.yang.common.ErrorType;
 import org.opendaylight.yangtools.yang.common.RpcError;
@@ -54,8 +53,7 @@ public class JsonRPCTx extends RemoteShardAware implements JsonRpcTransactionFac
     private static final Logger LOG = LoggerFactory.getLogger(JsonRPCTx.class);
     private static final Function<String, RpcError> ERROR_MAPPER = msg -> RpcResultBuilder
             .newError(ErrorType.APPLICATION, new ErrorTag("commit"), msg);
-    private static final FluentFuture<Optional<NormalizedNode>> NO_DATA = FluentFutures
-            .immediateFluentFuture(Optional.empty());
+    private static final FluentFuture<Optional<NormalizedNode>> NO_DATA = immediateFluentFuture(Optional.empty());
 
     private final @NonNull SettableFuture<CommitInfo> settableFuture = SettableFuture.create();
     private final @NonNull FluentFuture<CommitInfo> completionFuture = FluentFuture.from(settableFuture);
