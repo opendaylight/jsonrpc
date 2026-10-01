@@ -25,6 +25,7 @@ import org.opendaylight.jsonrpc.hmap.DataType;
 import org.opendaylight.jsonrpc.hmap.HierarchicalEnumMap;
 import org.opendaylight.jsonrpc.model.RemoteGovernance;
 import org.opendaylight.jsonrpc.provider.common.RpcClient;
+import org.opendaylight.mdsal.common.api.FluentFutures;
 import org.opendaylight.mdsal.dom.api.DOMRpcAvailabilityListener;
 import org.opendaylight.mdsal.dom.api.DOMRpcIdentifier;
 import org.opendaylight.mdsal.dom.api.DOMRpcImplementationNotAvailableException;
@@ -32,7 +33,6 @@ import org.opendaylight.mdsal.dom.api.DOMRpcResult;
 import org.opendaylight.mdsal.dom.api.DOMRpcService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.jsonrpc.rev161201.Peer;
 import org.opendaylight.yangtools.concepts.Registration;
-import org.opendaylight.yangtools.util.concurrent.FluentFutures;
 import org.opendaylight.yangtools.yang.common.QName;
 import org.opendaylight.yangtools.yang.common.QNameModule;
 import org.opendaylight.yangtools.yang.data.api.schema.ContainerNode;
@@ -104,7 +104,6 @@ public final class JsonRPCtoRPCBridge extends AbstractJsonRPCComponent implement
             return FluentFutures.immediateFailedFluentFuture(
                     new DOMRpcImplementationNotAvailableException("No endpoint is mapped to RPC %s", type));
         }
-
     }
 
     private static FluentFuture<DOMRpcResult> bridgeNotAvailable() {
